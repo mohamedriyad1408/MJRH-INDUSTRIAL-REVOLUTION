@@ -9,7 +9,7 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    alias: { "@": path.resolve(__dirname, "./src") },
+    alias: { "@": path.resolve(__dirname, ".") },
   },
   build: {
     outDir: "dist",
