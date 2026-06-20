@@ -1,13 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-export function useServerFn<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>) {
+export function useServerFn<TArgs extends any[], TResult>(fn: (...args: TArgs) => Promise<TResult>) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const execute = useCallback(async (args: TArgs): Promise<TResult | null> => {
+  const execute = async (...args: TArgs): Promise<TResult | null> => {
     setIsLoading(true);
     try {
-      const result = await fn(args);
+      const result = await fn(...args);
       return result;
     } catch (error: any) {
       const message = error?.message || 'حدث خطأ غير متوقع';
@@ -16,7 +16,8 @@ export function useServerFn<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult
     } finally {
       setIsLoading(false);
     }
-  }, [fn]);
+  };
 
-  return { execute, isLoading };
+  // نربط حالة التحميل بالدالة نفسها لكي يمكن الوصول إليها كـ fn.isLoading
+  return Object.assign(execute, { isLoading });
 }

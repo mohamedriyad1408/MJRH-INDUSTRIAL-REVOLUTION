@@ -85,7 +85,7 @@ function CustomerPortal() {
     setPlacing(true);
     const cartItems = items.map(([id, qty]) => {
       const svc = services.find((s) => s.id === id)!;
-      return { service_item_id: id, name: svc.name, qty, unit_price: svc.price, line_total: qty * svc.price, service_type: svc.service_type };
+      return { service_item_id: id, name: svc.name, qty, unit_price: svc.price, line_total: qty * svc.price, service_type: svc.service_type as any };
     });
     const subtotal = cartItems.reduce((s, i) => s + i.line_total, 0);
     const { data: ord, error } = await supabase.from("orders").insert({
@@ -97,7 +97,7 @@ function CustomerPortal() {
       await supabase.from("order_items").insert(cartItems.map((i) => ({ ...i, order_id: ord.id })));
     }
     if (images.length) {
-      await supabase.from("order_attachments").insert(images.map((url) => ({ order_id: ord.id, url, uploaded_by: customerId!, label: "صورة من العميل" })));
+      await  (supabase as any).from("order_attachments").insert(images.map((url) => ({ order_id: ord.id, url, uploaded_by: customerId!, label: "صورة من العميل" })));
     }
     setPlacing(false);
     toast.success(`✅ تم إرسال طلبك #${ord.order_number}`);
