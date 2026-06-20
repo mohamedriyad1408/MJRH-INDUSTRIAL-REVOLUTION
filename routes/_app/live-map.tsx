@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Truck, Package, MapPin, Navigation, RefreshCw, Route, X, CheckSquare } from "lucide-react";
+import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, CheckSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_app/live-map")({
   head: () => ({ meta: [{ title: "خريطة المراقبة الحية - MJRH" }] }),
@@ -167,7 +167,7 @@ function LiveMapPage() {
         <div className="flex gap-2">
           {selectedIds.size > 0 && <>
             <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={() => { if (selectedIds.size < 2) { toast.error("اختر نقطتين على الأقل"); return; } setRouteMode(true); toast.success(`خط سير لـ ${selectedIds.size} نقاط`); }}>
-              <Route className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedIds.size})
+              <RouteIcon className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedIds.size})
             </Button>
             <Button size="sm" variant="outline" onClick={() => { setSelectedIds(new Set()); setRouteMode(false); }}><X className="w-3.5 h-3.5" /></Button>
           </>}

@@ -67,7 +67,7 @@ function BudgetsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("budgets").select("*").order("created_at", { ascending: false });
+    const { data } = await  (supabase as any).from("budgets").select("*").order("created_at", { ascending: false });
     const raw = (data ?? []) as Budget[];
     const enriched = await Promise.all(raw.map(enrichBudget));
     setBudgets(enriched);
@@ -76,7 +76,7 @@ function BudgetsPage() {
   }
 
   async function loadItems(budgetId: string) {
-    const { data } = await supabase.from("budget_items").select("*").eq("budget_id", budgetId);
+    const { data } = await  (supabase as any).from("budget_items").select("*").eq("budget_id", budgetId);
     setItems((data ?? []) as BudgetItem[]);
   }
 
@@ -256,14 +256,14 @@ function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean
     if (!label || !revenue) { toast.error("أدخل الاسم والإيراد المستهدف"); return; }
     setSaving(true);
     const totalExp = items.reduce((s, i) => s + Number(i.expected || 0), 0);
-    const { data: b, error } = await supabase.from("budgets").insert({
+    const { data: b, error } = await  (supabase as any).from("budgets").insert({
       period_label: label, period_type: type, year, month: type === "monthly" ? month : null,
       expected_revenue: Number(revenue), expected_expenses: totalExp, tenant_id: tenantId,
     }).select("id").single();
     if (error) { setSaving(false); return toast.error(error.message); }
     const validItems = items.filter((i) => Number(i.expected) > 0);
     if (validItems.length) {
-      await supabase.from("budget_items").insert(validItems.map((i) => ({ budget_id: b.id, category: i.category, expected: Number(i.expected), tenant_id: tenantId })));
+      await  (supabase as any).from("budget_items").insert(validItems.map((i) => ({ budget_id: b.id, category: i.category, expected: Number(i.expected), tenant_id: tenantId })));
     }
     setSaving(false);
     toast.success("تم إنشاء الميزانية");

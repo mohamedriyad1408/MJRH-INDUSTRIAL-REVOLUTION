@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@/hooks/use-server-fn";
 
 import { adminApi } from "@/lib/admin-api";
 import { Card } from "@/components/ui/card";
