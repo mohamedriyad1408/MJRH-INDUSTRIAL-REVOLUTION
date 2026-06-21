@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
+import { distanceKm, formatDistance, type LatLng } from "@/lib/geo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +22,14 @@ export const Route = createFileRoute("/_app/driver")({
 /* ─── types ─── */
 type Pickup = {
   id: string; customer_name: string; phone: string;
-  address: string; location_url: string | null;
+  address: string; location_url: string | null; lat?: number | null; lng?: number | null; estimated_pieces?: number | null;
   status: string; scheduled_at: string | null;
   created_at: string; notes: string | null;
 };
 type Delivery = {
   id: string; order_number: number; status: string;
   is_urgent: boolean; created_at: string;
-  delivery_address: string | null;
+  delivery_address: string | null; delivery_lat?: number | null; delivery_lng?: number | null; assigned_driver_employee_id?: string | null;
   customers?: { full_name: string; phone: string } | null;
   task_assignments?: { employee_id: string }[];
 };
@@ -52,17 +53,18 @@ function DriverPage() {
   const [loading, setLoading] = useState(true);
   const [confirmCode, setConfirmCode] = useState<Record<string, string>>({});
   const [acting, setActing] = useState<string | null>(null);
+  const [myLoc, setMyLoc] = useState<LatLng | null>(null);
 
   /* ── employee id for this user ── */
   const [empId, setEmpId] = useState<string | null>(null);
   useEffect(() => {
     if (!user) return;
-    supabase
+    (supabase as any)
       .from("employees")
-      .select("id")
+      .select("id,current_lat,current_lng")
       .eq("profile_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setEmpId(data?.id ?? null));
+      .then(({ data }: any) => { setEmpId(data?.id ?? null); if ((data as any)?.current_lat && (data as any)?.current_lng) setMyLoc({ lat: Number((data as any).current_lat), lng: Number((data as any).current_lng) }); });
   }, [user]);
 
   const load = useCallback(async () => {
@@ -73,10 +75,10 @@ function DriverPage() {
         .select("*")
         .in("status", ["pending", "assigned"])
         .order("created_at"),
-      supabase
+      (supabase as any)
         .from("orders")
         .select(
-          "id, order_number, status, is_urgent, created_at, delivery_address, customers(full_name, phone), task_assignments(employee_id)"
+          "id, order_number, status, is_urgent, created_at, delivery_address, delivery_lat, delivery_lng, assigned_driver_employee_id, customers(full_name, phone), task_assignments(employee_id)"
         )
         .in("status", ["ready", "out_for_delivery"])
         .order("is_urgent", { ascending: false })
@@ -88,6 +90,24 @@ function DriverPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  async function updateMyLocation() {
+    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
+    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم GPS");
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      setMyLoc(loc);
+      await (supabase as any).from("employees").update({
+        current_lat: loc.lat, current_lng: loc.lng,
+        location_accuracy: pos.coords.accuracy,
+        location_updated_at: new Date().toISOString(),
+      }).eq("id", empId);
+      await (supabase as any).from("driver_location_log").insert({
+        employee_id: empId, lat: loc.lat, lng: loc.lng, accuracy: pos.coords.accuracy,
+      });
+      toast.success("تم تحديث موقعك");
+    }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
+  }
 
   /* ─── PICKUP: assign self ─── */
   async function assignSelf(p: Pickup) {
@@ -125,13 +145,13 @@ function DriverPage() {
       customerId = ins.id;
     }
     // 2. create order
-    const { data: ord, error: oe } = await supabase
+    const { data: ord, error: oe } = await (supabase as any)
       .from("orders")
       .insert({
         customer_id: customerId,
         order_type: "delivery",
         status: "received",
-        pickup_address: p.address,
+        pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null,
         notes: p.notes,
         created_by: user?.id,
       })
@@ -164,9 +184,9 @@ function DriverPage() {
   /* ─── DELIVERY: start out_for_delivery ─── */
   async function startDelivery(d: Delivery) {
     setActing(d.id);
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("orders")
-      .update({ status: "out_for_delivery" })
+      .update({ status: "out_for_delivery", assigned_driver_employee_id: empId ?? d.assigned_driver_employee_id ?? null })
       .eq("id", d.id);
     if (!error) {
       await supabase.from("order_status_history").insert({
@@ -219,8 +239,9 @@ function DriverPage() {
 
   const myDeliveries = empId
     ? deliveries.filter((d) =>
-        !d.task_assignments?.length ||
-        d.task_assignments.some((a) => a.employee_id === empId)
+        (!d.assigned_driver_employee_id && !d.task_assignments?.length) ||
+        d.assigned_driver_employee_id === empId ||
+        d.task_assignments?.some((a) => a.employee_id === empId)
       )
     : deliveries;
 
@@ -240,9 +261,10 @@ function DriverPage() {
             توصيلات: {myDeliveries.length}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load}>
-          تحديث
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={updateMyLocation}>موقعي</Button>
+          <Button variant="outline" size="sm" onClick={load}>تحديث</Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -283,6 +305,7 @@ function DriverPage() {
           empId={empId}
           onAssign={assignSelf}
           onConfirm={confirmPickup}
+          myLoc={myLoc}
         />
       ) : (
         <DeliveriesList
@@ -292,6 +315,7 @@ function DriverPage() {
           setConfirmCode={setConfirmCode}
           onStart={startDelivery}
           onConfirm={confirmDelivery}
+          myLoc={myLoc}
         />
       )}
     </div>
@@ -300,12 +324,13 @@ function DriverPage() {
 
 /* ─── Pickups sub-component ─── */
 function PickupsList({
-  pending, assigned, acting, empId, onAssign, onConfirm,
+  pending, assigned, acting, empId, onAssign, onConfirm, myLoc,
 }: {
   pending: Pickup[]; assigned: Pickup[];
   acting: string | null; empId: string | null;
   onAssign: (p: Pickup) => void;
   onConfirm: (p: Pickup) => void;
+  myLoc: LatLng | null;
 }) {
   const all = [...assigned, ...pending];
   if (!all.length)
@@ -327,7 +352,7 @@ function PickupsList({
       {assigned.map((p) => (
         <PickupCard
           key={p.id} p={p} acting={acting} isAssigned
-          onAssign={onAssign} onConfirm={onConfirm}
+          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc}
         />
       ))}
       {pending.length > 0 && (
@@ -338,7 +363,7 @@ function PickupsList({
       {pending.map((p) => (
         <PickupCard
           key={p.id} p={p} acting={acting} isAssigned={false}
-          onAssign={onAssign} onConfirm={onConfirm}
+          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc}
         />
       ))}
     </div>
@@ -346,11 +371,12 @@ function PickupsList({
 }
 
 function PickupCard({
-  p, acting, isAssigned, onAssign, onConfirm,
+  p, acting, isAssigned, onAssign, onConfirm, myLoc,
 }: {
   p: Pickup; acting: string | null; isAssigned: boolean;
   onAssign: (p: Pickup) => void;
   onConfirm: (p: Pickup) => void;
+  myLoc: LatLng | null;
 }) {
   return (
     <Card className={isAssigned ? "border-primary/40 bg-primary/5" : ""}>
@@ -368,6 +394,7 @@ function PickupCard({
           <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
           <span>{p.address}</span>
         </div>
+        <div className="text-xs text-muted-foreground">المسافة التقريبية: {formatDistance(distanceKm(myLoc, p.lat && p.lng ? { lat: Number(p.lat), lng: Number(p.lng) } : null))} · قطع تقديرية: {p.estimated_pieces ?? 1}</div>
         <div className="flex items-center gap-4">
           <a
             href={`tel:${p.phone}`}
@@ -429,13 +456,14 @@ function PickupCard({
 
 /* ─── Deliveries sub-component ─── */
 function DeliveriesList({
-  list, acting, confirmCode, setConfirmCode, onStart, onConfirm,
+  list, acting, confirmCode, setConfirmCode, onStart, onConfirm, myLoc,
 }: {
   list: Delivery[]; acting: string | null;
   confirmCode: Record<string, string>;
   setConfirmCode: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onStart: (d: Delivery) => void;
   onConfirm: (d: Delivery) => void;
+  myLoc: LatLng | null;
 }) {
   if (!list.length)
     return (
@@ -479,6 +507,7 @@ function DeliveriesList({
                 <span>{d.delivery_address}</span>
               </div>
             )}
+            <div className="text-xs text-muted-foreground">المسافة التقريبية: {formatDistance(distanceKm(myLoc, d.delivery_lat && d.delivery_lng ? { lat: Number(d.delivery_lat), lng: Number(d.delivery_lng) } : null))}</div>
 
             {d.customers?.phone && (
               <a

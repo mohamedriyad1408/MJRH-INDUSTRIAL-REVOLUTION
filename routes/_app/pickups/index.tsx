@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Plus, MapPin, Phone, Truck } from "lucide-react";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
+import { dueInfo } from "@/lib/geo";
+import { Loader2, Plus, MapPin, Phone, Truck, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pickups/")({
   head: () => ({ meta: [{ title: "طلبات الاستلام" }] }),
@@ -20,7 +22,7 @@ type Pickup = {
   location_url: string | null; status: string;
   driver_employee_id: string | null;
   scheduled_at: string | null; created_at: string;
-  notes: string | null;
+  notes: string | null; lat?: number | null; lng?: number | null; estimated_pieces?: number | null;
 };
 type Driver = { id: string; full_name: string };
 
@@ -49,6 +51,14 @@ function PickupsPage() {
   }
   useEffect(() => { load(); }, []);
 
+  async function autoAssign() {
+    try {
+      const r = await autoAssignDrivers();
+      toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة` : "لا توجد مهام تحتاج توزيع");
+      load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "تعذر التوزيع"); }
+  }
+
   async function assign(id: string, driverId: string) {
     const { error } = await supabase.from("pickup_requests")
       .update({ driver_employee_id: driverId, status: "assigned" }).eq("id", id);
@@ -67,9 +77,9 @@ function PickupsPage() {
       if (ins.error) return toast.error(ins.error.message);
       customerId = ins.data.id;
     }
-    const o = await supabase.from("orders").insert({
+    const o = await (supabase as any).from("orders").insert({
       customer_id: customerId, order_type: "delivery", status: "received",
-      pickup_address: p.address, notes: p.notes, created_by: user?.id,
+      pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null, notes: p.notes, created_by: user?.id,
     }).select("id").single();
     if (o.error) return toast.error(o.error.message);
     await supabase.from("pickup_requests").update({
@@ -88,7 +98,10 @@ function PickupsPage() {
           <p className="text-sm text-muted-foreground">{rows.length} طلب</p>
         </div>
         {canManage && (
-          <Button asChild><Link to="/pickups/new"><Plus className="w-4 h-4 ms-1" /> طلب استلام جديد</Link></Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={autoAssign}><Wand2 className="w-4 h-4 ms-1" /> توزيع تلقائي</Button>
+            <Button asChild><Link to="/pickups/new"><Plus className="w-4 h-4 ms-1" /> طلب استلام جديد</Link></Button>
+          </div>
         )}
       </div>
 
@@ -117,6 +130,8 @@ function PickupsPage() {
                 )}
                 {p.notes && <div className="text-xs text-muted-foreground">{p.notes}</div>}
                 <div className="text-xs text-muted-foreground">{fmtDate(p.created_at)}</div>
+                {p.scheduled_at && <div className={dueInfo(p.scheduled_at).late ? "text-xs text-red-600 font-bold" : "text-xs text-muted-foreground"}>⏱ {dueInfo(p.scheduled_at).label}</div>}
+                <div className="text-xs text-muted-foreground">قطع تقديرية: {p.estimated_pieces ?? 1} · {p.lat && p.lng ? "موقع دقيق ✅" : "موقع غير محدد ⚠"}</div>
 
                 {canManage && p.status === "pending" && (
                   <div className="flex gap-2 pt-2">

@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
+import { dueInfo } from "@/lib/geo";
 import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, CheckSquare } from "lucide-react";
 
 export const Route = createFileRoute("/_app/live-map")({
@@ -16,7 +18,7 @@ type PinType = "pickup" | "delivery" | "driver";
 type MapPin = {
   id: string; type: PinType; label: string; sublabel: string;
   address: string; lat?: number; lng?: number;
-  status?: string; orderNumber?: number;
+  status?: string; orderNumber?: number; dueLabel?: string; late?: boolean; pieces?: number; assignedTo?: string | null;
 };
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -81,7 +83,7 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
       });
       const marker = L.marker([pin.lat!, pin.lng!], { icon })
         .addTo(mapRef.current)
-        .bindPopup(`<div dir="rtl" style="font-family:sans-serif;min-width:150px"><b style="font-size:13px">${pin.label}</b>${pin.orderNumber ? `<div style="color:#666;font-size:11px">طلب #${pin.orderNumber}</div>` : ""}<div style="color:#888;font-size:11px;margin-top:4px">${pin.sublabel}</div><div style="color:#888;font-size:10px">📍 ${pin.address.slice(0, 45)}</div>${pin.status ? `<div style="margin-top:5px"><span style="background:${color};color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">${pin.status}</span></div>` : ""}</div>`);
+        .bindPopup(`<div dir="rtl" style="font-family:sans-serif;min-width:160px"><b style="font-size:13px">${pin.label}</b>${pin.orderNumber ? `<div style="color:#666;font-size:11px">طلب #${pin.orderNumber}</div>` : ""}<div style="color:#888;font-size:11px;margin-top:4px">${pin.sublabel}</div><div style="color:#888;font-size:10px">📍 ${pin.address.slice(0, 45)}</div>${pin.status ? `<div style="margin-top:5px"><span style="background:${pin.late ? "#ef4444" : color};color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">${pin.status}</span></div>` : ""}${pin.dueLabel ? `<div style="margin-top:4px;color:${pin.late ? "#dc2626" : "#666"};font-size:11px">⏱ ${pin.dueLabel}</div>` : ""}${pin.pieces ? `<div style="color:#666;font-size:10px">قطع: ${pin.pieces}</div>` : ""}</div>`);
       marker.on("click", () => onSelect(pin.id));
       markersRef.current[pin.id] = marker;
     });
@@ -119,19 +121,34 @@ function LiveMapPage() {
     const raw: MapPin[] = [];
 
     const [{ data: pickups }, { data: orders }, { data: drivers }] = await Promise.all([
-      supabase.from("pickup_requests").select("id,customer_name,address,phone,status").in("status", ["pending", "assigned"]),
-      supabase.from("orders").select("id,order_number,status,delivery_address,pickup_address,customers(full_name,phone)").in("status", ["ready", "out_for_delivery"]),
-      supabase.from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true),
+      (supabase as any).from("pickup_requests").select("id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id").in("status", ["pending", "assigned"]),
+      (supabase as any).from("orders").select("id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)").in("status", ["ready", "out_for_delivery"]),
+      (supabase as any).from("employees").select("id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true),
     ]);
 
-    (pickups ?? []).forEach((p: any) => raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق" }));
-    (orders ?? []).forEach((o: any) => { const addr = o.delivery_address || o.pickup_address; if (!addr) return; raw.push({ id: `d-${o.id}`, type: "delivery", label: o.customers?.full_name ?? "عميل", sublabel: o.customers?.phone ?? "", address: addr, orderNumber: o.order_number, status: o.status === "ready" ? "جاهز" : "خرج للتسليم" }); });
-    (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.phone ?? "", address: "موقع السائق" }));
+    const orderIds = (orders ?? []).map((o: any) => o.id);
+    const pieceMap = new Map<string, number>();
+    if (orderIds.length) {
+      const { data: pieces } = await (supabase as any).from("service_units").select("order_id,id").in("order_id", orderIds);
+      (pieces ?? []).forEach((x: any) => pieceMap.set(x.order_id, (pieceMap.get(x.order_id) ?? 0) + 1));
+    }
+
+    (pickups ?? []).forEach((p: any) => {
+      const due = dueInfo(p.scheduled_at);
+      raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id });
+    });
+    (orders ?? []).forEach((o: any) => {
+      const addr = o.delivery_address || o.pickup_address; if (!addr) return;
+      const due = dueInfo(o.promised_delivery_at);
+      raw.push({ id: `d-${o.id}`, type: "delivery", label: o.customers?.full_name ?? "عميل", sublabel: o.customers?.phone ?? "", address: addr, lat: o.delivery_lat ?? o.pickup_lat ?? undefined, lng: o.delivery_lng ?? o.pickup_lng ?? undefined, orderNumber: o.order_number, status: o.status === "ready" ? "جاهز" : "خرج للتسليم", dueLabel: due.label, late: due.late, pieces: pieceMap.get(o.id) ?? 1, assignedTo: o.assigned_driver_employee_id });
+    });
+    (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.location_updated_at ? `آخر تحديث ${new Date(d.location_updated_at).toLocaleTimeString("ar-EG")}` : (d.phone ?? ""), address: "موقع السائق", lat: d.current_lat ?? undefined, lng: d.current_lng ?? undefined }));
 
     setStats({ pickups: (pickups ?? []).length, deliveries: (orders ?? []).length, drivers: (drivers ?? []).length });
     setGeocoding(true);
     const geocoded = await Promise.all(raw.map(async (pin) => {
       if (pin.lat && pin.lng) return pin;
+      if (pin.type === "driver") return pin;
       const c = await geocode(pin.address);
       return c ? { ...pin, ...c } : pin;
     }));
@@ -145,6 +162,16 @@ function LiveMapPage() {
     const t = setInterval(loadData, 30000);
     return () => clearInterval(t);
   }, [loadData]);
+
+  async function runAutoAssign() {
+    try {
+      const r = await autoAssignDrivers();
+      toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة على ${r.drivers} مناديب` : "لا توجد مهام تحتاج توزيع");
+      loadData();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر توزيع المناديب");
+    }
+  }
 
   function toggle(id: string) {
     setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -171,6 +198,7 @@ function LiveMapPage() {
             </Button>
             <Button size="sm" variant="outline" onClick={() => { setSelectedIds(new Set()); setRouteMode(false); }}><X className="w-3.5 h-3.5" /></Button>
           </>}
+          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={runAutoAssign}>توزيع المناديب</Button>
           <Button size="sm" variant="outline" onClick={loadData}><RefreshCw className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
@@ -210,6 +238,8 @@ function LiveMapPage() {
                     <div className="font-bold truncate">{pin.label}</div>
                     {pin.orderNumber && <div className="text-muted-foreground">#{pin.orderNumber}</div>}
                     <div className="text-muted-foreground truncate">{pin.address.slice(0, 30)}</div>
+                    {pin.dueLabel && <div className={pin.late ? "text-red-600 font-bold" : "text-muted-foreground"}>⏱ {pin.dueLabel}</div>}
+                    {pin.pieces && <div className="text-muted-foreground">قطع: {pin.pieces}</div>}
                     {!pin.lat && <div className="text-amber-500 mt-0.5">⚠ موقع غير محدد</div>}
                     {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />محدد</div>}
                   </div>

@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, ArrowRight } from "lucide-react";
+import { parseLatLng } from "@/lib/geo";
+import { Loader2, Plus, Trash2, ArrowRight, LocateFixed } from "lucide-react";
 
 export const Route = createFileRoute("/_app/orders/new")({
   head: () => ({ meta: [{ title: "طلب جديد" }] }),
@@ -59,6 +60,8 @@ function NewOrderPage() {
   const [notes, setNotes] = useState("");
   const [pickupAddress, setPickupAddress] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [pickupLoc, setPickupLoc] = useState({ lat: "", lng: "" });
+  const [deliveryLoc, setDeliveryLoc] = useState({ lat: "", lng: "" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -102,6 +105,27 @@ function NewOrderPage() {
   const tax = taxable * (settings.tax_percent / 100);
   const total = taxable + tax;
 
+  function fillLocation(kind: "pickup" | "delivery") {
+    const text = kind === "pickup" ? pickupAddress : deliveryAddress;
+    const parsed = parseLatLng(text);
+    if (parsed) {
+      if (kind === "pickup") setPickupLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
+      else setDeliveryLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
+      toast.success("تم استخراج الإحداثيات");
+      return;
+    }
+    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم تحديد الموقع");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude.toFixed(7), lng: pos.coords.longitude.toFixed(7) };
+        if (kind === "pickup") setPickupLoc(loc); else setDeliveryLoc(loc);
+        toast.success("تم تحديد الموقع الحالي");
+      },
+      () => toast.error("تعذر تحديد الموقع"),
+      { enableHighAccuracy: true, timeout: 15000 }
+    );
+  }
+
   async function submit() {
     if (!customer && !newCustomer.full_name) { toast.error("ابحث عن عميل أو أضف عميلاً جديداً"); return; }
     if (!items.length) { toast.error("أضف خدمة واحدة على الأقل"); return; }
@@ -116,7 +140,7 @@ function NewOrderPage() {
       customerId = data!.id;
     }
 
-    const { data: order, error: oErr } = await supabase.from("orders").insert({
+    const { data: order, error: oErr } = await (supabase as any).from("orders").insert({
       customer_id: customerId,
       order_type: orderType,
       is_urgent: isUrgent,
@@ -124,6 +148,10 @@ function NewOrderPage() {
       payment_status: paymentStatus,
       pickup_address: orderType === "delivery" ? pickupAddress || null : null,
       delivery_address: orderType === "delivery" ? deliveryAddress || null : null,
+      pickup_lat: orderType === "delivery" && pickupLoc.lat ? Number(pickupLoc.lat) : null,
+      pickup_lng: orderType === "delivery" && pickupLoc.lng ? Number(pickupLoc.lng) : null,
+      delivery_lat: orderType === "delivery" && deliveryLoc.lat ? Number(deliveryLoc.lat) : null,
+      delivery_lng: orderType === "delivery" && deliveryLoc.lng ? Number(deliveryLoc.lng) : null,
       subtotal, urgent_fee: urgentFee, urgent_fee_amount: urgentFee, delivery_fee: delivery,
       discount_amount: disc, discount_percent: discPct, tax_amount: tax, total,
       notes: notes || null, created_by: user?.id,
@@ -270,8 +298,14 @@ function NewOrderPage() {
           </div>
           {orderType === "delivery" && (
             <>
-              <Input placeholder="عنوان الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
-              <Input placeholder="عنوان التسليم" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+              <div className="space-y-2">
+                <Input placeholder="عنوان/رابط موقع الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
+                <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
+              </div>
+              <div className="space-y-2">
+                <Input placeholder="عنوان/رابط موقع التسليم" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+                <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
+              </div>
               <div className="col-span-2">
                 <Label>مصاريف التوصيل</Label>
                 <Input type="number" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} />
