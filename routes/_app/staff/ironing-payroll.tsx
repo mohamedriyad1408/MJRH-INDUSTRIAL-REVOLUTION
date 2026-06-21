@@ -37,29 +37,18 @@ function IroningPayroll() {
     // Get all ironing-station employees
     const { data: emps } = await supabase.from("employees")
       .select("id, full_name").eq("is_active", true).eq("station", "ironing");
-    // Get their task assignments for ironing in the date range
-    const { data: assigns } = await supabase.from("task_assignments")
-      .select("employee_id, order_id, assigned_at, station")
-      .eq("station", "ironing")
-      .gte("assigned_at", from + "T00:00:00")
-      .lte("assigned_at", to + "T23:59:59");
-    // Get ironing items for those orders
-    const orderIds = Array.from(new Set((assigns ?? []).map((a: any) => a.order_id)));
-    let items: any[] = [];
-    if (orderIds.length) {
-      const { data } = await supabase.from("order_items")
-        .select("order_id, qty, unit_price, service_type")
-        .in("order_id", orderIds)
-        .in("service_type", ["ironing", "both"]);
-      items = data ?? [];
-    }
+    // Low-cost piece-level ironing payroll: count/value comes from numbered pieces assigned to each ironing tech.
+    const { data: units } = await (supabase as any).from("service_units")
+      .select("assigned_ironing_employee_id,order_id,line_value,unit_price,ironing_assigned_at")
+      .not("assigned_ironing_employee_id", "is", null)
+      .gte("ironing_assigned_at", from + "T00:00:00")
+      .lte("ironing_assigned_at", to + "T23:59:59");
     const { data: rates } = await supabase.from("ironing_rates").select("*");
 
     const result: Row[] = (emps ?? []).map((e: any) => {
-      const myAssigns = (assigns ?? []).filter((a: any) => a.employee_id === e.id);
-      const myOrderIds = new Set(myAssigns.map((a: any) => a.order_id));
-      const myItems = items.filter((it) => myOrderIds.has(it.order_id));
-      const total = myItems.reduce((s, it) => s + Number(it.qty) * Number(it.unit_price), 0);
+      const myUnits = ((units ?? []) as any[]).filter((u) => u.assigned_ironing_employee_id === e.id);
+      const myOrderIds = new Set(myUnits.map((u) => u.order_id));
+      const total = myUnits.reduce((s, u) => s + Number(u.line_value ?? u.unit_price ?? 0), 0);
       const rate = (rates ?? []).find((r: any) => r.employee_id === e.id);
       return {
         employee_id: e.id, full_name: e.full_name,
@@ -85,7 +74,7 @@ function IroningPayroll() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold">رواتب فنيي الكي</h1>
-        <p className="text-sm text-muted-foreground">حساب يومي/فترة حسب نسبة التشغيل</p>
+        <p className="text-sm text-muted-foreground">حساب فترة حسب القطع المسندة لكل فني كي بعد التوزيع العادل</p>
       </div>
       <Card><CardContent className="p-4 flex flex-wrap gap-3 items-end">
         <div><Label className="text-xs">من</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
@@ -99,7 +88,7 @@ function IroningPayroll() {
               <tr>
                 <th className="text-start p-3">الفني</th>
                 <th className="text-end p-3">عدد الطلبات</th>
-                <th className="text-end p-3">إجمالي تكلفة الكي</th>
+                <th className="text-end p-3">إجمالي قيمة القطع المسندة</th>
                 <th className="text-end p-3">نسبة التشغيل %</th>
                 <th className="text-end p-3">الراتب المستحق</th>
                 {canEdit && <th className="p-3 w-24"></th>}

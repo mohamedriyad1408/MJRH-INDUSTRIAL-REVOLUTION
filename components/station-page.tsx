@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, UserPlus } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 type Station = "reception" | "cleaning" | "ironing" | "packing" | "delivery";
@@ -52,7 +53,18 @@ export function StationPage({
     await supabase.from("order_status_history").insert({
       order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `محطة: ${title}`,
     });
-    toast.success("تم التحديث"); load();
+    if (to === "ironing") {
+      try {
+        const r = await autoAssignIroningPieces(id);
+        toast.success(r.assigned ? `تم التحديث وتوزيع ${r.assigned} قطعة كي` : "تم التحديث");
+      } catch (e) {
+        toast.success("تم التحديث");
+        toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي تلقائياً");
+      }
+    } else {
+      toast.success("تم التحديث");
+    }
+    load();
   }
 
   const queue = incoming ? rows.filter((r) => r.status === incoming) : [];

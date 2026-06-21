@@ -22,6 +22,19 @@ type Service = { id: string; name: string; service_type: string; unit_price: num
 type Customer = { id: string; full_name: string; phone: string };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
 
+function isShirtLikeName(name: string) {
+  return /قميص|بلوز|shirt|blouse/i.test(name);
+}
+
+function complexityForName(name: string) {
+  if (/فستان/i.test(name)) return 8;
+  if (/بدلة/i.test(name)) return 5;
+  if (/معطف/i.test(name)) return 4;
+  if (/عباية|جاكيت/i.test(name)) return 3;
+  if (/قميص|بنطلون|بلوز|جيبة/i.test(name)) return 2;
+  return 1;
+}
+
 function NewOrderPage() {
   const { hasRole, user } = useAuth();
   const canCreate = hasRole("cs_manager", "owner");
@@ -118,17 +131,46 @@ function NewOrderPage() {
 
     if (oErr) { toast.error(oErr.message); setSaving(false); return; }
 
-    const { error: iErr } = await supabase.from("order_items").insert(
+    const { data: insertedItems, error: iErr } = await supabase.from("order_items").insert(
       items.map((it) => ({
         order_id: order!.id, service_item_id: it.service_item_id, name: it.name,
         service_type: it.service_type as any, qty: it.qty, unit_price: it.unit_price,
         line_total: it.qty * it.unit_price,
       }))
-    );
+    ).select("id,name,qty,unit_price,service_type");
     if (iErr) { toast.error(iErr.message); setSaving(false); return; }
 
-    toast.success("تم إنشاء الطلب");
-    nav({ to: "/orders" });
+    // Low-cost piece registration: generate numbered pieces from the existing line items.
+    // The workshop still moves the full order together, but labels/photos/ironing fairness work per piece.
+    const units: any[] = [];
+    let unitNo = 1;
+    for (const it of (insertedItems ?? []) as any[]) {
+      const qty = Math.max(1, Number(it.qty ?? 1));
+      for (let n = 0; n < qty; n++) {
+        units.push({
+          order_id: order!.id,
+          order_item_id: it.id,
+          unit_number: unitNo,
+          name: it.name,
+          garment_type: it.name,
+          service_type: it.service_type,
+          unit_price: Number(it.unit_price ?? 0),
+          line_value: Number(it.unit_price ?? 0),
+          complexity_factor: complexityForName(it.name),
+          is_shirt_like: isShirtLikeName(it.name),
+          status: "received",
+          current_stage: "received",
+        });
+        unitNo += 1;
+      }
+    }
+    if (units.length) {
+      const { error: uErr } = await (supabase as any).from("service_units").insert(units);
+      if (uErr) { toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`); }
+    }
+
+    toast.success("تم إنشاء الطلب وترقيم القطع");
+    nav({ to: "/orders/$id", params: { id: order!.id } });
   }
 
   return (
@@ -174,8 +216,9 @@ function NewOrderPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">الخدمات</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">الخدمات والقطع</CardTitle></CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">كل كمية هنا ستتحول تلقائياً إلى قطع مرقمة داخل الطلب لطباعة ليبل باسم القطعة وتصويرها.</p>
           <Select onValueChange={addService}>
             <SelectTrigger><SelectValue placeholder="+ أضف خدمة" /></SelectTrigger>
             <SelectContent>

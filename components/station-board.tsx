@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, UserPlus } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
@@ -53,7 +54,17 @@ export function StationBoard({
       order_id: id, from_status: from, to_status: to, changed_by: user?.id,
       notes: `محطة: ${title}`,
     });
-    toast.success("تم التحديث");
+    if (to === "ironing") {
+      try {
+        const r = await autoAssignIroningPieces(id);
+        toast.success(r.assigned ? `تم التحديث وتوزيع ${r.assigned} قطعة كي` : "تم التحديث");
+      } catch (e) {
+        toast.success("تم التحديث");
+        toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي تلقائياً");
+      }
+    } else {
+      toast.success("تم التحديث");
+    }
     load();
   }
 
