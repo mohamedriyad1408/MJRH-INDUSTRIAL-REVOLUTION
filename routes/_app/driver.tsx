@@ -109,6 +109,13 @@ function DriverPage() {
     }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
   }
 
+  useEffect(() => {
+    if (empId && !myLoc) {
+      updateMyLocation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empId]);
+
   /* ─── PICKUP: assign self ─── */
   async function assignSelf(p: Pickup) {
     if (!empId) return toast.error("لم يتم ربط حسابك بموظف — تواصل مع المدير");

@@ -41,13 +41,12 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "كل الطلبات", url: "/orders", icon: ListOrdered },
       { title: "طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
-      { title: "طلبات الاستلام", url: "/pickups", icon: Truck, roles: ["cs_manager", "ops_manager", "owner", "courier"] },
     ],
   },
   {
     label: "محطات العمل",
     items: [
-      { title: "الريسيبشن", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
+      { title: "الاستقبال", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
       { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee"] },
       { title: "الكي", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee"] },
       { title: "التغليف", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee"] },

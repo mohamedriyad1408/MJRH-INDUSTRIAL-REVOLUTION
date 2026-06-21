@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_app/orders/new")({
 });
 
 type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean };
-type Customer = { id: string; full_name: string; phone: string };
+type Customer = { id: string; full_name: string; phone: string; address?: string | null };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
 
 type ServiceFilter = "all" | "cleaning" | "ironing" | "both";
@@ -93,7 +93,7 @@ function NewOrderPage() {
   useEffect(() => {
     if (!customerSearch || customer) { setCustomerMatches([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from("customers").select("id, full_name, phone")
+      const { data } = await supabase.from("customers").select("id, full_name, phone, address")
         .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%`).limit(8);
       setCustomerMatches((data ?? []) as Customer[]);
     }, 180);
@@ -323,9 +323,9 @@ function NewOrderPage() {
                       <div className="flex justify-between items-center p-3 rounded-xl bg-white border">
                         <div>
                           <div className="font-black">{customer.full_name}</div>
-                          <div className="text-xs text-slate-500">{customer.phone}</div>
+                          <div className="text-xs text-slate-500">{customer.phone}</div>{customer.address && <div className="text-xs text-slate-500 mt-1">{customer.address}</div>}
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button>
+                        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { if (customer.address) { setPickupAddress(customer.address); setDeliveryAddress(customer.address); toast.success("تم ملء عنوان العميل"); } }}>استخدم العنوان</Button><Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button></div>
                       </div>
                     ) : (
                       <>
@@ -333,7 +333,7 @@ function NewOrderPage() {
                         {customerMatches.length > 0 && (
                           <div className="rounded-xl border bg-white divide-y overflow-hidden">
                             {customerMatches.map((c) => (
-                              <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-teal-50 text-sm" onClick={() => setCustomer(c)}>
+                              <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-teal-50 text-sm" onClick={() => { setCustomer(c); if (c.address) { setPickupAddress(c.address); setDeliveryAddress(c.address); } }}>
                                 <div className="font-bold">{c.full_name}</div><div className="text-xs text-slate-500">{c.phone}</div>
                               </button>
                             ))}

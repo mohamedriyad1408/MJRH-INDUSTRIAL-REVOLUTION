@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
@@ -21,7 +22,9 @@ const STATION_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const nav = useNavigate();
+  useEffect(() => { if (hasRole("courier") && !hasRole("owner", "ops_manager", "cs_manager")) nav({ to: "/driver" }); }, [hasRole, nav]);
   const { data: stats, isLoading } = useDashboardStats();
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>;
@@ -32,7 +35,7 @@ function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">لوحة المالك</h1>
+          <h1 className="text-2xl font-bold">لوحة التشغيل</h1>
           <p className="text-sm text-muted-foreground">نظرة شاملة على MJRH</p>
         </div>
         <Link to="/live-map" className="flex items-center gap-2 text-sm text-teal-600 font-bold border border-teal-200 bg-teal-50 px-3 py-2 rounded-lg hover:bg-teal-100 transition">

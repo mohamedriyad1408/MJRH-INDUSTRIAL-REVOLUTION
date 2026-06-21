@@ -11,7 +11,7 @@ import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 
 export const Route = createFileRoute("/_app/stations/reception")({
-  head: () => ({ meta: [{ title: "الريسيبشن" }] }),
+  head: () => ({ meta: [{ title: "الاستقبال" }] }),
   component: ReceptionPage,
 });
 
@@ -82,9 +82,9 @@ function ReceptionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">الريسيبشن — استلام وتسجيل الطلبات</h1>
+        <h1 className="text-2xl font-bold">الاستقبال — تسجيل وتشغيل الطلبات</h1>
         <p className="text-sm text-muted-foreground">
-          طلبات في الريسيبشن: {walkIn.length} • قادمة من توصيل: {fromPickup.length} • طلبات استلام نشطة: {incomingPickups.length}
+          طلبات في الاستقبال: {walkIn.length} • قادمة من توصيل: {fromPickup.length} • طلبات استلام نشطة: {incomingPickups.length}
         </p>
       </div>
 
@@ -126,10 +126,10 @@ function ReceptionPage() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <PackageOpen className="w-4 h-4 text-primary" />
-              <span className="font-bold text-sm">طلبات الريسيبشن ({walkIn.length})</span>
+              <span className="font-bold text-sm">طلبات الاستقبال ({walkIn.length})</span>
             </div>
             {walkIn.length === 0 ? (
-              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">لا توجد طلبات في الريسيبشن</CardContent></Card>
+              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">لا توجد طلبات في الاستقبال</CardContent></Card>
             ) : (
               <div className="space-y-2">
                 {walkIn.map((o) => (
