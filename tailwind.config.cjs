@@ -1,10 +1,11 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   darkMode: ['class'],
   content: [
     './index.html',
     './main.tsx',
     './router.tsx',
+    './routeTree.gen.ts',
     './routes/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
     './hooks/**/*.{ts,tsx}',
