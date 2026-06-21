@@ -118,7 +118,7 @@ function ServicesPage() {
                 <Select value={editing.service_type} onValueChange={(v: any) => setEditing({ ...editing, service_type: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cleaning">تنظيف</SelectItem>
+                    <SelectItem value="cleaning">تصليح</SelectItem>
                     <SelectItem value="ironing">كي</SelectItem>
                     <SelectItem value="both">تنظيف وكي</SelectItem>
                   </SelectContent>

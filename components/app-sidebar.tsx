@@ -47,11 +47,11 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "محطات العمل",
     items: [
-      { title: "الاستلام", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
+      { title: "الريسيبشن", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
       { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee"] },
       { title: "الكي", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee"] },
       { title: "التغليف", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee"] },
-      { title: "التوصيل", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
+      { title: "المناديب", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
     ],
   },
   {

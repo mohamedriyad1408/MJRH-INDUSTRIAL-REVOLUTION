@@ -44,7 +44,7 @@ function complexityForName(name: string) {
 
 const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "all", label: "الكل", icon: Sparkles },
-  { id: "cleaning", label: "تنظيف", icon: Scissors },
+  { id: "cleaning", label: "تصليح", icon: Scissors },
   { id: "ironing", label: "كي", icon: Shirt },
   { id: "both", label: "غسيل + كي", icon: Package },
 ];
@@ -299,6 +299,10 @@ function NewOrderPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
+                  <Button type="button" variant={paymentStatus === "paid" ? "default" : "outline"} onClick={() => setPaymentStatus("paid")} className={paymentStatus === "paid" ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>مدفوع</Button>
+                  <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>آجل</Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">إلغاء</Link></Button>
                   <Button onClick={submit} disabled={saving} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black h-12">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الطلب"}
@@ -361,7 +365,7 @@ function NewOrderPage() {
                     </div>
                     <div className="flex flex-wrap gap-4">
                       <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> طلب مستعجل</label>
-                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={paymentStatus === "paid"} onCheckedChange={(v) => setPaymentStatus(v ? "paid" : "unpaid")} /> تم الدفع</label>
+                      
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {isUrgent && <Input type="number" placeholder="استعجال" value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
@@ -418,7 +422,7 @@ function NewOrderPage() {
                         <Plus className="w-5 h-5 text-teal-600 opacity-60 group-hover:opacity-100" />
                       </div>
                       <div className="mt-3 flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? "غسيل + كي" : s.service_type === "ironing" ? "كي" : "تنظيف"}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? "تنظيف + كي" : s.service_type === "ironing" ? "كي" : "تصليح"}</Badge>
                         <div className="font-black text-teal-700">{fmtMoney(s.unit_price)}</div>
                       </div>
                     </button>

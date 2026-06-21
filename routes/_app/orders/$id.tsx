@@ -161,6 +161,13 @@ function OrderDetailPage() {
     }
   }
 
+
+  async function togglePayment() {
+    const next = order.payment_status === "paid" ? "unpaid" : "paid";
+    const { error } = await supabase.from("orders").update({ payment_status: next }).eq("id", id);
+    if (error) toast.error(error.message); else { toast.success(next === "paid" ? "تم تسجيل الدفع" : "تم جعل الطلب آجل"); load(); }
+  }
+
   function printLabels() {
     const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>Labels</title><style>
       @page{size:50mm 30mm;margin:2mm} body{font-family:Arial,sans-serif;margin:0;color:#111}.label{width:46mm;height:26mm;border:1px dashed #999;margin:1mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;text-align:center}.code{font-size:18px;font-weight:900}.name{font-size:13px;font-weight:700}.meta{font-size:10px;color:#444}
@@ -192,6 +199,9 @@ function OrderDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <PrintInvoiceButton order={{ ...order, customers: order.customers, order_items: order.order_items ?? [] }} />
+          <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
+            {order.payment_status === "paid" ? "مدفوع" : "تسجيل الدفع"}
+          </Button>
           <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> طباعة ليبل القطع</Button>
           {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? "توزيع..." : "توزيع الكي"}</Button>}
           <StatusBadge level={statusLevel(order.status)} label={order.status} />
