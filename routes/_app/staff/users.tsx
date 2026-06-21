@@ -75,7 +75,7 @@ function StaffUsersPage() {
   );
 }
 
-type CreateFn = (args: { data: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier" } }) => Promise<unknown>;
+type CreateFn = (args: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier" }) => Promise<unknown>;
 
 function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn; onDone: () => void }) {
   const [email, setEmail] = useState("");
@@ -86,7 +86,7 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    try { await fn({ data: { tenantId, email, password, fullName, role } }); toast.success("تم"); onDone(); }
+    try { await fn({ tenantId, email, password, fullName, role }); toast.success("تم"); onDone(); }
     catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
     finally { setLoading(false); }
   }

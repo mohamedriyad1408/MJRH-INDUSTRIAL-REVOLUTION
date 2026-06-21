@@ -93,7 +93,7 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await fn({ data: { name, slug, ownerEmail: email, ownerPassword: password, ownerFullName: fullName } });
+      await fn({ name, slug, ownerEmail: email, ownerPassword: password, ownerFullName: fullName });
       toast.success("تم إنشاء المغسلة والمالك");
       onDone();
     } catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }

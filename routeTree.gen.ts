@@ -11,17 +11,22 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
 import { Route as AppManagerRouteImport } from './routes/_app/manager'
+import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
 import { Route as AppFinanceRouteImport } from './routes/_app/finance'
+import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
 import { Route as AppCsRouteImport } from './routes/_app/cs'
+import { Route as AppBudgetsRouteImport } from './routes/_app/budgets'
 import { Route as AppBranchesRouteImport } from './routes/_app/branches'
 import { Route as AppStaffIndexRouteImport } from './routes/_app/staff/index'
 import { Route as AppPickupsIndexRouteImport } from './routes/_app/pickups/index'
@@ -57,6 +62,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerPortalRoute = CustomerPortalRouteImport.update({
+  id: '/customer-portal',
+  path: '/customer-portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -81,6 +91,11 @@ const AppServicesRoute = AppServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOpsRoute = AppOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
@@ -91,9 +106,19 @@ const AppManagerRoute = AppManagerRouteImport.update({
   path: '/manager',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLiveMapRoute = AppLiveMapRouteImport.update({
+  id: '/live-map',
+  path: '/live-map',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFinanceRoute = AppFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDriverRoute = AppDriverRouteImport.update({
+  id: '/driver',
+  path: '/driver',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -109,6 +134,11 @@ const AppCustomersRoute = AppCustomersRouteImport.update({
 const AppCsRoute = AppCsRouteImport.update({
   id: '/cs',
   path: '/cs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBudgetsRoute = AppBudgetsRouteImport.update({
+  id: '/budgets',
+  path: '/budgets',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBranchesRoute = AppBranchesRouteImport.update({
@@ -234,15 +264,20 @@ const AppAdminTenantsIdRoute = AppAdminTenantsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/branches': typeof AppBranchesRoute
+  '/budgets': typeof AppBudgetsRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
+  '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
+  '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/track/$token': typeof TrackTokenRoute
@@ -271,15 +306,20 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof AppAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/branches': typeof AppBranchesRoute
+  '/budgets': typeof AppBudgetsRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
+  '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
+  '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/track/$token': typeof TrackTokenRoute
@@ -311,15 +351,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/branches': typeof AppBranchesRoute
+  '/_app/budgets': typeof AppBudgetsRoute
   '/_app/cs': typeof AppCsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/driver': typeof AppDriverRoute
   '/_app/finance': typeof AppFinanceRoute
+  '/_app/live-map': typeof AppLiveMapRoute
   '/_app/manager': typeof AppManagerRoute
   '/_app/ops': typeof AppOpsRoute
+  '/_app/reports': typeof AppReportsRoute
   '/_app/services': typeof AppServicesRoute
   '/_app/settings': typeof AppSettingsRoute
   '/track/$token': typeof TrackTokenRoute
@@ -352,15 +397,20 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/customer-portal'
     | '/login'
     | '/reset-password'
     | '/branches'
+    | '/budgets'
     | '/cs'
     | '/customers'
     | '/dashboard'
+    | '/driver'
     | '/finance'
+    | '/live-map'
     | '/manager'
     | '/ops'
+    | '/reports'
     | '/services'
     | '/settings'
     | '/track/$token'
@@ -389,15 +439,20 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/customer-portal'
     | '/login'
     | '/reset-password'
     | '/branches'
+    | '/budgets'
     | '/cs'
     | '/customers'
     | '/dashboard'
+    | '/driver'
     | '/finance'
+    | '/live-map'
     | '/manager'
     | '/ops'
+    | '/reports'
     | '/services'
     | '/settings'
     | '/track/$token'
@@ -428,15 +483,20 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/customer-portal'
     | '/login'
     | '/reset-password'
     | '/_app/branches'
+    | '/_app/budgets'
     | '/_app/cs'
     | '/_app/customers'
     | '/_app/dashboard'
+    | '/_app/driver'
     | '/_app/finance'
+    | '/_app/live-map'
     | '/_app/manager'
     | '/_app/ops'
+    | '/_app/reports'
     | '/_app/services'
     | '/_app/settings'
     | '/track/$token'
@@ -468,6 +528,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  CustomerPortalRoute: typeof CustomerPortalRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TrackTokenRoute: typeof TrackTokenRoute
@@ -487,6 +548,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer-portal': {
+      id: '/customer-portal'
+      path: '/customer-portal'
+      fullPath: '/customer-portal'
+      preLoaderRoute: typeof CustomerPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -524,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServicesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ops': {
       id: '/_app/ops'
       path: '/ops'
@@ -538,11 +613,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppManagerRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/live-map': {
+      id: '/_app/live-map'
+      path: '/live-map'
+      fullPath: '/live-map'
+      preLoaderRoute: typeof AppLiveMapRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/finance': {
       id: '/_app/finance'
       path: '/finance'
       fullPath: '/finance'
       preLoaderRoute: typeof AppFinanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/driver': {
+      id: '/_app/driver'
+      path: '/driver'
+      fullPath: '/driver'
+      preLoaderRoute: typeof AppDriverRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -564,6 +653,13 @@ declare module '@tanstack/react-router' {
       path: '/cs'
       fullPath: '/cs'
       preLoaderRoute: typeof AppCsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/budgets': {
+      id: '/_app/budgets'
+      path: '/budgets'
+      fullPath: '/budgets'
+      preLoaderRoute: typeof AppBudgetsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/branches': {
@@ -739,12 +835,16 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppBranchesRoute: typeof AppBranchesRoute
+  AppBudgetsRoute: typeof AppBudgetsRoute
   AppCsRoute: typeof AppCsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDriverRoute: typeof AppDriverRoute
   AppFinanceRoute: typeof AppFinanceRoute
+  AppLiveMapRoute: typeof AppLiveMapRoute
   AppManagerRoute: typeof AppManagerRoute
   AppOpsRoute: typeof AppOpsRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppServicesRoute: typeof AppServicesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -775,12 +875,16 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppBranchesRoute: AppBranchesRoute,
+  AppBudgetsRoute: AppBudgetsRoute,
   AppCsRoute: AppCsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDriverRoute: AppDriverRoute,
   AppFinanceRoute: AppFinanceRoute,
+  AppLiveMapRoute: AppLiveMapRoute,
   AppManagerRoute: AppManagerRoute,
   AppOpsRoute: AppOpsRoute,
+  AppReportsRoute: AppReportsRoute,
   AppServicesRoute: AppServicesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
@@ -813,6 +917,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  CustomerPortalRoute: CustomerPortalRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TrackTokenRoute: TrackTokenRoute,

@@ -33,7 +33,7 @@ function UsersPage() {
 
   async function load() {
     setLoading(true);
-    try { const r = await fetchFn(); setUsers(r.users as U[]); }
+    try { const r = await fetchFn(); setUsers((r?.users ?? []) as U[]); }
     catch (e) { toast.error(e instanceof Error ? e.message : "خطأ"); }
     finally { setLoading(false); }
   }
@@ -43,7 +43,7 @@ function UsersPage() {
 
   async function remove(uid: string) {
     if (!confirm("حذف الحساب نهائياً؟")) return;
-    try { await delFn({ data: { userId: uid } }); toast.success("تم الحذف"); load(); }
+    try { await delFn(uid); toast.success("تم الحذف"); load(); }
     catch (e) { toast.error(e instanceof Error ? e.message : "خطأ"); }
   }
 
@@ -51,7 +51,7 @@ function UsersPage() {
     if (!pwUser || pw.length < 6) return;
     setSaving(true);
     try {
-      await resetFn({ data: { userId: pwUser.id, newPassword: pw } });
+      await resetFn(pwUser.id, pw);
       toast.success("تم تغيير كلمة المرور");
       setPwUser(null); setPw("");
     } catch (e) { toast.error(e instanceof Error ? e.message : "خطأ"); }

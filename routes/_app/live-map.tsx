@@ -121,7 +121,7 @@ function LiveMapPage() {
     const [{ data: pickups }, { data: orders }, { data: drivers }] = await Promise.all([
       supabase.from("pickup_requests").select("id,customer_name,address,phone,status").in("status", ["pending", "assigned"]),
       supabase.from("orders").select("id,order_number,status,delivery_address,pickup_address,customers(full_name,phone)").in("status", ["ready", "out_for_delivery"]),
-      supabase.from("employees").select("id,full_name,phone").eq("job_role", "courier").eq("is_active", true),
+      supabase.from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true),
     ]);
 
     (pickups ?? []).forEach((p: any) => raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق" }));

@@ -72,7 +72,7 @@ function FinancePage() {
     const { data: adv } = await supabase
       .from("employee_requests")
       .select("id,employee_id,amount,reason,status,created_at,decided_at,employees(full_name)")
-      .eq("request_type", "advance")
+      .eq("type", "advance")
       .order("created_at", { ascending: false });
     setAdvances(((adv ?? []) as any).map((a: any) => ({
       ...a,
@@ -267,7 +267,7 @@ function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employe
     const emp = employees.find((e) => e.id === empId); if (!emp) { toast.error("اختر موظف"); return; }
     const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
     setSaving(true);
-    const { error } = await supabase.from("employee_requests").insert({ employee_id: emp.id, request_type: "advance", amount: amt, reason: reason || null, requested_by: userId, status: "pending" });
+    const { error } = await supabase.from("employee_requests").insert({ employee_id: emp.id, type: "advance", amount: amt, reason: reason || null, created_by: userId, status: "pending" });
     setSaving(false);
     if (error) toast.error(error.message); else { toast.success("تم إرسال الطلب"); setOpen(false); setAmount(""); setReason(""); setEmpId(""); onCreated(); }
   }

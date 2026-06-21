@@ -60,7 +60,7 @@ function DriverPage() {
     supabase
       .from("employees")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("profile_id", user.id)
       .maybeSingle()
       .then(({ data }) => setEmpId(data?.id ?? null));
   }, [user]);
