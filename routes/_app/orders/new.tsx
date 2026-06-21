@@ -163,7 +163,6 @@ function NewOrderPage() {
       items.map((it) => ({
         order_id: order!.id, service_item_id: it.service_item_id, name: it.name,
         service_type: it.service_type as any, qty: it.qty, unit_price: it.unit_price,
-        line_total: it.qty * it.unit_price,
       }))
     ).select("id,name,qty,unit_price,service_type");
     if (iErr) { toast.error(iErr.message); setSaving(false); return; }
@@ -248,11 +247,24 @@ function NewOrderPage() {
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">كل كمية هنا ستتحول تلقائياً إلى قطع مرقمة داخل الطلب لطباعة ليبل باسم القطعة وتصويرها.</p>
           <Select onValueChange={addService}>
-            <SelectTrigger><SelectValue placeholder="+ أضف خدمة" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="+ أضف خدمة من القائمة" /></SelectTrigger>
             <SelectContent>
               {services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {fmtMoney(s.unit_price)}</SelectItem>)}
             </SelectContent>
           </Select>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {services.slice(0, 16).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => addService(s.id)}
+                className="rounded-xl border bg-primary/10 hover:bg-primary/20 active:scale-[.98] p-3 text-center transition min-h-20"
+              >
+                <div className="font-bold text-sm leading-tight">{s.name}</div>
+                <div className="text-xs text-muted-foreground mt-1">{fmtMoney(s.unit_price)}</div>
+              </button>
+            ))}
+          </div>
           {items.length === 0 ? (
             <div className="text-center text-sm text-muted-foreground p-4">لم تتم إضافة خدمات بعد</div>
           ) : (

@@ -85,9 +85,9 @@ function CustomerPortal() {
     setPlacing(true);
     const cartItems = items.map(([id, qty]) => {
       const svc = services.find((s) => s.id === id)!;
-      return { service_item_id: id, name: svc.name, qty, unit_price: svc.price, line_total: qty * svc.price, service_type: svc.service_type as any };
+      return { service_item_id: id, name: svc.name, qty, unit_price: svc.price, service_type: svc.service_type as any };
     });
-    const subtotal = cartItems.reduce((s, i) => s + i.line_total, 0);
+    const subtotal = cartItems.reduce((s, i) => s + i.qty * i.unit_price, 0);
     const { data: ord, error } = await supabase.from("orders").insert({
       customer_id: customerId!, order_type: "walk_in", status: "received",
       subtotal, total: subtotal, notes: notes || null, created_by: customerId!,

@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 
@@ -87,6 +87,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
 export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { roles, hasRole, user, signOut, isSuperAdmin } = useAuth();
+  const { setOpenMobile } = useSidebar();
   const groups = isSuperAdmin ? adminGroups : tenantGroups;
 
   return (
@@ -116,7 +117,7 @@ export function AppSidebar() {
                     return (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton asChild isActive={active}>
-                          <Link to={item.url} className="flex items-center gap-2">
+                          <Link to={item.url} className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
                             <item.icon className="w-4 h-4 shrink-0" />
                             <span>{item.title}</span>
                           </Link>
@@ -137,7 +138,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/customer-portal" target="_blank" className="flex items-center gap-2 text-teal-600">
+              <a href="/customer-portal" target="_blank" className="flex items-center gap-2 text-teal-600" onClick={() => setOpenMobile(false)}>
                 <UserCircle className="w-4 h-4" /><span>بوابة العميل</span>
               </a>
             </SidebarMenuButton>
