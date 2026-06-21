@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { parseLatLng } from "@/lib/geo";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { Loader2, ArrowRight, LocateFixed } from "lucide-react";
 
 export const Route = createFileRoute("/_app/pickups/new")({
@@ -64,7 +65,13 @@ function NewPickup() {
     });
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("تم إنشاء طلب الاستلام"); nav({ to: "/pickups" });
+    try {
+      const r = await autoAssignDrivers();
+      toast.success(r.assigned ? `تم إنشاء الطلب وتوزيعه تلقائياً (${r.assigned})` : "تم إنشاء طلب الاستلام");
+    } catch {
+      toast.success("تم إنشاء طلب الاستلام");
+    }
+    nav({ to: "/pickups" });
   }
 
   return (

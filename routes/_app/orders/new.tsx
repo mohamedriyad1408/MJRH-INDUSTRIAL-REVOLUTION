@@ -1,18 +1,22 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtMoney } from "@/lib/format";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseLatLng } from "@/lib/geo";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { parseLatLng } from "@/lib/geo";
-import { Loader2, Plus, Trash2, ArrowRight, LocateFixed } from "lucide-react";
+import {
+  Loader2, Trash2, ArrowRight, LocateFixed, Search, UserPlus, Sparkles,
+  Shirt, Package, Scissors, Truck, Receipt, CreditCard, Zap, Plus, Minus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/orders/new")({
   head: () => ({ meta: [{ title: "طلب جديد" }] }),
@@ -22,6 +26,8 @@ export const Route = createFileRoute("/_app/orders/new")({
 type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean };
 type Customer = { id: string; full_name: string; phone: string };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
+
+type ServiceFilter = "all" | "cleaning" | "ironing" | "both";
 
 function isShirtLikeName(name: string) {
   return /قميص|بلوز|shirt|blouse/i.test(name);
@@ -35,6 +41,13 @@ function complexityForName(name: string) {
   if (/قميص|بنطلون|بلوز|جيبة/i.test(name)) return 2;
   return 1;
 }
+
+const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "all", label: "الكل", icon: Sparkles },
+  { id: "cleaning", label: "تنظيف", icon: Scissors },
+  { id: "ironing", label: "كي", icon: Shirt },
+  { id: "both", label: "غسيل + كي", icon: Package },
+];
 
 function NewOrderPage() {
   const { hasRole, user } = useAuth();
@@ -62,6 +75,8 @@ function NewOrderPage() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [pickupLoc, setPickupLoc] = useState({ lat: "", lng: "" });
   const [deliveryLoc, setDeliveryLoc] = useState({ lat: "", lng: "" });
+  const [filter, setFilter] = useState<ServiceFilter>("all");
+  const [serviceSearch, setServiceSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -70,6 +85,7 @@ function NewOrderPage() {
       if (data) {
         setSettings({ urgent_service_fee: Number(data.urgent_service_fee), default_delivery_fee: Number(data.default_delivery_fee), tax_percent: Number(data.tax_percent) });
         setDeliveryFee(String(data.default_delivery_fee));
+        setUrgentFeeInput(String(data.urgent_service_fee ?? 0));
       }
     });
   }, []);
@@ -80,23 +96,42 @@ function NewOrderPage() {
       const { data } = await supabase.from("customers").select("id, full_name, phone")
         .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%`).limit(8);
       setCustomerMatches((data ?? []) as Customer[]);
-    }, 250);
+    }, 180);
     return () => clearTimeout(t);
   }, [customerSearch, customer]);
+
+  const filteredServices = useMemo(() => {
+    const q = serviceSearch.trim().toLowerCase();
+    return services.filter((s) => {
+      const byFilter = filter === "all" || s.service_type === filter;
+      const bySearch = !q || s.name.toLowerCase().includes(q);
+      return byFilter && bySearch;
+    });
+  }, [services, filter, serviceSearch]);
 
   if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">صلاحية إنشاء الطلبات متاحة لخدمة العملاء والمالك فقط.</Card>;
 
   function addService(svcId: string) {
     const svc = services.find((s) => s.id === svcId);
     if (!svc) return;
-    setItems([...items, { service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }]);
+    const idx = items.findIndex((it) => it.service_item_id === svc.id && it.unit_price === Number(svc.unit_price));
+    if (idx >= 0) {
+      setItems(items.map((it, i) => i === idx ? { ...it, qty: it.qty + 1 } : it));
+    } else {
+      setItems([{ service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }, ...items]);
+    }
   }
   function removeItem(idx: number) { setItems(items.filter((_, i) => i !== idx)); }
   function updateItem(idx: number, patch: Partial<LineItem>) {
     setItems(items.map((it, i) => i === idx ? { ...it, ...patch } : it));
   }
+  function inc(idx: number, by: number) {
+    updateItem(idx, { qty: Math.max(1, items[idx].qty + by) });
+  }
 
   const subtotal = items.reduce((s, it) => s + it.qty * it.unit_price, 0);
+  const piecesCount = items.reduce((s, it) => s + it.qty, 0);
+  const shirtCount = items.reduce((s, it) => s + (isShirtLikeName(it.name) ? it.qty : 0), 0);
   const urgentFee = isUrgent ? Number(urgentFeeInput || 0) : 0;
   const delivery = orderType === "delivery" ? Number(deliveryFee || 0) : 0;
   const discPct = Math.max(0, Math.min(100, Number(discountPct || 0)));
@@ -127,8 +162,8 @@ function NewOrderPage() {
   }
 
   async function submit() {
-    if (!customer && !newCustomer.full_name) { toast.error("ابحث عن عميل أو أضف عميلاً جديداً"); return; }
-    if (!items.length) { toast.error("أضف خدمة واحدة على الأقل"); return; }
+    if (!customer && !newCustomer.full_name) { toast.error("اختار عميل أو أضف عميل جديد"); return; }
+    if (!items.length) { toast.error("أضف قطعة أو خدمة واحدة على الأقل"); return; }
     setSaving(true);
 
     let customerId = customer?.id;
@@ -167,8 +202,6 @@ function NewOrderPage() {
     ).select("id,name,qty,unit_price,service_type");
     if (iErr) { toast.error(iErr.message); setSaving(false); return; }
 
-    // Low-cost piece registration: generate numbered pieces from the existing line items.
-    // The workshop still moves the full order together, but labels/photos/ironing fairness work per piece.
     const units: any[] = [];
     let unitNo = 1;
     for (const it of (insertedItems ?? []) as any[]) {
@@ -193,7 +226,7 @@ function NewOrderPage() {
     }
     if (units.length) {
       const { error: uErr } = await (supabase as any).from("service_units").insert(units);
-      if (uErr) { toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`); }
+      if (uErr) toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`);
     }
 
     toast.success("تم إنشاء الطلب وترقيم القطع");
@@ -201,177 +234,211 @@ function NewOrderPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-4xl">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
-        <h1 className="text-2xl font-bold">طلب جديد</h1>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">العميل</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {customer ? (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-muted">
-              <div>
-                <div className="font-medium">{customer.full_name}</div>
-                <div className="text-xs text-muted-foreground">{customer.phone}</div>
-              </div>
-              <Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button>
+    <div className="min-h-[calc(100vh-6rem)] -m-4 md:-m-6 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white" dir="rtl">
+      <div className="p-3 md:p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Button asChild variant="secondary" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight">فاتورة تشغيل جديدة</h1>
+              <p className="text-xs md:text-sm text-teal-100/80">شاشة POS سريعة — اختار العميل، اضغط الخدمات، أنشئ الطلب</p>
             </div>
-          ) : (
-            <>
-              <Input placeholder="ابحث بالاسم أو التليفون..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} />
-              {customerMatches.length > 0 && (
-                <div className="border rounded-lg divide-y">
-                  {customerMatches.map((c) => (
-                    <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-muted text-sm" onClick={() => setCustomer(c)}>
-                      <div className="font-medium">{c.full_name}</div>
-                      <div className="text-xs text-muted-foreground">{c.phone}</div>
-                    </button>
+          </div>
+          <div className="flex gap-2">
+            <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} قطعة</Badge>
+            <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/30 px-3 py-1">{shirtCount} قميص/بلوزة</Badge>
+            {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> مستعجل</Badge>}
+          </div>
+        </div>
+
+        <div className="grid xl:grid-cols-[420px_1fr] gap-4 items-start">
+          {/* Invoice rail */}
+          <aside className="xl:sticky xl:top-16 space-y-3 order-2 xl:order-1">
+            <Card className="bg-black/40 border-white/10 text-white shadow-2xl backdrop-blur">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-black text-lg flex items-center gap-2"><Receipt className="w-5 h-5 text-teal-300" /> الفاتورة</div>
+                  <Button variant="ghost" size="sm" className="text-red-200 hover:text-red-100" onClick={() => setItems([])} disabled={!items.length}>مسح</Button>
+                </div>
+
+                <div className="space-y-2 max-h-[42vh] overflow-y-auto pe-1">
+                  {!items.length && (
+                    <div className="rounded-2xl border border-dashed border-white/20 p-8 text-center text-sm text-slate-300">
+                      اضغط على أي خدمة لإضافتها هنا
+                    </div>
+                  )}
+                  {items.map((it, idx) => (
+                    <div key={`${it.service_item_id}-${idx}`} className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-bold leading-tight">{it.name}</div>
+                        <Button size="icon" variant="ghost" className="w-7 h-7 text-red-200" onClick={() => removeItem(idx)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center rounded-xl overflow-hidden border border-white/10">
+                          <button className="px-3 py-2 bg-white/10" onClick={() => inc(idx, -1)}><Minus className="w-3 h-3" /></button>
+                          <Input type="number" min={1} value={it.qty} onChange={(e) => updateItem(idx, { qty: Math.max(1, Number(e.target.value)) })} className="w-14 h-9 bg-transparent border-0 text-center text-white" />
+                          <button className="px-3 py-2 bg-white/10" onClick={() => inc(idx, 1)}><Plus className="w-3 h-3" /></button>
+                        </div>
+                        <Input type="number" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} className="w-24 h-9 bg-white/5 border-white/10 text-white text-center" />
+                        <div className="font-black text-teal-200 min-w-20 text-end">{fmtMoney(it.qty * it.unit_price)}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
-              <div className="text-xs text-muted-foreground">أو أضف عميل جديد:</div>
-              <div className="grid grid-cols-2 gap-2">
-                <Input placeholder="الاسم" value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} />
-                <Input placeholder="التليفون" value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} />
-                <Input className="col-span-2" placeholder="العنوان (اختياري)" value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">الخدمات والقطع</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground">كل كمية هنا ستتحول تلقائياً إلى قطع مرقمة داخل الطلب لطباعة ليبل باسم القطعة وتصويرها.</p>
-          <Select onValueChange={addService}>
-            <SelectTrigger><SelectValue placeholder="+ أضف خدمة من القائمة" /></SelectTrigger>
-            <SelectContent>
-              {services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {fmtMoney(s.unit_price)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {services.slice(0, 16).map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => addService(s.id)}
-                className="rounded-xl border bg-primary/10 hover:bg-primary/20 active:scale-[.98] p-3 text-center transition min-h-20"
-              >
-                <div className="font-bold text-sm leading-tight">{s.name}</div>
-                <div className="text-xs text-muted-foreground mt-1">{fmtMoney(s.unit_price)}</div>
-              </button>
-            ))}
-          </div>
-          {items.length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground p-4">لم تتم إضافة خدمات بعد</div>
-          ) : (
-            <div className="space-y-2">
-              {items.map((it, idx) => (
-                <div key={idx} className="flex gap-2 items-center p-2 rounded-lg border">
-                  <div className="flex-1 font-medium text-sm">{it.name}</div>
-                  <Input type="number" min={1} value={it.qty} onChange={(e) => updateItem(idx, { qty: Math.max(1, Number(e.target.value)) })} className="w-16 h-8" />
-                  <Input type="number" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} className="w-24 h-8" />
-                  <div className="w-24 text-end font-medium text-sm">{fmtMoney(it.qty * it.unit_price)}</div>
-                  <Button size="sm" variant="ghost" onClick={() => removeItem(idx)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                <div className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2 text-sm">
+                  <Row label="المجموع الفرعي" value={fmtMoney(subtotal)} />
+                  {isUrgent && <Row label="رسوم استعجال" value={fmtMoney(urgentFee)} />}
+                  {orderType === "delivery" && <Row label="توصيل" value={fmtMoney(delivery)} />}
+                  {disc > 0 && <Row label={`خصم ${discPct}%`} value={`- ${fmtMoney(disc)}`} />}
+                  {settings.tax_percent > 0 && <Row label={`ضريبة ${settings.tax_percent}%`} value={fmtMoney(tax)} />}
+                  <div className="border-t border-white/10 pt-3 mt-3 flex justify-between items-center">
+                    <span className="text-xl font-black">الإجمالي</span>
+                    <span className="text-3xl font-black text-teal-200">{fmtMoney(total)}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">التفاصيل</CardTitle></CardHeader>
-        <CardContent className="grid md:grid-cols-2 gap-4">
-          <div>
-            <Label>نوع الطلب</Label>
-            <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="walk_in">داخلي (استلام يدوي)</SelectItem>
-                <SelectItem value="delivery">توصيل</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>طريقة الدفع</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">نقدي</SelectItem>
-                <SelectItem value="instapay">InstaPay</SelectItem>
-                <SelectItem value="cod_cash">دفع عند الاستلام - نقدي</SelectItem>
-                <SelectItem value="cod_instapay">دفع عند الاستلام - InstaPay</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {orderType === "delivery" && (
-            <>
-              <div className="space-y-2">
-                <Input placeholder="عنوان/رابط موقع الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
-                <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
-              </div>
-              <div className="space-y-2">
-                <Input placeholder="عنوان/رابط موقع التسليم" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
-                <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
-              </div>
-              <div className="col-span-2">
-                <Label>مصاريف التوصيل</Label>
-                <Input type="number" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} />
-              </div>
-            </>
-          )}
-          <div className="flex items-center gap-2">
-            <Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} id="urgent" />
-            <Label htmlFor="urgent" className="text-sm">طلب مستعجل</Label>
-          </div>
-          {isUrgent && (
-            <div>
-              <Label>رسوم الاستعجال</Label>
-              <Input type="number" value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} />
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <Checkbox checked={paymentStatus === "paid"} onCheckedChange={(v) => setPaymentStatus(v ? "paid" : "unpaid")} id="paid" />
-            <Label htmlFor="paid" className="text-sm">تم الدفع</Label>
-          </div>
-          <div>
-            <Label>نسبة الخصم %</Label>
-            <Input type="number" min={0} max={100} value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} />
-          </div>
-          <div className="col-span-2">
-            <Label>ملاحظات</Label>
-            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </div>
-        </CardContent>
-      </Card>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">إلغاء</Link></Button>
+                  <Button onClick={submit} disabled={saving} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black h-12">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الطلب"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
 
-      <Card>
-        <CardContent className="pt-6 space-y-1 text-sm">
-          <Row label="المجموع الفرعي" value={fmtMoney(subtotal)} />
-          {isUrgent && <Row label="رسوم استعجال" value={fmtMoney(urgentFee)} />}
-          {orderType === "delivery" && <Row label="توصيل" value={fmtMoney(delivery)} />}
-          {disc > 0 && <Row label={`خصم ${discPct}%`} value={`- ${fmtMoney(disc)}`} />}
-          {settings.tax_percent > 0 && <Row label={`ضريبة ${settings.tax_percent}%`} value={fmtMoney(tax)} />}
-          <div className="border-t pt-2 mt-2 flex justify-between font-bold text-base">
-            <span>الإجمالي</span><span>{fmtMoney(total)}</span>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Main POS */}
+          <main className="space-y-4 order-1 xl:order-2">
+            <Card className="bg-white/95 text-slate-950 border-0 shadow-2xl overflow-hidden">
+              <CardContent className="p-4 space-y-4">
+                <div className="grid lg:grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-slate-100 p-3 space-y-2">
+                    <div className="flex items-center gap-2 font-black"><Search className="w-4 h-4 text-teal-600" /> العميل</div>
+                    {customer ? (
+                      <div className="flex justify-between items-center p-3 rounded-xl bg-white border">
+                        <div>
+                          <div className="font-black">{customer.full_name}</div>
+                          <div className="text-xs text-slate-500">{customer.phone}</div>
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Input placeholder="ابحث بالاسم أو الهاتف" value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="bg-white" />
+                        {customerMatches.length > 0 && (
+                          <div className="rounded-xl border bg-white divide-y overflow-hidden">
+                            {customerMatches.map((c) => (
+                              <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-teal-50 text-sm" onClick={() => setCustomer(c)}>
+                                <div className="font-bold">{c.full_name}</div><div className="text-xs text-slate-500">{c.phone}</div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input placeholder="اسم عميل جديد" value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
+                          <Input placeholder="الهاتف" value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
+                          <Input className="col-span-2 bg-white" placeholder="العنوان" value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" asChild><Link to="/orders">إلغاء</Link></Button>
-        <Button onClick={submit} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الطلب"}
-        </Button>
+                  <div className="rounded-2xl bg-slate-100 p-3 space-y-3">
+                    <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> التشغيل والدفع</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
+                        <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="walk_in">داخلي</SelectItem><SelectItem value="delivery">توصيل</SelectItem></SelectContent>
+                      </Select>
+                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cash">نقدي</SelectItem><SelectItem value="instapay">InstaPay</SelectItem>
+                          <SelectItem value="cod_cash">دفع عند الاستلام - نقدي</SelectItem><SelectItem value="cod_instapay">دفع عند الاستلام - InstaPay</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> طلب مستعجل</label>
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={paymentStatus === "paid"} onCheckedChange={(v) => setPaymentStatus(v ? "paid" : "unpaid")} /> تم الدفع</label>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {isUrgent && <Input type="number" placeholder="استعجال" value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
+                      <Input type="number" placeholder="خصم %" value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="bg-white" />
+                      {orderType === "delivery" && <Input type="number" placeholder="توصيل" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
+                    </div>
+                  </div>
+                </div>
+
+                {orderType === "delivery" && (
+                  <div className="rounded-2xl bg-teal-50 border border-teal-100 p-3 space-y-3">
+                    <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> بيانات التوصيل والموقع</div>
+                    <div className="grid lg:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Input placeholder="عنوان/رابط موقع الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
+                        <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
+                      </div>
+                      <div className="space-y-2">
+                        <Input placeholder="عنوان/رابط موقع التسليم" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+                        <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/95 text-slate-950 border-0 shadow-2xl">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="font-black text-xl">الخدمات السريعة</div>
+                    <div className="text-xs text-slate-500">اضغط الخدمة لإضافتها فورًا للفاتورة</div>
+                  </div>
+                  <div className="relative w-full md:w-72">
+                    <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input className="pr-9" placeholder="ابحث عن خدمة" value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {FILTERS.map((f) => {
+                    const Icon = f.icon;
+                    const active = filter === f.id;
+                    return <button key={f.id} onClick={() => setFilter(f.id)} className={`rounded-2xl p-3 border text-sm font-black transition ${active ? "bg-teal-600 text-white border-teal-600 shadow-lg" : "bg-slate-50 hover:bg-slate-100"}`}><Icon className="w-4 h-4 mx-auto mb-1" />{f.label}</button>;
+                  })}
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {filteredServices.map((s) => (
+                    <button key={s.id} type="button" onClick={() => addService(s.id)} className="group rounded-3xl border bg-gradient-to-br from-white to-slate-50 hover:from-teal-50 hover:to-white hover:border-teal-300 p-4 text-start min-h-28 shadow-sm hover:shadow-xl transition active:scale-[.98]">
+                      <div className="flex justify-between gap-2">
+                        <div className="font-black text-base leading-tight group-hover:text-teal-700">{s.name}</div>
+                        <Plus className="w-5 h-5 text-teal-600 opacity-60 group-hover:opacity-100" />
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? "غسيل + كي" : s.service_type === "ironing" ? "كي" : "تنظيف"}</Badge>
+                        <div className="font-black text-teal-700">{fmtMoney(s.unit_price)}</div>
+                      </div>
+                    </button>
+                  ))}
+                  {!filteredServices.length && <div className="col-span-full text-center text-slate-500 p-10">لا توجد خدمات مطابقة</div>}
+                </div>
+
+                <div>
+                  <Label className="text-slate-700">ملاحظات الطلب</Label>
+                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات مهمة..." />
+                </div>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
       </div>
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between text-muted-foreground"><span>{label}</span><span className="text-foreground">{value}</span></div>;
+  return <div className="flex justify-between text-slate-300"><span>{label}</span><span className="text-white font-bold">{value}</span></div>;
 }
