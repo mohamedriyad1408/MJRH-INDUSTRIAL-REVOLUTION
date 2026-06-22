@@ -54,7 +54,8 @@ const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ c
 
 function NewOrderPage() {
   const { hasRole, user } = useAuth();
-  const canCreate = hasRole("cs_manager", "owner");
+  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
+  const canCreate = hasRole("cs_manager", "owner") || employeeStation === "reception";
   const nav = useNavigate();
 
   const [services, setServices] = useState<Service[]>([]);
@@ -82,6 +83,11 @@ function NewOrderPage() {
   const [filter, setFilter] = useState<ServiceFilter>("all");
   const [serviceSearch, setServiceSearch] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from("employees").select("station,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployeeStation(data?.station ?? null));
+  }, [user]);
 
   useEffect(() => {
     supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }) => setServices((data ?? []) as Service[]));
@@ -114,7 +120,7 @@ function NewOrderPage() {
     });
   }, [services, filter, serviceSearch]);
 
-  if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">صلاحية إنشاء الطلبات متاحة لخدمة العملاء والمالك فقط.</Card>;
+  if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.</Card>;
 
   function addService(svcId: string) {
     const svc = services.find((s) => s.id === svcId);

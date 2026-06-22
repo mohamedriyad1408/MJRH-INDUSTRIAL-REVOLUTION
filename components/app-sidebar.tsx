@@ -113,6 +113,9 @@ export function AppSidebar() {
 
   function isVisible(item: NavItem) {
     if (!isSuperAdmin && hasRole("employee") && !isManager) {
+      if (employeeStation === "reception") {
+        return ["/orders", "/orders/new", "/customers", "/stations/reception"].includes(item.url);
+      }
       if (item.url === "/driver") return employeeJobRole === "driver";
       if (item.url.startsWith("/stations/")) return item.url === stationUrl;
       return false;

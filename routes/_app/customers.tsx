@@ -22,13 +22,19 @@ export const Route = createFileRoute("/_app/customers")({
 type Customer = { id: string; full_name: string; phone: string; email: string | null; address: string | null; notes: string | null; created_at: string; lat?: number | null; lng?: number | null; location_url?: string | null; area?: string | null };
 
 function CustomersPage() {
-  const { hasRole } = useAuth();
-  const canEdit = hasRole("owner", "cs_manager");
+  const { hasRole, user } = useAuth();
+  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
+  const canEdit = hasRole("owner", "cs_manager") || employeeStation === "reception";
   const [list, setList] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Partial<Customer> | null>(null);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from("employees").select("station,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployeeStation(data?.station ?? null));
+  }, [user]);
 
   async function load() {
     setLoading(true);

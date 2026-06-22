@@ -53,6 +53,11 @@ function AppLayout() {
           if (data?.id && !data.profile_id) {
             await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
           }
+          if (data?.station === "reception") {
+            const allowed = ["/orders", "/customers", "/stations/reception"];
+            if (!allowed.some((x) => path.startsWith(x))) nav({ to: "/orders/new" });
+            return;
+          }
           const target = data?.job_role === "driver" ? "/driver" : data?.station ? `/stations/${data.station}` : null;
           if (target && !path.startsWith(target)) nav({ to: target as any });
         });
