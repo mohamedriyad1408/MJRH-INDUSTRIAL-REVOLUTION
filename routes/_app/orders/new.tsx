@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_app/orders/new")({
 });
 
 type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean };
+type ServiceArea = { id: string; name: string; area_type: string; lat: number | null; lng: number | null; default_delivery_fee: number; aliases?: string[] | null };
 type Customer = { id: string; full_name: string; phone: string; address?: string | null; lat?: number | null; lng?: number | null; location_url?: string | null };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
 
@@ -57,6 +58,7 @@ function NewOrderPage() {
   const nav = useNavigate();
 
   const [services, setServices] = useState<Service[]>([]);
+  const [areas, setAreas] = useState<ServiceArea[]>([]);
   const [settings, setSettings] = useState<{ urgent_service_fee: number; default_delivery_fee: number; tax_percent: number }>({ urgent_service_fee: 0, default_delivery_fee: 0, tax_percent: 0 });
 
   const [customerSearch, setCustomerSearch] = useState("");
@@ -83,6 +85,7 @@ function NewOrderPage() {
 
   useEffect(() => {
     supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }) => setServices((data ?? []) as Service[]));
+    (supabase as any).from("service_areas").select("id,name,area_type,lat,lng,default_delivery_fee,aliases").eq("is_active", true).order("area_type").order("name").then(({ data }: any) => setAreas((data ?? []) as ServiceArea[]));
     supabase.from("app_settings").select("*").limit(1).maybeSingle().then(({ data }) => {
       if (data) {
         setSettings({ urgent_service_fee: Number(data.urgent_service_fee), default_delivery_fee: Number(data.default_delivery_fee), tax_percent: Number(data.tax_percent) });
@@ -141,6 +144,21 @@ function NewOrderPage() {
   const taxable = Math.max(0, subtotal + urgentFee + delivery - disc);
   const tax = taxable * (settings.tax_percent / 100);
   const total = taxable + tax;
+
+  function applyArea(areaId: string, kind: "pickup" | "delivery" = "delivery") {
+    const area = areas.find((a) => a.id === areaId);
+    if (!area) return;
+    const suffix = area.area_type === "compound" ? `كمبوند ${area.name}` : area.name;
+    if (kind === "pickup") {
+      setPickupAddress((x) => x ? `${x} - ${suffix}` : suffix);
+      if (area.lat && area.lng) setPickupLoc({ lat: String(area.lat), lng: String(area.lng) });
+    } else {
+      setDeliveryAddress((x) => x ? `${x} - ${suffix}` : suffix);
+      if (area.lat && area.lng) setDeliveryLoc({ lat: String(area.lat), lng: String(area.lng) });
+    }
+    if (area.default_delivery_fee) setDeliveryFee(String(area.default_delivery_fee));
+    toast.success(`تم اختيار ${area.name}`);
+  }
 
   function fillLocation(kind: "pickup" | "delivery") {
     const text = kind === "pickup" ? pickupAddress : deliveryAddress;
@@ -382,6 +400,16 @@ function NewOrderPage() {
                 {orderType === "delivery" && (
                   <div className="rounded-2xl bg-teal-50 border border-teal-100 p-3 space-y-3">
                     <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> بيانات التوصيل والموقع</div>
+                    <div className="grid md:grid-cols-2 gap-2">
+                      <Select onValueChange={(v) => applyArea(v, "pickup") }>
+                        <SelectTrigger><SelectValue placeholder="منطقة/كمبوند الاستلام" /></SelectTrigger>
+                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Select onValueChange={(v) => applyArea(v, "delivery") }>
+                        <SelectTrigger><SelectValue placeholder="منطقة/كمبوند التسليم" /></SelectTrigger>
+                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
                     <div className="grid lg:grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Input placeholder="عنوان/رابط موقع الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
