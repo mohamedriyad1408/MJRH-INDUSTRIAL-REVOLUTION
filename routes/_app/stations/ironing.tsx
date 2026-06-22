@@ -1,7 +1,271 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Loader2, Shirt, CheckCircle2, RotateCcw, Scale, User, Image as ImageIcon, PackageCheck } from "lucide-react";
 import { StationBoard } from "@/components/station-board";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 
 export const Route = createFileRoute("/_app/stations/ironing")({
-  head: () => ({ meta: [{ title: "محطة الكي" }] }),
-  component: () => <StationBoard title="محطة الكي" station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />,
+  head: () => ({ meta: [{ title: "الكي" }] }),
+  component: IroningRoute,
 });
+
+type Unit = {
+  id: string;
+  label_code: string;
+  name: string;
+  photo_url?: string | null;
+  line_value?: number | null;
+  is_shirt_like?: boolean | null;
+  needs_reclean?: boolean | null;
+  reclean_reason?: string | null;
+  ironing_completed_at?: string | null;
+  assigned_ironing_employee_id?: string | null;
+  orders?: { id: string; order_number: number; status: string; customers?: { full_name: string; phone: string } | null } | null;
+  employees?: { full_name: string } | null;
+};
+
+type Employee = { id: string; full_name: string };
+
+function IroningRoute() {
+  const { hasRole } = useAuth();
+  const isManager = hasRole("owner", "ops_manager");
+
+  if (isManager) return <IroningManagerPage />;
+  return <IroningWorkerPage />;
+}
+
+function IroningManagerPage() {
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [assigning, setAssigning] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    const [u, e] = await Promise.all([
+      (supabase as any)
+        .from("service_units")
+        .select("id,label_code,name,line_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
+        .in("service_type", ["ironing", "both"])
+        .in("orders.status", ["ironing", "packing", "ready"])
+        .order("ironing_assigned_at", { ascending: true }),
+      supabase.from("employees").select("id,full_name").eq("is_active", true).or("station.eq.ironing,job_role.eq.ironing_tech").order("full_name"),
+    ]);
+    setUnits((u.data ?? []).filter((x: any) => x.orders) as Unit[]);
+    setEmployees((e.data ?? []) as Employee[]);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function distributeAll() {
+    setAssigning(true);
+    try {
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("id")
+        .in("status", ["cleaning", "ironing"]);
+      let total = 0;
+      for (const o of orders ?? []) {
+        const r = await autoAssignIroningPieces(o.id);
+        total += r.assigned;
+      }
+      toast.success(total ? `تم توزيع ${total} قطعة على فنيي الكي` : "لا توجد قطع غير موزعة");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي");
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  const stats = useMemo(() => {
+    return employees.map((emp) => {
+      const mine = units.filter((u) => u.assigned_ironing_employee_id === emp.id);
+      return {
+        ...emp,
+        pieces: mine.length,
+        done: mine.filter((u) => u.ironing_completed_at).length,
+        shirts: mine.filter((u) => u.is_shirt_like).length,
+        value: mine.reduce((s, u) => s + Number(u.line_value ?? 0), 0),
+      };
+    });
+  }, [employees, units]);
+
+  const unassigned = units.filter((u) => !u.assigned_ironing_employee_id).length;
+  const done = units.filter((u) => u.ironing_completed_at).length;
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> إدارة الكي</h1>
+            <p className="text-sm text-white/70">توزيع عادل للقطع على المكوجية ومتابعة إنجاز كل فني</p>
+          </div>
+          <Button onClick={distributeAll} disabled={assigning} className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-black">
+            {assigning ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Scale className="w-4 h-4 ms-1" />}
+            توزيع كل غير الموزع
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <MiniStat label="قطع الكي" value={units.length} />
+          <MiniStat label="غير موزع" value={unassigned} tone={unassigned ? "warn" : "ok"} />
+          <MiniStat label="تم الكي" value={`${done}/${units.length}`} tone="ok" />
+        </div>
+      </div>
+
+      {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
+        <>
+          <Card>
+            <CardHeader><CardTitle className="text-base">حمل كل فني</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-3 gap-3">
+              {stats.map((s) => (
+                <div key={s.id} className="rounded-2xl border p-3 bg-card">
+                  <div className="flex items-center gap-2 font-black"><User className="w-4 h-4 text-violet-600" /> {s.full_name}</div>
+                  <div className="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
+                    <div className="rounded-xl bg-slate-100 p-2"><div className="font-black text-lg">{s.pieces}</div><div>قطع</div></div>
+                    <div className="rounded-xl bg-blue-50 p-2"><div className="font-black text-lg">{s.shirts}</div><div>قمصان</div></div>
+                    <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>تم</div></div>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">قيمة مسندة: {s.value.toLocaleString()} ج</div>
+                </div>
+              ))}
+              {!stats.length && <div className="text-sm text-muted-foreground">لا يوجد فنيون مربوطون بمحطة الكي.</div>}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">قطع الكي الجارية</CardTitle></CardHeader>
+            <CardContent className="space-y-2">
+              {units.map((u) => <UnitRow key={u.id} u={u} manager />)}
+              {!units.length && <div className="text-center text-sm text-muted-foreground p-8">لا توجد قطع كي حالياً</div>}
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      <StationBoard title="تحريك الطلبات إلى التغليف" station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />
+    </div>
+  );
+}
+
+function IroningWorkerPage() {
+  const { user } = useAuth();
+  const [empId, setEmpId] = useState<string | null>(null);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  async function load(employeeId = empId) {
+    if (!employeeId) return;
+    setLoading(true);
+    const { data } = await (supabase as any)
+      .from("service_units")
+      .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone))")
+      .eq("assigned_ironing_employee_id", employeeId)
+      .in("service_type", ["ironing", "both"])
+      .is("ironing_completed_at", null)
+      .order("ironing_assigned_at", { ascending: true });
+    setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from("employees").select("id").eq("profile_id", user.id).maybeSingle().then(({ data }: any) => {
+      setEmpId(data?.id ?? null);
+      if (data?.id) load(data.id);
+      else setLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  async function markDone(u: Unit) {
+    const { error } = await (supabase as any).from("service_units").update({
+      current_stage: "ironing_done",
+      ironing_completed_at: new Date().toISOString(),
+    }).eq("id", u.id);
+    if (error) toast.error(error.message); else { toast.success(`تم كي ${u.label_code}`); load(); }
+  }
+
+  async function markReclean(u: Unit) {
+    const reason = prompt("سبب رجوع القطعة للتنظيف؟", u.reclean_reason ?? "");
+    if (reason === null) return;
+    const { error } = await (supabase as any).from("service_units").update({
+      needs_reclean: true,
+      reclean_reason: reason || "مرتجع تنظيف من الكي",
+      reclean_reported_by: user?.id,
+      reclean_reported_at: new Date().toISOString(),
+    }).eq("id", u.id);
+    if (error) toast.error(error.message); else { toast.success("تم تسجيل مرتجع التنظيف"); load(); }
+  }
+
+  if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin" /></div>;
+  if (!empId) return <Card><CardContent className="p-8 text-center text-muted-foreground">حسابك غير مربوط بموظف كي. تواصل مع الإدارة.</CardContent></Card>;
+
+  return (
+    <div className="space-y-5 max-w-3xl mx-auto">
+      <div className="rounded-3xl bg-gradient-to-br from-violet-700 to-slate-950 text-white p-5 shadow-xl">
+        <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> شغل الكي الخاص بي</h1>
+        <p className="text-sm text-white/70 mt-1">القطع موزعة عليك تلقائياً حسب العدالة في العدد والقمصان وقيمة الفاتورة</p>
+        <div className="grid grid-cols-3 gap-3 mt-4">
+          <MiniStat label="قطعك" value={units.length} />
+          <MiniStat label="قمصان/بلوز" value={units.filter((u) => u.is_shirt_like).length} />
+          <MiniStat label="مرتجعات" value={units.filter((u) => u.needs_reclean).length} tone="warn" />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {units.map((u) => <UnitRow key={u.id} u={u} onDone={markDone} onReclean={markReclean} />)}
+        {!units.length && (
+          <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-10 text-center text-emerald-700 font-bold">
+            <PackageCheck className="w-10 h-10 mx-auto mb-2" /> لا توجد قطع مسندة لك الآن
+          </CardContent></Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean; onDone?: (u: Unit) => void; onReclean?: (u: Unit) => void }) {
+  return (
+    <div className="rounded-2xl border bg-card p-3 grid grid-cols-[72px_1fr] md:grid-cols-[72px_1fr_auto] gap-3 items-center">
+      <div className="w-[72px] h-[72px] rounded-xl border bg-muted overflow-hidden flex items-center justify-center">
+        {u.photo_url ? <img src={u.photo_url} className="w-full h-full object-cover" /> : <ImageIcon className="w-7 h-7 text-muted-foreground" />}
+      </div>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-black text-lg">{u.label_code}</span>
+          <Badge variant="outline">{u.name}</Badge>
+          {u.is_shirt_like && <Badge className="bg-blue-600">قميص/بلوزة</Badge>}
+          {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> مرتجع تنظيف</Badge>}
+          {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> تم</Badge>}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          طلب #{u.orders?.order_number} · {u.orders?.customers?.full_name ?? "—"} · قيمة {Number(u.line_value ?? 0).toLocaleString()} ج
+        </div>
+        {manager && <div className="text-xs text-muted-foreground mt-1">الفني: <b>{u.employees?.full_name ?? "غير موزع"}</b></div>}
+        {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">سبب المرتجع: {u.reclean_reason}</div>}
+      </div>
+      {!manager && (
+        <div className="col-span-2 md:col-span-1 flex md:flex-col gap-2">
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onDone?.(u)}><CheckCircle2 className="w-4 h-4 ms-1" /> تم الكي</Button>
+          <Button className="flex-1" variant="outline" onClick={() => onReclean?.(u)}><RotateCcw className="w-4 h-4 ms-1" /> مرتجع تنظيف</Button>
+        </div>
+      )}
+      {manager && u.orders?.id && <Button asChild variant="outline" size="sm"><Link to="/orders/$id" params={{ id: u.orders.id }}>فتح الطلب</Link></Button>}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone }: { label: string; value: string | number; tone?: "ok" | "warn" }) {
+  return <div className={`rounded-2xl p-3 border border-white/10 ${tone === "warn" ? "bg-amber-400/20" : tone === "ok" ? "bg-emerald-400/20" : "bg-white/10"}`}>
+    <div className="text-2xl font-black">{value}</div><div className="text-xs text-white/70">{label}</div>
+  </div>;
+}
