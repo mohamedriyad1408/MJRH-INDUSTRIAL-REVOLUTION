@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2 } from "lucide-react";
+import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
@@ -74,6 +74,7 @@ function OrderDetailPage() {
   const [addingUnit, setAddingUnit] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
   const [form, setForm] = useState({ garment_type: "قميص", color: "", notes: "" });
 
   const load = useCallback(async () => {
@@ -248,6 +249,26 @@ function OrderDetailPage() {
     if (error) toast.error(error.message); else { toast.success(next === "paid" ? "تم تسجيل الدفع" : "تم جعل الطلب آجل"); load(); }
   }
 
+  async function uploadPaymentProof(file: File) {
+    if (!file) return;
+    setProofUploading(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `orders/${id}/instapay-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { setProofUploading(false); return toast.error(error.message); }
+    const { data } = supabase.storage.from("payment-proofs").getPublicUrl(path);
+    const { error: uErr } = await (supabase as any).from("orders").update({
+      payment_proof_url: data.publicUrl,
+      payment_proof_uploaded_at: new Date().toISOString(),
+      payment_proof_uploaded_by: user?.id,
+      payment_status: "paid",
+    }).eq("id", id);
+    setProofUploading(false);
+    if (uErr) return toast.error(uErr.message);
+    toast.success("تم حفظ صورة تحويل InstaPay وتسجيل الدفع");
+    load();
+  }
+
   async function overrideCloseOrder() {
     if (!hasRole("owner", "ops_manager")) return toast.error("صلاحية مدير التشغيل أو المالك فقط");
     const reason = prompt("سبب إغلاق الطلب بتجاوز التحقق؟", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً");
@@ -294,6 +315,15 @@ function OrderDetailPage() {
           <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
             {order.payment_status === "paid" ? "مدفوع" : "تسجيل الدفع"}
           </Button>
+          {(order.payment_method === "instapay" || order.payment_method === "cod_instapay") && canEdit && (
+            <label className="inline-flex">
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPaymentProof(e.target.files[0])} />
+              <Button type="button" variant={order.payment_proof_url ? "default" : "outline"} disabled={proofUploading} asChild>
+                <span>{proofUploading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} إثبات InstaPay</span>
+              </Button>
+            </label>
+          )}
+          {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> عرض الإيصال</a></Button>}
           {hasRole("owner", "ops_manager") && order.status !== "delivered" && <Button variant="destructive" onClick={overrideCloseOrder}>إغلاق بتجاوز</Button>}
           <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> طباعة ليبل القطع</Button>
           {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? "توزيع..." : "توزيع الكي"}</Button>}
