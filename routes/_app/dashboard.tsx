@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
@@ -24,7 +25,16 @@ const STATION_LABELS: Record<string, { label: string; color: string }> = {
 function Dashboard() {
   const { user, hasRole } = useAuth();
   const nav = useNavigate();
-  useEffect(() => { if (hasRole("courier") && !hasRole("owner", "ops_manager", "cs_manager")) nav({ to: "/driver" }); }, [hasRole, nav]);
+  useEffect(() => {
+    const isManager = hasRole("owner", "ops_manager", "cs_manager");
+    if (hasRole("courier") && !isManager) { nav({ to: "/driver" }); return; }
+    if (hasRole("employee") && !isManager && user) {
+      (supabase as any).from("employees").select("station,job_role").eq("profile_id", user.id).maybeSingle().then(({ data }: any) => {
+        if (data?.job_role === "driver") nav({ to: "/driver" });
+        else if (data?.station) nav({ to: `/stations/${data.station}` as any });
+      });
+    }
+  }, [hasRole, nav, user]);
   const { data: stats, isLoading } = useDashboardStats();
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>;

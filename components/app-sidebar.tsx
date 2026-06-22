@@ -10,6 +10,8 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[] };
 
@@ -39,7 +41,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "الطلبات",
     items: [
-      { title: "كل الطلبات", url: "/orders", icon: ListOrdered },
+      { title: "كل الطلبات", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
     ],
   },
@@ -87,7 +89,37 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { roles, hasRole, user, signOut, isSuperAdmin } = useAuth();
   const { setOpenMobile } = useSidebar();
+  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
+  const [employeeJobRole, setEmployeeJobRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any)
+      .from("employees")
+      .select("station,job_role")
+      .eq("profile_id", user.id)
+      .maybeSingle()
+      .then(({ data }: any) => {
+        setEmployeeStation(data?.station ?? null);
+        setEmployeeJobRole(data?.job_role ?? null);
+      });
+  }, [user]);
   const groups = isSuperAdmin ? adminGroups : tenantGroups;
+  const isManager = hasRole("owner", "ops_manager", "cs_manager");
+  const stationUrl = employeeStation ? `/stations/${employeeStation}` : null;
+
+  function isVisible(item: NavItem) {
+    if (item.roles && !hasRole(...item.roles)) return false;
+    if (!isSuperAdmin && hasRole("employee") && !isManager) {
+      if (item.url.startsWith("/stations/")) return item.url === stationUrl;
+      if (item.url === "/driver") return employeeJobRole === "driver";
+      return false;
+    }
+    if (!isSuperAdmin && hasRole("courier") && !isManager) {
+      return item.url === "/driver";
+    }
+    return true;
+  }
 
   return (
     <Sidebar side="right" collapsible="icon">
@@ -104,7 +136,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         {groups.map((g) => {
-          const visible = g.items.filter((i) => !i.roles || hasRole(...i.roles));
+          const visible = g.items.filter(isVisible);
           if (!visible.length) return null;
           return (
             <SidebarGroup key={g.label}>
