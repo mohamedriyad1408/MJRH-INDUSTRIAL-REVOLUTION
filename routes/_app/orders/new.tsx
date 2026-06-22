@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_app/orders/new")({
 });
 
 type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean };
-type Customer = { id: string; full_name: string; phone: string; address?: string | null };
+type Customer = { id: string; full_name: string; phone: string; address?: string | null; lat?: number | null; lng?: number | null; location_url?: string | null };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
 
 type ServiceFilter = "all" | "cleaning" | "ironing" | "both";
@@ -41,6 +41,8 @@ function complexityForName(name: string) {
   if (/قميص|بنطلون|بلوز|جيبة/i.test(name)) return 2;
   return 1;
 }
+
+function phoneDigits(v: string) { return (v || "").replace(/\D/g, ""); }
 
 const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "all", label: "الكل", icon: Sparkles },
@@ -93,7 +95,7 @@ function NewOrderPage() {
   useEffect(() => {
     if (!customerSearch || customer) { setCustomerMatches([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from("customers").select("id, full_name, phone, address")
+      const { data } = await (supabase as any).from("customers").select("id, full_name, phone, address, lat, lng, location_url")
         .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%`).limit(8);
       setCustomerMatches((data ?? []) as Customer[]);
     }, 180);
@@ -163,6 +165,8 @@ function NewOrderPage() {
 
   async function submit() {
     if (!customer && !newCustomer.full_name) { toast.error("اختار عميل أو أضف عميل جديد"); return; }
+    const effectivePhone = customer?.phone ?? newCustomer.phone;
+    if (phoneDigits(effectivePhone).length < 11) { toast.error("رقم الهاتف يجب أن يكون 11 رقم على الأقل"); return; }
     if (!items.length) { toast.error("أضف قطعة أو خدمة واحدة على الأقل"); return; }
     setSaving(true);
 
@@ -325,7 +329,7 @@ function NewOrderPage() {
                           <div className="font-black">{customer.full_name}</div>
                           <div className="text-xs text-slate-500">{customer.phone}</div>{customer.address && <div className="text-xs text-slate-500 mt-1">{customer.address}</div>}
                         </div>
-                        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { if (customer.address) { setPickupAddress(customer.address); setDeliveryAddress(customer.address); toast.success("تم ملء عنوان العميل"); } }}>استخدم العنوان</Button><Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button></div>
+                        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { if (customer.address) { setPickupAddress(customer.address); setDeliveryAddress(customer.address); } if (customer.lat && customer.lng) { const loc = { lat: String(customer.lat), lng: String(customer.lng) }; setPickupLoc(loc); setDeliveryLoc(loc); } toast.success("تم ملء بيانات العميل"); }}>استخدم العنوان</Button><Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button></div>
                       </div>
                     ) : (
                       <>
@@ -333,7 +337,7 @@ function NewOrderPage() {
                         {customerMatches.length > 0 && (
                           <div className="rounded-xl border bg-white divide-y overflow-hidden">
                             {customerMatches.map((c) => (
-                              <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-teal-50 text-sm" onClick={() => { setCustomer(c); if (c.address) { setPickupAddress(c.address); setDeliveryAddress(c.address); } }}>
+                              <button key={c.id} type="button" className="w-full text-start p-2 hover:bg-teal-50 text-sm" onClick={() => { setCustomer(c); if (c.address) { setPickupAddress(c.address); setDeliveryAddress(c.address); } if (c.lat && c.lng) { const loc = { lat: String(c.lat), lng: String(c.lng) }; setPickupLoc(loc); setDeliveryLoc(loc); } }}>
                                 <div className="font-bold">{c.full_name}</div><div className="text-xs text-slate-500">{c.phone}</div>
                               </button>
                             ))}

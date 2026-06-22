@@ -168,6 +168,18 @@ function OrderDetailPage() {
     if (error) toast.error(error.message); else { toast.success(next === "paid" ? "تم تسجيل الدفع" : "تم جعل الطلب آجل"); load(); }
   }
 
+  async function overrideCloseOrder() {
+    if (!hasRole("owner", "ops_manager")) return toast.error("صلاحية مدير التشغيل أو المالك فقط");
+    const reason = prompt("سبب إغلاق الطلب بتجاوز التحقق؟", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً");
+    if (reason === null) return;
+    const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
+    if (!error) {
+      await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `إغلاق بتجاوز التحقق: ${reason}` });
+      toast.success("تم إغلاق الطلب بتجاوز التحقق");
+      load();
+    } else toast.error(error.message);
+  }
+
   function printLabels() {
     const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>Labels</title><style>
       @page{size:50mm 30mm;margin:2mm} body{font-family:Arial,sans-serif;margin:0;color:#111}.label{width:46mm;height:26mm;border:1px dashed #999;margin:1mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;text-align:center}.code{font-size:18px;font-weight:900}.name{font-size:13px;font-weight:700}.meta{font-size:10px;color:#444}
@@ -202,6 +214,7 @@ function OrderDetailPage() {
           <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
             {order.payment_status === "paid" ? "مدفوع" : "تسجيل الدفع"}
           </Button>
+          {hasRole("owner", "ops_manager") && order.status !== "delivered" && <Button variant="destructive" onClick={overrideCloseOrder}>إغلاق بتجاوز</Button>}
           <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> طباعة ليبل القطع</Button>
           {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? "توزيع..." : "توزيع الكي"}</Button>}
           <StatusBadge level={statusLevel(order.status)} label={order.status} />

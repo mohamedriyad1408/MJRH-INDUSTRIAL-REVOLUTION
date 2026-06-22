@@ -60,6 +60,7 @@ function CustomersPage() {
 
   async function save() {
     if (!editing?.full_name || !editing.phone) { toast.error("الاسم والتليفون مطلوبان"); return; }
+    if ((editing.phone || "").replace(/\D/g, "").length < 11) { toast.error("رقم الهاتف يجب أن يكون 11 رقم على الأقل"); return; }
     const payload = { full_name: editing.full_name, phone: editing.phone, email: editing.email || null, address: editing.address || null, notes: editing.notes || null, lat: editing.lat ?? null, lng: editing.lng ?? null, location_url: editing.location_url || null, area: editing.area || null };
     const { error } = editing.id
       ? await (supabase as any).from("customers").update(payload).eq("id", editing.id)
