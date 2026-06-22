@@ -96,12 +96,15 @@ export function AppSidebar() {
     if (!user) return;
     (supabase as any)
       .from("employees")
-      .select("station,job_role")
-      .eq("profile_id", user.id)
+      .select("id,station,job_role,profile_id,email")
+      .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
       .maybeSingle()
-      .then(({ data }: any) => {
+      .then(async ({ data }: any) => {
         setEmployeeStation(data?.station ?? null);
         setEmployeeJobRole(data?.job_role ?? null);
+        if (data?.id && !data.profile_id) {
+          await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+        }
       });
   }, [user]);
   const groups = isSuperAdmin ? adminGroups : tenantGroups;

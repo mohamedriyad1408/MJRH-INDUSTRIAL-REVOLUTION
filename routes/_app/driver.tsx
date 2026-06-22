@@ -61,10 +61,14 @@ function DriverPage() {
     if (!user) return;
     (supabase as any)
       .from("employees")
-      .select("id,current_lat,current_lng")
-      .eq("profile_id", user.id)
+      .select("id,current_lat,current_lng,profile_id,email")
+      .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
       .maybeSingle()
-      .then(({ data }: any) => { setEmpId(data?.id ?? null); if ((data as any)?.current_lat && (data as any)?.current_lng) setMyLoc({ lat: Number((data as any).current_lat), lng: Number((data as any).current_lng) }); });
+      .then(async ({ data }: any) => {
+        setEmpId(data?.id ?? null);
+        if (data?.id && !data.profile_id) await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+        if ((data as any)?.current_lat && (data as any)?.current_lng) setMyLoc({ lat: Number((data as any).current_lat), lng: Number((data as any).current_lng) });
+      });
   }, [user]);
 
   const load = useCallback(async () => {

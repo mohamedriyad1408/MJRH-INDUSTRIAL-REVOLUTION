@@ -178,8 +178,9 @@ function IroningWorkerPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("id").eq("profile_id", user.id).maybeSingle().then(({ data }: any) => {
+    (supabase as any).from("employees").select("id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(async ({ data }: any) => {
       setEmpId(data?.id ?? null);
+      if (data?.id && !data.profile_id) await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
       if (data?.id) load(data.id);
       else setLoading(false);
     });
