@@ -112,15 +112,15 @@ export function AppSidebar() {
   const stationUrl = employeeStation ? `/stations/${employeeStation}` : null;
 
   function isVisible(item: NavItem) {
-    if (item.roles && !hasRole(...item.roles)) return false;
     if (!isSuperAdmin && hasRole("employee") && !isManager) {
-      if (item.url.startsWith("/stations/")) return item.url === stationUrl;
       if (item.url === "/driver") return employeeJobRole === "driver";
+      if (item.url.startsWith("/stations/")) return item.url === stationUrl;
       return false;
     }
     if (!isSuperAdmin && hasRole("courier") && !isManager) {
       return item.url === "/driver";
     }
+    if (item.roles && !hasRole(...item.roles)) return false;
     return true;
   }
 

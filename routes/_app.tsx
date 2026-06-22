@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { session, loading, roles, isSuperAdmin, signOut } = useAuth();
+  const { session, user, loading, roles, isSuperAdmin, hasRole, signOut } = useAuth();
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -27,6 +28,35 @@ function AppLayout() {
       nav({ to: "/admin/tenants" });
     }
   }, [loading, session, isSuperAdmin, path, nav]);
+
+
+
+  // Guard employee/courier deep links: non-managers should only access their operational page.
+  useEffect(() => {
+    if (loading || !session || !roles.length || isSuperAdmin) return;
+    const isManager = hasRole("owner", "ops_manager", "cs_manager");
+    if (isManager) return;
+
+    if (hasRole("courier")) {
+      if (!path.startsWith("/driver")) nav({ to: "/driver" });
+      return;
+    }
+
+    if (hasRole("employee") && user) {
+      (supabase as any)
+        .from("employees")
+        .select("id,station,job_role,profile_id,email")
+        .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
+        .maybeSingle()
+        .then(async ({ data }: any) => {
+          if (data?.id && !data.profile_id) {
+            await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+          }
+          const target = data?.job_role === "driver" ? "/driver" : data?.station ? `/stations/${data.station}` : null;
+          if (target && !path.startsWith(target)) nav({ to: target as any });
+        });
+    }
+  }, [loading, session, roles.length, isSuperAdmin, hasRole, path, nav, user]);
 
   if (loading || !session) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
