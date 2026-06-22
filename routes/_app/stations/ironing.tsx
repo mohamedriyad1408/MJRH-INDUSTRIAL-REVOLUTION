@@ -45,6 +45,7 @@ function IroningManagerPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
+  const [transferTo, setTransferTo] = useState<Record<string, string>>({});
 
   async function load() {
     setLoading(true);
@@ -83,6 +84,16 @@ function IroningManagerPage() {
     } finally {
       setAssigning(false);
     }
+  }
+
+  async function transferTasks(fromId: string) {
+    const toId = transferTo[fromId];
+    if (!toId || toId === fromId) return toast.error("اختر الفني البديل");
+    const { error } = await (supabase as any).from("service_units").update({
+      assigned_ironing_employee_id: toId,
+      ironing_assigned_at: new Date().toISOString(),
+    }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["ironing", "both"]);
+    if (error) toast.error(error.message); else { toast.success("تم نقل مهام الفني"); load(); }
   }
 
   const stats = useMemo(() => {
@@ -135,6 +146,15 @@ function IroningManagerPage() {
                     <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>تم</div></div>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">قيمة مسندة: {s.value.toLocaleString()} ج</div>
+                  {s.pieces > s.done && (
+                    <div className="flex gap-2 mt-3">
+                      <select className="flex-1 h-9 rounded-md border bg-background px-2 text-xs" value={transferTo[s.id] ?? ""} onChange={(e) => setTransferTo((m) => ({ ...m, [s.id]: e.target.value }))}>
+                        <option value="">نقل غير المنجز إلى...</option>
+                        {employees.filter((e) => e.id !== s.id).map((e) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                      </select>
+                      <Button size="sm" variant="outline" onClick={() => transferTasks(s.id)}>نقل</Button>
+                    </div>
+                  )}
                 </div>
               ))}
               {!stats.length && <div className="text-sm text-muted-foreground">لا يوجد فنيون مربوطون بمحطة الكي.</div>}
@@ -161,6 +181,9 @@ function IroningWorkerPage() {
   const [empId, setEmpId] = useState<string | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [todayValue, setTodayValue] = useState(0);
+  const [todayDoneValue, setTodayDoneValue] = useState(0);
+  const [ratePct, setRatePct] = useState(0);
 
   async function load(employeeId = empId) {
     if (!employeeId) return;
@@ -173,6 +196,16 @@ function IroningWorkerPage() {
       .is("ironing_completed_at", null)
       .order("ironing_assigned_at", { ascending: true });
     setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const [{ data: todayUnits }, { data: rate }] = await Promise.all([
+      (supabase as any).from("service_units").select("line_value,ironing_completed_at").eq("assigned_ironing_employee_id", employeeId).gte("ironing_assigned_at", today.toISOString()),
+      (supabase as any).from("ironing_rates").select("percentage").eq("employee_id", employeeId).order("effective_from", { ascending: false }).limit(1).maybeSingle(),
+    ]);
+    const allValue = (todayUnits ?? []).reduce((sum: number, u: any) => sum + Number(u.line_value ?? 0), 0);
+    const doneValue = (todayUnits ?? []).filter((u: any) => u.ironing_completed_at).reduce((sum: number, u: any) => sum + Number(u.line_value ?? 0), 0);
+    setTodayValue(allValue);
+    setTodayDoneValue(doneValue);
+    setRatePct(Number(rate?.percentage ?? 0));
     setLoading(false);
   }
 
@@ -215,10 +248,11 @@ function IroningWorkerPage() {
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 to-slate-950 text-white p-5 shadow-xl">
         <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> شغل الكي الخاص بي</h1>
         <p className="text-sm text-white/70 mt-1">القطع موزعة عليك تلقائياً حسب العدالة في العدد والقمصان وقيمة الفاتورة</p>
-        <div className="grid grid-cols-3 gap-3 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
           <MiniStat label="قطعك" value={units.length} />
           <MiniStat label="قمصان/بلوز" value={units.filter((u) => u.is_shirt_like).length} />
-          <MiniStat label="مرتجعات" value={units.filter((u) => u.needs_reclean).length} tone="warn" />
+          <MiniStat label="يوميتك المنجزة" value={`${Math.round(todayDoneValue * ratePct / 100)} ج`} tone="ok" />
+          <MiniStat label="لو خلصت الكل" value={`${Math.round(todayValue * ratePct / 100)} ج`} />
         </div>
       </div>
 

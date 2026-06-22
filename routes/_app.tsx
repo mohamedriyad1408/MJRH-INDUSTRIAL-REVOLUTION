@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Loader2, Hourglass, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AttendanceWidget } from "@/components/attendance-widget";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -57,6 +58,7 @@ function AppLayout() {
           <header className="h-14 border-b bg-card flex items-center px-4 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
             <div className="font-bold text-sm">Dry Tech — نظام إدارة المغاسل</div>
+            <AttendanceWidget />
           </header>
           <main className="flex-1 p-4 md:p-6 bg-background">
             <Outlet />
