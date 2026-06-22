@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight } from "lucide-react";
+import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2 } from "lucide-react";
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
@@ -34,6 +34,9 @@ function statusLevel(s: string): StatusLevel {
   if (s === "cancelled") return "urgent";
   return "waiting";
 }
+
+type Service = { id: string; name: string; service_type: string; unit_price: number };
+type InvoiceItem = { id?: string; service_item_id?: string | null; name: string; service_type: string; qty: number; unit_price: number };
 
 type ServiceUnit = {
   id: string;
@@ -64,6 +67,9 @@ function OrderDetailPage() {
   const { user, hasRole } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [units, setUnits] = useState<ServiceUnit[]>([]);
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [invoiceSaving, setInvoiceSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [addingUnit, setAddingUnit] = useState(false);
   const [assigning, setAssigning] = useState(false);
@@ -72,20 +78,94 @@ function OrderDetailPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [{ data: ord }, { data: su }] = await Promise.all([
+    const [{ data: ord }, { data: su }, { data: svcs }] = await Promise.all([
       supabase.from("orders").select("*,customers(full_name,phone),order_items(*)").eq("id", id).single(),
       (supabase as any)
         .from("service_units")
         .select("*,employees:assigned_ironing_employee_id(full_name)")
         .eq("order_id", id)
         .order("unit_number"),
+      supabase.from("service_items").select("id,name,service_type,unit_price").eq("is_active", true).order("name"),
     ]);
     setOrder(ord);
+    setInvoiceItems(((ord as any)?.order_items ?? []).map((it: any) => ({ id: it.id, service_item_id: it.service_item_id, name: it.name, service_type: it.service_type, qty: it.qty, unit_price: Number(it.unit_price ?? 0) })));
+    setServices((svcs ?? []) as Service[]);
     setUnits((su ?? []) as ServiceUnit[]);
     setLoading(false);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+
+  function addInvoiceService(serviceId: string) {
+    const svc = services.find((x) => x.id === serviceId);
+    if (!svc) return;
+    setInvoiceItems((rows) => [{ service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }, ...rows]);
+  }
+
+  function invoiceTotals(rows = invoiceItems) {
+    const subtotal = rows.reduce((sum, it) => sum + Number(it.qty) * Number(it.unit_price), 0);
+    const total = subtotal + Number(order?.delivery_fee ?? 0) + Number(order?.urgent_fee_amount ?? order?.urgent_fee ?? 0) - Number(order?.discount_amount ?? 0) + Number(order?.tax_amount ?? 0);
+    return { subtotal, total };
+  }
+
+  function updateInvoiceRow(idx: number, patch: Partial<InvoiceItem>) {
+    setInvoiceItems((rows) => rows.map((r, i) => i === idx ? { ...r, ...patch } : r));
+  }
+
+  async function deleteInvoiceRow(idx: number) {
+    const row = invoiceItems[idx];
+    if (!confirm("حذف البند من الفاتورة؟")) return;
+    if (row.id) {
+      await (supabase as any).from("service_units").delete().eq("order_item_id", row.id).is("ironing_completed_at", null);
+      const { error } = await supabase.from("order_items").delete().eq("id", row.id);
+      if (error) return toast.error(error.message);
+    }
+    const next = invoiceItems.filter((_, i) => i !== idx);
+    setInvoiceItems(next);
+    const totals = invoiceTotals(next);
+    await (supabase as any).from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
+    toast.success("تم حذف البند");
+    load();
+  }
+
+  async function saveInvoiceChanges() {
+    if (!invoiceItems.length) return toast.error("الفاتورة لا تحتوي على بنود");
+    setInvoiceSaving(true);
+    for (const it of invoiceItems) {
+      const payload = { order_id: id, service_item_id: it.service_item_id ?? null, name: it.name, service_type: it.service_type as any, qty: Math.max(1, Number(it.qty)), unit_price: Number(it.unit_price) };
+      if (it.id) await supabase.from("order_items").update(payload).eq("id", it.id);
+      else {
+        const { data: inserted, error } = await supabase.from("order_items").insert(payload).select("id,name,qty,unit_price,service_type").single();
+        if (!error && inserted) {
+          const qty = Math.max(1, Number(inserted.qty ?? 1));
+          const startNo = units.length + 1;
+          const newUnits = Array.from({ length: qty }, (_, i) => ({ order_id: id, order_item_id: inserted.id, unit_number: startNo + i, name: inserted.name, garment_type: inserted.name, service_type: inserted.service_type, unit_price: Number(inserted.unit_price ?? 0), line_value: Number(inserted.unit_price ?? 0), complexity_factor: complexityForName(inserted.name), is_shirt_like: isShirtLikeName(inserted.name), status: order?.status ?? "received", current_stage: order?.status ?? "received", tenant_id: order?.tenant_id }));
+          await (supabase as any).from("service_units").insert(newUnits);
+        }
+      }
+    }
+    const totals = invoiceTotals();
+    const { error } = await (supabase as any).from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
+    setInvoiceSaving(false);
+    if (error) toast.error(error.message); else { toast.success("تم حفظ تعديلات الفاتورة"); load(); }
+  }
+
+  async function updateUnitService(unit: ServiceUnit, serviceType: string) {
+    const { error } = await (supabase as any).from("service_units").update({ service_type: serviceType, current_stage: serviceType === "both" ? "cleaning" : unit.current_stage }).eq("id", unit.id);
+    if (error) toast.error(error.message); else { toast.success("تم تعديل خدمة القطعة"); load(); }
+  }
+
+  async function finalizeAndNotify() {
+    await saveInvoiceChanges();
+    const totals = invoiceTotals();
+    const { error } = await (supabase as any).from("orders").update({ invoice_finalized_at: new Date().toISOString(), customer_notified_at: new Date().toISOString(), total: totals.total, subtotal: totals.subtotal }).eq("id", id);
+    if (error) return toast.error(error.message);
+    const phone = (order.customers?.phone ?? "").replace(/\D/g, "");
+    const msg = `فاتورتك النهائية من Dry Tech لطلب #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
+    if (phone.length >= 11) window.open(`https://wa.me/2${phone.startsWith("0") ? phone.slice(1) : phone}?text=${encodeURIComponent(msg)}`, "_blank");
+    toast.success("تم تأكيد الفاتورة وتجهيز إشعار العميل");
+    load();
+  }
 
   async function addUnit() {
     if (!form.garment_type) return;
@@ -229,6 +309,33 @@ function OrderDetailPage() {
       </div>
 
       <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> تعديل الفاتورة النهائية</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {canEdit && <div className="flex gap-2">
+            <Select onValueChange={addInvoiceService}>
+              <SelectTrigger><SelectValue placeholder="إضافة صنف للفاتورة" /></SelectTrigger>
+              <SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {Number(s.unit_price).toLocaleString()} ج</SelectItem>)}</SelectContent>
+            </Select>
+            <Button onClick={saveInvoiceChanges} disabled={invoiceSaving}>{invoiceSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> تأكيد وإشعار</Button>
+          </div>}
+          <div className="space-y-2">
+            {invoiceItems.map((it, idx) => (
+              <div key={it.id ?? idx} className="grid md:grid-cols-[1fr_80px_110px_90px_40px] gap-2 items-center rounded-xl border p-2">
+                <Input value={it.name} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { name: e.target.value })} />
+                <Input type="number" min={1} value={it.qty} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { qty: Math.max(1, Number(e.target.value)) })} />
+                <Input type="number" value={it.unit_price} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { unit_price: Number(e.target.value) })} />
+                <div className="font-black text-end">{(it.qty * it.unit_price).toLocaleString()} ج</div>
+                {canEdit && <Button size="icon" variant="ghost" onClick={() => deleteInvoiceRow(idx)}><Trash2 className="w-4 h-4 text-red-600" /></Button>}
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl bg-muted p-3 flex justify-between font-black"><span>الإجمالي النهائي</span><span>{invoiceTotals().total.toLocaleString()} ج</span></div>
+          {order.invoice_finalized_at && <Badge className="bg-emerald-600">تم تأكيد الفاتورة</Badge>}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> القطع المسجلة ({units.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">لا توجد قطع بعد — أضف القطع من هنا أو من بنود الطلب.</p>}
@@ -254,6 +361,7 @@ function OrderDetailPage() {
                   {u.attributes?.color ? `اللون: ${u.attributes.color} · ` : ""}
                   قيمة تقديرية: {Number(u.line_value ?? 0).toLocaleString()} ج · جهد ×{u.complexity_factor}
                 </div>
+                {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">كي</SelectItem><SelectItem value="both">تنظيف + كي</SelectItem><SelectItem value="cleaning">تصليح</SelectItem></SelectContent></Select></div>}
                 <div className="text-xs text-muted-foreground">
                   فني الكي: <b>{u.employees?.full_name ?? "لم يوزع بعد"}</b>
                 </div>
