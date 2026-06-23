@@ -71,15 +71,22 @@ function CustomerPortal() {
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    for (const file of files.slice(0, 5)) {
-      const path = `order-images/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("order-attachments").upload(path, file);
+    const remaining = Math.max(0, 5 - images.length);
+    if (!remaining) { toast.error("الحد الأقصى 5 صور"); return; }
+    const selected = files.slice(0, remaining);
+    if (!selected.length) return;
+    for (const file of selected) {
+      const safe = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "-");
+      const path = `order-images/${Date.now()}-${Math.random().toString(36).slice(2)}-${safe}`;
+      const { error } = await supabase.storage.from("order-attachments").upload(path, file, { contentType: file.type });
       if (!error) {
         const { data: urlData } = supabase.storage.from("order-attachments").getPublicUrl(path);
-        setImages((prev) => [...prev, urlData.publicUrl]);
+        setImages((prev) => prev.length >= 5 ? prev : [...prev, urlData.publicUrl].slice(0, 5));
       }
     }
-    toast.success("تم رفع الصور");
+    if (files.length > remaining) toast.warning(`تم رفع ${selected.length} صور فقط — الحد الأقصى 5`);
+    else toast.success("تم رفع الصور");
+    e.currentTarget.value = "";
   }
 
   async function placeOrder() {
@@ -177,17 +184,17 @@ function CustomerPortal() {
               ) : (
                 <div className="space-y-2">
                   {services.map((svc) => (
-                    <div key={svc.id} className="flex items-center justify-between border rounded-lg p-3">
+                    <div key={svc.id} className="flex items-center justify-between border rounded-2xl p-3 bg-white shadow-sm">
                       <div>
                         <div className="font-bold text-sm">{svc.name}</div>
                         <div className="text-xs text-teal-600 font-bold">{svc.price} ج.م</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button onClick={() => setCart((c) => ({ ...c, [svc.id]: Math.max(0, (c[svc.id] ?? 0) - 1) }))}
-                          className="w-7 h-7 rounded-full border flex items-center justify-center font-bold text-lg leading-none">−</button>
+                          className="w-9 h-9 rounded-full border bg-slate-50 flex items-center justify-center font-bold text-lg leading-none">−</button>
                         <span className="w-6 text-center font-bold text-sm">{cart[svc.id] ?? 0}</span>
                         <button onClick={() => setCart((c) => ({ ...c, [svc.id]: (c[svc.id] ?? 0) + 1 }))}
-                          className="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-lg leading-none">+</button>
+                          className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-lg leading-none shadow">+</button>
                       </div>
                     </div>
                   ))}
@@ -203,8 +210,8 @@ function CustomerPortal() {
                 <label className="text-sm font-bold block mb-1">صور القطع (مشاكل، بقع، إلخ)</label>
                 <label className="flex items-center gap-2 border-2 border-dashed border-teal-300 rounded-lg p-3 cursor-pointer hover:bg-teal-50 transition">
                   <Camera className="w-5 h-5 text-teal-600" />
-                  <span className="text-sm text-teal-700">ارفع صور (حتى 5 صور)</span>
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                  <span className="text-sm text-teal-700">افتح الكاميرا / ارفع صور ({images.length}/5)</span>
+                  <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageUpload} />
                 </label>
                 {images.length > 0 && (
                   <div className="flex gap-2 mt-2 flex-wrap">
