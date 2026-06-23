@@ -15,6 +15,7 @@ import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
+import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
@@ -79,6 +80,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const TrackTokenRoute = TrackTokenRouteImport.update({
   id: '/track/$token',
   path: '/track/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinSlugRoute = JoinSlugRouteImport.update({
+  id: '/join/$slug',
+  path: '/join/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -280,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/orders/$id': typeof AppOrdersIdRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/': typeof AppIndexRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/_app/reports': typeof AppReportsRoute
   '/_app/services': typeof AppServicesRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/_app/': typeof AppIndexRoute
   '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
@@ -413,6 +422,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/services'
     | '/settings'
+    | '/join/$slug'
     | '/track/$token'
     | '/admin/platform-fees'
     | '/orders/$id'
@@ -455,6 +465,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/services'
     | '/settings'
+    | '/join/$slug'
     | '/track/$token'
     | '/'
     | '/admin/platform-fees'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/_app/reports'
     | '/_app/services'
     | '/_app/settings'
+    | '/join/$slug'
     | '/track/$token'
     | '/_app/'
     | '/_app/admin/platform-fees'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   CustomerPortalRoute: typeof CustomerPortalRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  JoinSlugRoute: typeof JoinSlugRoute
   TrackTokenRoute: typeof TrackTokenRoute
 }
 
@@ -576,6 +589,13 @@ declare module '@tanstack/react-router' {
       path: '/track/$token'
       fullPath: '/track/$token'
       preLoaderRoute: typeof TrackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$slug': {
+      id: '/join/$slug'
+      path: '/join/$slug'
+      fullPath: '/join/$slug'
+      preLoaderRoute: typeof JoinSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/settings': {
@@ -920,6 +940,7 @@ const rootRouteChildren: RootRouteChildren = {
   CustomerPortalRoute: CustomerPortalRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  JoinSlugRoute: JoinSlugRoute,
   TrackTokenRoute: TrackTokenRoute,
 }
 export const routeTree = rootRouteImport
