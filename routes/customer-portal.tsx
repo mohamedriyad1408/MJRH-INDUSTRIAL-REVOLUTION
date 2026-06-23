@@ -48,7 +48,7 @@ function CustomerPortal() {
   async function verify() {
     if (!phone || phone.length < 10) { toast.error("أدخل رقم هاتف صحيح"); return; }
     setLoading(true);
-    const { data } = await (supabase as any).from("customers").select("id, full_name, address, lat, lng").eq("phone", phone).maybeSingle();
+    const { data } = await (supabase as any).rpc("customer_portal_verify", { _phone: phone }).maybeSingle();
     setLoading(false);
     if (!data) { toast.error("الرقم غير مسجل — تواصل مع المغسلة"); return; }
     setCustomerId(data.id);
@@ -60,13 +60,13 @@ function CustomerPortal() {
   }
 
   async function loadOrders(cid: string) {
-    const { data } = await supabase.from("orders").select("id,order_number,status,total,created_at,promised_delivery_at,notes,order_items(name,qty,unit_price)").eq("customer_id", cid).order("created_at", { ascending: false }).limit(20);
+    const { data } = await (supabase as any).rpc("customer_portal_orders", { _phone: phone });
     setOrders((data ?? []) as any);
   }
 
   async function loadServices() {
-    const { data } = await supabase.from("service_items").select("id,name,unit_price,service_type").eq("is_active", true).order("name");
-    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.unit_price ?? s.price ?? 0), service_type: s.service_type })));
+    const { data } = await (supabase as any).rpc("customer_portal_services", { _phone: phone });
+    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.price ?? 0), service_type: s.service_type })));
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -91,19 +91,13 @@ function CustomerPortal() {
       return { service_item_id: id, name: svc.name, qty, unit_price: svc.price, service_type: svc.service_type as any };
     });
     const subtotal = cartItems.reduce((s, i) => s + i.qty * i.unit_price, 0);
-    const { data: ord, error } = await (supabase as any).from("orders").insert({
-      customer_id: customerId!, order_type: "delivery", status: "received",
-      pickup_address: customerInfo?.address ?? null, delivery_address: customerInfo?.address ?? null,
-      pickup_lat: customerInfo?.lat ?? null, pickup_lng: customerInfo?.lng ?? null, delivery_lat: customerInfo?.lat ?? null, delivery_lng: customerInfo?.lng ?? null,
-      subtotal, total: subtotal, notes: notes || null, created_by: customerId!,
-    }).select("id,order_number").single();
+    const { data: ord, error } = await (supabase as any).rpc("customer_portal_create_order", {
+      _phone: phone,
+      _items: cartItems.map((i) => ({ service_item_id: i.service_item_id, qty: i.qty })),
+      _notes: notes || null,
+      _image_urls: images,
+    }).single();
     if (error) { setPlacing(false); return toast.error(error.message); }
-    if (cartItems.length) {
-      await supabase.from("order_items").insert(cartItems.map((i) => ({ ...i, order_id: ord.id })));
-    }
-    if (images.length) {
-      await  (supabase as any).from("order_attachments").insert(images.map((url) => ({ order_id: ord.id, url, uploaded_by: customerId!, label: "صورة من العميل" })));
-    }
     setPlacing(false);
     toast.success(`✅ تم إرسال طلبك #${ord.order_number}`);
     setCart({}); setNotes(""); setImages([]);
