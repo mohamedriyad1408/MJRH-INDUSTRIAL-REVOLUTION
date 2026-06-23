@@ -14,7 +14,7 @@ async function call<T>(action: string, payload: Record<string, unknown> = {}): P
 }
 
 export const adminApi = {
-  createTenant:      (p: { name: string; slug: string; ownerEmail: string; ownerPassword: string; ownerFullName: string }) =>
+  createTenant:      (p: { name: string; slug: string; ownerEmail: string; ownerPassword: string; ownerFullName: string; lat?: number | null; lng?: number | null; locationUrl?: string | null; operatingRadiusKm?: number | null }) =>
     call<{ tenant_id: string }>("createTenant", p),
 
   createTenantUser:  (p: { tenantId: string; email: string; password: string; fullName: string; role: string }) =>

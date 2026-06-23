@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Loader2, Building2 } from "lucide-react";
+import { parseLatLng } from "@/lib/geo";
+import { Plus, Loader2, Building2, LocateFixed } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin/tenants/")({
   head: () => ({ meta: [{ title: "إدارة المغاسل" }] }),
@@ -87,13 +88,27 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [locationUrl, setLocationUrl] = useState("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const [radius, setRadius] = useState("8");
   const [loading, setLoading] = useState(false);
+
+  function extractLocation() {
+    const parsed = parseLatLng(locationUrl);
+    if (!parsed) return toast.error("الصق رابط Google Maps أو lat,lng");
+    setLat(String(parsed.lat)); setLng(String(parsed.lng));
+  }
+  function useGps() {
+    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم GPS");
+    navigator.geolocation.getCurrentPosition((p) => { setLat(p.coords.latitude.toFixed(7)); setLng(p.coords.longitude.toFixed(7)); setLocationUrl(`https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`); }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      await fn({ name, slug, ownerEmail: email, ownerPassword: password, ownerFullName: fullName });
+      await fn({ name, slug, ownerEmail: email, ownerPassword: password, ownerFullName: fullName, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, locationUrl: locationUrl || null, operatingRadiusKm: Number(radius || 8) });
       toast.success("تم إنشاء المغسلة والمالك");
       onDone();
     } catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
@@ -106,6 +121,17 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
       <div>
         <Label>الكود (slug — حروف إنجليزية صغيرة وأرقام)</Label>
         <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} required pattern="[a-z0-9\-]+" />
+      </div>
+      <div className="border rounded-lg p-3 space-y-2">
+        <Label>موقع المغسلة ونطاق التشغيل</Label>
+        <Input placeholder="رابط Google Maps أو lat,lng" value={locationUrl} onChange={(e) => setLocationUrl(e.target.value)} />
+        <div className="grid grid-cols-3 gap-2">
+          <Input placeholder="Latitude" value={lat} onChange={(e) => setLat(e.target.value)} />
+          <Input placeholder="Longitude" value={lng} onChange={(e) => setLng(e.target.value)} />
+          <Input type="number" placeholder="نطاق كم" value={radius} onChange={(e) => setRadius(e.target.value)} />
+        </div>
+        <div className="flex gap-2"><Button type="button" variant="outline" onClick={extractLocation}>استخراج</Button><Button type="button" variant="secondary" onClick={useGps}><LocateFixed className="w-4 h-4 ms-1" /> GPS</Button></div>
+        <p className="text-xs text-muted-foreground">سيتم إظهار الكمبوندات والمناطق الواقعة داخل نطاق التشغيل فقط.</p>
       </div>
       <div className="border-t pt-3 space-y-3">
         <div className="text-sm font-medium">حساب المالك</div>
