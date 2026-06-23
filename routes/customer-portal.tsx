@@ -30,6 +30,7 @@ type CustomerInfo = { id: string; full_name: string; address?: string | null; la
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
 
 function CustomerPortal() {
+  const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
   const [phone, setPhone] = useState("");
   const [verified, setVerified] = useState(false);
   const [customerId, setCustomerId] = useState<string | null>(null);
@@ -47,7 +48,7 @@ function CustomerPortal() {
   async function verify() {
     if (!phone || phone.replace(/\D/g, "").length < 10) { toast.error("أدخل رقم هاتف صحيح"); return; }
     setLoading(true);
-    const { data } = await (supabase as any).rpc("customer_portal_verify", { _phone: phone }).maybeSingle();
+    const { data } = await (supabase as any).rpc("customer_portal_verify", { _phone: phone, _slug: tenantSlug }).maybeSingle();
     setLoading(false);
     if (!data) { toast.error("الرقم غير مسجل — تواصل مع المغسلة أو سجل من رابط المغسلة"); return; }
     setCustomerId(data.id);
@@ -59,12 +60,12 @@ function CustomerPortal() {
   }
 
   async function loadOrders() {
-    const { data } = await (supabase as any).rpc("customer_portal_orders", { _phone: phone });
+    const { data } = await (supabase as any).rpc("customer_portal_orders", { _phone: phone, _slug: tenantSlug });
     setOrders((data ?? []) as any);
   }
 
   async function loadServices() {
-    const { data } = await (supabase as any).rpc("customer_portal_services", { _phone: phone });
+    const { data } = await (supabase as any).rpc("customer_portal_services", { _phone: phone, _slug: tenantSlug });
     setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.price ?? 0), service_type: s.service_type })));
   }
 
@@ -92,6 +93,7 @@ function CustomerPortal() {
       _items: pieces.map((p) => ({ service_item_id: p.service_item_id, qty: 1, image_url: p.image_url ?? null })),
       _notes: notes || null,
       _image_urls: pieces.map((p) => p.image_url).filter(Boolean),
+      _slug: tenantSlug,
     }).single();
     if (error) { setPlacing(false); return toast.error(error.message); }
     setPlacing(false);

@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
@@ -70,6 +71,11 @@ const CustomerPortalRoute = CustomerPortalRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -269,6 +275,7 @@ const AppAdminTenantsIdRoute = AppAdminTenantsIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/$slug': typeof SlugRoute
   '/': typeof AppIndexRoute
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof AppAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/$slug': typeof SlugRoute
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -358,6 +366,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/$slug': typeof SlugRoute
   '/_app': typeof AppRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
@@ -405,6 +414,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/$slug'
     | '/'
     | '/customer-portal'
     | '/login'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/$slug'
     | '/customer-portal'
     | '/login'
     | '/reset-password'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/admin/users'
   id:
     | '__root__'
+    | '/$slug'
     | '/_app'
     | '/customer-portal'
     | '/login'
@@ -539,6 +551,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  SlugRoute: typeof SlugRoute
   AppRoute: typeof AppRouteWithChildren
   CustomerPortalRoute: typeof CustomerPortalRoute
   LoginRoute: typeof LoginRoute
@@ -575,6 +588,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -936,6 +956,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  SlugRoute: SlugRoute,
   AppRoute: AppRouteWithChildren,
   CustomerPortalRoute: CustomerPortalRoute,
   LoginRoute: LoginRoute,
