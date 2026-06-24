@@ -20,6 +20,7 @@ import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppReceivablesRouteImport } from './routes/_app/receivables'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
 import { Route as AppManagerRouteImport } from './routes/_app/manager'
 import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
@@ -31,6 +32,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
 import { Route as AppCsRouteImport } from './routes/_app/cs'
 import { Route as AppCrmRouteImport } from './routes/_app/crm'
+import { Route as AppCashClosingRouteImport } from './routes/_app/cash-closing'
 import { Route as AppBudgetsRouteImport } from './routes/_app/budgets'
 import { Route as AppBranchesRouteImport } from './routes/_app/branches'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
@@ -115,6 +117,11 @@ const AppReportsRoute = AppReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReceivablesRoute = AppReceivablesRouteImport.update({
+  id: '/receivables',
+  path: '/receivables',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOpsRoute = AppOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
@@ -168,6 +175,11 @@ const AppCsRoute = AppCsRouteImport.update({
 const AppCrmRoute = AppCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCashClosingRoute = AppCashClosingRouteImport.update({
+  id: '/cash-closing',
+  path: '/cash-closing',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBudgetsRoute = AppBudgetsRouteImport.update({
@@ -326,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
+  '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
@@ -337,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
+  '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
@@ -377,6 +391,7 @@ export interface FileRoutesByTo {
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
+  '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
@@ -388,6 +403,7 @@ export interface FileRoutesByTo {
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
+  '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
@@ -431,6 +447,7 @@ export interface FileRoutesById {
   '/_app/billing': typeof AppBillingRoute
   '/_app/branches': typeof AppBranchesRoute
   '/_app/budgets': typeof AppBudgetsRoute
+  '/_app/cash-closing': typeof AppCashClosingRoute
   '/_app/crm': typeof AppCrmRoute
   '/_app/cs': typeof AppCsRoute
   '/_app/customers': typeof AppCustomersRoute
@@ -442,6 +459,7 @@ export interface FileRoutesById {
   '/_app/live-map': typeof AppLiveMapRoute
   '/_app/manager': typeof AppManagerRoute
   '/_app/ops': typeof AppOpsRoute
+  '/_app/receivables': typeof AppReceivablesRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/services': typeof AppServicesRoute
   '/_app/settings': typeof AppSettingsRoute
@@ -486,6 +504,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/branches'
     | '/budgets'
+    | '/cash-closing'
     | '/crm'
     | '/cs'
     | '/customers'
@@ -497,6 +516,7 @@ export interface FileRouteTypes {
     | '/live-map'
     | '/manager'
     | '/ops'
+    | '/receivables'
     | '/reports'
     | '/services'
     | '/settings'
@@ -537,6 +557,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/branches'
     | '/budgets'
+    | '/cash-closing'
     | '/crm'
     | '/cs'
     | '/customers'
@@ -548,6 +569,7 @@ export interface FileRouteTypes {
     | '/live-map'
     | '/manager'
     | '/ops'
+    | '/receivables'
     | '/reports'
     | '/services'
     | '/settings'
@@ -590,6 +612,7 @@ export interface FileRouteTypes {
     | '/_app/billing'
     | '/_app/branches'
     | '/_app/budgets'
+    | '/_app/cash-closing'
     | '/_app/crm'
     | '/_app/cs'
     | '/_app/customers'
@@ -601,6 +624,7 @@ export interface FileRouteTypes {
     | '/_app/live-map'
     | '/_app/manager'
     | '/_app/ops'
+    | '/_app/receivables'
     | '/_app/reports'
     | '/_app/services'
     | '/_app/settings'
@@ -723,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/receivables': {
+      id: '/_app/receivables'
+      path: '/receivables'
+      fullPath: '/receivables'
+      preLoaderRoute: typeof AppReceivablesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ops': {
       id: '/_app/ops'
       path: '/ops'
@@ -798,6 +829,13 @@ declare module '@tanstack/react-router' {
       path: '/crm'
       fullPath: '/crm'
       preLoaderRoute: typeof AppCrmRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/cash-closing': {
+      id: '/_app/cash-closing'
+      path: '/cash-closing'
+      fullPath: '/cash-closing'
+      preLoaderRoute: typeof AppCashClosingRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/budgets': {
@@ -1011,6 +1049,7 @@ interface AppRouteChildren {
   AppBillingRoute: typeof AppBillingRoute
   AppBranchesRoute: typeof AppBranchesRoute
   AppBudgetsRoute: typeof AppBudgetsRoute
+  AppCashClosingRoute: typeof AppCashClosingRoute
   AppCrmRoute: typeof AppCrmRoute
   AppCsRoute: typeof AppCsRoute
   AppCustomersRoute: typeof AppCustomersRoute
@@ -1022,6 +1061,7 @@ interface AppRouteChildren {
   AppLiveMapRoute: typeof AppLiveMapRoute
   AppManagerRoute: typeof AppManagerRoute
   AppOpsRoute: typeof AppOpsRoute
+  AppReceivablesRoute: typeof AppReceivablesRoute
   AppReportsRoute: typeof AppReportsRoute
   AppServicesRoute: typeof AppServicesRoute
   AppSettingsRoute: typeof AppSettingsRoute
@@ -1058,6 +1098,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBillingRoute: AppBillingRoute,
   AppBranchesRoute: AppBranchesRoute,
   AppBudgetsRoute: AppBudgetsRoute,
+  AppCashClosingRoute: AppCashClosingRoute,
   AppCrmRoute: AppCrmRoute,
   AppCsRoute: AppCsRoute,
   AppCustomersRoute: AppCustomersRoute,
@@ -1069,6 +1110,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLiveMapRoute: AppLiveMapRoute,
   AppManagerRoute: AppManagerRoute,
   AppOpsRoute: AppOpsRoute,
+  AppReceivablesRoute: AppReceivablesRoute,
   AppReportsRoute: AppReportsRoute,
   AppServicesRoute: AppServicesRoute,
   AppSettingsRoute: AppSettingsRoute,

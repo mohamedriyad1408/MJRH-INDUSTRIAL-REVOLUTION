@@ -5,6 +5,7 @@ import {
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
+  UsersRound, LockKeyhole,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -77,6 +78,8 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "الحسابات", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
       { title: "القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
+      { title: "ذمم العملاء", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
+      { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole, roles: ["owner", "ops_manager"] },
       { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
       { title: "المخزون والمعدات", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
       { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },
