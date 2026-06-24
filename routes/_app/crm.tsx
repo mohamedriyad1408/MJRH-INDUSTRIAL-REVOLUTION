@@ -81,10 +81,20 @@ function CrmPage() {
     const c = customers.find((x) => x.id === form.customer_id);
     if (!c) return toast.error("اختار عميل");
     if (!form.message.trim()) return toast.error("اكتب الرسالة");
+    const messageText = form.message;
     const { error } = await (supabase as any).from("customer_messages").insert({
-      customer_id: c.id, phone: c.phone, channel: "whatsapp", template_key: form.template_key, message: form.message, status, created_by: user?.id,
+      customer_id: c.id, phone: c.phone, channel: "whatsapp", template_key: form.template_key, message: messageText, status, created_by: user?.id,
     });
-    if (error) toast.error(error.message); else { toast.success(status === "queued" ? "تم وضع الرسالة في قائمة الإرسال" : "تم حفظ مسودة"); setForm({ customer_id: "", template_key: "order_ready", message: templates.order_ready }); load(); }
+    if (error) toast.error(error.message); else {
+      if (status === "queued") {
+        window.open(whatsappUrl(c.phone, messageText), "_blank", "noopener,noreferrer");
+        toast.success("تم فتح واتساب. بعد الإرسال اضغط: تم الإرسال من سجل الرسائل");
+      } else {
+        toast.success("تم حفظ مسودة");
+      }
+      setForm({ customer_id: "", template_key: "order_ready", message: templates.order_ready });
+      load();
+    }
   }
 
   async function markSent(m: any) {
@@ -101,14 +111,14 @@ function CrmPage() {
 
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black flex items-center gap-2"><HeartHandshake className="w-7 h-7 text-teal-600" />CRM والولاء والواتساب</h1><p className="text-sm text-muted-foreground">نقاط العملاء، شرائح VIP، وتحضير رسائل واتساب قابلة للإرسال.</p></div>
+      <div><h1 className="text-2xl font-black flex items-center gap-2"><HeartHandshake className="w-7 h-7 text-teal-600" />CRM والولاء والواتساب</h1><p className="text-sm text-muted-foreground">نقاط العملاء، شرائح VIP، وتحضير رسائل واتساب. الإرسال الحالي يفتح واتساب يدويًا، والإرسال الآلي يحتاج WhatsApp API.</p></div>
       <div className="flex gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button onClick={rebuildLoyalty}><RefreshCw className="w-4 h-4 ms-1" />تحديث الولاء</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
       <Kpi label="عملاء" value={customers.length} />
       <Kpi label="Gold/VIP" value={stats.vip} />
-      <Kpi label="رسائل معلقة" value={stats.queued} />
+      <Kpi label="رسائل جاهزة للإرسال" value={stats.queued} />
     </div>
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="loyalty" className="space-y-4">
@@ -125,7 +135,7 @@ function CrmPage() {
           <Field label="العميل"><Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}><SelectTrigger><SelectValue placeholder="اختار عميل" /></SelectTrigger><SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name} — {c.phone}</SelectItem>)}</SelectContent></Select></Field>
           <Field label="القالب"><Select value={form.template_key} onValueChange={selectTemplate}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="order_ready">الطلب جاهز</SelectItem><SelectItem value="payment_reminder">تذكير دفع</SelectItem><SelectItem value="winback">استرجاع عميل</SelectItem><SelectItem value="thanks">شكر وتقييم</SelectItem></SelectContent></Select></Field>
           <Field label="نص الرسالة"><Textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field>
-          <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => saveMessage("draft")}>مسودة</Button><Button onClick={() => saveMessage("queued")}><Send className="w-4 h-4 ms-1" />تجهيز للإرسال</Button></div>
+          <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => saveMessage("draft")}>مسودة</Button><Button onClick={() => saveMessage("queued")}><Send className="w-4 h-4 ms-1" />فتح واتساب للإرسال</Button></div>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">سجل الرسائل</CardTitle></CardHeader><CardContent className="space-y-2">
           {messages.map((m) => <div key={m.id} className="rounded-2xl border p-3 space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{m.customers?.full_name ?? m.phone}</div><Badge variant={m.status === "sent" ? "secondary" : "outline"}>{statusAr(m.status)}</Badge></div><p className="text-sm text-muted-foreground">{m.message}</p><div className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={whatsappUrl(m.phone ?? m.customers?.phone, m.message)} target="_blank">فتح واتساب</a></Button>{m.status !== "sent" && <Button size="sm" onClick={() => markSent(m)}>تم الإرسال</Button>}</div></div>)}
@@ -139,4 +149,4 @@ function CrmPage() {
 function Kpi({ label, value }: { label: string; value: any }) { return <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black mt-1">{value}</div></CardContent></Card>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1"><Label>{label}</Label>{children}</div>; }
 function tierAr(s: string) { return ({ basic: "Basic", silver: "Silver", gold: "Gold", vip: "VIP" } as any)[s] ?? s; }
-function statusAr(s: string) { return ({ draft: "مسودة", queued: "جاهزة", sent: "مرسلة", failed: "فشلت" } as any)[s] ?? s; }
+function statusAr(s: string) { return ({ draft: "مسودة", queued: "جاهزة للإرسال", sent: "مرسلة", failed: "فشلت" } as any)[s] ?? s; }
