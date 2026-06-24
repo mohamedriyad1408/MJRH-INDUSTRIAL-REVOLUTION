@@ -55,41 +55,48 @@ function FinancePage() {
 
   async function load() {
     setLoading(true);
-    // الوضع السهل: أول ما صاحب العمل يفتح الحسابات، النظام يجهز رواتب الشهر كمصروفات آجلة بدون خطوات معقدة.
-    const { data: payrollData } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) }).catch(() => ({ data: null }));
-    setPayrollSync(payrollData);
+    try {
+      // الوضع السهل: أول ما صاحب العمل يفتح الحسابات، النظام يجهز رواتب الشهر كمصروفات آجلة بدون خطوات معقدة.
+      const { data: payrollData, error: payrollError } = await (supabase as any)
+        .rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
+      if (payrollError) toast.error(`تعذر تجهيز الرواتب: ${payrollError.message}`);
+      setPayrollSync(payrollData ?? null);
 
-    let oq = supabase.from("orders").select("total,payment_status,payment_method").neq("status", "cancelled");
-    if (fromDate) oq = oq.gte("created_at", fromDate);
-    const { data: orders } = await oq;
-    const rev = (orders ?? []).reduce((acc: any, o: any) => {
-      const t = Number(o.total ?? 0); acc.total += t; acc.count++;
-      if (o.payment_status === "paid") acc.paid += t; else acc.unpaid += t;
-      return acc;
-    }, { total: 0, paid: 0, unpaid: 0, count: 0 });
-    setRevenue(rev);
+      let oq = supabase.from("orders").select("total,payment_status,payment_method").neq("status", "cancelled");
+      if (fromDate) oq = oq.gte("created_at", fromDate);
 
-    let eq = supabase.from("expenses").select("*").order("spent_at", { ascending: false });
-    if (fromDate) eq = eq.gte("spent_at", fromDate);
-    const { data: exp } = await eq;
-    setExpenses((exp ?? []) as any);
+      let eq = supabase.from("expenses").select("*").order("spent_at", { ascending: false });
+      if (fromDate) eq = eq.gte("spent_at", fromDate);
 
-    // ✅ Phase 2: fetch from employee_requests (unified) instead of advance_requests on technicians
-    const { data: adv } = await supabase
-      .from("employee_requests")
-      .select("id,employee_id,amount,reason,status,created_at,decided_at,employees(full_name)")
-      .eq("type", "advance")
-      .order("created_at", { ascending: false });
-    setAdvances(((adv ?? []) as any).map((a: any) => ({
-      ...a,
-      employee_name: a.employees?.full_name ?? "—",
-    })));
+      const [ordRes, expRes, advRes, empRes] = await Promise.all([
+        oq,
+        eq,
+        supabase
+          .from("employee_requests")
+          .select("id,employee_id,amount,reason,status,created_at,decided_at,employees(full_name)")
+          .eq("type", "advance")
+          .order("created_at", { ascending: false }),
+        supabase.from("employees").select("id,full_name,monthly_salary,commission_percent").eq("is_active", true).order("full_name"),
+      ]);
 
-    // ✅ Phase 2: employees table instead of technicians
-    const { data: emps } = await supabase.from("employees").select("id,full_name,monthly_salary,commission_percent").eq("is_active", true).order("full_name");
-    setEmployees((emps ?? []) as any);
+      if (ordRes.error) toast.error(ordRes.error.message);
+      if (expRes.error) toast.error(expRes.error.message);
+      if (advRes.error) toast.error(advRes.error.message);
+      if (empRes.error) toast.error(empRes.error.message);
 
-    setLoading(false);
+      const orders = ordRes.data ?? [];
+      const rev = orders.reduce((acc: any, o: any) => {
+        const t = Number(o.total ?? 0); acc.total += t; acc.count++;
+        if (o.payment_status === "paid") acc.paid += t; else acc.unpaid += t;
+        return acc;
+      }, { total: 0, paid: 0, unpaid: 0, count: 0 });
+      setRevenue(rev);
+      setExpenses((expRes.data ?? []) as any);
+      setAdvances(((advRes.data ?? []) as any).map((a: any) => ({ ...a, employee_name: a.employees?.full_name ?? "—" })));
+      setEmployees((empRes.data ?? []) as any);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, [fromDate]);
@@ -107,9 +114,10 @@ function FinancePage() {
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const pendingAdvances = advances.filter((a) => a.status === "pending");
   const approvedAdvancesTotal = advances.filter((a) => a.status === "approved").reduce((s, a) => s + Number(a.amount), 0);
-  const payrollExpenses = expenses.filter((e) => e.category === "salaries").reduce((s, e) => s + Number(e.amount), 0);
-  const payablePayroll = expenses.filter((e) => e.category === "salaries" && e.status === "payable").reduce((s, e) => s + Number(e.amount), 0);
-  const expectedMonthlySalaries = employees.reduce((s, e) => s + Number(e.monthly_salary ?? 0), 0);
+  const payrollGrossFromSync = Number(payrollSync?.gross_total ?? 0);
+  const payrollExpenses = Math.max(expenses.filter((e) => e.category === "salaries").reduce((s, e) => s + Number(e.amount), 0), payrollGrossFromSync);
+  const payablePayroll = Math.max(expenses.filter((e) => e.category === "salaries" && e.status === "payable").reduce((s, e) => s + Number(e.amount), 0), payrollGrossFromSync);
+  const expectedMonthlySalaries = Math.max(employees.reduce((s, e) => s + Number(e.monthly_salary ?? 0), 0), payrollGrossFromSync);
   const netProfit = revenue.total - totalExpenses - approvedAdvancesTotal;
 
   return (

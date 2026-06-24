@@ -1,6 +1,11 @@
-export function fmtMoney(n: number | string | null | undefined, currency = "ج.م") {
+export function fmtMoney(n: number | string | null | undefined, currency = "جنيه") {
   const v = Number(n ?? 0);
-  return `${v.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+  const hasFractions = Math.abs(v % 1) > 0.001;
+  const formatted = v.toLocaleString("en-US", {
+    minimumFractionDigits: hasFractions ? 2 : 0,
+    maximumFractionDigits: 2,
+  });
+  return `${formatted} ${currency}`;
 }
 
 export function fmtDate(d: string | Date | null | undefined) {
