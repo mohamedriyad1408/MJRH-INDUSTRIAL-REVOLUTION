@@ -116,16 +116,17 @@ function CustomerPortal() {
     const { error } = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: true, contentType: file.type });
     if (error) { setPayingOrderId(null); return toast.error(error.message); }
     const { data } = supabase.storage.from("payment-proofs").getPublicUrl(path);
-    const { data: res, error: rpcErr } = await (supabase as any).rpc("customer_portal_submit_instapay_payment", {
-      _phone: phone,
-      _slug: tenantSlug,
-      _order_id: order.id,
-      _proof_url: data.publicUrl,
-      _amount: amount,
-      _detected_amount: detected,
-    }).maybeSingle();
+    const { data: res, error: fnErr } = await supabase.functions.invoke("ocr-payment-proof", {
+      body: {
+        phone,
+        slug: tenantSlug,
+        orderId: order.id,
+        proofUrl: data.publicUrl,
+        typedAmount: amount,
+      },
+    });
     setPayingOrderId(null);
-    if (rpcErr) return toast.error(rpcErr.message);
+    if (fnErr || res?.ok === false) return toast.error(res?.error ?? fnErr?.message ?? "تعذر قراءة الإيصال");
     toast.success(res?.message ?? "تم رفع إثبات الدفع");
     loadOrders();
   }
