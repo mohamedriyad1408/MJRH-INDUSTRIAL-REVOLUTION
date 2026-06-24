@@ -116,6 +116,19 @@ function Dashboard() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> أشياء تحتاج تدخل الآن</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(stats?.attention ?? []).length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">لا توجد مشاكل تشغيل واضحة الآن ✅</div>}
+          {(stats?.attention ?? []).map((a: any) => (
+            <Link key={a.key} to={a.href} className={`flex items-center justify-between rounded-xl border p-3 text-sm hover:shadow-sm transition ${a.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : a.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}>
+              <span className="font-bold">{a.label}</span>
+              <span className="font-black text-lg">{a.count}</span>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
+
       {/* Quick links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
