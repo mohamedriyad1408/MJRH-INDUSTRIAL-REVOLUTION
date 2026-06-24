@@ -4,6 +4,7 @@ import {
   Users, Tag, Settings, LogOut, Wallet, BriefcaseBusiness,
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle,
+  BarChart3, Boxes, HeartHandshake, ReceiptText,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -22,6 +23,7 @@ const adminGroups: { label: string; items: NavItem[] }[] = [
       { title: "المغاسل", url: "/admin/tenants", icon: Building2 },
       { title: "كل المستخدمين", url: "/admin/users", icon: Crown },
       { title: "رسوم تشغيل المنصة", url: "/admin/platform-fees", icon: Banknote },
+      { title: "فواتير SaaS", url: "/admin/billing", icon: ReceiptText },
     ],
   },
 ];
@@ -36,6 +38,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "لوحة المدير", url: "/manager", icon: ShieldCheck, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "لوحة السائق", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
       { title: "خريطة المراقبة الحية", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
+      { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager"] },
     ],
   },
   {
@@ -52,6 +55,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee"] },
       { title: "الكي", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee"] },
       { title: "التغليف", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee"] },
+      { title: "الجودة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee"] },
       { title: "المناديب", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
     ],
   },
@@ -68,16 +72,19 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "المالية",
+    label: "المالية والتشغيل",
     items: [
       { title: "الحسابات", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
+      { title: "المخزون والمعدات", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
+      { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },
     ],
   },
   {
     label: "الإدارة",
     items: [
       { title: "العملاء", url: "/customers", icon: Users, roles: ["cs_manager", "owner"] },
+      { title: "CRM والولاء", url: "/crm", icon: HeartHandshake, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "كتالوج الخدمات", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
       { title: "نقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
       { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },

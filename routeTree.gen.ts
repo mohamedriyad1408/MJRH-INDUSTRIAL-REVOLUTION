@@ -23,17 +23,21 @@ import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
 import { Route as AppManagerRouteImport } from './routes/_app/manager'
 import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
+import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppFinanceRouteImport } from './routes/_app/finance'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
 import { Route as AppCsRouteImport } from './routes/_app/cs'
+import { Route as AppCrmRouteImport } from './routes/_app/crm'
 import { Route as AppBudgetsRouteImport } from './routes/_app/budgets'
 import { Route as AppBranchesRouteImport } from './routes/_app/branches'
+import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppStaffIndexRouteImport } from './routes/_app/staff/index'
 import { Route as AppPickupsIndexRouteImport } from './routes/_app/pickups/index'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
 import { Route as AppStationsReceptionRouteImport } from './routes/_app/stations/reception'
+import { Route as AppStationsQcRouteImport } from './routes/_app/stations/qc'
 import { Route as AppStationsPackingRouteImport } from './routes/_app/stations/packing'
 import { Route as AppStationsIroningRouteImport } from './routes/_app/stations/ironing'
 import { Route as AppStationsDeliveryRouteImport } from './routes/_app/stations/delivery'
@@ -50,6 +54,7 @@ import { Route as AppPickupsNewRouteImport } from './routes/_app/pickups/new'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
 import { Route as AppOrdersIdRouteImport } from './routes/_app/orders/$id'
 import { Route as AppAdminPlatformFeesRouteImport } from './routes/_app/admin/platform-fees'
+import { Route as AppAdminBillingRouteImport } from './routes/_app/admin/billing'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
 import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
 import { Route as AppAdminTenantsIdRouteImport } from './routes/_app/admin/tenants/$id'
@@ -123,6 +128,11 @@ const AppLiveMapRoute = AppLiveMapRouteImport.update({
   path: '/live-map',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFinanceRoute = AppFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
@@ -148,6 +158,11 @@ const AppCsRoute = AppCsRouteImport.update({
   path: '/cs',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCrmRoute = AppCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBudgetsRoute = AppBudgetsRouteImport.update({
   id: '/budgets',
   path: '/budgets',
@@ -156,6 +171,11 @@ const AppBudgetsRoute = AppBudgetsRouteImport.update({
 const AppBranchesRoute = AppBranchesRouteImport.update({
   id: '/branches',
   path: '/branches',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBillingRoute = AppBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => AppRoute,
 } as any)
 const AppStaffIndexRoute = AppStaffIndexRouteImport.update({
@@ -176,6 +196,11 @@ const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
 const AppStationsReceptionRoute = AppStationsReceptionRouteImport.update({
   id: '/stations/reception',
   path: '/stations/reception',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStationsQcRoute = AppStationsQcRouteImport.update({
+  id: '/stations/qc',
+  path: '/stations/qc',
   getParentRoute: () => AppRoute,
 } as any)
 const AppStationsPackingRoute = AppStationsPackingRouteImport.update({
@@ -258,6 +283,11 @@ const AppAdminPlatformFeesRoute = AppAdminPlatformFeesRouteImport.update({
   path: '/admin/platform-fees',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminBillingRoute = AppAdminBillingRouteImport.update({
+  id: '/admin/billing',
+  path: '/admin/billing',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
   id: '/admin/users/',
   path: '/admin/users/',
@@ -280,13 +310,16 @@ export interface FileRoutesByFullPath {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
+  '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
+  '/inventory': typeof AppInventoryRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
@@ -295,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
+  '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/orders/$id': typeof AppOrdersIdRoute
   '/orders/new': typeof AppOrdersNewRoute
@@ -311,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/stations/delivery': typeof AppStationsDeliveryRoute
   '/stations/ironing': typeof AppStationsIroningRoute
   '/stations/packing': typeof AppStationsPackingRoute
+  '/stations/qc': typeof AppStationsQcRoute
   '/stations/reception': typeof AppStationsReceptionRoute
   '/orders/': typeof AppOrdersIndexRoute
   '/pickups/': typeof AppPickupsIndexRoute
@@ -324,13 +359,16 @@ export interface FileRoutesByTo {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
+  '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
   '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
+  '/inventory': typeof AppInventoryRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
@@ -340,6 +378,7 @@ export interface FileRoutesByTo {
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/': typeof AppIndexRoute
+  '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/orders/$id': typeof AppOrdersIdRoute
   '/orders/new': typeof AppOrdersNewRoute
@@ -356,6 +395,7 @@ export interface FileRoutesByTo {
   '/stations/delivery': typeof AppStationsDeliveryRoute
   '/stations/ironing': typeof AppStationsIroningRoute
   '/stations/packing': typeof AppStationsPackingRoute
+  '/stations/qc': typeof AppStationsQcRoute
   '/stations/reception': typeof AppStationsReceptionRoute
   '/orders': typeof AppOrdersIndexRoute
   '/pickups': typeof AppPickupsIndexRoute
@@ -371,13 +411,16 @@ export interface FileRoutesById {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_app/billing': typeof AppBillingRoute
   '/_app/branches': typeof AppBranchesRoute
   '/_app/budgets': typeof AppBudgetsRoute
+  '/_app/crm': typeof AppCrmRoute
   '/_app/cs': typeof AppCsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/driver': typeof AppDriverRoute
   '/_app/finance': typeof AppFinanceRoute
+  '/_app/inventory': typeof AppInventoryRoute
   '/_app/live-map': typeof AppLiveMapRoute
   '/_app/manager': typeof AppManagerRoute
   '/_app/ops': typeof AppOpsRoute
@@ -387,6 +430,7 @@ export interface FileRoutesById {
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/billing': typeof AppAdminBillingRoute
   '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/_app/orders/$id': typeof AppOrdersIdRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
@@ -403,6 +447,7 @@ export interface FileRoutesById {
   '/_app/stations/delivery': typeof AppStationsDeliveryRoute
   '/_app/stations/ironing': typeof AppStationsIroningRoute
   '/_app/stations/packing': typeof AppStationsPackingRoute
+  '/_app/stations/qc': typeof AppStationsQcRoute
   '/_app/stations/reception': typeof AppStationsReceptionRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
   '/_app/pickups/': typeof AppPickupsIndexRoute
@@ -419,13 +464,16 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/billing'
     | '/branches'
     | '/budgets'
+    | '/crm'
     | '/cs'
     | '/customers'
     | '/dashboard'
     | '/driver'
     | '/finance'
+    | '/inventory'
     | '/live-map'
     | '/manager'
     | '/ops'
@@ -434,6 +482,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/join/$slug'
     | '/track/$token'
+    | '/admin/billing'
     | '/admin/platform-fees'
     | '/orders/$id'
     | '/orders/new'
@@ -450,6 +499,7 @@ export interface FileRouteTypes {
     | '/stations/delivery'
     | '/stations/ironing'
     | '/stations/packing'
+    | '/stations/qc'
     | '/stations/reception'
     | '/orders/'
     | '/pickups/'
@@ -463,13 +513,16 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/billing'
     | '/branches'
     | '/budgets'
+    | '/crm'
     | '/cs'
     | '/customers'
     | '/dashboard'
     | '/driver'
     | '/finance'
+    | '/inventory'
     | '/live-map'
     | '/manager'
     | '/ops'
@@ -479,6 +532,7 @@ export interface FileRouteTypes {
     | '/join/$slug'
     | '/track/$token'
     | '/'
+    | '/admin/billing'
     | '/admin/platform-fees'
     | '/orders/$id'
     | '/orders/new'
@@ -495,6 +549,7 @@ export interface FileRouteTypes {
     | '/stations/delivery'
     | '/stations/ironing'
     | '/stations/packing'
+    | '/stations/qc'
     | '/stations/reception'
     | '/orders'
     | '/pickups'
@@ -509,13 +564,16 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/_app/billing'
     | '/_app/branches'
     | '/_app/budgets'
+    | '/_app/crm'
     | '/_app/cs'
     | '/_app/customers'
     | '/_app/dashboard'
     | '/_app/driver'
     | '/_app/finance'
+    | '/_app/inventory'
     | '/_app/live-map'
     | '/_app/manager'
     | '/_app/ops'
@@ -525,6 +583,7 @@ export interface FileRouteTypes {
     | '/join/$slug'
     | '/track/$token'
     | '/_app/'
+    | '/_app/admin/billing'
     | '/_app/admin/platform-fees'
     | '/_app/orders/$id'
     | '/_app/orders/new'
@@ -541,6 +600,7 @@ export interface FileRouteTypes {
     | '/_app/stations/delivery'
     | '/_app/stations/ironing'
     | '/_app/stations/packing'
+    | '/_app/stations/qc'
     | '/_app/stations/reception'
     | '/_app/orders/'
     | '/_app/pickups/'
@@ -660,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLiveMapRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/inventory': {
+      id: '/_app/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/finance': {
       id: '/_app/finance'
       path: '/finance'
@@ -695,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/crm': {
+      id: '/_app/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AppCrmRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/budgets': {
       id: '/_app/budgets'
       path: '/budgets'
@@ -707,6 +781,13 @@ declare module '@tanstack/react-router' {
       path: '/branches'
       fullPath: '/branches'
       preLoaderRoute: typeof AppBranchesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/billing': {
+      id: '/_app/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/staff/': {
@@ -735,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/stations/reception'
       fullPath: '/stations/reception'
       preLoaderRoute: typeof AppStationsReceptionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stations/qc': {
+      id: '/_app/stations/qc'
+      path: '/stations/qc'
+      fullPath: '/stations/qc'
+      preLoaderRoute: typeof AppStationsQcRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/stations/packing': {
@@ -849,6 +937,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminPlatformFeesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/billing': {
+      id: '/_app/admin/billing'
+      path: '/admin/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AppAdminBillingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/admin/users/': {
       id: '/_app/admin/users/'
       path: '/admin/users'
@@ -874,13 +969,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBillingRoute: typeof AppBillingRoute
   AppBranchesRoute: typeof AppBranchesRoute
   AppBudgetsRoute: typeof AppBudgetsRoute
+  AppCrmRoute: typeof AppCrmRoute
   AppCsRoute: typeof AppCsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDriverRoute: typeof AppDriverRoute
   AppFinanceRoute: typeof AppFinanceRoute
+  AppInventoryRoute: typeof AppInventoryRoute
   AppLiveMapRoute: typeof AppLiveMapRoute
   AppManagerRoute: typeof AppManagerRoute
   AppOpsRoute: typeof AppOpsRoute
@@ -888,6 +986,7 @@ interface AppRouteChildren {
   AppServicesRoute: typeof AppServicesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminBillingRoute: typeof AppAdminBillingRoute
   AppAdminPlatformFeesRoute: typeof AppAdminPlatformFeesRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
@@ -904,6 +1003,7 @@ interface AppRouteChildren {
   AppStationsDeliveryRoute: typeof AppStationsDeliveryRoute
   AppStationsIroningRoute: typeof AppStationsIroningRoute
   AppStationsPackingRoute: typeof AppStationsPackingRoute
+  AppStationsQcRoute: typeof AppStationsQcRoute
   AppStationsReceptionRoute: typeof AppStationsReceptionRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
   AppPickupsIndexRoute: typeof AppPickupsIndexRoute
@@ -914,13 +1014,16 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBillingRoute: AppBillingRoute,
   AppBranchesRoute: AppBranchesRoute,
   AppBudgetsRoute: AppBudgetsRoute,
+  AppCrmRoute: AppCrmRoute,
   AppCsRoute: AppCsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDriverRoute: AppDriverRoute,
   AppFinanceRoute: AppFinanceRoute,
+  AppInventoryRoute: AppInventoryRoute,
   AppLiveMapRoute: AppLiveMapRoute,
   AppManagerRoute: AppManagerRoute,
   AppOpsRoute: AppOpsRoute,
@@ -928,6 +1031,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppServicesRoute: AppServicesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminBillingRoute: AppAdminBillingRoute,
   AppAdminPlatformFeesRoute: AppAdminPlatformFeesRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
@@ -944,6 +1048,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStationsDeliveryRoute: AppStationsDeliveryRoute,
   AppStationsIroningRoute: AppStationsIroningRoute,
   AppStationsPackingRoute: AppStationsPackingRoute,
+  AppStationsQcRoute: AppStationsQcRoute,
   AppStationsReceptionRoute: AppStationsReceptionRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
   AppPickupsIndexRoute: AppPickupsIndexRoute,
