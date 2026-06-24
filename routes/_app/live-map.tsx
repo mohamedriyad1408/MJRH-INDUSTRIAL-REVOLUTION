@@ -18,7 +18,7 @@ type PinType = "pickup" | "delivery" | "driver";
 type MapPin = {
   id: string; type: PinType; label: string; sublabel: string;
   address: string; lat?: number; lng?: number;
-  status?: string; orderNumber?: number; dueLabel?: string; late?: boolean; pieces?: number; assignedTo?: string | null;
+  status?: string; orderNumber?: number; dueLabel?: string; late?: boolean; pieces?: number; assignedTo?: string | null; source?: "pickup" | "order" | "driver"; sourceId?: string; coordKind?: "pickup" | "delivery";
 };
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -137,7 +137,7 @@ function LiveMapPage() {
 
     (pickups ?? []).forEach((p: any) => {
       const due = dueInfo(p.scheduled_at);
-      raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id });
+      raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id, source: "pickup", sourceId: p.id, coordKind: "pickup" });
     });
     (orders ?? []).forEach((o: any) => {
       if (openPickupOrderIds.has(o.id)) return;
@@ -166,10 +166,10 @@ function LiveMapPage() {
         dueLabel: due.label,
         late: due.late,
         pieces: pieceMap.get(o.id) ?? 1,
-        assignedTo: o.assigned_driver_employee_id,
+        assignedTo: o.assigned_driver_employee_id, source: "order", sourceId: o.id, coordKind: inPickupPhase ? "pickup" : "delivery",
       });
     });
-    (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.location_updated_at ? `آخر تحديث ${new Date(d.location_updated_at).toLocaleTimeString("ar-EG")}` : (d.phone ?? ""), address: "موقع السائق", lat: d.current_lat ?? undefined, lng: d.current_lng ?? undefined }));
+    (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.location_updated_at ? `آخر تحديث ${new Date(d.location_updated_at).toLocaleTimeString("ar-EG")}` : (d.phone ?? ""), address: "موقع السائق", lat: d.current_lat ?? undefined, lng: d.current_lng ?? undefined, source: "driver", sourceId: d.id }));
 
     setStats({ pickups: (pickups ?? []).length, deliveries: (orders ?? []).length, drivers: (drivers ?? []).length });
     setGeocoding(true);
@@ -177,6 +177,13 @@ function LiveMapPage() {
       if (pin.lat && pin.lng) return pin;
       if (pin.type === "driver") return pin;
       const c = await geocode(pin.address);
+      if (c && pin.source === "pickup" && pin.sourceId) {
+        await (supabase as any).from("pickup_requests").update({ lat: c.lat, lng: c.lng }).eq("id", pin.sourceId).then(() => null);
+      }
+      if (c && pin.source === "order" && pin.sourceId) {
+        const patch = pin.coordKind === "pickup" ? { pickup_lat: c.lat, pickup_lng: c.lng } : { delivery_lat: c.lat, delivery_lng: c.lng };
+        await (supabase as any).from("orders").update(patch).eq("id", pin.sourceId).then(() => null);
+      }
       return c ? { ...pin, ...c } : pin;
     }));
     setGeocoding(false);
@@ -211,6 +218,8 @@ function LiveMapPage() {
   }
 
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">للمالك ومدير التشغيل فقط.</CardContent></Card>;
+  const noLocationPins = pins.filter((p) => p.type !== "driver" && (!p.lat || !p.lng));
+  const driversNoLocation = pins.filter((p) => p.type === "driver" && (!p.lat || !p.lng));
 
   return (
     <div className="flex flex-col gap-3" style={{ height: "calc(100vh - 110px)" }}>
@@ -240,6 +249,13 @@ function LiveMapPage() {
         <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-xs text-teal-700 flex items-center gap-2">
           <CheckSquare className="w-3.5 h-3.5 shrink-0" />
           اضغط على نقطة في الخريطة أو القائمة لتحديدها، ثم اضغط "رسم خط السير"
+        </div>
+      )}
+
+      {(noLocationPins.length > 0 || driversNoLocation.length > 0) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+          {noLocationPins.length > 0 && <div>تنبيه: يوجد {noLocationPins.length} طلب بلا موقع واضح. راجع العنوان أو افتح الطلب لتسجيل الموقع.</div>}
+          {driversNoLocation.length > 0 && <div>تنبيه: يوجد {driversNoLocation.length} مندوب لم يحدث موقعه. اطلب منه فتح لوحة السائق والضغط على زر موقعي.</div>}
         </div>
       )}
 
