@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Banknote, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/staff/ironing-payroll")({
   head: () => ({ meta: [{ title: "رواتب فنيي الكي" }] }),
@@ -26,6 +26,10 @@ function IroningPayroll() {
   const canEdit = hasRole("owner");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [cashAccountId, setCashAccountId] = useState("");
+  const [payouts, setPayouts] = useState<any[]>([]);
   const [from, setFrom] = useState(() => {
     const d = new Date(); d.setDate(d.getDate() - 30);
     return d.toISOString().slice(0, 10);
@@ -39,11 +43,18 @@ function IroningPayroll() {
       .select("id, full_name").eq("is_active", true).eq("station", "ironing");
     // Low-cost piece-level ironing payroll: count/value comes from numbered pieces assigned to each ironing tech.
     const { data: units } = await (supabase as any).from("service_units")
-      .select("assigned_ironing_employee_id,order_id,line_value,unit_price,ironing_assigned_at")
+      .select("assigned_ironing_employee_id,order_id,line_value,unit_price,ironing_completed_at")
       .not("assigned_ironing_employee_id", "is", null)
-      .gte("ironing_assigned_at", from + "T00:00:00")
-      .lte("ironing_assigned_at", to + "T23:59:59");
-    const { data: rates } = await supabase.from("ironing_rates").select("*");
+      .gte("ironing_completed_at", from + "T00:00:00")
+      .lte("ironing_completed_at", to + "T23:59:59");
+    const [{ data: rates }, { data: cash }, { data: paidRows }] = await Promise.all([
+      supabase.from("ironing_rates").select("*"),
+      (supabase as any).rpc("ensure_default_cash_account").then(async () => (supabase as any).from("cash_accounts").select("id,name,current_balance").eq("is_active", true).order("created_at")),
+      (supabase as any).from("ironing_daily_payouts").select("*,employees(full_name)").gte("payout_date", from).lte("payout_date", to).order("payout_date", { ascending: false }),
+    ]);
+    setCashAccounts(cash ?? []);
+    setCashAccountId((x) => x || cash?.[0]?.id || "");
+    setPayouts(paidRows ?? []);
 
     const result: Row[] = (emps ?? []).map((e: any) => {
       const myUnits = ((units ?? []) as any[]).filter((u) => u.assigned_ironing_employee_id === e.id);
@@ -62,6 +73,16 @@ function IroningPayroll() {
   }
   useEffect(() => { load(); }, [from, to]);
 
+  async function payToday() {
+    if (!cashAccountId) return toast.error("اختار الخزنة التي سيتم الصرف منها");
+    setPaying(true);
+    const { data, error } = await (supabase as any).rpc("pay_daily_ironing_workers", { _work_date: to, _cash_account_id: cashAccountId });
+    setPaying(false);
+    if (error) return toast.error(error.message);
+    toast.success(`تم صرف ${Number(data?.total_amount ?? 0).toLocaleString("en-US")} جنيه لعدد ${data?.workers_count ?? 0} فني`);
+    load();
+  }
+
   async function saveRate(r: Row, pct: number) {
     const payload = { employee_id: r.employee_id, percentage: pct, effective_from: new Date().toISOString().slice(0, 10) };
     const { error } = r.rate_id
@@ -79,6 +100,8 @@ function IroningPayroll() {
       <Card><CardContent className="p-4 flex flex-wrap gap-3 items-end">
         <div><Label className="text-xs">من</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><Label className="text-xs">إلى</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+        <div className="min-w-56"><Label className="text-xs">الخزنة</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={cashAccountId} onChange={(e) => setCashAccountId(e.target.value)}>{cashAccounts.map((c) => <option key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance)}</option>)}</select></div>
+        {canEdit && <Button onClick={payToday} disabled={paying} className="bg-emerald-600 hover:bg-emerald-700">{paying ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Banknote className="w-4 h-4 ms-1" />} صرف يومية تاريخ {to}</Button>}
       </CardContent></Card>
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
@@ -106,6 +129,14 @@ function IroningPayroll() {
           </table>
         </CardContent></Card>
       )}
+
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-600" />سجل صرف اليوميات</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {payouts.map((p) => <div key={p.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{p.employees?.full_name}</b><div className="text-xs text-muted-foreground">{p.payout_date} · {p.pieces_count} قطعة · نسبة {p.percentage}%</div></div><div className="font-black text-emerald-700">{fmtMoney(p.amount)}</div></div>)}
+          {!payouts.length && <div className="p-6 text-center text-muted-foreground">لا توجد يوميات مصروفة في الفترة المختارة</div>}
+        </CardContent>
+      </Card>
     </div>
   );
 }
