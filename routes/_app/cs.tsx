@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Calendar, AlertTriangle, Zap, PlusCircle, Eye, Timer } from "lucide-react";
+import { Loader2, Calendar, AlertTriangle, Zap, PlusCircle, Eye, Timer, CreditCard, MessageCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,6 +24,7 @@ function CsDashboard() {
   const allowed = hasRole("cs_manager", "owner", "ops_manager");
   const [stats, setStats] = useState({ today: 0, late: 0, urgent: 0 });
   const [active, setActive] = useState<ActiveOrder[]>([]);
+  const [attention, setAttention] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
 
@@ -34,7 +35,7 @@ function CsDashboard() {
     (async () => {
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const end = new Date(); end.setHours(23, 59, 59, 999);
-      const [a, b, u, act] = await Promise.all([
+      const [a, b, u, act, unpaidReady, proofs, queuedMsgs, invoiceReview] = await Promise.all([
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()),
         supabase.from("orders").select("id", { count: "exact", head: true }).lt("promised_delivery_at", new Date().toISOString()).not("status", "in", "(delivered,cancelled)"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("is_urgent", true).not("status", "in", "(delivered,cancelled)"),
@@ -42,9 +43,19 @@ function CsDashboard() {
           .select("id, order_number, status, is_urgent, created_at, customers(full_name), task_assignments(employee_id, assigned_at, employees(full_name))")
           .in("status", ["received", "cleaning", "ironing", "packing"])
           .order("is_urgent", { ascending: false }).order("created_at"),
+        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
+        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
+        (supabase as any).from("customer_messages").select("id", { count: "exact", head: true }).eq("status", "queued"),
+        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
       ]);
       setStats({ today: a.count ?? 0, late: b.count ?? 0, urgent: u.count ?? 0 });
       setActive((act.data ?? []) as any);
+      setAttention([
+        { label: "طلبات جاهزة غير مدفوعة", count: unpaidReady.count ?? 0, href: "/receivables", tone: "amber", icon: CreditCard },
+        { label: "إيصالات تحتاج مراجعة", count: proofs.count ?? 0, href: "/orders", tone: "red", icon: CreditCard },
+        { label: "رسائل واتساب جاهزة", count: queuedMsgs.count ?? 0, href: "/crm", tone: "blue", icon: MessageCircle },
+        { label: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, href: "/orders", tone: "amber", icon: FileText },
+      ].filter((x) => x.count > 0));
       setLoading(false);
     })();
   }, [allowed]);
