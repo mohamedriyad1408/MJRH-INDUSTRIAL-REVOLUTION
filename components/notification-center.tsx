@@ -61,7 +61,7 @@ export function NotificationCenter() {
       supabase.from("orders").select("id,order_number,total,payment_status,status").eq("payment_status", "unpaid").not("status", "eq", "cancelled").limit(5),
       (supabase as any).from("orders").select("id,order_number,status").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
       (supabase as any).from("orders").select("id,order_number,order_type,delivery_address,delivery_lat,delivery_lng,status").eq("order_type", "delivery").in("status", ["received", "cleaning", "ironing", "packing", "ready"]).is("delivery_lat", null).limit(5),
-      (supabase as any).from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,orders(order_number)").eq("needs_reclean", true).limit(5),
+      (supabase as any).from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,reclean_reason,reclean_photo_url,orders(order_number)").eq("needs_reclean", true).limit(5),
       (supabase as any).from("pickup_requests").select("id,customer_name,status,scheduled_at,lat,lng").in("status", ["pending", "assigned"]).is("lat", null).limit(5),
     ]);
 
@@ -89,13 +89,13 @@ export function NotificationCenter() {
     (recleanRes.data ?? []).forEach((u: any) => {
       const aud: AlertAudience[] = ["owner", "ops", "cleaning"];
       if (!u.assigned_ironing_employee_id || u.assigned_ironing_employee_id === empId) aud.push("ironing");
-      next.push({ id: `reclean-${u.id}`, audience: aud, tone: "red", title: `${u.label_code} مرتجع تنظيف`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name}`, icon: <RotateCcw className="w-4 h-4" />, href: u.order_id ? `/orders/${u.order_id}` : undefined });
+      next.push({ id: `reclean-${u.id}`, audience: aud, tone: "red", title: `${u.label_code} مرتجع تنظيف`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <RotateCcw className="w-4 h-4" />, href: u.order_id ? `/orders/${u.order_id}` : undefined });
     });
 
     // Station-specific operational alerts
     if (myAudiences.includes("ironing")) {
       const { data } = await (supabase as any).from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId).is("ironing_completed_at", null).limit(10);
-      (data ?? []).slice(0, 5).forEach((u: any) => next.push({ id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: `${u.label_code} في انتظار الكي`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
+      (data ?? []).slice(0, 5).forEach((u: any) => next.push({ id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: `${u.label_code} في انتظار الكي`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
     }
 
     if (myAudiences.includes("cleaning")) {

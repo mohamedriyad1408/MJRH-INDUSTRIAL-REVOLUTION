@@ -59,6 +59,7 @@ type ServiceUnit = {
   needs_reclean: boolean;
   reclean_reason?: string | null;
   reclean_reported_at?: string | null;
+  reclean_return_to_employee_id?: string | null;
   employees?: { full_name: string } | null;
 };
 
@@ -115,9 +116,13 @@ function OrderDetailPage() {
 
   async function deleteInvoiceRow(idx: number) {
     const row = invoiceItems[idx];
-    if (!confirm("حذف البند من الفاتورة؟")) return;
+    const reason = prompt("سبب إلغاء هذا البند من الفاتورة؟");
+    if (reason === null) return;
+    if (reason.trim().length < 3) return toast.error("لا يمكن إلغاء بند بدون سبب واضح");
+    const amount = Number(row.qty) * Number(row.unit_price);
     if (row.id) {
-      await (supabase as any).from("service_units").delete().eq("order_item_id", row.id).is("ironing_completed_at", null);
+      await (supabase as any).from("order_cancellations").insert({ order_id: id, order_item_id: row.id, cancel_type: "invoice_item", reason: reason.trim(), amount_delta: amount, cancelled_by: user?.id, tenant_id: order?.tenant_id });
+      await (supabase as any).from("service_units").update({ status: "cancelled", current_stage: "cancelled", cancelled_at: new Date().toISOString(), cancel_reason: reason.trim(), cancelled_by: user?.id }).eq("order_item_id", row.id);
       const { error } = await supabase.from("order_items").delete().eq("id", row.id);
       if (error) return toast.error(error.message);
     }
@@ -125,7 +130,7 @@ function OrderDetailPage() {
     setInvoiceItems(next);
     const totals = invoiceTotals(next);
     await (supabase as any).from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
-    toast.success("تم حذف البند");
+    toast.success("تم إلغاء البند وتسجيل السبب");
     load();
   }
 
@@ -269,6 +274,15 @@ function OrderDetailPage() {
     load();
   }
 
+  async function cancelOrder() {
+    if (!hasRole("owner")) return toast.error("إلغاء الطلب بالكامل للمالك فقط");
+    const reason = prompt("سبب إلغاء الطلب بالكامل؟");
+    if (reason === null) return;
+    if (reason.trim().length < 3) return toast.error("لا يمكن إلغاء الطلب بدون سبب واضح");
+    const { error } = await (supabase as any).rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
+    if (error) toast.error(error.message); else { toast.success("تم إلغاء الطلب وتسجيل السبب"); load(); }
+  }
+
   async function overrideCloseOrder() {
     if (!hasRole("owner", "ops_manager")) return toast.error("صلاحية مدير التشغيل أو المالك فقط");
     const reason = prompt("سبب إغلاق الطلب بتجاوز التحقق؟", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً");
@@ -324,7 +338,8 @@ function OrderDetailPage() {
             </label>
           )}
           {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> عرض الإيصال</a></Button>}
-          {hasRole("owner", "ops_manager") && order.status !== "delivered" && <Button variant="destructive" onClick={overrideCloseOrder}>إغلاق بتجاوز</Button>}
+          {hasRole("owner") && order.status !== "cancelled" && <Button variant="destructive" onClick={cancelOrder}>إلغاء الطلب بسبب</Button>}
+          {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>إغلاق بتجاوز</Button>}
           <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> طباعة ليبل القطع</Button>
           {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? "توزيع..." : "توزيع الكي"}</Button>}
           <StatusBadge level={statusLevel(order.status)} label={order.status} />
@@ -396,7 +411,7 @@ function OrderDetailPage() {
                   فني الكي: <b>{u.employees?.full_name ?? "لم يوزع بعد"}</b>
                 </div>
                 {u.customer_notes && <div className="text-xs text-amber-700">📝 {u.customer_notes}</div>}
-                {u.needs_reclean && <div className="text-xs text-amber-700">سبب المرتجع: {u.reclean_reason}</div>}
+                {u.needs_reclean && <div className="text-xs text-amber-700">سبب المرتجع: {u.reclean_reason} · سيرجع لنفس فني الكي بعد تنظيفه</div>}
               </div>
               {canOperate && <div className="flex md:flex-col gap-2 justify-end">
                 <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> مرتجع تنظيف</Button>

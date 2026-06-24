@@ -22,6 +22,7 @@ type Unit = {
   photo_url?: string | null;
   needs_reclean: boolean;
   reclean_reason?: string | null;
+  reclean_return_to_employee_id?: string | null;
   current_stage: string;
   order_id: string;
   orders?: { id: string; order_number: number; status: string; customers?: { full_name: string; phone: string } | null } | null;
@@ -51,7 +52,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
     setLoading(true);
     const { data } = await (supabase as any)
       .from("service_units")
-      .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
+      .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
       .or("service_type.eq.both,needs_reclean.eq.true")
       .in("orders.status", ["cleaning", "ironing", "packing", "ready"])
       .order("unit_number");
@@ -62,12 +63,8 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
   useEffect(() => { load(); }, []);
 
   async function resolveReclean(unit: Unit) {
-    const { error } = await (supabase as any).from("service_units").update({
-      needs_reclean: false,
-      reclean_resolved_at: new Date().toISOString(),
-      current_stage: "cleaning_done",
-    }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success("تم إنهاء مرتجع التنظيف"); load(); }
+    const { error } = await (supabase as any).rpc("resolve_reclean_return", { _unit_id: unit.id });
+    if (error) toast.error(error.message); else { toast.success("تم تنظيف المرتجع ورجوعه لنفس فني الكي"); load(); }
   }
 
   async function markCleaned(unit: Unit) {
@@ -132,7 +129,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
                         {u.service_type === "both" && <Badge className="bg-blue-600"><Shirt className="w-3 h-3 ms-1" /> تنظيف + كي</Badge>}
                         {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> مرتجع تنظيف</Badge>}
                       </div>
-                      {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">سبب المرتجع: {u.reclean_reason}</div>}
+                      {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">سبب المرتجع: {u.reclean_reason} · بعد التنظيف سترجع لنفس فني الكي</div>}
                       <div className="text-xs text-muted-foreground mt-1">المرحلة: {u.current_stage}</div>
                     </div>
                     <div className="col-span-2 md:col-span-1 flex gap-2 justify-end">

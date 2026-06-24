@@ -190,8 +190,9 @@ function IroningWorkerPage() {
     setLoading(true);
     const { data } = await (supabase as any)
       .from("service_units")
-      .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone))")
+      .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,reclean_return_to_employee_id,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone))")
       .eq("assigned_ironing_employee_id", employeeId)
+      .eq("needs_reclean", false)
       .in("service_type", ["ironing", "both"])
       .is("ironing_completed_at", null)
       .order("ironing_assigned_at", { ascending: true });
@@ -229,15 +230,11 @@ function IroningWorkerPage() {
   }
 
   async function markReclean(u: Unit) {
-    const reason = prompt("سبب رجوع القطعة للتنظيف؟", u.reclean_reason ?? "");
+    const reason = prompt("سبب رجوع القطعة للتنظيف؟ لن يتم الرجوع بدون سبب واضح", u.reclean_reason ?? "");
     if (reason === null) return;
-    const { error } = await (supabase as any).from("service_units").update({
-      needs_reclean: true,
-      reclean_reason: reason || "مرتجع تنظيف من الكي",
-      reclean_reported_by: user?.id,
-      reclean_reported_at: new Date().toISOString(),
-    }).eq("id", u.id);
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل مرتجع التنظيف"); load(); }
+    if (reason.trim().length < 3) return toast.error("سبب المرتجع مطلوب");
+    const { error } = await (supabase as any).rpc("register_reclean_return", { _unit_id: u.id, _reason: reason.trim(), _photo_url: null });
+    if (error) toast.error(error.message); else { toast.success("تم إرسال القطعة للغسيل، وسترجع لك بعد تنظيفها"); load(); }
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin" /></div>;
