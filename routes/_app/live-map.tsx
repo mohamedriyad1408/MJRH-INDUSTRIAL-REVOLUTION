@@ -122,11 +122,12 @@ function LiveMapPage() {
     const raw: MapPin[] = [];
 
     const [{ data: pickups }, { data: orders }, { data: drivers }] = await Promise.all([
-      (supabase as any).from("pickup_requests").select("id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id").in("status", ["pending", "assigned"]),
+      (supabase as any).from("pickup_requests").select("id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id").in("status", ["pending", "assigned"]),
       (supabase as any).from("orders").select("id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)").in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
       (supabase as any).from("employees").select("id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true),
     ]);
 
+    const openPickupOrderIds = new Set((pickups ?? []).map((p: any) => p.converted_order_id).filter(Boolean));
     const orderIds = (orders ?? []).map((o: any) => o.id);
     const pieceMap = new Map<string, number>();
     if (orderIds.length) {
@@ -139,6 +140,7 @@ function LiveMapPage() {
       raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id });
     });
     (orders ?? []).forEach((o: any) => {
+      if (openPickupOrderIds.has(o.id)) return;
       const due = dueInfo(o.promised_delivery_at);
       const inPickupPhase = ["received", "cleaning", "ironing", "packing"].includes(o.status);
       const addr = inPickupPhase ? (o.pickup_address || o.delivery_address) : (o.delivery_address || o.pickup_address);

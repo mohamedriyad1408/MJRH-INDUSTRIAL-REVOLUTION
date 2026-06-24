@@ -62,6 +62,12 @@ function ReceptionPage() {
 
   async function moveToProcessing(id: string) {
     setActing(id);
+    const { data: openPickup } = await (supabase as any).from("pickup_requests").select("id,status").eq("converted_order_id", id).in("status", ["pending", "assigned"]).maybeSingle();
+    if (openPickup) {
+      setActing(null);
+      toast.error("لا يمكن تحويل الطلب للتنظيف قبل أن يستلمه المندوب من العميل");
+      return;
+    }
     const { error } = await supabase.from("orders").update({ status: "cleaning" }).eq("id", id);
     if (!error) {
       await supabase.from("order_status_history").insert({

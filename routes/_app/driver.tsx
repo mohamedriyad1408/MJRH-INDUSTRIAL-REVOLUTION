@@ -24,7 +24,7 @@ type Pickup = {
   id: string; customer_name: string; phone: string;
   address: string; location_url: string | null; lat?: number | null; lng?: number | null; estimated_pieces?: number | null;
   status: string; scheduled_at: string | null;
-  created_at: string; notes: string | null;
+  created_at: string; notes: string | null; converted_order_id?: string | null; customer_id?: string | null;
 };
 type Delivery = {
   id: string; order_number: number; status: string;
@@ -137,56 +137,37 @@ function DriverPage() {
   /* ─── PICKUP: confirm + auto-create order ─── */
   async function confirmPickup(p: Pickup) {
     setActing(p.id);
-    // 1. upsert customer
-    let customerId: string | null = null;
-    const { data: ex } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("phone", p.phone)
-      .maybeSingle();
-    if (ex) {
-      customerId = ex.id;
-    } else {
-      const { data: ins, error: ce } = await supabase
-        .from("customers")
-        .insert({ full_name: p.customer_name, phone: p.phone, address: p.address })
-        .select("id")
+
+    // لو طلب العميل اتعمل من بوابة العميل، طلب الاستلام يكون مربوط بطلب جاهز ولا ننشئ طلب مكرر.
+    if (p.converted_order_id) {
+      const { data: ord, error: oe } = await (supabase as any)
+        .from("orders")
+        .update({ status: "received", assigned_driver_employee_id: empId ?? null })
+        .eq("id", p.converted_order_id)
+        .select("id, order_number")
         .single();
+      if (oe) { setActing(null); return toast.error(oe.message); }
+      await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString() }).eq("id", p.id);
+      await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: `تم استلام الطلب من العميل بواسطة المندوب` });
+      setActing(null);
+      toast.success(`✅ تم استلام طلب #${ord.order_number} من العميل`);
+      load();
+      return;
+    }
+
+    // طلب استلام يدوي بدون طلب سابق: ننشئ طلب جديد.
+    let customerId: string | null = null;
+    const { data: ex } = await supabase.from("customers").select("id").eq("phone", p.phone).maybeSingle();
+    if (ex) customerId = ex.id;
+    else {
+      const { data: ins, error: ce } = await supabase.from("customers").insert({ full_name: p.customer_name, phone: p.phone, address: p.address }).select("id").single();
       if (ce) { setActing(null); return toast.error(ce.message); }
       customerId = ins.id;
     }
-    // 2. create order
-    const { data: ord, error: oe } = await (supabase as any)
-      .from("orders")
-      .insert({
-        customer_id: customerId,
-        order_type: "delivery",
-        status: "received",
-        pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null,
-        notes: p.notes,
-        created_by: user?.id,
-      })
-      .select("id, order_number")
-      .single();
+    const { data: ord, error: oe } = await (supabase as any).from("orders").insert({ customer_id: customerId, order_type: "delivery", status: "received", pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null, notes: p.notes, created_by: user?.id, assigned_driver_employee_id: empId ?? null }).select("id, order_number").single();
     if (oe) { setActing(null); return toast.error(oe.message); }
-    // 3. update pickup
-    await supabase
-      .from("pickup_requests")
-      .update({
-        status: "converted",
-        picked_up_at: new Date().toISOString(),
-        converted_order_id: ord.id,
-        customer_id: customerId,
-      })
-      .eq("id", p.id);
-    // 4. status history
-    await supabase.from("order_status_history").insert({
-      order_id: ord.id,
-      from_status: null,
-      to_status: "received",
-      changed_by: user?.id,
-      notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}`,
-    });
+    await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
+    await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
     setActing(null);
     toast.success(`✅ تم الاستلام! طلب #${ord.order_number} أُنشئ تلقائياً`);
     load();
