@@ -9,7 +9,7 @@
 2. Import in Vercel → New Project
 3. Add Environment Variables:
    - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_SUPABASE_ANON_KEY` (or `VITE_SUPABASE_PUBLISHABLE_KEY`)
 4. Click Deploy ✅
 
 ### 2. Supabase Setup
@@ -33,7 +33,7 @@ npm run dev
 ```
 
 ## Architecture
-- **Frontend**: React 19 + Vite 5 + TanStack Router (SPA)
+- **Frontend**: React 18 + Vite 5 + TanStack Router (SPA)
 - **Backend**: Supabase (Postgres + Auth + Realtime + Edge Functions)
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Deploy**: Vercel (frontend) + Supabase (backend)
