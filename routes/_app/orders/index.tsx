@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Search, Eye, Zap } from "lucide-react";
+import { Loader2, Plus, Search, Eye, Zap, AlertTriangle, PackageOpen, ShieldCheck, RotateCcw, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/_app/orders/")({
   head: () => ({ meta: [{ title: "كل الطلبات" }] }),
@@ -16,9 +16,10 @@ export const Route = createFileRoute("/_app/orders/")({
 });
 
 type Row = {
-  id: string; order_number: number; status: string; payment_status: string;
+  id: string; order_number: number; status: string; payment_status: string; payment_verification_status?: string | null; invoice_finalized_at?: string | null;
   total: number; is_urgent: boolean; created_at: string; customer_id: string;
   customers?: { full_name: string; phone: string } | null;
+  pieces_count?: number; reclean_count?: number; qc_failed_count?: number; open_pickup?: boolean;
 };
 
 function OrdersPage() {
@@ -28,21 +29,51 @@ function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [quick, setQuick] = useState("all");
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("id, order_number, status, payment_status, total, is_urgent, created_at, customer_id, customers(full_name, phone)")
-      .order("created_at", { ascending: false })
-      .limit(200);
-    setRows((data ?? []) as any);
-    setLoading(false);
+    try {
+      const { data, error } = await (supabase as any)
+        .from("orders")
+        .select("id, order_number, status, payment_status, payment_verification_status, invoice_finalized_at, total, is_urgent, created_at, customer_id, customers(full_name, phone)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      const base = (data ?? []) as any[];
+      const ids = base.map((r) => r.id);
+      const [unitsRes, pickupsRes] = await Promise.all([
+        ids.length ? (supabase as any).from("service_units").select("order_id,needs_reclean,current_stage,status").in("order_id", ids) : Promise.resolve({ data: [] }),
+        ids.length ? (supabase as any).from("pickup_requests").select("converted_order_id,status").in("converted_order_id", ids).in("status", ["pending", "assigned"]) : Promise.resolve({ data: [] }),
+      ]);
+      const unitMap = new Map<string, any>();
+      (unitsRes.data ?? []).forEach((u: any) => {
+        const x = unitMap.get(u.order_id) ?? { pieces_count: 0, reclean_count: 0, qc_failed_count: 0 };
+        if (u.status !== "cancelled" && u.current_stage !== "cancelled") x.pieces_count += 1;
+        if (u.needs_reclean) x.reclean_count += 1;
+        if (u.current_stage === "qc_failed") x.qc_failed_count += 1;
+        unitMap.set(u.order_id, x);
+      });
+      const openPickup = new Set((pickupsRes.data ?? []).map((p: any) => p.converted_order_id));
+      setRows(base.map((r) => ({ ...r, ...(unitMap.get(r.id) ?? { pieces_count: 0, reclean_count: 0, qc_failed_count: 0 }), open_pickup: openPickup.has(r.id) })) as any);
+    } catch (e: any) {
+      console.error(e);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { load(); }, []);
 
   const filtered = rows.filter((r) => {
     if (status !== "all" && r.status !== status) return false;
+    if (quick === "no_pieces" && (r.pieces_count ?? 0) > 0) return false;
+    if (quick === "reclean" && !(r.reclean_count ?? 0)) return false;
+    if (quick === "qc" && !(r.qc_failed_count ?? 0)) return false;
+    if (quick === "payment_review" && !["pending_review", "underpaid"].includes(r.payment_verification_status ?? "")) return false;
+    if (quick === "invoice_review" && !( ["packing", "ready"].includes(r.status) && !r.invoice_finalized_at)) return false;
+    if (quick === "open_pickup" && !r.open_pickup) return false;
+    if (quick === "ready_unpaid" && !( ["ready", "out_for_delivery"].includes(r.status) && r.payment_status !== "paid")) return false;
     if (search) {
       const s = search.toLowerCase();
       if (!String(r.order_number).includes(s) && !(r.customers?.full_name ?? "").includes(search) && !(r.customers?.phone ?? "").includes(search)) return false;
@@ -74,6 +105,19 @@ function OrdersPage() {
         </Select>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {[
+          ["all", "الكل", AlertTriangle],
+          ["open_pickup", "استلامات مفتوحة", PackageOpen],
+          ["no_pieces", "بلا قطع", PackageOpen],
+          ["reclean", "مرتجعات", RotateCcw],
+          ["qc", "مشاكل جودة", ShieldCheck],
+          ["invoice_review", "فواتير تحتاج اعتماد", CreditCard],
+          ["payment_review", "إيصالات تحتاج مراجعة", CreditCard],
+          ["ready_unpaid", "جاهز غير مدفوع", CreditCard],
+        ].map(([k, label, Icon]: any) => <Button key={k} size="sm" variant={quick === k ? "default" : "outline"} onClick={() => setQuick(k)}><Icon className="w-3 h-3 ms-1" />{label}</Button>)}
+      </div>
+
       {loading ? (
         <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : (
@@ -102,11 +146,12 @@ function OrdersPage() {
                       <div className="font-medium">{r.customers?.full_name ?? "—"}</div>
                       <div className="text-xs text-muted-foreground">{r.customers?.phone ?? ""}</div>
                     </td>
-                    <td className="p-3"><Badge variant="secondary">{ORDER_STATUS_AR[r.status] ?? r.status}</Badge></td>
+                    <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{ORDER_STATUS_AR[r.status] ?? r.status}</Badge>{r.open_pickup && <Badge className="bg-blue-600">استلام مفتوح</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">بلا قطع</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">مرتجع</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">جودة</Badge>}</div></td>
                     <td className="p-3">
                       <Badge variant={r.payment_status === "paid" ? "default" : "outline"}>
                         {PAYMENT_STATUS_AR[r.payment_status] ?? r.payment_status}
                       </Badge>
+                      {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">إيصال مراجعة</Badge>}
                     </td>
                     <td className="p-3 font-medium">{fmtMoney(r.total)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.created_at)}</td>
