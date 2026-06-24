@@ -118,11 +118,12 @@ function LiveMapPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    try {
     const raw: MapPin[] = [];
 
     const [{ data: pickups }, { data: orders }, { data: drivers }] = await Promise.all([
       (supabase as any).from("pickup_requests").select("id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id").in("status", ["pending", "assigned"]),
-      (supabase as any).from("orders").select("id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)").in("status", ["ready", "out_for_delivery"]),
+      (supabase as any).from("orders").select("id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)").in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
       (supabase as any).from("employees").select("id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true),
     ]);
 
@@ -138,9 +139,33 @@ function LiveMapPage() {
       raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id });
     });
     (orders ?? []).forEach((o: any) => {
-      const addr = o.delivery_address || o.pickup_address; if (!addr) return;
       const due = dueInfo(o.promised_delivery_at);
-      raw.push({ id: `d-${o.id}`, type: "delivery", label: o.customers?.full_name ?? "عميل", sublabel: o.customers?.phone ?? "", address: addr, lat: o.delivery_lat ?? o.pickup_lat ?? undefined, lng: o.delivery_lng ?? o.pickup_lng ?? undefined, orderNumber: o.order_number, status: o.status === "ready" ? "جاهز" : "خرج للتسليم", dueLabel: due.label, late: due.late, pieces: pieceMap.get(o.id) ?? 1, assignedTo: o.assigned_driver_employee_id });
+      const inPickupPhase = ["received", "cleaning", "ironing", "packing"].includes(o.status);
+      const addr = inPickupPhase ? (o.pickup_address || o.delivery_address) : (o.delivery_address || o.pickup_address);
+      if (!addr) return;
+      const statusAr: Record<string, string> = {
+        received: "تم الاستلام",
+        cleaning: "في الغسيل",
+        ironing: "في الكي",
+        packing: "في التغليف",
+        ready: "جاهز للتسليم",
+        out_for_delivery: "خرج للتسليم",
+      };
+      raw.push({
+        id: `${inPickupPhase ? "op" : "d"}-${o.id}`,
+        type: inPickupPhase ? "pickup" : "delivery",
+        label: o.customers?.full_name ?? "عميل",
+        sublabel: o.customers?.phone ?? "",
+        address: addr,
+        lat: inPickupPhase ? (o.pickup_lat ?? o.delivery_lat ?? undefined) : (o.delivery_lat ?? o.pickup_lat ?? undefined),
+        lng: inPickupPhase ? (o.pickup_lng ?? o.delivery_lng ?? undefined) : (o.delivery_lng ?? o.pickup_lng ?? undefined),
+        orderNumber: o.order_number,
+        status: statusAr[o.status] ?? o.status,
+        dueLabel: due.label,
+        late: due.late,
+        pieces: pieceMap.get(o.id) ?? 1,
+        assignedTo: o.assigned_driver_employee_id,
+      });
     });
     (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.location_updated_at ? `آخر تحديث ${new Date(d.location_updated_at).toLocaleTimeString("ar-EG")}` : (d.phone ?? ""), address: "موقع السائق", lat: d.current_lat ?? undefined, lng: d.current_lng ?? undefined }));
 
@@ -154,7 +179,13 @@ function LiveMapPage() {
     }));
     setGeocoding(false);
     setPins(geocoded);
-    setLoading(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "تعذر تحميل الخريطة");
+      setPins([]);
+    } finally {
+      setGeocoding(false);
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
