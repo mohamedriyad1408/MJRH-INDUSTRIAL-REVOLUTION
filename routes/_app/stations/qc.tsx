@@ -55,25 +55,24 @@ function QcStation() {
   }, [units]);
 
   async function qc(unit: Unit, res: "passed" | "reclean" | "repair" | "lost" | "damaged") {
-    const note = notes[unit.id] ?? "";
-    const failed = res !== "passed";
-    const { error: qErr } = await (supabase as any).from("qc_checks").insert({
-      order_id: unit.order_id,
-      service_unit_id: unit.id,
-      result: res,
-      severity: failed ? "high" : "normal",
-      notes: note || null,
-      checked_by: user?.id,
-    });
-    if (qErr) { toast.error(qErr.message); return; }
+    const note = (notes[unit.id] ?? "").trim();
+    if (res !== "passed" && note.length < 3) return toast.error("اكتب سبب واضح قبل رفض القطعة");
 
-    const patch: any = failed
-      ? { current_stage: "qc_failed", needs_reclean: res === "reclean", reclean_reason: res === "reclean" ? note || "فشل فحص الجودة" : null }
-      : { current_stage: "qc_passed", needs_reclean: false, reclean_reason: null };
-    const { error: uErr } = await (supabase as any).from("service_units").update(patch).eq("id", unit.id);
-    if (uErr) toast.error(uErr.message);
+    let error: any = null;
+    if (res === "passed") {
+      const r = await (supabase as any).rpc("pass_qc_unit", { _unit_id: unit.id, _notes: note || null });
+      error = r.error;
+    } else if (res === "reclean") {
+      const r = await (supabase as any).rpc("register_reclean_return", { _unit_id: unit.id, _reason: note, _photo_url: null });
+      error = r.error;
+    } else {
+      const r = await (supabase as any).rpc("register_qc_issue", { _unit_id: unit.id, _result: res, _reason: note });
+      error = r.error;
+    }
+
+    if (error) toast.error(error.message);
     else {
-      toast.success(failed ? "تم تسجيل ملاحظة الجودة" : "تم اعتماد القطعة");
+      toast.success(res === "passed" ? "تم اعتماد القطعة" : res === "reclean" ? "تم رجوع القطعة للغسيل" : "تم تسجيل مشكلة الجودة وإشعار الإدارة");
       setNotes((m) => ({ ...m, [unit.id]: "" }));
       load();
     }
@@ -123,15 +122,15 @@ function QcStation() {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="reclean">مرتجع تنظيف</SelectItem>
-                          <SelectItem value="repair">يحتاج تصليح</SelectItem>
+                          <SelectItem value="repair">يحتاج تصليح / خياطة</SelectItem>
                           <SelectItem value="damaged">تالف</SelectItem>
                           <SelectItem value="lost">مفقود</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" onClick={() => qc(u, (result[u.id] ?? "reclean") as any)}><AlertTriangle className="w-4 h-4 ms-1" /> رفض</Button>
+                      <Button variant="outline" onClick={() => qc(u, (result[u.id] ?? "reclean") as any)}><AlertTriangle className="w-4 h-4 ms-1" /> تسجيل المشكلة</Button>
                       <Button onClick={() => qc(u, "passed")} className="bg-emerald-600 hover:bg-emerald-500"><CheckCircle2 className="w-4 h-4 ms-1" /> اعتماد</Button>
                     </div>
-                    {u.needs_reclean && <Button variant="secondary" className="w-full" onClick={() => qc(u, "reclean")}><RotateCcw className="w-4 h-4 ms-1" /> تأكيد رجوعها للتنظيف</Button>}
+                    {u.needs_reclean && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">هذه القطعة مرجعة للغسيل. تظهر الآن في محطة الغسيل ولن تخرج للعميل حتى تنتهي دورة المرتجع.</div>}
                   </div>
                 ))}
               </CardContent>
