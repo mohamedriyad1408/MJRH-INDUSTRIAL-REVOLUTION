@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, UserPlus } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { validateOrderMove } from "@/lib/station-workflow";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 type Station = "reception" | "cleaning" | "ironing" | "packing" | "delivery";
@@ -48,6 +49,8 @@ export function StationPage({
   useEffect(() => { load(); }, [station]);
 
   async function move(id: string, to: OrderStatus, from: OrderStatus) {
+    const check = await validateOrderMove(id, to);
+    if (!check.ok) return toast.error(check.message);
     const { error } = await supabase.from("orders").update({ status: to }).eq("id", id);
     if (error) return toast.error(error.message);
     await supabase.from("order_status_history").insert({
