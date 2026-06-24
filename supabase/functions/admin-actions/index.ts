@@ -80,13 +80,27 @@ Deno.serve(async (req) => {
         await sb.from("tenants").update({ owner_user_id: ownerId }).eq("id", tenant.id);
         await sb.from("user_roles").insert({ user_id: ownerId, role: "owner", tenant_id: tenant.id });
         await sb.from("app_settings").insert({ tenant_id: tenant.id, business_name: name });
+        await sb.from("employees").upsert({
+          tenant_id: tenant.id,
+          profile_id: ownerId,
+          full_name: ownerFullName || name,
+          email: ownerEmail,
+          job_title: "مالك المغسلة",
+          role: "owner",
+          job_role: "other",
+          monthly_salary: 0,
+          commission_percent: 0,
+          is_active: true,
+        }, { onConflict: "tenant_id,email" }).then(() => null);
+        await sb.rpc("ensure_default_cash_account_for", { _tenant_id: tenant.id }).then(() => null);
+        await sb.rpc("ensure_default_chart_accounts_for", { _tenant_id: tenant.id }).then(() => null);
 
         return json({ tenant_id: tenant.id });
       }
 
       // ============ Owner: إنشاء مستخدم داخل المغسلة ============
       case "createTenantUser": {
-        const { tenantId, email, password, fullName, role } = body;
+        const { tenantId, email, password, fullName, role, station, jobRole, monthlySalary, commissionPercent } = body;
         await assertTenantOwner(sb, callerId, tenantId);
 
         const { data: created, error } = await sb.auth.admin.createUser({
@@ -104,6 +118,25 @@ Deno.serve(async (req) => {
 
         const { error: rErr } = await sb.from("user_roles").insert({ user_id: userId, role, tenant_id: tenantId });
         if (rErr) throw new Error(rErr.message);
+
+        if (["employee", "courier", "cs_manager", "ops_manager"].includes(role)) {
+          const employeePayload: Record<string, unknown> = {
+            tenant_id: tenantId,
+            profile_id: userId,
+            full_name: fullName,
+            email,
+            job_title: role === "courier" ? "مندوب" : role === "cs_manager" ? "خدمة عملاء" : role === "ops_manager" ? "مدير تشغيل" : "موظف",
+            role,
+            station: station || (role === "courier" ? "delivery" : null),
+            job_role: jobRole || (role === "courier" ? "driver" : "other"),
+            monthly_salary: Number(monthlySalary ?? 0),
+            commission_percent: Number(commissionPercent ?? 0),
+            is_active: true,
+          };
+          await sb.from("employees").upsert(employeePayload, { onConflict: "tenant_id,email" }).then(({ error }) => {
+            if (error) throw new Error(error.message);
+          });
+        }
 
         return json({ user_id: userId });
       }

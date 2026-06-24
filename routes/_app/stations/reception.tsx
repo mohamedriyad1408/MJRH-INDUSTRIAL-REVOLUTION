@@ -195,6 +195,7 @@ function OrderCard({
           </div>
           <div className="text-sm text-muted-foreground">{o.customers?.full_name ?? "—"}</div>
           <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
+          {o.notes && <div className="mt-1 rounded-lg bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">ملاحظات الطلب: {o.notes}</div>}
         </div>
         {canMove && (
           <div className="flex gap-1 shrink-0">

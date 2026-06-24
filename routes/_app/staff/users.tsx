@@ -75,18 +75,22 @@ function StaffUsersPage() {
   );
 }
 
-type CreateFn = (args: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier" }) => Promise<unknown>;
+type CreateFn = (args: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier"; station?: string | null; jobRole?: string | null; monthlySalary?: number; commissionPercent?: number }) => Promise<unknown>;
 
 function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn; onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"cs_manager" | "ops_manager" | "employee" | "customer" | "courier">("employee");
+  const [station, setStation] = useState("none");
+  const [jobRole, setJobRole] = useState("other");
+  const [monthlySalary, setMonthlySalary] = useState("0");
+  const [commissionPercent, setCommissionPercent] = useState("0");
   const [loading, setLoading] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    try { await fn({ tenantId, email, password, fullName, role }); toast.success("تم"); onDone(); }
+    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0) }); toast.success("تم إنشاء المستخدم وربطه بموظف عند الحاجة"); onDone(); }
     catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
     finally { setLoading(false); }
   }
@@ -108,6 +112,48 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
           </SelectContent>
         </Select>
       </div>
+
+      {role !== "customer" && (
+        <div className="border rounded-lg p-3 space-y-3">
+          <div className="text-sm font-bold">بيانات التشغيل والراتب</div>
+          <div>
+            <Label>المحطة</Label>
+            <Select value={station} onValueChange={setStation}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">بدون محطة</SelectItem>
+                <SelectItem value="reception">الاستقبال</SelectItem>
+                <SelectItem value="cleaning">الغسيل</SelectItem>
+                <SelectItem value="ironing">الكي</SelectItem>
+                <SelectItem value="packing">التغليف</SelectItem>
+                <SelectItem value="delivery">التوصيل</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>نوع الوظيفة</Label>
+            <Select value={jobRole} onValueChange={setJobRole}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="other">أخرى</SelectItem>
+                <SelectItem value="receptionist">استقبال</SelectItem>
+                <SelectItem value="cleaning_tech">فني غسيل</SelectItem>
+                <SelectItem value="ironing_tech">فني كي</SelectItem>
+                <SelectItem value="packing_tech">تغليف</SelectItem>
+                <SelectItem value="driver">مندوب</SelectItem>
+                <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
+                <SelectItem value="cs_manager">خدمة عملاء</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label>راتب شهري</Label><Input type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} /></div>
+            <div><Label>نسبة/عمولة %</Label><Input type="number" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} /></div>
+          </div>
+          <p className="text-xs text-muted-foreground">المستخدم سيظهر في الموظفين ومحطته فورًا.</p>
+        </div>
+      )}
+
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="w-4 h-4 animate-spin ms-1" />} إنشاء
       </Button>
