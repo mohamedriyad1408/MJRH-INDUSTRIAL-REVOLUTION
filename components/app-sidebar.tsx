@@ -4,7 +4,7 @@ import {
   Users, Tag, Settings, LogOut, Wallet, BriefcaseBusiness,
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle,
-  BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator,
+  BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -76,6 +76,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "الحسابات", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
+      { title: "القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
       { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
       { title: "المخزون والمعدات", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
       { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },

@@ -23,6 +23,7 @@ import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
 import { Route as AppManagerRouteImport } from './routes/_app/manager'
 import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
+import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
 import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppFinanceRouteImport } from './routes/_app/finance'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
@@ -127,6 +128,11 @@ const AppManagerRoute = AppManagerRouteImport.update({
 const AppLiveMapRoute = AppLiveMapRouteImport.update({
   id: '/live-map',
   path: '/live-map',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLedgerRoute = AppLedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
   getParentRoute: () => AppRoute,
 } as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
@@ -327,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
   '/inventory': typeof AppInventoryRoute
+  '/ledger': typeof AppLedgerRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
@@ -377,6 +384,7 @@ export interface FileRoutesByTo {
   '/driver': typeof AppDriverRoute
   '/finance': typeof AppFinanceRoute
   '/inventory': typeof AppInventoryRoute
+  '/ledger': typeof AppLedgerRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
   '/ops': typeof AppOpsRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/_app/driver': typeof AppDriverRoute
   '/_app/finance': typeof AppFinanceRoute
   '/_app/inventory': typeof AppInventoryRoute
+  '/_app/ledger': typeof AppLedgerRoute
   '/_app/live-map': typeof AppLiveMapRoute
   '/_app/manager': typeof AppManagerRoute
   '/_app/ops': typeof AppOpsRoute
@@ -484,6 +493,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/finance'
     | '/inventory'
+    | '/ledger'
     | '/live-map'
     | '/manager'
     | '/ops'
@@ -534,6 +544,7 @@ export interface FileRouteTypes {
     | '/driver'
     | '/finance'
     | '/inventory'
+    | '/ledger'
     | '/live-map'
     | '/manager'
     | '/ops'
@@ -586,6 +597,7 @@ export interface FileRouteTypes {
     | '/_app/driver'
     | '/_app/finance'
     | '/_app/inventory'
+    | '/_app/ledger'
     | '/_app/live-map'
     | '/_app/manager'
     | '/_app/ops'
@@ -730,6 +742,13 @@ declare module '@tanstack/react-router' {
       path: '/live-map'
       fullPath: '/live-map'
       preLoaderRoute: typeof AppLiveMapRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/ledger': {
+      id: '/_app/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof AppLedgerRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/inventory': {
@@ -999,6 +1018,7 @@ interface AppRouteChildren {
   AppDriverRoute: typeof AppDriverRoute
   AppFinanceRoute: typeof AppFinanceRoute
   AppInventoryRoute: typeof AppInventoryRoute
+  AppLedgerRoute: typeof AppLedgerRoute
   AppLiveMapRoute: typeof AppLiveMapRoute
   AppManagerRoute: typeof AppManagerRoute
   AppOpsRoute: typeof AppOpsRoute
@@ -1045,6 +1065,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDriverRoute: AppDriverRoute,
   AppFinanceRoute: AppFinanceRoute,
   AppInventoryRoute: AppInventoryRoute,
+  AppLedgerRoute: AppLedgerRoute,
   AppLiveMapRoute: AppLiveMapRoute,
   AppManagerRoute: AppManagerRoute,
   AppOpsRoute: AppOpsRoute,
