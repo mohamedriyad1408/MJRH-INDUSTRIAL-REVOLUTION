@@ -33,6 +33,7 @@ import { Route as AppCrmRouteImport } from './routes/_app/crm'
 import { Route as AppBudgetsRouteImport } from './routes/_app/budgets'
 import { Route as AppBranchesRouteImport } from './routes/_app/branches'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
+import { Route as AppAccountingRouteImport } from './routes/_app/accounting'
 import { Route as AppStaffIndexRouteImport } from './routes/_app/staff/index'
 import { Route as AppPickupsIndexRouteImport } from './routes/_app/pickups/index'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
@@ -178,6 +179,11 @@ const AppBillingRoute = AppBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAccountingRoute = AppAccountingRouteImport.update({
+  id: '/accounting',
+  path: '/accounting',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStaffIndexRoute = AppStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRoute
   '/budgets': typeof AppBudgetsRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/customer-portal': typeof CustomerPortalRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_app/accounting': typeof AppAccountingRoute
   '/_app/billing': typeof AppBillingRoute
   '/_app/branches': typeof AppBranchesRoute
   '/_app/budgets': typeof AppBudgetsRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/accounting'
     | '/billing'
     | '/branches'
     | '/budgets'
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/accounting'
     | '/billing'
     | '/branches'
     | '/budgets'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/customer-portal'
     | '/login'
     | '/reset-password'
+    | '/_app/accounting'
     | '/_app/billing'
     | '/_app/branches'
     | '/_app/budgets'
@@ -790,6 +802,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBillingRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/accounting': {
+      id: '/_app/accounting'
+      path: '/accounting'
+      fullPath: '/accounting'
+      preLoaderRoute: typeof AppAccountingRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/staff/': {
       id: '/_app/staff/'
       path: '/staff'
@@ -969,6 +988,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAccountingRoute: typeof AppAccountingRoute
   AppBillingRoute: typeof AppBillingRoute
   AppBranchesRoute: typeof AppBranchesRoute
   AppBudgetsRoute: typeof AppBudgetsRoute
@@ -1014,6 +1034,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountingRoute: AppAccountingRoute,
   AppBillingRoute: AppBillingRoute,
   AppBranchesRoute: AppBranchesRoute,
   AppBudgetsRoute: AppBudgetsRoute,
