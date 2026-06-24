@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_app/cash-closing")({
 });
 
 function CashClosingPage() {
-  const { hasRole, user } = useAuth();
+  const { hasRole, user, tenantId } = useAuth();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -35,7 +35,11 @@ function CashClosingPage() {
     setLoading(true);
     try {
       await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
-      const { data: acc, error: accErr } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
+      let { data: acc, error: accErr } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
+      if ((!acc || acc.length === 0) && tenantId) {
+        const ins = await (supabase as any).from("cash_accounts").insert({ tenant_id: tenantId, name: "الخزنة الرئيسية", account_type: "cash", opening_balance: 0, current_balance: 0 }).select("*").single();
+        if (!ins.error && ins.data) acc = [ins.data];
+      }
       if (accErr) toast.error(accErr.message);
       const first = accountId || acc?.[0]?.id || "";
       setAccounts(acc ?? []); setAccountId(first);
@@ -64,7 +68,7 @@ function CashClosingPage() {
   }, [tx, accounts, accountId, counted]);
 
   async function closeDay() {
-    if (!accountId) return toast.error("اختار خزنة");
+    if (!accountId) return toast.error("لا توجد خزنة. اضغط تحديث وسيقوم النظام بإنشاء الخزنة الرئيسية.");
     const acc = accounts.find((a) => a.id === accountId);
     const { error } = await (supabase as any).from("daily_cash_closings").upsert({
       cash_account_id: accountId,

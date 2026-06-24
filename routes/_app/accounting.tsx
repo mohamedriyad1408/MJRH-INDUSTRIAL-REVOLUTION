@@ -28,7 +28,7 @@ function monthBounds(date = new Date()) {
 }
 
 function AccountingPage() {
-  const { hasRole, user } = useAuth();
+  const { hasRole, user, tenantId } = useAuth();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
@@ -47,13 +47,24 @@ function AccountingPage() {
     return monthBounds(new Date(y, m - 1, 1));
   }, [month]);
 
+
+  async function ensureCashAccount() {
+    await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
+    let { data } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
+    if ((!data || data.length === 0) && tenantId) {
+      const ins = await (supabase as any).from("cash_accounts").insert({ tenant_id: tenantId, name: "الخزنة الرئيسية", account_type: "cash", opening_balance: 0, current_balance: 0 }).select("*").single();
+      if (!ins.error && ins.data) data = [ins.data];
+    }
+    return data ?? [];
+  }
+
   async function load() {
     if (!canUse) { setLoading(false); return; }
     setLoading(true);
     try {
-      await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
+      const ensuredCash = await ensureCashAccount();
       const results = await Promise.allSettled([
-        (supabase as any).from("cash_accounts").select("*").order("created_at"),
+        Promise.resolve({ data: ensuredCash, error: null }),
         (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").order("happened_at", { ascending: false }).limit(80),
         (supabase as any).from("expenses").select("*,employees(full_name)").gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
         (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("is_active", true).order("full_name"),
@@ -96,8 +107,9 @@ function AccountingPage() {
   }
 
   async function syncApprovedAdvances() {
-    const mainCash = cashAccounts[0]?.id;
-    if (!mainCash) return toast.error("لا توجد خزنة");
+    const ensured = cashAccounts.length ? cashAccounts : await ensureCashAccount();
+    const mainCash = ensured[0]?.id;
+    if (!mainCash) return toast.error("تعذر إنشاء الخزنة الرئيسية");
     const { data: adv, error } = await (supabase as any)
       .from("employee_requests")
       .select("id,employee_id,amount,reason,created_at,employees(full_name)")
@@ -122,32 +134,9 @@ function AccountingPage() {
   }
 
   async function generatePayroll() {
-    if (!employees.length) return toast.error("لا يوجد موظفون");
-    const { data: units } = await (supabase as any).from("service_units").select("assigned_ironing_employee_id,line_value,ironing_completed_at").gte("ironing_completed_at", bounds.fromIso).lte("ironing_completed_at", bounds.toIso).not("assigned_ironing_employee_id", "is", null);
-    const { data: daily } = await (supabase as any).from("daily_salaries").select("employee_id,amount,work_date").gte("work_date", bounds.start).lte("work_date", bounds.end);
-    const { data: adv } = await (supabase as any).from("employee_requests").select("employee_id,amount,created_at").eq("type", "advance").eq("status", "approved").gte("created_at", bounds.fromIso).lte("created_at", bounds.toIso);
-
-    const { data: period, error: pErr } = await (supabase as any).from("payroll_periods").upsert({
-      period_start: bounds.start, period_end: bounds.end, status: "draft", created_by: user?.id,
-    }, { onConflict: "tenant_id,period_start,period_end" }).select("id").single();
-    if (pErr) return toast.error(pErr.message);
-
-    const rows = employees.map((e) => {
-      const base = Number(e.monthly_salary ?? 0);
-      const d = (daily ?? []).filter((x: any) => x.employee_id === e.id).reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0);
-      const sales = (units ?? []).filter((u: any) => u.assigned_ironing_employee_id === e.id).reduce((s: number, u: any) => s + Number(u.line_value ?? 0), 0);
-      const commission = sales * (Number(e.commission_percent ?? 0) / 100);
-      const advances = (adv ?? []).filter((x: any) => x.employee_id === e.id).reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0);
-      const gross = base + d + commission;
-      return { payroll_period_id: period.id, employee_id: e.id, base_salary: base, daily_salary: d, commission_amount: commission, gross_pay: gross, advances_deducted: advances, net_pay: Math.max(0, gross - advances), status: "draft" };
-    });
-    const { error: lErr } = await (supabase as any).from("payroll_lines").upsert(rows, { onConflict: "payroll_period_id,employee_id" });
-    if (lErr) return toast.error(lErr.message);
-    const grossTotal = rows.reduce((s, r) => s + r.gross_pay, 0);
-    const advTotal = rows.reduce((s, r) => s + r.advances_deducted, 0);
-    const netTotal = rows.reduce((s, r) => s + r.net_pay, 0);
-    await (supabase as any).from("payroll_periods").update({ gross_total: grossTotal, advances_total: advTotal, net_total: netTotal }).eq("id", period.id);
-    toast.success("تم توليد مسير رواتب الشهر");
+    const { data, error } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: bounds.start });
+    if (error) return toast.error(error.message);
+    toast.success(`تم توليد مسير الرواتب: ${data?.employees_count ?? 0} موظف`);
     load();
   }
 
@@ -171,8 +160,9 @@ function AccountingPage() {
   }
 
   async function payPayroll(periodId: string) {
-    const mainCash = cashAccounts[0]?.id;
-    if (!mainCash) return toast.error("لا توجد خزنة للدفع");
+    const ensured = cashAccounts.length ? cashAccounts : await ensureCashAccount();
+    const mainCash = ensured[0]?.id;
+    if (!mainCash) return toast.error("تعذر إنشاء الخزنة الرئيسية للدفع");
     const periodLines = lines.filter((l) => l.payroll_period_id === periodId);
     for (const l of periodLines) {
       const net = Number(l.net_pay ?? 0); if (!net) continue;
