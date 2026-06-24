@@ -474,7 +474,7 @@ function OrderDetailPage() {
 
 
 
-type OrderIssue = { title: string; detail: string; action: string; href?: string; tone: "red" | "amber" | "blue" };
+type OrderIssue = { title: string; detail: string; action: string; href?: string; tone: "red" | "amber" | "blue"; units?: ServiceUnit[] };
 
 function buildOrderIssues(order: any, units: ServiceUnit[], pickups: any[], qcs: any[]): OrderIssue[] {
   const out: OrderIssue[] = [];
@@ -488,11 +488,11 @@ function buildOrderIssues(order: any, units: ServiceUnit[], pickups: any[], qcs:
 
   if (activePickup) out.push({ title: "استلام مفتوح", detail: activePickup.status === "pending" ? "الطلب لسه مستني تعيين مندوب للاستلام من العميل" : "المندوب اتعين ولسه لم يؤكد الاستلام", action: "تابع من الخريطة أو لوحة السائق", href: "/live-map", tone: "blue" });
   if (!activeUnits.length && order.status !== "cancelled") out.push({ title: "الطلب بلا قطع", detail: "لا يمكن تشغيل الطلب قبل تسجيل القطع", action: "أضف القطع من أسفل صفحة الطلب", tone: "red" });
-  if (reclean.length) out.push({ title: "مرتجع غسيل", detail: `${reclean.length} قطعة رجعت للغسيل`, action: "افتح محطة الغسيل وأنهِ المرتجع", href: "/stations/cleaning", tone: "red" });
-  if (qcFailed.length) out.push({ title: "مشكلة جودة", detail: `${qcFailed.length} قطعة موقوفة في الجودة`, action: "راجع محطة الجودة أو تواصل مع العميل", href: "/stations/qc", tone: "red" });
-  if (order.status === "cleaning" && notCleaned.length) out.push({ title: "الغسيل لم يكتمل", detail: `${notCleaned.length} قطعة لم يتم تعليمها كمنظفة`, action: "أكمل القطع في محطة الغسيل", href: "/stations/cleaning", tone: "amber" });
-  if (order.status === "ironing" && notIroned.length) out.push({ title: "الكي لم يكتمل", detail: `${notIroned.length} قطعة لم يتم تعليمها كمكوية`, action: "أكمل القطع في محطة الكي", href: "/stations/ironing", tone: "amber" });
-  if (["packing", "ready"].includes(order.status) && notQc.length) out.push({ title: "الجودة غير مكتملة", detail: `${notQc.length} قطعة لم تعتمد من الجودة`, action: "افتح محطة الجودة", href: "/stations/qc", tone: "amber" });
+  if (reclean.length) out.push({ title: "مرتجع غسيل", detail: `${reclean.length} قطعة رجعت للغسيل`, action: "افتح محطة الغسيل وأنهِ المرتجع", href: "/stations/cleaning", tone: "red", units: reclean });
+  if (qcFailed.length) out.push({ title: "مشكلة جودة", detail: `${qcFailed.length} قطعة موقوفة في الجودة`, action: "راجع محطة الجودة أو تواصل مع العميل", href: "/stations/qc", tone: "red", units: qcFailed });
+  if (order.status === "cleaning" && notCleaned.length) out.push({ title: "الغسيل لم يكتمل", detail: `${notCleaned.length} قطعة لم يتم تعليمها كمنظفة`, action: "أكمل القطع في محطة الغسيل", href: "/stations/cleaning", tone: "amber", units: notCleaned });
+  if (order.status === "ironing" && notIroned.length) out.push({ title: "الكي لم يكتمل", detail: `${notIroned.length} قطعة لم يتم تعليمها كمكوية`, action: "أكمل القطع في محطة الكي", href: "/stations/ironing", tone: "amber", units: notIroned });
+  if (["packing", "ready"].includes(order.status) && notQc.length) out.push({ title: "الجودة غير مكتملة", detail: `${notQc.length} قطعة لم تعتمد من الجودة`, action: "افتح محطة الجودة", href: "/stations/qc", tone: "amber", units: notQc });
   if (["ready", "out_for_delivery"].includes(order.status) && order.payment_status !== "paid") out.push({ title: "الدفع غير مكتمل", detail: "لا يجب تسليم الطلب قبل تسجيل الدفع أو تحصيله", action: "راجع ذمم العملاء أو تحصيل المندوب", href: "/receivables", tone: "amber" });
   if (["packing", "ready"].includes(order.status) && !order.invoice_finalized_at) out.push({ title: "الفاتورة لم تعتمد", detail: "الفاتورة النهائية قيد المراجعة", action: "راجع بنود الفاتورة واضغط تأكيد وإشعار", tone: "amber" });
   if (["pending_review", "underpaid"].includes(order.payment_verification_status ?? "")) out.push({ title: "إيصال دفع يحتاج مراجعة", detail: order.payment_verification_status === "underpaid" ? "المبلغ المقروء أقل من المطلوب" : "الإيصال قيد المراجعة", action: "راجع صورة الإيصال والدفع", tone: "red" });
@@ -506,7 +506,18 @@ function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
     <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> ما الذي يحتاج انتباهك في هذا الطلب؟</CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-2 gap-2">
       {issues.map((x, i) => {
-        const body = <div className={`rounded-xl border p-3 text-sm ${cls(x.tone)}`}><div className="font-black">{x.title}</div><div className="text-xs opacity-80 mt-1">{x.detail}</div><div className="text-xs font-bold mt-2">الخطوة التالية: {x.action}</div></div>;
+        const body = <div className={`rounded-xl border p-3 text-sm ${cls(x.tone)}`}>
+          <div className="font-black">{x.title}</div>
+          <div className="text-xs opacity-80 mt-1">{x.detail}</div>
+          {x.units?.length ? <div className="mt-2 flex flex-wrap gap-2">
+            {x.units.slice(0, 4).map((u) => <div key={u.id} className="flex items-center gap-1 rounded-lg bg-white/70 border px-2 py-1 text-[11px]">
+              {u.photo_url && <img src={u.photo_url} className="w-6 h-6 rounded object-cover" />}
+              <span className="font-bold">{u.label_code}</span><span>{u.name}</span>
+            </div>)}
+            {x.units.length > 4 && <span className="text-[11px] opacity-70">+{x.units.length - 4}</span>}
+          </div> : null}
+          <div className="text-xs font-bold mt-2">الخطوة التالية: {x.action}</div>
+        </div>;
         return x.href ? <Link key={i} to={x.href as any}>{body}</Link> : <div key={i}>{body}</div>;
       })}
     </CardContent>
