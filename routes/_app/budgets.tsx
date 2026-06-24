@@ -67,12 +67,16 @@ function BudgetsPage() {
 
   async function load() {
     setLoading(true);
-    const { data } = await  (supabase as any).from("budgets").select("*").order("created_at", { ascending: false });
-    const raw = (data ?? []) as Budget[];
-    const enriched = await Promise.all(raw.map(enrichBudget));
-    setBudgets(enriched);
-    if (enriched.length && !selected) setSelected(enriched[0]);
-    setLoading(false);
+    try {
+      const { data, error } = await  (supabase as any).from("budgets").select("*").order("created_at", { ascending: false });
+      if (error) { toast.error(error.message); setBudgets([]); return; }
+      const raw = (data ?? []) as Budget[];
+      const enriched = await Promise.all(raw.map((b) => enrichBudget(b).catch(() => b)));
+      setBudgets(enriched);
+      if (enriched.length && !selected) setSelected(enriched[0]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function loadItems(budgetId: string) {

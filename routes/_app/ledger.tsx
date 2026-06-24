@@ -40,18 +40,24 @@ function LedgerPage() {
   const b = useMemo(() => boundsFromMonth(month), [month]);
 
   async function load() {
-    if (!canUse) return;
+    if (!canUse) { setLoading(false); return; }
     setLoading(true);
-    await (supabase as any).rpc("ensure_default_chart_accounts").catch(() => null);
-    const [a, j, p, t, profit] = await Promise.all([
-      (supabase as any).from("chart_accounts").select("*").eq("is_active", true).order("code"),
-      (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
-      (supabase as any).from("accounting_periods").select("*").order("period_start", { ascending: false }).limit(18),
-      (supabase as any).from("v_trial_balance").select("*").order("code"),
-      (supabase as any).from("v_profit_loss").select("*").order("code"),
-    ]);
-    if (a.error) toast.error(a.error.message);
-    setAccounts(a.data ?? []); setJournals(j.data ?? []); setPeriods(p.data ?? []); setTrial(t.data ?? []); setPl(profit.data ?? []); setLoading(false);
+    try {
+      await (supabase as any).rpc("ensure_default_chart_accounts").catch(() => null);
+      const results = await Promise.allSettled([
+        (supabase as any).from("chart_accounts").select("*").eq("is_active", true).order("code"),
+        (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
+        (supabase as any).from("accounting_periods").select("*").order("period_start", { ascending: false }).limit(18),
+        (supabase as any).from("v_trial_balance").select("*").order("code"),
+        (supabase as any).from("v_profit_loss").select("*").order("code"),
+      ]);
+      const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
+      const a = val(0), j = val(1), p = val(2), t = val(3), profit = val(4);
+      [a, j, p, t, profit].forEach((r: any) => r.error && toast.error(r.error.message ?? "تعذر تحميل جزء من البيانات"));
+      setAccounts(a.data ?? []); setJournals(j.data ?? []); setPeriods(p.data ?? []); setTrial(t.data ?? []); setPl(profit.data ?? []);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { load(); }, [canUse, month]);
 

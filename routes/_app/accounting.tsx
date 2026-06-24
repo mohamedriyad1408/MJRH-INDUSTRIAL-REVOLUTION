@@ -48,21 +48,26 @@ function AccountingPage() {
   }, [month]);
 
   async function load() {
-    if (!canUse) return;
+    if (!canUse) { setLoading(false); return; }
     setLoading(true);
-    await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
-    const [ca, ct, ex, em, pp, pl, lg] = await Promise.all([
-      (supabase as any).from("cash_accounts").select("*").order("created_at"),
-      (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").order("happened_at", { ascending: false }).limit(80),
-      (supabase as any).from("expenses").select("*,employees(full_name)").gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
-      (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("is_active", true).order("full_name"),
-      (supabase as any).from("payroll_periods").select("*").order("period_start", { ascending: false }).limit(12),
-      (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").order("created_at", { ascending: false }).limit(100),
-      (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").order("entry_at", { ascending: false }).limit(120),
-    ]);
-    if (ca.error) toast.error(ca.error.message);
-    setCashAccounts(ca.data ?? []); setCashTx(ct.data ?? []); setExpenses(ex.data ?? []); setEmployees(em.data ?? []); setPeriods(pp.data ?? []); setLines(pl.data ?? []); setLedger(lg.data ?? []);
-    setLoading(false);
+    try {
+      await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
+      const results = await Promise.allSettled([
+        (supabase as any).from("cash_accounts").select("*").order("created_at"),
+        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").order("happened_at", { ascending: false }).limit(80),
+        (supabase as any).from("expenses").select("*,employees(full_name)").gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
+        (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("is_active", true).order("full_name"),
+        (supabase as any).from("payroll_periods").select("*").order("period_start", { ascending: false }).limit(12),
+        (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").order("created_at", { ascending: false }).limit(100),
+        (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").order("entry_at", { ascending: false }).limit(120),
+      ]);
+      const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
+      const ca = val(0), ct = val(1), ex = val(2), em = val(3), pp = val(4), pl = val(5), lg = val(6);
+      [ca, ct, ex, em, pp, pl, lg].forEach((r: any) => r.error && toast.error(r.error.message ?? "تعذر تحميل جزء من البيانات"));
+      setCashAccounts(ca.data ?? []); setCashTx(ct.data ?? []); setExpenses(ex.data ?? []); setEmployees(em.data ?? []); setPeriods(pp.data ?? []); setLines(pl.data ?? []); setLedger(lg.data ?? []);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { load(); }, [canUse, month]);
 

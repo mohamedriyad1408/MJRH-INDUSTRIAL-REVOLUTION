@@ -31,22 +31,27 @@ function CashClosingPage() {
   const [notes, setNotes] = useState("");
 
   async function load() {
-    if (!canUse) return;
+    if (!canUse) { setLoading(false); return; }
     setLoading(true);
-    await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
-    const { data: acc } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
-    const first = accountId || acc?.[0]?.id || "";
-    setAccounts(acc ?? []); setAccountId(first);
-    if (first) {
+    try {
+      await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
+      const { data: acc, error: accErr } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
+      if (accErr) toast.error(accErr.message);
+      const first = accountId || acc?.[0]?.id || "";
+      setAccounts(acc ?? []); setAccountId(first);
+      if (!first) { setTx([]); setClosings([]); return; }
       const from = new Date(date + "T00:00:00").toISOString();
       const to = new Date(date + "T23:59:59").toISOString();
       const [t, c] = await Promise.all([
         (supabase as any).from("cash_transactions").select("*").eq("cash_account_id", first).gte("happened_at", from).lte("happened_at", to).order("happened_at", { ascending: false }),
         (supabase as any).from("daily_cash_closings").select("*,cash_accounts(name)").order("closing_date", { ascending: false }).limit(30),
       ]);
+      if (t.error) toast.error(t.error.message);
+      if (c.error) toast.error(c.error.message);
       setTx(t.data ?? []); setClosings(c.data ?? []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
   useEffect(() => { load(); }, [canUse, date, accountId]);
 
