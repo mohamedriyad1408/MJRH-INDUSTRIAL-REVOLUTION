@@ -28,7 +28,7 @@ type Pickup = {
 };
 type Delivery = {
   id: string; order_number: number; status: string;
-  is_urgent: boolean; created_at: string;
+  is_urgent: boolean; created_at: string; total: number; payment_status: string; payment_method?: string | null;
   delivery_address: string | null; delivery_lat?: number | null; delivery_lng?: number | null; assigned_driver_employee_id?: string | null;
   customers?: { full_name: string; phone: string } | null;
   task_assignments?: { employee_id: string }[];
@@ -82,7 +82,7 @@ function DriverPage() {
       (supabase as any)
         .from("orders")
         .select(
-          "id, order_number, status, is_urgent, created_at, delivery_address, delivery_lat, delivery_lng, assigned_driver_employee_id, customers(full_name, phone), task_assignments(employee_id)"
+          "id, order_number, status, is_urgent, created_at, total, payment_status, payment_method, delivery_address, delivery_lat, delivery_lng, assigned_driver_employee_id, customers(full_name, phone), task_assignments(employee_id)"
         )
         .in("status", ["ready", "out_for_delivery"])
         .order("is_urgent", { ascending: false })
@@ -203,21 +203,26 @@ function DriverPage() {
     if (code.trim() !== last4) {
       return toast.error(`كود التأكيد خطأ — آخر 4 أرقام من هاتف العميل (${last4})`);
     }
+    let collected: number | null = null;
+    if (d.payment_status !== "paid") {
+      const val = prompt(`المطلوب من العميل ${Number(d.total ?? 0).toLocaleString("en-US")} جنيه. اكتب المبلغ المحصل من العميل`);
+      if (val === null) return;
+      collected = Number(val || 0);
+      if (!collected || collected < Number(d.total ?? 0)) return toast.error("المبلغ المحصل أقل من المطلوب");
+    }
     setActing(d.id);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "delivered", payment_status: "paid" })
-      .eq("id", d.id);
+    const { data: res, error } = await (supabase as any).rpc("confirm_delivery_with_collection", { _order_id: d.id, _collected_amount: collected, _driver_employee_id: empId });
     if (!error) {
       await supabase.from("order_status_history").insert({
         order_id: d.id, from_status: d.status as any,
         to_status: "delivered", changed_by: user?.id,
-        notes: "تأكيد التسليم بكود العميل",
+        notes: collected ? `تأكيد التسليم وتحصيل ${collected} جنيه` : "تأكيد التسليم بكود العميل",
       });
     }
     setActing(null);
     if (error) return toast.error(error.message);
-    toast.success("🎉 تم التسليم بنجاح!");
+    const extra = Number(res?.overpayment ?? 0);
+    toast.success(extra > 0 ? `🎉 تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "🎉 تم التسليم بنجاح!");
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });
     load();
   }
@@ -487,6 +492,7 @@ function DeliveriesList({
                 <div className="text-sm text-muted-foreground">
                   {d.customers?.full_name}
                 </div>
+                <div className="text-xs text-muted-foreground">الإجمالي: {Number(d.total ?? 0).toLocaleString("en-US")} جنيه · {d.payment_status === "paid" ? "مدفوع" : "تحصيل عند التسليم"}</div>
               </div>
               <Badge variant={d.status === "out_for_delivery" ? "default" : "secondary"}>
                 {d.status === "ready" ? "جاهز للتسليم" : "خرج للتسليم"}
