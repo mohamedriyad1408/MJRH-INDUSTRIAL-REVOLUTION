@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Plus, Camera, CheckCircle2, Clock, Truck, Package, Shirt, Sparkles, Inbox, Trash2, Image as ImageIcon, Send } from "lucide-react";
+import { Loader2, Plus, Camera, CheckCircle2, Clock, Truck, Package, Shirt, Sparkles, Inbox, Trash2, Send, Download, Upload, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/customer-portal")({
   head: () => ({ meta: [{ title: "بوابة العميل - MJRH" }] }),
@@ -24,7 +24,7 @@ const ORDER_STEPS = [
   { key: "delivered", label: "تم التسليم 🎉", icon: CheckCircle2, color: "#059669" },
 ];
 
-type Order = { id: string; order_number: number; status: string; total: number; created_at: string; promised_delivery_at: string | null; notes: string | null; order_items?: { name: string; qty: number; unit_price: number }[] };
+type Order = { id: string; order_number: number; status: string; payment_status?: string; payment_method?: string | null; total: number; created_at: string; promised_delivery_at: string | null; invoice_finalized_at?: string | null; payment_proof_url?: string | null; customer_payment_amount?: number | null; payment_verification_status?: string | null; overpayment_amount?: number | null; notes: string | null; order_items?: { name: string; qty: number; unit_price: number; line_total?: number }[] };
 type ServiceItem = { id: string; name: string; price: number; service_type: string };
 type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null };
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
@@ -44,6 +44,8 @@ function CustomerPortal() {
   const [notes, setNotes] = useState("");
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>({});
 
   async function verify() {
     if (!phone || phone.replace(/\D/g, "").length < 10) { toast.error("أدخل رقم هاتف صحيح"); return; }
@@ -83,6 +85,49 @@ function CustomerPortal() {
     setPieces((prev) => prev.map((p) => p.key === pieceKey ? { ...p, image_url: data.publicUrl } : p));
     setUploadingKey(null);
     toast.success("تم حفظ صورة القطعة");
+  }
+
+
+  function downloadInvoice(order: Order) {
+    if (!order.invoice_finalized_at) { toast.error("الفاتورة لم تتم مراجعتها واعتمادها بعد"); return; }
+    const rows = (order.order_items ?? []).map((it) => `
+      <tr><td>${it.name}</td><td>${it.qty}</td><td>${Number(it.unit_price).toFixed(2)}</td><td>${Number(it.line_total ?? it.qty * it.unit_price).toFixed(2)}</td></tr>
+    `).join("");
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>فاتورة #${order.order_number}</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px;text-align:right}.total{font-size:22px;font-weight:900;color:#0f766e}.box{border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:16px}</style></head><body><div class="box"><h1>فاتورة طلب #${order.order_number}</h1><p>العميل: ${customerName}</p><p>الهاتف: ${phone}</p><p>تاريخ الطلب: ${new Date(order.created_at).toLocaleString("ar-EG")}</p><p>تمت المراجعة: ${new Date(order.invoice_finalized_at).toLocaleString("ar-EG")}</p></div><table><thead><tr><th>الخدمة</th><th>العدد</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${rows}</tbody></table><p class="total">المطلوب: ${order.total} ج.م</p><script>window.print()</script></body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) return toast.error("المتصفح منع فتح الفاتورة");
+    w.document.write(html); w.document.close();
+  }
+
+  function detectAmountFromFilename(file: File) {
+    const m = file.name.match(/(?:egp|ج|amount|مبلغ)?\s*(\d{2,7}(?:[.,]\d{1,2})?)/i);
+    return m ? Number(m[1].replace(",", ".")) : null;
+  }
+
+  async function uploadPaymentProof(order: Order, file: File) {
+    if (!order.invoice_finalized_at) return toast.error("استنى مراجعة واعتماد الفاتورة أولًا");
+    const typedAmount = Number(paymentAmounts[order.id] || 0);
+    const detected = detectAmountFromFilename(file);
+    const amount = detected || typedAmount;
+    if (!amount) return toast.error("اكتب المبلغ المدفوع أو ارفع صورة باسم يحتوي على المبلغ مثل instapay-250.jpg");
+    setPayingOrderId(order.id);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `customer-payments/${order.id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: true, contentType: file.type });
+    if (error) { setPayingOrderId(null); return toast.error(error.message); }
+    const { data } = supabase.storage.from("payment-proofs").getPublicUrl(path);
+    const { data: res, error: rpcErr } = await (supabase as any).rpc("customer_portal_submit_instapay_payment", {
+      _phone: phone,
+      _slug: tenantSlug,
+      _order_id: order.id,
+      _proof_url: data.publicUrl,
+      _amount: amount,
+      _detected_amount: detected,
+    }).maybeSingle();
+    setPayingOrderId(null);
+    if (rpcErr) return toast.error(rpcErr.message);
+    toast.success(res?.message ?? "تم رفع إثبات الدفع");
+    loadOrders();
   }
 
   async function placeOrder() {
@@ -153,8 +198,8 @@ function CustomerPortal() {
         {tab === "orders" ? (
           <div className="space-y-3">
             {activeOrders.length === 0 && doneOrders.length === 0 && <Card><CardContent className="p-8 text-center text-slate-400">لا توجد طلبات بعد</CardContent></Card>}
-            {activeOrders.map((o) => <OrderCard key={o.id} order={o} />)}
-            {doneOrders.length > 0 && <><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">الطلبات السابقة</p>{doneOrders.slice(0, 5).map((o) => <OrderCard key={o.id} order={o} />)}</>}
+            {activeOrders.map((o) => <OrderCard key={o.id} order={o} onDownloadInvoice={downloadInvoice} onUploadProof={uploadPaymentProof} paymentAmount={paymentAmounts[o.id] ?? ""} setPaymentAmount={(v) => setPaymentAmounts((m) => ({ ...m, [o.id]: v }))} paying={payingOrderId === o.id} />)}
+            {doneOrders.length > 0 && <><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">الطلبات السابقة</p>{doneOrders.slice(0, 5).map((o) => <OrderCard key={o.id} order={o} onDownloadInvoice={downloadInvoice} onUploadProof={uploadPaymentProof} paymentAmount={paymentAmounts[o.id] ?? ""} setPaymentAmount={(v) => setPaymentAmounts((m) => ({ ...m, [o.id]: v }))} paying={payingOrderId === o.id} />)}</>}
           </div>
         ) : (
           <div className="space-y-4">
@@ -213,7 +258,7 @@ function CustomerPortal() {
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, setPaymentAmount, paying }: { order: Order; onDownloadInvoice: (o: Order) => void; onUploadProof: (o: Order, f: File) => void; paymentAmount: string; setPaymentAmount: (v: string) => void; paying: boolean }) {
   const idx = ORDER_STEPS.findIndex((s) => s.key === order.status);
   const step = ORDER_STEPS[idx] ?? ORDER_STEPS[0];
   return (
@@ -229,8 +274,18 @@ function OrderCard({ order }: { order: Order }) {
         {order.status !== "delivered" && order.status !== "cancelled" && <div className="flex gap-1">{ORDER_STEPS.slice(0, -1).map((s, i) => <div key={s.key} className={`h-1.5 flex-1 rounded-full transition-all ${i <= idx ? "bg-teal-500" : "bg-slate-200"}`} />)}</div>}
         {order.order_items?.length ? <div className="text-xs text-slate-500 space-y-0.5">{order.order_items.slice(0, 3).map((it, i) => <div key={i}>{it.qty}× {it.name}</div>)}</div> : null}
         <div className="flex justify-between items-center pt-1 border-t"><span className="text-sm text-slate-500">الإجمالي</span><span className="font-black text-teal-700">{order.total} ج.م</span></div>
+        {order.invoice_finalized_at ? <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2"><Badge className="bg-emerald-600">الفاتورة تمت مراجعتها</Badge><Button size="sm" variant="outline" onClick={() => onDownloadInvoice(order)}><Download className="w-4 h-4 ms-1" />تحميل الفاتورة</Button></div>
+          {order.payment_status === "paid" ? <div className="text-sm font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />تم تسجيل الدفع{Number(order.overpayment_amount ?? 0) > 0 ? ` — الزائد ${order.overpayment_amount} ج.م بقشيش للمندوب` : ""}</div> : <div className="space-y-2">
+            <div className="text-xs text-slate-500">ادفع InstaPay ثم ارفع صورة الإيصال. لو دفعت زيادة، الزائد يتسجل بقشيش للمندوب.</div>
+            <div className="grid grid-cols-[1fr_auto] gap-2"><Input type="number" placeholder="المبلغ المدفوع" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /><Button asChild disabled={paying}><label className="cursor-pointer">{paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 ms-1" />رفع الإيصال</>}<input hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUploadProof(order, e.target.files[0])} /></label></Button></div>
+            {order.payment_proof_url && <div className="text-xs text-amber-700">تم رفع إيصال سابق — الحالة: {statusAr(order.payment_verification_status)}</div>}
+          </div>}
+        </div> : <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">الفاتورة قيد المراجعة. الدفع يظهر بعد اعتماد الفاتورة.</div>}
         {order.promised_delivery_at && <div className="text-xs text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3" /> متوقع: {new Date(order.promised_delivery_at).toLocaleString("ar-EG")}</div>}
       </CardContent>
     </Card>
   );
 }
+
+function statusAr(s?: string | null) { return ({ none: "لا يوجد", pending_review: "قيد المراجعة", matched: "مطابق", overpaid: "مدفوع بزيادة", underpaid: "أقل من المطلوب", rejected: "مرفوض" } as any)[s || "none"] ?? s; }
