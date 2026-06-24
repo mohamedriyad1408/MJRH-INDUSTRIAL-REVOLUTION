@@ -24,7 +24,7 @@ const ORDER_STEPS = [
   { key: "delivered", label: "تم التسليم 🎉", icon: CheckCircle2, color: "#059669" },
 ];
 
-type Order = { id: string; order_number: number; status: string; payment_status?: string; payment_method?: string | null; total: number; created_at: string; promised_delivery_at: string | null; invoice_finalized_at?: string | null; payment_proof_url?: string | null; customer_payment_amount?: number | null; payment_verification_status?: string | null; overpayment_amount?: number | null; notes: string | null; order_items?: { name: string; qty: number; unit_price: number; line_total?: number }[] };
+type Order = { id: string; order_number: number; status: string; payment_status?: string; payment_method?: string | null; total: number; created_at: string; promised_delivery_at: string | null; invoice_finalized_at?: string | null; payment_proof_url?: string | null; customer_payment_amount?: number | null; payment_verification_status?: string | null; overpayment_amount?: number | null; pickup_status?: string | null; picked_up_at?: string | null; notes: string | null; order_items?: { name: string; qty: number; unit_price: number; line_total?: number }[] };
 type ServiceItem = { id: string; name: string; price: number; service_type: string };
 type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null };
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
@@ -273,6 +273,7 @@ function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, set
           <Badge style={{ background: step.color, color: "#fff" }}>{step.label}</Badge>
         </div>
         {order.status !== "delivered" && order.status !== "cancelled" && <div className="flex gap-1">{ORDER_STEPS.slice(0, -1).map((s, i) => <div key={s.key} className={`h-1.5 flex-1 rounded-full transition-all ${i <= idx ? "bg-teal-500" : "bg-slate-200"}`} />)}</div>}
+        <CustomerOrderHint order={order} />
         {order.order_items?.length ? <div className="text-xs text-slate-500 space-y-0.5">{order.order_items.slice(0, 3).map((it, i) => <div key={i}>{it.qty}× {it.name}</div>)}</div> : null}
         <div className="flex justify-between items-center pt-1 border-t"><span className="text-sm text-slate-500">الإجمالي</span><span className="font-black text-teal-700">{order.total} ج.م</span></div>
         {order.invoice_finalized_at ? <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3 space-y-2">
@@ -287,6 +288,16 @@ function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, set
       </CardContent>
     </Card>
   );
+}
+
+function CustomerOrderHint({ order }: { order: Order }) {
+  if (order.pickup_status === "pending") return <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">طلبك اتسجل، وفي انتظار تعيين مندوب للاستلام من عنوانك.</div>;
+  if (order.pickup_status === "assigned") return <div className="rounded-xl bg-blue-50 border border-blue-100 p-2 text-xs text-blue-700">تم تعيين مندوب، وهو في طريقه لاستلام الطلب.</div>;
+  if (order.pickup_status === "converted" && order.status === "received") return <div className="rounded-xl bg-teal-50 border border-teal-100 p-2 text-xs text-teal-700">تم استلام الطلب من المندوب ودخل الاستقبال.</div>;
+  if (["cleaning", "ironing", "packing"].includes(order.status)) return <div className="rounded-xl bg-slate-50 border p-2 text-xs text-slate-600">طلبك داخل التشغيل الآن. سيتم اعتماد الفاتورة بعد المراجعة النهائية.</div>;
+  if (order.status === "ready") return <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-2 text-xs text-emerald-700">طلبك جاهز للتسليم. تابع الدفع أو انتظر المندوب.</div>;
+  if (order.status === "out_for_delivery") return <div className="rounded-xl bg-orange-50 border border-orange-100 p-2 text-xs text-orange-700">طلبك خرج للتسليم مع المندوب.</div>;
+  return null;
 }
 
 function statusAr(s?: string | null) { return ({ none: "لا يوجد", pending_review: "قيد المراجعة", matched: "مطابق", overpaid: "مدفوع بزيادة", underpaid: "أقل من المطلوب", rejected: "مرفوض" } as any)[s || "none"] ?? s; }
