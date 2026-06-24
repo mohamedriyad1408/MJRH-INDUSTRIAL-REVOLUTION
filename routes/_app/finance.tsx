@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2 } from "lucide-react";
+import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2, RefreshCw, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_app/finance")({
   head: () => ({ meta: [{ title: "الحسابات - MJRH" }] }),
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_app/finance")({
 });
 
 const EXPENSE_CATEGORIES = [
-  { value: "salaries", label: "الرواتب اليومية" },
+  { value: "salaries", label: "رواتب وعمولات" },
   { value: "rent", label: "الإيجار" },
   { value: "water", label: "فاتورة المياه" },
   { value: "electricity", label: "فاتورة الكهرباء" },
@@ -30,10 +30,10 @@ const EXPENSE_CATEGORIES = [
   { value: "other", label: "أخرى" },
 ];
 
-type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string };
+type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string; status?: string; source_type?: string | null; employee_id?: string | null };
 // ✅ Phase 2: Use employees instead of technicians
 type AdvanceRequest = { id: string; employee_id: string | null; employee_name: string; amount: number; reason: string | null; status: "pending"|"approved"|"rejected"; created_at: string; decided_at: string | null };
-type Employee = { id: string; full_name: string };
+type Employee = { id: string; full_name: string; monthly_salary?: number; commission_percent?: number };
 
 function FinancePage() {
   const { hasRole, user } = useAuth();
@@ -43,6 +43,8 @@ function FinancePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [advances, setAdvances] = useState<AdvanceRequest[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]); // ✅ was: techs/technicians
+  const [payrollSync, setPayrollSync] = useState<any>(null);
+  const [syncingPayroll, setSyncingPayroll] = useState(false);
   const [range, setRange] = useState<"7d"|"30d"|"all">("30d");
 
   const fromDate = useMemo(() => {
@@ -53,6 +55,10 @@ function FinancePage() {
 
   async function load() {
     setLoading(true);
+    // الوضع السهل: أول ما صاحب العمل يفتح الحسابات، النظام يجهز رواتب الشهر كمصروفات آجلة بدون خطوات معقدة.
+    const { data: payrollData } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) }).catch(() => ({ data: null }));
+    setPayrollSync(payrollData);
+
     let oq = supabase.from("orders").select("total,payment_status,payment_method").neq("status", "cancelled");
     if (fromDate) oq = oq.gte("created_at", fromDate);
     const { data: orders } = await oq;
@@ -80,7 +86,7 @@ function FinancePage() {
     })));
 
     // ✅ Phase 2: employees table instead of technicians
-    const { data: emps } = await supabase.from("employees").select("id,full_name").eq("is_active", true).order("full_name");
+    const { data: emps } = await supabase.from("employees").select("id,full_name,monthly_salary,commission_percent").eq("is_active", true).order("full_name");
     setEmployees((emps ?? []) as any);
 
     setLoading(false);
@@ -88,9 +94,22 @@ function FinancePage() {
 
   useEffect(() => { load(); }, [fromDate]);
 
+  async function syncPayrollNow() {
+    setSyncingPayroll(true);
+    const { data, error } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
+    setSyncingPayroll(false);
+    if (error) return toast.error(error.message);
+    setPayrollSync(data);
+    toast.success("تم تجهيز رواتب وعمولات الشهر كمصروفات آجلة");
+    load();
+  }
+
   const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const pendingAdvances = advances.filter((a) => a.status === "pending");
   const approvedAdvancesTotal = advances.filter((a) => a.status === "approved").reduce((s, a) => s + Number(a.amount), 0);
+  const payrollExpenses = expenses.filter((e) => e.category === "salaries").reduce((s, e) => s + Number(e.amount), 0);
+  const payablePayroll = expenses.filter((e) => e.category === "salaries" && e.status === "payable").reduce((s, e) => s + Number(e.amount), 0);
+  const expectedMonthlySalaries = employees.reduce((s, e) => s + Number(e.monthly_salary ?? 0), 0);
   const netProfit = revenue.total - totalExpenses - approvedAdvancesTotal;
 
   return (
@@ -120,6 +139,28 @@ function FinancePage() {
         <StatCard label="صافي الربح" value={fmtMoney(netProfit)} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
       </div>
 
+      <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="font-black text-lg flex items-center gap-2"><Users className="w-5 h-5 text-teal-700" />رواتب الشهر ظاهرة تلقائيًا</div>
+              <p className="text-sm text-muted-foreground">النظام يجمع رواتب الموظفين وعمولاتهم وسلفهم ويضيفها كمصروفات آجلة لهذا الشهر. لا تحتاج تعمل خطوات محاسبية معقدة.</p>
+            </div>
+            <Button onClick={syncPayrollNow} disabled={syncingPayroll}>
+              {syncingPayroll ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}
+              ظبط الرواتب الآن
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Stat title="رواتب مسجلة" value={fmtMoney(expectedMonthlySalaries)} />
+            <Stat title="مصروفات رواتب ظاهرة" value={fmtMoney(payrollExpenses)} />
+            <Stat title="رواتب آجلة" value={fmtMoney(payablePayroll)} />
+            <Stat title="سلف معتمدة" value={fmtMoney(approvedAdvancesTotal)} />
+          </div>
+          {payrollSync && <div className="text-xs text-teal-700 font-bold">آخر مزامنة: {payrollSync.employees_count ?? 0} موظف · إجمالي مستحق {fmtMoney(Number(payrollSync.gross_total ?? 0))} · صافي بعد السلف {fmtMoney(Number(payrollSync.net_total ?? 0))}</div>}
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue={pendingAdvances.length ? "advances" : "expenses"}>
         <TabsList>
           <TabsTrigger value="expenses">المصروفات</TabsTrigger>
@@ -147,7 +188,7 @@ function FinancePage() {
                   {expenses.map((e) => (
                     <tr key={e.id} className="border-t">
                       <td className="p-3">{fmtDate(e.spent_at)}</td>
-                      <td className="p-3"><Badge variant="secondary">{EXPENSE_CATEGORIES.find(c=>c.value===e.category)?.label ?? e.category}</Badge></td>
+                      <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{EXPENSE_CATEGORIES.find(c=>c.value===e.category)?.label ?? e.category}</Badge>{e.status === "payable" && <Badge variant="outline" className="border-amber-300 text-amber-700">آجل</Badge>}{e.source_type === "auto_payroll_line" && <Badge className="bg-teal-600">تلقائي</Badge>}</div></td>
                       <td className="p-3 text-muted-foreground">{e.description || "—"}</td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(e.amount)}</td>
                       {isOwner && <td className="p-3">
