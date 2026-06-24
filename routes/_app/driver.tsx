@@ -290,6 +290,8 @@ function DriverPage() {
         </button>
       </div>
 
+      {!loading && <DriverNextAction pendingPickups={pendingPickups} myPickups={myPickups} deliveries={myDeliveries} myLoc={myLoc} />}
+
       {loading ? (
         <div className="flex justify-center p-10">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -317,6 +319,19 @@ function DriverPage() {
       )}
     </div>
   );
+}
+
+
+function DriverNextAction({ pendingPickups, myPickups, deliveries, myLoc }: { pendingPickups: Pickup[]; myPickups: Pickup[]; deliveries: Delivery[]; myLoc: LatLng | null }) {
+  const dueDelivery = deliveries.find((d) => d.status === "out_for_delivery" && d.payment_status !== "paid") || deliveries.find((d) => d.status === "out_for_delivery") || deliveries.find((d) => d.status === "ready");
+  let title = "ابدأ بمهمة الاستلام";
+  let detail = "لا توجد مهام عاجلة. لو أنت قريب من طلب استلام، خذه وابدأ.";
+  let tone = "bg-blue-50 border-blue-200 text-blue-800";
+  if (!myLoc) { title = "حدّث موقعك أولًا"; detail = "اضغط زر موقعي عشان الخريطة والتوزيع يشتغلوا صح."; tone = "bg-amber-50 border-amber-200 text-amber-800"; }
+  else if (myPickups.length) { title = "عندك استلام مكلف به"; detail = `${myPickups[0].customer_name} — اذهب للعميل واضغط تأكيد الاستلام بعد الاستلام.`; }
+  else if (dueDelivery) { title = dueDelivery.payment_status === "paid" ? "عندك تسليم جاهز" : "عندك تسليم مع تحصيل"; detail = `طلب #${dueDelivery.order_number} — ${dueDelivery.payment_status === "paid" ? "سلمه بكود العميل" : `حصل ${Number(dueDelivery.total ?? 0).toLocaleString("en-US")} جنيه عند التسليم`}`; tone = dueDelivery.payment_status === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-800"; }
+  else if (pendingPickups.length) { title = "يوجد استلامات غير مسندة"; detail = `أقرب طلب: ${pendingPickups[0].customer_name}. لو مناسب اضغط خذ الطلب.`; }
+  return <Card className={`border ${tone}`}><CardContent className="p-3 text-sm"><div className="font-black">{title}</div><div className="text-xs mt-1 opacity-80">{detail}</div></CardContent></Card>;
 }
 
 /* ─── Pickups sub-component ─── */

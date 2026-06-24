@@ -56,6 +56,7 @@ type ServiceUnit = {
   customer_notes?: string | null;
   staff_notes?: string | null;
   assigned_ironing_employee_id?: string | null;
+  ironing_completed_at?: string | null;
   needs_reclean: boolean;
   reclean_reason?: string | null;
   reclean_reported_at?: string | null;
@@ -325,6 +326,7 @@ function OrderDetailPage() {
   const shirtCount = units.filter((u) => u.is_shirt_like).length;
   const invoiceValue = units.reduce((s, u) => s + Number(u.line_value ?? 0), 0);
   const recleanUnits = units.filter((u) => u.needs_reclean);
+  const issueList = buildOrderIssues(order, units, pickupRows, qcRows);
 
   return (
     <div className="space-y-5 max-w-4xl" dir="rtl">
@@ -357,6 +359,8 @@ function OrderDetailPage() {
           <StatusBadge level={statusLevel(order.status)} label={order.status} />
         </div>
       </div>
+
+      <OrderIssuePanel issues={issueList} />
 
       <div className="grid md:grid-cols-4 gap-3">
         <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">عدد القطع</div><div className="text-xl font-black">{pieceCount}</div></CardContent></Card>
@@ -468,6 +472,46 @@ function OrderDetailPage() {
   );
 }
 
+
+
+type OrderIssue = { title: string; detail: string; action: string; href?: string; tone: "red" | "amber" | "blue" };
+
+function buildOrderIssues(order: any, units: ServiceUnit[], pickups: any[], qcs: any[]): OrderIssue[] {
+  const out: OrderIssue[] = [];
+  const activePickup = pickups.find((p) => ["pending", "assigned"].includes(p.status));
+  const activeUnits = units.filter((u) => u.status !== "cancelled" && u.current_stage !== "cancelled");
+  const reclean = activeUnits.filter((u) => u.needs_reclean);
+  const qcFailed = activeUnits.filter((u) => u.current_stage === "qc_failed");
+  const notCleaned = activeUnits.filter((u) => ["both", "cleaning"].includes(u.service_type) && ["cleaning", "received"].includes(u.current_stage));
+  const notIroned = activeUnits.filter((u) => ["both", "ironing"].includes(u.service_type) && !u.ironing_completed_at && !["ironing_done", "qc_passed"].includes(u.current_stage));
+  const notQc = activeUnits.filter((u) => !["qc_passed", "delivered", "cancelled"].includes(u.current_stage));
+
+  if (activePickup) out.push({ title: "استلام مفتوح", detail: activePickup.status === "pending" ? "الطلب لسه مستني تعيين مندوب للاستلام من العميل" : "المندوب اتعين ولسه لم يؤكد الاستلام", action: "تابع من الخريطة أو لوحة السائق", href: "/live-map", tone: "blue" });
+  if (!activeUnits.length && order.status !== "cancelled") out.push({ title: "الطلب بلا قطع", detail: "لا يمكن تشغيل الطلب قبل تسجيل القطع", action: "أضف القطع من أسفل صفحة الطلب", tone: "red" });
+  if (reclean.length) out.push({ title: "مرتجع غسيل", detail: `${reclean.length} قطعة رجعت للغسيل`, action: "افتح محطة الغسيل وأنهِ المرتجع", href: "/stations/cleaning", tone: "red" });
+  if (qcFailed.length) out.push({ title: "مشكلة جودة", detail: `${qcFailed.length} قطعة موقوفة في الجودة`, action: "راجع محطة الجودة أو تواصل مع العميل", href: "/stations/qc", tone: "red" });
+  if (order.status === "cleaning" && notCleaned.length) out.push({ title: "الغسيل لم يكتمل", detail: `${notCleaned.length} قطعة لم يتم تعليمها كمنظفة`, action: "أكمل القطع في محطة الغسيل", href: "/stations/cleaning", tone: "amber" });
+  if (order.status === "ironing" && notIroned.length) out.push({ title: "الكي لم يكتمل", detail: `${notIroned.length} قطعة لم يتم تعليمها كمكوية`, action: "أكمل القطع في محطة الكي", href: "/stations/ironing", tone: "amber" });
+  if (["packing", "ready"].includes(order.status) && notQc.length) out.push({ title: "الجودة غير مكتملة", detail: `${notQc.length} قطعة لم تعتمد من الجودة`, action: "افتح محطة الجودة", href: "/stations/qc", tone: "amber" });
+  if (["ready", "out_for_delivery"].includes(order.status) && order.payment_status !== "paid") out.push({ title: "الدفع غير مكتمل", detail: "لا يجب تسليم الطلب قبل تسجيل الدفع أو تحصيله", action: "راجع ذمم العملاء أو تحصيل المندوب", href: "/receivables", tone: "amber" });
+  if (["packing", "ready"].includes(order.status) && !order.invoice_finalized_at) out.push({ title: "الفاتورة لم تعتمد", detail: "الفاتورة النهائية قيد المراجعة", action: "راجع بنود الفاتورة واضغط تأكيد وإشعار", tone: "amber" });
+  if (["pending_review", "underpaid"].includes(order.payment_verification_status ?? "")) out.push({ title: "إيصال دفع يحتاج مراجعة", detail: order.payment_verification_status === "underpaid" ? "المبلغ المقروء أقل من المطلوب" : "الإيصال قيد المراجعة", action: "راجع صورة الإيصال والدفع", tone: "red" });
+  return out;
+}
+
+function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
+  if (!issues.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">لا توجد مشاكل واضحة في الطلب الآن ✅</CardContent></Card>;
+  const cls = (tone: string) => tone === "red" ? "border-red-200 bg-red-50 text-red-800" : tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-800" : "border-blue-200 bg-blue-50 text-blue-800";
+  return <Card>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> ما الذي يحتاج انتباهك في هذا الطلب؟</CardTitle></CardHeader>
+    <CardContent className="grid md:grid-cols-2 gap-2">
+      {issues.map((x, i) => {
+        const body = <div className={`rounded-xl border p-3 text-sm ${cls(x.tone)}`}><div className="font-black">{x.title}</div><div className="text-xs opacity-80 mt-1">{x.detail}</div><div className="text-xs font-bold mt-2">الخطوة التالية: {x.action}</div></div>;
+        return x.href ? <Link key={i} to={x.href as any}>{body}</Link> : <div key={i}>{body}</div>;
+      })}
+    </CardContent>
+  </Card>;
+}
 
 const STATUS_AR: Record<string, string> = {
   received: "دخل الاستقبال",
