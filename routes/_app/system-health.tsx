@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Wrench } from "lucide-react";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
+import { fmtMoney, fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/system-health")({
   head: () => ({ meta: [{ title: "فحص النظام" }] }),
@@ -23,6 +24,7 @@ type Check = {
   fix?: string;
   severity: "ok" | "warn" | "danger";
   details?: { label: string; sub?: string; href?: string }[];
+  error?: string;
 };
 
 function severityFor(count: number, okWhenZero = false): "ok" | "warn" | "danger" {
@@ -37,6 +39,7 @@ function SystemHealthPage() {
   const [repairing, setRepairing] = useState(false);
   const [fixingKey, setFixingKey] = useState<string | null>(null);
   const [checks, setChecks] = useState<Check[]>([]);
+  const [diagnostics, setDiagnostics] = useState<string[]>([]);
 
   async function load() {
     if (!canUse) return;
@@ -83,6 +86,13 @@ function SystemHealthPage() {
         (supabase as any).from("orders").select("id,order_number,status,updated_at,customers(full_name)").not("status", "in", "(delivered,cancelled)").lt("updated_at", yesterdayIso).limit(5),
       ]);
 
+      const [cashHealth, journalEntries, manualCashTx, manualCashJournals] = await Promise.all([
+        (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
+        (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
+        (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
+        (supabase as any).from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
+      ]);
+
       const activeOrders = orders.data ?? [];
       const activeUnits = (units.data ?? []).filter((u: any) => u.status !== "cancelled" && u.current_stage !== "cancelled");
       const orderIdsWithPieces = new Set(activeUnits.map((u: any) => u.order_id));
@@ -105,10 +115,37 @@ function SystemHealthPage() {
       const oldPayablesDetails = (oldPayables.data ?? []).map((e: any) => ({ label: e.description || "مصروف آجل", sub: `${Number(e.amount ?? 0).toLocaleString("en-US")} جنيه`, href: "/accounting" }));
       const stuckOrderDetails = (stuckOrders.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: `${o.customers?.full_name ?? "عميل"} — واقف في ${o.status}`, href: `/orders/${o.id}` }));
 
+      const cashRows = cashHealth.data ?? [];
+      const cashMismatchRows = cashRows.filter((c: any) => Math.abs(Number(c.balance_difference ?? 0)) >= 0.01);
+      const cashHealthDetails = cashRows.slice(0, 5).map((c: any) => ({
+        label: c.name,
+        sub: `الرصيد: ${fmtMoney(c.current_balance)} — المتوقع: ${fmtMoney(c.expected_balance)} — حركات: ${c.posted_transactions_count ?? 0}`,
+        href: "/accounting",
+      }));
+      const cashMismatchDetails = cashMismatchRows.slice(0, 5).map((c: any) => ({
+        label: c.name,
+        sub: `فرق ${fmtMoney(c.balance_difference)} بين الرصيد والحركات المسجلة`,
+        href: "/accounting",
+      }));
+      const manualJournalIds = new Set((manualCashJournals.data ?? []).map((j: any) => j.source_id).filter(Boolean));
+      const manualWithoutJournal = (manualCashTx.data ?? []).filter((t: any) => !manualJournalIds.has(t.id));
+      const manualWithoutJournalDetails = manualWithoutJournal.slice(0, 5).map((t: any) => ({
+        label: t.description || "حركة خزنة يدوية",
+        sub: `${t.direction === "in" ? "داخل" : "خارج"} — ${fmtMoney(t.amount)} — ${fmtDate(t.happened_at)}`,
+        href: "/accounting",
+      }));
+
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals];
+      const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
+      setDiagnostics([...new Set(errors)].slice(0, 6));
+
       const next: Check[] = [
         { key: "settings", title: "إعدادات المغسلة", count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: "يتم إنشاؤها تلقائيًا عند فتح مغسلة جديدة" },
-        { key: "cash", title: "الخزنة موجودة", count: cash.count ?? 0, severity: severityFor(cash.count ?? 0), href: "/accounting", fix: "اضغط إصلاح الأساسيات لإنشاء الخزنة الرئيسية" },
-        { key: "chart", title: "شجرة الحسابات موجودة", count: chart.count ?? 0, severity: (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: "اضغط إصلاح الأساسيات لإنشاء الحسابات" },
+        { key: "cash", title: "الخزن والحسابات النقدية", count: cashRows.length || cash.count || 0, severity: cashHealth.error ? "danger" : severityFor(cashRows.length || cash.count || 0), href: "/accounting", fix: cashHealth.error ? "فشل قراءة صحة الخزنة؛ اضغط إصلاح الأساسيات ثم حدّث" : "لا يكفي وجود الخزنة؛ يظهر هنا رصيدها وحركاتها للتأكد أنها تعمل", details: cashHealthDetails, error: cashHealth.error?.message },
+        { key: "chart", title: "شجرة الحسابات موجودة", count: chart.count ?? 0, severity: chart.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: chart.error ? "فشل قراءة شجرة الحسابات؛ اضغط إصلاح الأساسيات" : "اضغط إصلاح الأساسيات لإنشاء الحسابات", error: chart.error?.message },
+        { key: "cashBalanceIntegrity", title: "اتزان أرصدة الخزن", count: cashMismatchRows.length, okWhenZero: true, severity: cashHealth.error ? "danger" : severityFor(cashMismatchRows.length, true), href: "/accounting", fix: cashMismatchRows.length ? "الرصيد الظاهر لا يساوي مجموع الحركات؛ اضغط إصلاح سريع لإعادة الحساب" : "أرصدة الخزن مطابقة للحركات المسجلة", details: cashMismatchDetails, error: cashHealth.error?.message },
+        { key: "journal", title: "القيود المحاسبية تعمل", count: journalEntries.count ?? 0, severity: journalEntries.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "warn", href: "/ledger", fix: journalEntries.error ? "فشل قراءة القيود" : "أي دخل/خرج أو دفع أو مصروف يجب أن يظهر هنا كقيد", error: journalEntries.error?.message },
+        { key: "manualNoJournal", title: "حركات خزنة بلا قيد", count: manualWithoutJournal.length, okWhenZero: true, severity: manualCashTx.error || manualCashJournals.error ? "danger" : severityFor(manualWithoutJournal.length, true), href: "/ledger", fix: manualWithoutJournal.length ? "اضغط إصلاح سريع لإنشاء قيود للحركات اليدوية القديمة" : "كل حركة خزنة يدوية لها قيد محاسبي", details: manualWithoutJournalDetails, error: manualCashTx.error?.message || manualCashJournals.error?.message },
         { key: "employees", title: "موظفون نشطون", count: employees.count ?? 0, severity: severityFor(employees.count ?? 0), href: "/staff", fix: "أضف موظفين وحدد المحطة والراتب" },
         { key: "services", title: "خدمات مفعلة", count: services.count ?? 0, severity: severityFor(services.count ?? 0), href: "/services", fix: "أضف كتالوج الخدمات قبل إنشاء الطلبات" },
         { key: "customers", title: "عملاء مسجلون", count: customers.count ?? 0, severity: (customers.count ?? 0) > 0 ? "ok" : "warn", href: "/customers", fix: "أضف عميل أو استخدم بوابة العميل" },
@@ -140,16 +177,18 @@ function SystemHealthPage() {
     const r1 = await (supabase as any).rpc("ensure_default_cash_account"); if (r1.error) errs.push(r1.error.message);
     const r2 = await (supabase as any).rpc("ensure_default_chart_accounts"); if (r2.error) errs.push(r2.error.message);
     const r3 = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: today }); if (r3.error) errs.push(r3.error.message);
+    const r4 = await (supabase as any).rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
+    const r5 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r5.error) errs.push(r5.error.message);
     try { await autoAssignDrivers(); } catch (e: any) { /* no drivers or no tasks: ignore */ }
     setRepairing(false);
-    if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح الأساسيات: خزنة، حسابات، ورواتب الشهر");
+    if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح الأساسيات: خزنة، حسابات، أرصدة، قيود يدوية، ورواتب الشهر");
     load();
   }
 
   async function fixCheck(key: string) {
     setFixingKey(key);
     try {
-      if (["cash", "chart", "settings", "employees"].includes(key)) {
+      if (["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal"].includes(key)) {
         await repairBasics();
         return;
       }
@@ -218,14 +257,21 @@ function SystemHealthPage() {
       <Kpi title="بنود الفحص" value={checks.length} tone="ok" />
     </div>
 
+    {diagnostics.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
+      <div className="font-black">فيه استعلامات فشلت أثناء الفحص، لذلك أي رقم ظاهر ممكن يكون غير دقيق:</div>
+      {diagnostics.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{d}</div>)}
+      <div className="text-xs">اضغط <b>إصلاح الأساسيات</b> ثم <b>تحديث</b>. لو استمر الخطأ فالمشكلة في قاعدة البيانات أو الصلاحيات وليست في الواجهة.</div>
+    </CardContent></Card>}
+
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid md:grid-cols-2 gap-3">
       {checks.map((c) => {
         const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-        const canAutoFix = ["cash", "chart", "settings", "employees", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
+        const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
         return <Card key={c.key} className={cls}>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
             <div className="text-xs text-muted-foreground">{c.fix}</div>
+            {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">خطأ القراءة: {c.error}</div>}
             {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => {
               const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>;
               return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>;
