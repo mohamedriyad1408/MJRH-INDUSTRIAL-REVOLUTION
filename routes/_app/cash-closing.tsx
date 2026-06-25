@@ -87,23 +87,52 @@ function CashClosingPage() {
     }, { onConflict: "tenant_id,cash_account_id,closing_date" });
     if (error) return toast.error(error.message);
 
+    const dayStart = new Date(date + "T00:00:00").toISOString();
+    const dayEnd = new Date(date + "T23:59:59").toISOString();
+    const [ordersToday, deliveredToday, reclean, qcIssues, unpaidReady, invoiceReview] = await Promise.all([
+      (supabase as any).from("orders").select("id,total,status", { count: "exact" }).gte("created_at", dayStart).lte("created_at", dayEnd),
+      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered").gte("updated_at", dayStart).lte("updated_at", dayEnd),
+      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("needs_reclean", true),
+      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
+      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
+      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+    ]);
+    const dayOrders = ordersToday.data ?? [];
+    const dayRevenue = dayOrders.reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
+    const active = dayOrders.filter((o: any) => !["delivered", "cancelled"].includes(o.status)).length;
+
     const body = [
+      `تقرير نهاية اليوم وإقفال الخزنة`,
       `الخزنة: ${acc?.name ?? "خزنة"}`,
       `اليوم: ${date}`,
-      `داخل اليوم: ${fmtMoney(totals.cashIn)}`,
-      `خارج اليوم: ${fmtMoney(totals.cashOut)}`,
-      `الرصيد المتوقع: ${fmtMoney(totals.expected)}`,
-      `النقدية الموجودة فعليًا: ${fmtMoney(Number(counted || 0))}`,
-      `الفرق: ${fmtMoney(totals.diff)}`,
-      notes ? `سبب الفرق: ${notes}` : null,
+      "",
+      "الخزنة:",
+      `- داخل اليوم: ${fmtMoney(totals.cashIn)}`,
+      `- خارج اليوم: ${fmtMoney(totals.cashOut)}`,
+      `- الرصيد المتوقع: ${fmtMoney(totals.expected)}`,
+      `- النقدية الموجودة فعليًا: ${fmtMoney(Number(counted || 0))}`,
+      `- الفرق: ${fmtMoney(totals.diff)}`,
+      notes ? `- سبب الفرق: ${notes}` : null,
+      "",
+      "الحركة:",
+      `- طلبات اليوم: ${ordersToday.count ?? dayOrders.length}`,
+      `- تم تسليمها اليوم: ${deliveredToday.count ?? 0}`,
+      `- طلبات نشطة من طلبات اليوم: ${active}`,
+      `- إيراد اليوم: ${fmtMoney(dayRevenue)}`,
+      "",
+      "المتابعات المفتوحة:",
+      `- مرتجعات غسيل: ${reclean.count ?? 0}`,
+      `- مشاكل جودة: ${qcIssues.count ?? 0}`,
+      `- جاهز غير مدفوع: ${unpaidReady.count ?? 0}`,
+      `- فواتير تحتاج اعتماد: ${invoiceReview.count ?? 0}`,
     ].filter(Boolean).join("\n");
 
     await (supabase as any).from("app_notifications").insert({
       audience: "owner",
-      title: totals.diff !== 0 ? "تقرير إقفال خزنة بفرق" : "تقرير إقفال خزنة اليوم",
+      title: totals.diff !== 0 ? "تقرير نهاية اليوم - فرق خزنة" : "تقرير نهاية اليوم",
       body,
-      href: "/cash-closing",
-      tone: totals.diff !== 0 ? "warning" : "success",
+      href: "/today",
+      tone: totals.diff !== 0 ? "warning" : (active || (reclean.count ?? 0) || (qcIssues.count ?? 0) ? "warning" : "success"),
     }).then(() => null);
 
     toast.success("تم إقفال الخزنة وحفظ تقرير في التنبيهات");
