@@ -36,6 +36,9 @@ type Insight = { title: string; body: string; tone: "good" | "warn" | "bad" | "i
 function ReportsPage() {
   const { hasRole } = useAuth();
   const canView = hasRole("owner", "ops_manager", "cs_manager");
+  const isOwner = hasRole("owner");
+  const isOps = hasRole("ops_manager");
+  const isCs = hasRole("cs_manager");
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [loading, setLoading] = useState(false);
@@ -50,7 +53,7 @@ function ReportsPage() {
     const prevFrom = new Date(year, month - 1, 1).toISOString();
     const prevTo = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-    const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes] = await Promise.all([
+    const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes] = await Promise.all([
       (supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)").gte("created_at", from).lte("created_at", to),
       (supabase as any).from("orders").select("id,total,status,created_at").gte("created_at", prevFrom).lte("created_at", prevTo),
       (supabase as any).from("expenses").select("amount,category,spent_at").gte("spent_at", from).lte("spent_at", to),
@@ -59,6 +62,10 @@ function ReportsPage() {
       (supabase as any).from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to),
       (supabase as any).from("qc_checks").select("id,result,severity,checked_at,service_unit_id").gte("checked_at", from).lte("checked_at", to).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("inventory_items").select("id,name,current_qty,reorder_level,avg_unit_cost,is_active").eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("customer_messages").select("id,status,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("orders").select("id,payment_verification_status,total,created_at").in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("orders").select("id,status,invoice_finalized_at,created_at").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("pickup_requests").select("id,status,created_at,driver_employee_id").in("status", ["pending", "assigned"]).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     const orders = ordRes.data ?? [];
@@ -69,6 +76,10 @@ function ReportsPage() {
     const units = unitRes.data ?? [];
     const qc = qcRes.data ?? [];
     const inv = invRes.data ?? [];
+    const messages = msgRes.data ?? [];
+    const proofIssues = proofRes.data ?? [];
+    const invoiceNeedsReview = invoiceRes.data ?? [];
+    const activePickups = pickupRes.data ?? [];
 
     const totalRevenue = orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
     const prevRevenue = prevOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
@@ -123,6 +134,9 @@ function ReportsPage() {
       svcMap[i.name].revenue += Number(i.line_total ?? 0);
     });
     const topServices = Object.values(svcMap).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+    const queuedMessages = messages.filter((m: any) => m.status === "queued").length;
+    const sentMessages = messages.filter((m: any) => m.status === "sent").length;
+    const pendingPickups = activePickups.filter((p: any) => p.status === "pending" || !p.driver_employee_id).length;
 
     const insights: Insight[] = [];
     if (revenueDelta !== null) insights.push({
@@ -142,6 +156,7 @@ function ReportsPage() {
       totalOrders: orders.length, delivered, cancelled, urgent, unpaidValue, avgOrder, avgCycleHours,
       stageCounts, bottleneck, recleanCount, qcFailed, qcCount: qc.length, qcRate, lowStock,
       stations, topEmployees, topServices, insights,
+      queuedMessages, sentMessages, proofIssues: proofIssues.length, invoiceNeedsReview: invoiceNeedsReview.length, pendingPickups,
     });
     setLoading(false);
   }
@@ -203,6 +218,8 @@ function ReportsPage() {
             <Kpi label="جودة QC" value={`${data.qcRate.toFixed(1)}%`} tone={data.qcRate > 8 ? "red" : "green"} sub="نسبة الفشل" />
           </div>
 
+          <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} />
+
           <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Brain className="w-5 h-5 text-teal-700" />ماذا يقول النظام؟</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-3">
@@ -254,6 +271,31 @@ function ReportsPage() {
       )}
     </div>
   );
+}
+
+
+function RoleFocus({ isOwner, isOps, isCs, data }: { isOwner: boolean; isOps: boolean; isCs: boolean; data: any }) {
+  return <div className="grid lg:grid-cols-3 gap-4">
+    {isOwner && <Card className="border-emerald-200 bg-emerald-50/50"><CardHeader><CardTitle className="text-sm">ملخص المالك</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label="صافي الشهر" value={fmtMoney(data.netProfit)} warn={data.netProfit < 0} />
+      <FocusRow label="آجل عند العملاء" value={fmtMoney(data.unpaidValue)} warn={data.unpaidValue > 0} />
+      <FocusRow label="مخزون تحت الحد" value={data.lowStock.length} warn={data.lowStock.length > 0} />
+    </CardContent></Card>}
+    {isOps && <Card className="border-blue-200 bg-blue-50/50"><CardHeader><CardTitle className="text-sm">ملخص مدير التشغيل</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label="عنق الزجاجة" value={`${STAGE_AR[data.bottleneck[0]] ?? data.bottleneck[0]} (${data.bottleneck[1]})`} warn={Number(data.bottleneck[1]) > 0} />
+      <FocusRow label="مرتجعات غسيل" value={data.recleanCount} warn={data.recleanCount > 0} />
+      <FocusRow label="طلبات استلام بلا مندوب" value={data.pendingPickups} warn={data.pendingPickups > 0} />
+    </CardContent></Card>}
+    {isCs && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-sm">ملخص خدمة العملاء</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label="فواتير تحتاج اعتماد" value={data.invoiceNeedsReview} warn={data.invoiceNeedsReview > 0} />
+      <FocusRow label="إيصالات تحتاج مراجعة" value={data.proofIssues} warn={data.proofIssues > 0} />
+      <FocusRow label="رسائل واتساب جاهزة" value={data.queuedMessages} warn={data.queuedMessages > 0} />
+    </CardContent></Card>}
+  </div>;
+}
+
+function FocusRow({ label, value, warn }: { label: string; value: any; warn?: boolean }) {
+  return <div className="flex items-center justify-between rounded-xl border bg-white/70 p-2"><span>{label}</span><Badge variant={warn ? "destructive" : "secondary"}>{value}</Badge></div>;
 }
 
 function Kpi({ label, value, sub, tone }: { label: string; value: any; sub?: string; tone: "teal" | "green" | "red" | "blue" | "amber" | "slate" }) {
