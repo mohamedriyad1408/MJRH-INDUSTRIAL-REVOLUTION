@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, RefreshCw, Wrench, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, ShieldCheck, Wrench } from "lucide-react";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
 
 export const Route = createFileRoute("/_app/system-health")({
   head: () => ({ meta: [{ title: "فحص النظام" }] }),
@@ -21,6 +22,7 @@ type Check = {
   href?: string;
   fix?: string;
   severity: "ok" | "warn" | "danger";
+  details?: { label: string; sub?: string; href?: string }[];
 };
 
 function severityFor(count: number, okWhenZero = false): "ok" | "warn" | "danger" {
@@ -42,6 +44,7 @@ function SystemHealthPage() {
       const [
         cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver,
         reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation,
+        pickupsDetail, readyNoDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail, driversNoLocDetail,
       ] = await Promise.all([
         (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
         (supabase as any).from("chart_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
@@ -59,12 +62,33 @@ function SystemHealthPage() {
         (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
         (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
         (supabase as any).from("employees").select("id", { count: "exact", head: true }).eq("job_role", "driver").eq("is_active", true).is("current_lat", null),
+        (supabase as any).from("pickup_requests").select("id,customer_name,status,phone").in("status", ["pending", "assigned"]).limit(5),
+        (supabase as any).from("orders").select("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
+        (supabase as any).from("service_units").select("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(5),
+        (supabase as any).from("service_units").select("id,label_code,name,order_id,staff_notes,orders(order_number)").eq("current_stage", "qc_failed").limit(5),
+        (supabase as any).from("orders").select("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(5),
+        (supabase as any).from("orders").select("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(5),
+        (supabase as any).from("orders").select("id,order_number,payment_verification_status,total,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(5),
+        (supabase as any).from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true).is("current_lat", null).limit(5),
       ]);
 
       const activeOrders = orders.data ?? [];
       const activeUnits = (units.data ?? []).filter((u: any) => u.status !== "cancelled" && u.current_stage !== "cancelled");
       const orderIdsWithPieces = new Set(activeUnits.map((u: any) => u.order_id));
       const noPieces = activeOrders.filter((o: any) => !orderIdsWithPieces.has(o.id)).length;
+
+      const noPieceDetails = activeOrders
+        .filter((o: any) => !orderIdsWithPieces.has(o.id))
+        .slice(0, 5)
+        .map((o: any) => ({ label: `طلب #${o.order_number ?? o.id.slice(0, 6)}`, sub: "لا توجد قطع", href: `/orders/${o.id}` }));
+      const pickupDetails = (pickupsDetail.data ?? []).map((p: any) => ({ label: p.customer_name, sub: p.status === "pending" ? "بانتظار مندوب" : "مندوب في الطريق", href: "/live-map" }));
+      const readyNoDriverDetails = (readyNoDriverDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: o.customers?.full_name ?? "جاهز بلا مندوب", href: "/live-map" }));
+      const recleanDetails = (recleanDetail.data ?? []).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.reclean_reason ?? "مرتجع"}`, href: `/orders/${u.order_id}` }));
+      const qcDetails = (qcDetail.data ?? []).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}` }));
+      const unpaidDetails = (unpaidDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: `${o.customers?.full_name ?? "عميل"} — ${Number(o.total ?? 0).toLocaleString("en-US")} جنيه`, href: `/orders/${o.id}` }));
+      const invoiceDetails = (invoiceDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: `${o.customers?.full_name ?? "عميل"} — ${o.status}`, href: `/orders/${o.id}` }));
+      const proofDetails = (proofDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "المبلغ أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}` }));
+      const driverNoLocDetails = (driversNoLocDetail.data ?? []).map((d: any) => ({ label: d.full_name, sub: d.phone ?? "لم يحدث موقعه", href: "/driver" }));
 
       const next: Check[] = [
         { key: "settings", title: "إعدادات المغسلة", count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: "يتم إنشاؤها تلقائيًا عند فتح مغسلة جديدة" },
@@ -73,15 +97,15 @@ function SystemHealthPage() {
         { key: "employees", title: "موظفون نشطون", count: employees.count ?? 0, severity: severityFor(employees.count ?? 0), href: "/staff", fix: "أضف موظفين وحدد المحطة والراتب" },
         { key: "services", title: "خدمات مفعلة", count: services.count ?? 0, severity: severityFor(services.count ?? 0), href: "/services", fix: "أضف كتالوج الخدمات قبل إنشاء الطلبات" },
         { key: "customers", title: "عملاء مسجلون", count: customers.count ?? 0, severity: (customers.count ?? 0) > 0 ? "ok" : "warn", href: "/customers", fix: "أضف عميل أو استخدم بوابة العميل" },
-        { key: "noPieces", title: "طلبات بلا قطع", count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: "افتح الطلب وسجل القطع" },
-        { key: "pickups", title: "استلامات مفتوحة", count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: "وزعها على مندوبين من الخريطة" },
-        { key: "readyNoDriver", title: "طلبات جاهزة بلا مندوب", count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: "عين مندوب قبل خروج الطلب للتسليم" },
-        { key: "reclean", title: "مرتجعات غسيل مفتوحة", count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: "أنه المرتجع من محطة الغسيل" },
-        { key: "qc", title: "مشاكل جودة مفتوحة", count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: "راجع قرار الجودة وتواصل مع العميل عند الحاجة" },
-        { key: "unpaid", title: "جاهز أو خارج وغير مدفوع", count: unpaidReady.count ?? 0, okWhenZero: true, severity: severityFor(unpaidReady.count ?? 0, true), href: "/receivables", fix: "حصّل أو راجع ذمم العملاء" },
-        { key: "invoice", title: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: "راجع الطلب واضغط تأكيد وإشعار" },
-        { key: "proof", title: "إيصالات دفع تحتاج مراجعة", count: paymentReview.count ?? 0, okWhenZero: true, severity: severityFor(paymentReview.count ?? 0, true), href: "/orders", fix: "راجع صورة الإيصال والمبلغ" },
-        { key: "driverLocation", title: "مندوبون بلا موقع", count: driversNoLocation.count ?? 0, okWhenZero: true, severity: (driversNoLocation.count ?? 0) ? "warn" : "ok", href: "/driver", fix: "اطلب من المندوب الضغط على زر موقعي" },
+        { key: "noPieces", title: "طلبات بلا قطع", count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: "افتح الطلب وسجل القطع", details: noPieceDetails },
+        { key: "pickups", title: "استلامات مفتوحة", count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: "وزعها على مندوبين من الخريطة", details: pickupDetails },
+        { key: "readyNoDriver", title: "طلبات جاهزة بلا مندوب", count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: "عين مندوب قبل خروج الطلب للتسليم", details: readyNoDriverDetails },
+        { key: "reclean", title: "مرتجعات غسيل مفتوحة", count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: "أنه المرتجع من محطة الغسيل", details: recleanDetails },
+        { key: "qc", title: "مشاكل جودة مفتوحة", count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: "راجع قرار الجودة وتواصل مع العميل عند الحاجة", details: qcDetails },
+        { key: "unpaid", title: "جاهز أو خارج وغير مدفوع", count: unpaidReady.count ?? 0, okWhenZero: true, severity: severityFor(unpaidReady.count ?? 0, true), href: "/receivables", fix: "حصّل أو راجع ذمم العملاء", details: unpaidDetails },
+        { key: "invoice", title: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: "راجع الطلب واضغط تأكيد وإشعار", details: invoiceDetails },
+        { key: "proof", title: "إيصالات دفع تحتاج مراجعة", count: paymentReview.count ?? 0, okWhenZero: true, severity: severityFor(paymentReview.count ?? 0, true), href: "/orders", fix: "راجع صورة الإيصال والمبلغ", details: proofDetails },
+        { key: "driverLocation", title: "مندوبون بلا موقع", count: driversNoLocation.count ?? 0, okWhenZero: true, severity: (driversNoLocation.count ?? 0) ? "warn" : "ok", href: "/driver", fix: "اطلب من المندوب الضغط على زر موقعي", details: driverNoLocDetails },
       ];
       setChecks(next);
     } finally {
@@ -96,6 +120,7 @@ function SystemHealthPage() {
     const r1 = await (supabase as any).rpc("ensure_default_cash_account"); if (r1.error) errs.push(r1.error.message);
     const r2 = await (supabase as any).rpc("ensure_default_chart_accounts"); if (r2.error) errs.push(r2.error.message);
     const r3 = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: today }); if (r3.error) errs.push(r3.error.message);
+    try { await autoAssignDrivers(); } catch (e: any) { /* no drivers or no tasks: ignore */ }
     setRepairing(false);
     if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح الأساسيات: خزنة، حسابات، ورواتب الشهر");
     load();
@@ -126,7 +151,7 @@ function SystemHealthPage() {
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid md:grid-cols-2 gap-3">
       {checks.map((c) => {
         const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-        const body = <Card className={cls}><CardContent className="p-4"><div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div><div className="text-xs text-muted-foreground mt-2">{c.fix}</div></CardContent></Card>;
+        const body = <Card className={cls}><CardContent className="p-4"><div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div><div className="text-xs text-muted-foreground mt-2">{c.fix}</div>{c.details?.length ? <div className="mt-3 space-y-1">{c.details.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>)}</div> : null}</CardContent></Card>;
         return c.href ? <Link key={c.key} to={c.href as any}>{body}</Link> : <div key={c.key}>{body}</div>;
       })}
     </div>}
