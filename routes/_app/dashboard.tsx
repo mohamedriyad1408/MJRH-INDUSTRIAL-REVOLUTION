@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
 import { Loader2, Calendar, Zap, CheckCircle2, AlertTriangle, Activity, Wallet, TrendingUp, Users, Navigation, Truck } from "lucide-react";
 import { Link as RouterLink } from "@tanstack/react-router";
+import { RoleDailyBrief } from "@/components/role-daily-brief";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "لوحة المالك - MJRH" }] }),
@@ -53,6 +54,8 @@ function Dashboard() {
           <Navigation className="w-4 h-4" /> الخريطة الحية
         </Link>
       </div>
+
+      <RoleDailyBrief role="owner" />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

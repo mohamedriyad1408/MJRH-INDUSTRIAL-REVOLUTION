@@ -6,6 +6,7 @@ import { fmtMoney } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, AlertTriangle, Zap, Inbox, Banknote, Smartphone, UserCog, ShieldCheck, Truck, PackageOpen, RotateCcw } from "lucide-react";
+import { RoleDailyBrief } from "@/components/role-daily-brief";
 
 export const Route = createFileRoute("/_app/ops")({
   head: () => ({ meta: [{ title: "لوحة التشغيل" }] }),
@@ -90,6 +91,8 @@ function OpsDashboard() {
         <h1 className="text-2xl font-bold">لوحة مدير التشغيل</h1>
         <p className="text-sm text-muted-foreground">نظرة سريعة على الطلبات والإيرادات</p>
       </div>
+
+      <RoleDailyBrief role="ops" />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map((c, i) => (

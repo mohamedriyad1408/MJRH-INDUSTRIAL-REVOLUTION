@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, AlertTriangle, Zap, PlusCircle, Eye, Timer, CreditCard, MessageCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RoleDailyBrief } from "@/components/role-daily-brief";
 
 export const Route = createFileRoute("/_app/cs")({
   head: () => ({ meta: [{ title: "لوحة خدمة العملاء" }] }),
