@@ -69,6 +69,7 @@ function CashClosingPage() {
 
   async function closeDay() {
     if (!accountId) return toast.error("لا توجد خزنة. اضغط تحديث وسيقوم النظام بإنشاء الخزنة الرئيسية.");
+    if (totals.diff !== 0 && notes.trim().length < 3) return toast.error("يوجد فرق في الخزنة. اكتب سبب الفرق قبل الإقفال.");
     const acc = accounts.find((a) => a.id === accountId);
     const { error } = await (supabase as any).from("daily_cash_closings").upsert({
       cash_account_id: accountId,
@@ -84,7 +85,30 @@ function CashClosingPage() {
       closed_by: user?.id,
       closed_at: new Date().toISOString(),
     }, { onConflict: "tenant_id,cash_account_id,closing_date" });
-    if (error) toast.error(error.message); else { toast.success("تم إقفال الخزنة لليوم"); setNotes(""); load(); }
+    if (error) return toast.error(error.message);
+
+    const body = [
+      `الخزنة: ${acc?.name ?? "خزنة"}`,
+      `اليوم: ${date}`,
+      `داخل اليوم: ${fmtMoney(totals.cashIn)}`,
+      `خارج اليوم: ${fmtMoney(totals.cashOut)}`,
+      `الرصيد المتوقع: ${fmtMoney(totals.expected)}`,
+      `النقدية الموجودة فعليًا: ${fmtMoney(Number(counted || 0))}`,
+      `الفرق: ${fmtMoney(totals.diff)}`,
+      notes ? `سبب الفرق: ${notes}` : null,
+    ].filter(Boolean).join("\n");
+
+    await (supabase as any).from("app_notifications").insert({
+      audience: "owner",
+      title: totals.diff !== 0 ? "تقرير إقفال خزنة بفرق" : "تقرير إقفال خزنة اليوم",
+      body,
+      href: "/cash-closing",
+      tone: totals.diff !== 0 ? "warning" : "success",
+    }).then(() => null);
+
+    toast.success("تم إقفال الخزنة وحفظ تقرير في التنبيهات");
+    setNotes("");
+    load();
   }
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">إقفال الخزنة للمالك ومدير التشغيل فقط.</CardContent></Card>;

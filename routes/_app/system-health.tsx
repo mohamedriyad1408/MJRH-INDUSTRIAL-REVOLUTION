@@ -171,6 +171,31 @@ function SystemHealthPage() {
     }
   }
 
+  async function createDailySystemReport() {
+    const danger = checks.filter((c) => c.severity === "danger");
+    const warn = checks.filter((c) => c.severity === "warn");
+    const ok = checks.filter((c) => c.severity === "ok");
+    const lines = [
+      `تقرير فحص النظام اليومي`,
+      `مشاكل حرجة: ${danger.length}`,
+      `تنبيهات: ${warn.length}`,
+      `بنود سليمة: ${ok.length}`,
+      "",
+      ...danger.map((c) => `❌ ${c.title}: ${c.count} — ${c.fix}`),
+      ...warn.map((c) => `⚠️ ${c.title}: ${c.count} — ${c.fix}`),
+    ];
+    const body = lines.join("\n");
+    const { error } = await (supabase as any).from("app_notifications").insert({
+      audience: "owner",
+      title: "تقرير فحص النظام اليومي",
+      body,
+      href: "/system-health",
+      tone: danger.length ? "danger" : warn.length ? "warning" : "success",
+    });
+    if (error) toast.error(error.message);
+    else toast.success("تم حفظ تقرير فحص النظام في جرس التنبيهات");
+  }
+
   useEffect(() => { load(); }, [canUse]);
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">فحص النظام للمالك ومدير التشغيل فقط.</CardContent></Card>;
@@ -184,7 +209,7 @@ function SystemHealthPage() {
         <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-teal-600" /> فحص النظام</h1>
         <p className="text-sm text-muted-foreground">مراجعة سريعة لكل أساسيات المغسلة والرحلة التشغيلية. لو فيه مشكلة، اضغط عليها لتذهب لمكان الإصلاح.</p>
       </div>
-      <div className="flex gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح الأساسيات</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={createDailySystemReport}>حفظ تقرير اليوم</Button><Button onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح الأساسيات</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
