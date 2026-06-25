@@ -53,7 +53,7 @@ function ReportsPage() {
     const prevFrom = new Date(year, month - 1, 1).toISOString();
     const prevTo = new Date(year, month, 0, 23, 59, 59).toISOString();
 
-    const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes] = await Promise.all([
+    const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes, lateDetailsRes] = await Promise.all([
       (supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)").gte("created_at", from).lte("created_at", to),
       (supabase as any).from("orders").select("id,total,status,created_at").gte("created_at", prevFrom).lte("created_at", prevTo),
       (supabase as any).from("expenses").select("amount,category,spent_at").gte("spent_at", from).lte("spent_at", to),
@@ -66,6 +66,7 @@ function ReportsPage() {
       (supabase as any).from("orders").select("id,payment_verification_status,total,created_at").in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("orders").select("id,status,invoice_finalized_at,created_at").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id,status,created_at,driver_employee_id").in("status", ["pending", "assigned"]).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("orders").select("id,order_number,status,promised_delivery_at,updated_at,customers(full_name),task_assignments(employee_id,station,assigned_at,completed_at,employees(full_name))").not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString()).limit(50).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     const orders = ordRes.data ?? [];
@@ -80,6 +81,7 @@ function ReportsPage() {
     const proofIssues = proofRes.data ?? [];
     const invoiceNeedsReview = invoiceRes.data ?? [];
     const activePickups = pickupRes.data ?? [];
+    const lateDetails = lateDetailsRes.data ?? [];
 
     const totalRevenue = orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
     const prevRevenue = prevOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
@@ -137,6 +139,20 @@ function ReportsPage() {
     const queuedMessages = messages.filter((m: any) => m.status === "queued").length;
     const sentMessages = messages.filter((m: any) => m.status === "sent").length;
     const pendingPickups = activePickups.filter((p: any) => p.status === "pending" || !p.driver_employee_id).length;
+    const lateByStage: Record<string, number> = {};
+    const lateByEmployee: Record<string, { name: string; count: number; stages: Record<string, number> }> = {};
+    lateDetails.forEach((o: any) => {
+      const stage = o.status ?? "unknown";
+      lateByStage[stage] = (lateByStage[stage] ?? 0) + 1;
+      const assignments = (o.task_assignments ?? []).filter((ta: any) => ta.station === stage || (stage === "received" && ta.station === "reception"));
+      const last = (assignments.length ? assignments : (o.task_assignments ?? [])).sort((a: any, b: any) => new Date(b.assigned_at ?? 0).getTime() - new Date(a.assigned_at ?? 0).getTime())[0];
+      const empKey = last?.employee_id ?? "unassigned";
+      const name = last?.employees?.full_name ?? "غير مُعيّن";
+      if (!lateByEmployee[empKey]) lateByEmployee[empKey] = { name, count: 0, stages: {} };
+      lateByEmployee[empKey].count += 1;
+      lateByEmployee[empKey].stages[stage] = (lateByEmployee[empKey].stages[stage] ?? 0) + 1;
+    });
+    const lateEmployees = Object.values(lateByEmployee).sort((a, b) => b.count - a.count).slice(0, 6);
 
     const insights: Insight[] = [];
     if (revenueDelta !== null) insights.push({
@@ -157,6 +173,7 @@ function ReportsPage() {
       stageCounts, bottleneck, recleanCount, qcFailed, qcCount: qc.length, qcRate, lowStock,
       stations, topEmployees, topServices, insights,
       queuedMessages, sentMessages, proofIssues: proofIssues.length, invoiceNeedsReview: invoiceNeedsReview.length, pendingPickups,
+      lateByStage, lateEmployees,
     });
     setLoading(false);
   }
@@ -220,6 +237,8 @@ function ReportsPage() {
 
           <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} />
 
+          <DelayResponsibility data={data} />
+
           <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Brain className="w-5 h-5 text-teal-700" />ماذا يقول النظام؟</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-3">
@@ -273,6 +292,21 @@ function ReportsPage() {
   );
 }
 
+
+
+function DelayResponsibility({ data }: { data: any }) {
+  const stages = Object.entries(data.lateByStage ?? {}).sort((a: any, b: any) => b[1] - a[1]);
+  const employees = data.lateEmployees ?? [];
+  if (!stages.length && !employees.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">لا توجد طلبات متأخرة تحتاج تحليل مسؤولية ✅</CardContent></Card>;
+  return <div className="grid md:grid-cols-2 gap-4">
+    <Card className="border-amber-200 bg-amber-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" />التأخير حسب المرحلة</CardTitle></CardHeader><CardContent className="space-y-2">
+      {stages.map(([stage, count]: any) => <Row key={stage} left={STAGE_AR[stage] ?? stage} mid="طلبات متأخرة" right={String(count)} />)}
+    </CardContent></Card>
+    <Card className="border-red-200 bg-red-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="w-4 h-4" />من يحتاج متابعة؟</CardTitle></CardHeader><CardContent className="space-y-2">
+      {employees.map((e: any) => <Row key={e.name} left={e.name} mid={Object.entries(e.stages).map(([s,c]: any) => `${STAGE_AR[s] ?? s}: ${c}`).join("، ")} right={String(e.count)} />)}
+    </CardContent></Card>
+  </div>;
+}
 
 function RoleFocus({ isOwner, isOps, isCs, data }: { isOwner: boolean; isOps: boolean; isCs: boolean; data: any }) {
   return <div className="grid lg:grid-cols-3 gap-4">
