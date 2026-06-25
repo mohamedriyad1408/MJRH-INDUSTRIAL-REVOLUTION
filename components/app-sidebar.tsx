@@ -78,6 +78,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "الحسابات", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
       { title: "القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
+      { title: "فحص النظام", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
       { title: "ذمم العملاء", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole, roles: ["owner", "ops_manager"] },
       { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
