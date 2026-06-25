@@ -120,8 +120,8 @@ function BudgetsPage() {
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Target className="w-6 h-6 text-teal-600" />الميزانيات</h1>
-          <p className="text-sm text-muted-foreground">مقارنة المخطط بالفعلي لكل فترة</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Target className="w-6 h-6 text-teal-600" />الهدف الشهري</h1>
+          <p className="text-sm text-muted-foreground">اكتب المتوقع تكسب كام وتصرف كام، والسيستم يقارن بالفعلي تلقائيًا.</p>
         </div>
         <NewBudgetDialog open={newOpen} setOpen={setNewOpen} onCreated={load} tenantId={tenantId} />
       </div>
@@ -131,8 +131,8 @@ function BudgetsPage() {
       ) : budgets.length === 0 ? (
         <Card><CardContent className="p-10 text-center">
           <Target className="w-12 h-12 text-teal-300 mx-auto mb-3" />
-          <p className="font-bold text-lg">لا توجد ميزانيات بعد</p>
-          <p className="text-sm text-muted-foreground mt-1">أنشئ ميزانيتك الأولى لتتبع الأداء المالي</p>
+          <p className="font-bold text-lg">لا يوجد هدف شهري بعد</p>
+          <p className="text-sm text-muted-foreground mt-1">اضغط هدف شهري جديد واكتب المتوقع ببساطة</p>
         </CardContent></Card>
       ) : (
         <div className="grid lg:grid-cols-3 gap-4">
@@ -270,7 +270,7 @@ function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean
       await  (supabase as any).from("budget_items").insert(validItems.map((i) => ({ budget_id: b.id, category: i.category, expected: Number(i.expected), tenant_id: tenantId })));
     }
     setSaving(false);
-    toast.success("تم إنشاء الميزانية");
+    toast.success("تم حفظ الهدف");
     setOpen(false);
     onCreated();
   }
@@ -278,10 +278,10 @@ function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-teal-600 hover:bg-teal-700"><Plus className="w-4 h-4 ms-1" />ميزانية جديدة</Button>
+        <Button className="bg-teal-600 hover:bg-teal-700"><Plus className="w-4 h-4 ms-1" />هدف شهري جديد</Button>
       </DialogTrigger>
       <DialogContent dir="rtl" className="max-w-lg">
-        <DialogHeader><DialogTitle>إنشاء ميزانية جديدة</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>إنشاء هدف شهري جديد</DialogTitle></DialogHeader>
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -303,9 +303,9 @@ function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean
             <div><Label>السنة</Label><Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} /></div>
             {type === "monthly" && <div><Label>الشهر</Label><Input type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value))} /></div>}
           </div>
-          <div><Label>الإيراد المستهدف (ج.م)</Label><Input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} /></div>
+          <div><Label>عايز تكسب كام هذا الشهر</Label><Input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} /></div>
           <div>
-            <Label>بنود المصروفات المخططة</Label>
+            <Label>متوقع تصرف على إيه</Label>
             {items.map((item, i) => (
               <div key={i} className="flex gap-2 mt-2">
                 <Select value={item.category} onValueChange={(v) => setItems((p) => p.map((x, j) => j === i ? { ...x, category: v } : x))}>
@@ -322,7 +322,7 @@ function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean
         </div>
         <DialogFooter>
           <Button onClick={submit} disabled={saving} className="bg-teal-600 hover:bg-teal-700">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الميزانية"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ الهدف"}
           </Button>
         </DialogFooter>
       </DialogContent>

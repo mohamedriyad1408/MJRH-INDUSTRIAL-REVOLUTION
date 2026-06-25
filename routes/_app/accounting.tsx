@@ -183,7 +183,7 @@ function AccountingPage() {
 
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />المحاسبة والخزنة</h1><p className="text-sm text-muted-foreground">مصروفات مستحقة، خزنة، معاملات، رواتب، عمولات، وسلف تخصم تلقائيًا.</p></div>
+      <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />الخزنة والرواتب</h1><p className="text-sm text-muted-foreground">صفحة تشغيل يومية بسيطة: رصيد الخزنة، الرواتب المستحقة، المصروفات، وصرف الرواتب. التفاصيل المحاسبية موجودة في صفحة القيود للمحاسب.</p></div>
       <div className="flex gap-2"><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>تحديث</Button></div>
     </div>
     <div className="grid md:grid-cols-4 gap-3">
@@ -193,13 +193,20 @@ function AccountingPage() {
       <Kpi label="رواتب مستحقة" value={fmtMoney(kpis.payrollDue)} icon={<Users />} warn={kpis.payrollDue > 0} />
     </div>
 
+    {!loading && <Card className="border-teal-200 bg-teal-50/60"><CardContent className="p-4 text-sm text-teal-900 space-y-1">
+      <div className="font-black">طريقة الاستخدام المختصرة</div>
+      <div>١) افتح رواتب الشهر واضغط <b>جهّز رواتب الشهر</b> لو الرواتب غير ظاهرة.</div>
+      <div>٢) اضغط <b>اعتماد كمصروف آجل</b> ليظهر الراتب كمصروف حتى قبل الدفع.</div>
+      <div>٣) عند الدفع اضغط <b>صرف الرواتب</b> فيخصم من الخزنة تلقائيًا.</div>
+    </CardContent></Card>}
+
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="payroll" className="space-y-4">
-      <TabsList><TabsTrigger value="payroll">مسير الرواتب</TabsTrigger><TabsTrigger value="cash">الخزنة والمعاملات</TabsTrigger><TabsTrigger value="expenses">المصروفات المستحقة</TabsTrigger><TabsTrigger value="ledger">دفتر الموظفين</TabsTrigger></TabsList>
+      <TabsList><TabsTrigger value="payroll">رواتب الشهر</TabsTrigger><TabsTrigger value="cash">الخزنة</TabsTrigger><TabsTrigger value="expenses">مصروفات آجلة</TabsTrigger><TabsTrigger value="ledger">كشف الموظفين</TabsTrigger></TabsList>
 
       <TabsContent value="payroll" className="space-y-4">
-        <div className="flex flex-wrap gap-2"><Button onClick={generatePayroll}><RefreshCw className="w-4 h-4 ms-1" />توليد رواتب الشهر</Button><Button variant="outline" onClick={syncApprovedAdvances}>مزامنة السلف كمصروفات</Button></div>
+        <div className="flex flex-wrap gap-2"><Button onClick={generatePayroll}><RefreshCw className="w-4 h-4 ms-1" />جهّز رواتب الشهر</Button><Button variant="outline" onClick={syncApprovedAdvances}>تسجيل السلف في الحسابات</Button></div>
         <div className="grid md:grid-cols-2 gap-3">
-          {periods.map((p) => <Card key={p.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{p.period_start} → {p.period_end}</span><Status s={p.status} /></CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="grid grid-cols-3 gap-2"><Mini label="الإجمالي" value={fmtMoney(p.gross_total)} /><Mini label="السلف" value={fmtMoney(p.advances_total)} /><Mini label="الصافي" value={fmtMoney(p.net_total)} /></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => postPayroll(p.id)} disabled={p.status !== "draft"}>ترحيل كمصروف آجل</Button><Button size="sm" onClick={() => payPayroll(p.id)} disabled={p.status === "paid" || p.status === "draft"}><CheckCircle2 className="w-4 h-4 ms-1" />صرف من الخزنة</Button></div></CardContent></Card>)}
+          {periods.map((p) => <Card key={p.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{p.period_start} → {p.period_end}</span><Status s={p.status} /></CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="grid grid-cols-3 gap-2"><Mini label="الإجمالي" value={fmtMoney(p.gross_total)} /><Mini label="السلف" value={fmtMoney(p.advances_total)} /><Mini label="الصافي" value={fmtMoney(p.net_total)} /></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => postPayroll(p.id)} disabled={p.status !== "draft"}>اعتماد كمصروف آجل</Button><Button size="sm" onClick={() => payPayroll(p.id)} disabled={p.status === "paid" || p.status === "draft"}><CheckCircle2 className="w-4 h-4 ms-1" />صرف الرواتب</Button></div></CardContent></Card>)}
           {!periods.length && <Empty text="لم يتم توليد أي مسير رواتب بعد" />}
         </div>
         <Card><CardHeader><CardTitle className="text-base">بنود آخر الرواتب</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><PayrollTable rows={lines} /></CardContent></Card>
