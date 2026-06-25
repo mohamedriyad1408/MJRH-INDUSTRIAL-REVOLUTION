@@ -35,6 +35,7 @@ function SystemHealthPage() {
   const canUse = hasRole("owner", "ops_manager") || hasRole("super_admin");
   const [loading, setLoading] = useState(true);
   const [repairing, setRepairing] = useState(false);
+  const [fixingKey, setFixingKey] = useState<string | null>(null);
   const [checks, setChecks] = useState<Check[]>([]);
 
   async function load() {
@@ -145,6 +146,31 @@ function SystemHealthPage() {
     load();
   }
 
+  async function fixCheck(key: string) {
+    setFixingKey(key);
+    try {
+      if (["cash", "chart", "settings", "employees"].includes(key)) {
+        await repairBasics();
+        return;
+      }
+      if (["pickups", "readyNoDriver"].includes(key)) {
+        const r = await autoAssignDrivers();
+        toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة على المناديب` : "لا توجد مهام قابلة للتوزيع الآن");
+      } else if (key === "driverLocation") {
+        toast.info("الإصلاح هنا من جهاز المندوب: يفتح لوحة السائق ويضغط زر موقعي");
+      } else if (key === "cashClosing") {
+        toast.info("افتح صفحة إقفال الخزنة واكتب النقدية الموجودة فعليًا");
+      } else {
+        toast.info("هذا البند يحتاج مراجعة يدوية من الصفحة المرتبطة به");
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذر تنفيذ الإصلاح");
+    } finally {
+      setFixingKey(null);
+    }
+  }
+
   useEffect(() => { load(); }, [canUse]);
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">فحص النظام للمالك ومدير التشغيل فقط.</CardContent></Card>;
@@ -170,8 +196,21 @@ function SystemHealthPage() {
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid md:grid-cols-2 gap-3">
       {checks.map((c) => {
         const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-        const body = <Card className={cls}><CardContent className="p-4"><div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div><div className="text-xs text-muted-foreground mt-2">{c.fix}</div>{c.details?.length ? <div className="mt-3 space-y-1">{c.details.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>)}</div> : null}</CardContent></Card>;
-        return c.href ? <Link key={c.key} to={c.href as any}>{body}</Link> : <div key={c.key}>{body}</div>;
+        const canAutoFix = ["cash", "chart", "settings", "employees", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
+        return <Card key={c.key} className={cls}>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
+            <div className="text-xs text-muted-foreground">{c.fix}</div>
+            {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => {
+              const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>;
+              return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>;
+            })}</div> : null}
+            <div className="flex gap-2 pt-1">
+              {c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>فتح مكان الإصلاح</Link></Button>}
+              {canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح سريع</Button>}
+            </div>
+          </CardContent>
+        </Card>;
       })}
     </div>}
   </div>;
