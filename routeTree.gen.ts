@@ -17,6 +17,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
+import { Route as AppTodayRouteImport } from './routes/_app/today'
 import { Route as AppSystemHealthRouteImport } from './routes/_app/system-health'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
@@ -102,6 +103,11 @@ const JoinSlugRoute = JoinSlugRouteImport.update({
   id: '/join/$slug',
   path: '/join/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppTodayRoute = AppTodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSystemHealthRoute = AppSystemHealthRouteImport.update({
   id: '/system-health',
@@ -361,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/system-health': typeof AppSystemHealthRoute
+  '/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/admin/billing': typeof AppAdminBillingRoute
@@ -415,6 +422,7 @@ export interface FileRoutesByTo {
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/system-health': typeof AppSystemHealthRoute
+  '/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/': typeof AppIndexRoute
@@ -472,6 +480,7 @@ export interface FileRoutesById {
   '/_app/services': typeof AppServicesRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/system-health': typeof AppSystemHealthRoute
+  '/_app/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/_app/': typeof AppIndexRoute
@@ -530,6 +539,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/settings'
     | '/system-health'
+    | '/today'
     | '/join/$slug'
     | '/track/$token'
     | '/admin/billing'
@@ -584,6 +594,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/settings'
     | '/system-health'
+    | '/today'
     | '/join/$slug'
     | '/track/$token'
     | '/'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/_app/services'
     | '/_app/settings'
     | '/_app/system-health'
+    | '/_app/today'
     | '/join/$slug'
     | '/track/$token'
     | '/_app/'
@@ -737,6 +749,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/join/$slug'
       preLoaderRoute: typeof JoinSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/today': {
+      id: '/_app/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof AppTodayRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/system-health': {
       id: '/_app/system-health'
@@ -1085,6 +1104,7 @@ interface AppRouteChildren {
   AppServicesRoute: typeof AppServicesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSystemHealthRoute: typeof AppSystemHealthRoute
+  AppTodayRoute: typeof AppTodayRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAdminBillingRoute: typeof AppAdminBillingRoute
   AppAdminPlatformFeesRoute: typeof AppAdminPlatformFeesRoute
@@ -1135,6 +1155,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppServicesRoute: AppServicesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSystemHealthRoute: AppSystemHealthRoute,
+  AppTodayRoute: AppTodayRoute,
   AppIndexRoute: AppIndexRoute,
   AppAdminBillingRoute: AppAdminBillingRoute,
   AppAdminPlatformFeesRoute: AppAdminPlatformFeesRoute,
