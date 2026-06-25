@@ -10,7 +10,8 @@ import { dueInfo } from "@/lib/geo";
 
 type AlertTone = "red" | "amber" | "blue";
 type AlertAudience = "owner" | "ops" | "cs" | "ironing" | "cleaning" | "packing" | "driver";
-type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed" };
+type AlertCategory = "report" | "finance" | "quality" | "ops" | "system";
+type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed"; category?: AlertCategory };
 
 const toneClass: Record<AlertTone, string> = {
   red: "border-red-200 bg-red-50 text-red-800",
@@ -25,6 +26,7 @@ export function NotificationCenter() {
   const [station, setStation] = useState<string | null>(null);
   const [jobRole, setJobRole] = useState<string | null>(null);
   const [empId, setEmpId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | AlertCategory>("all");
 
   useEffect(() => {
     if (!user) return;
@@ -68,29 +70,29 @@ export function NotificationCenter() {
 
     (lateRes.data ?? []).forEach((o: any) => {
       const d = dueInfo(o.promised_delivery_at);
-      next.push({ kind: "computed", id: `late-${o.id}`, audience: ["owner", "ops", "cs"], tone: "red", title: `طلب #${o.order_number} متأخر`, detail: d.label, icon: <Clock className="w-4 h-4" />, href: `/orders/${o.id}` });
+      next.push({ kind: "computed", category: "ops", id: `late-${o.id}`, audience: ["owner", "ops", "cs"], tone: "red", title: `طلب #${o.order_number} متأخر`, detail: d.label, icon: <Clock className="w-4 h-4" />, href: `/orders/${o.id}` });
     });
 
     (unpaidRes.data ?? []).forEach((o: any) => {
-      next.push({ kind: "computed", id: `unpaid-${o.id}`, audience: ["owner", "cs"], tone: "amber", title: `طلب #${o.order_number} غير مدفوع`, detail: `${Number(o.total ?? 0).toLocaleString()} ج`, icon: <CreditCard className="w-4 h-4" />, href: `/orders/${o.id}` });
+      next.push({ kind: "computed", category: "finance", id: `unpaid-${o.id}`, audience: ["owner", "cs"], tone: "amber", title: `طلب #${o.order_number} غير مدفوع`, detail: `${Number(o.total ?? 0).toLocaleString()} ج`, icon: <CreditCard className="w-4 h-4" />, href: `/orders/${o.id}` });
     });
 
     (unassignedDeliveryRes.data ?? []).forEach((o: any) => {
-      next.push({ kind: "computed", id: `unassigned-${o.id}`, audience: ["owner", "ops", "driver"], tone: "blue", title: `طلب #${o.order_number} جاهز بلا مندوب`, detail: "اضغط توزيع المناديب من الخريطة", icon: <Truck className="w-4 h-4" />, href: "/live-map" });
+      next.push({ kind: "computed", category: "ops", id: `unassigned-${o.id}`, audience: ["owner", "ops", "driver"], tone: "blue", title: `طلب #${o.order_number} جاهز بلا مندوب`, detail: "اضغط توزيع المناديب من الخريطة", icon: <Truck className="w-4 h-4" />, href: "/live-map" });
     });
 
     (noLocationOrdersRes.data ?? []).forEach((o: any) => {
-      next.push({ kind: "computed", id: `noloc-order-${o.id}`, audience: ["owner", "ops", "cs"], tone: "amber", title: `طلب #${o.order_number} بلا موقع`, detail: "لن يظهر بدقة على الخريطة", icon: <MapPinOff className="w-4 h-4" />, href: `/orders/${o.id}` });
+      next.push({ kind: "computed", category: "ops", id: `noloc-order-${o.id}`, audience: ["owner", "ops", "cs"], tone: "amber", title: `طلب #${o.order_number} بلا موقع`, detail: "لن يظهر بدقة على الخريطة", icon: <MapPinOff className="w-4 h-4" />, href: `/orders/${o.id}` });
     });
 
     (pickupNoLocationRes.data ?? []).forEach((p: any) => {
-      next.push({ kind: "computed", id: `noloc-pickup-${p.id}`, audience: ["owner", "ops", "cs"], tone: "amber", title: `طلب استلام بلا موقع`, detail: p.customer_name, icon: <MapPinOff className="w-4 h-4" />, href: "/orders/new" });
+      next.push({ kind: "computed", category: "ops", id: `noloc-pickup-${p.id}`, audience: ["owner", "ops", "cs"], tone: "amber", title: `طلب استلام بلا موقع`, detail: p.customer_name, icon: <MapPinOff className="w-4 h-4" />, href: "/orders/new" });
     });
 
     (recleanRes.data ?? []).forEach((u: any) => {
       const aud: AlertAudience[] = ["owner", "ops", "cleaning"];
       if (!u.assigned_ironing_employee_id || u.assigned_ironing_employee_id === empId) aud.push("ironing");
-      next.push({ kind: "computed", id: `reclean-${u.id}`, audience: aud, tone: "red", title: `${u.label_code} مرتجع تنظيف`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <RotateCcw className="w-4 h-4" />, href: u.order_id ? `/orders/${u.order_id}` : undefined });
+      next.push({ kind: "computed", category: "quality", id: `reclean-${u.id}`, audience: aud, tone: "red", title: `${u.label_code} مرتجع تنظيف`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <RotateCcw className="w-4 h-4" />, href: u.order_id ? `/orders/${u.order_id}` : undefined });
     });
 
     (appNotifsRes.data ?? []).forEach((n: any) => {
@@ -99,6 +101,7 @@ export function NotificationCenter() {
         id: `app-${n.id}`,
         appNotificationId: n.id,
         kind: String(n.title ?? "").includes("تقرير") ? "report" : "problem",
+        category: String(n.title ?? "").includes("تقرير") ? "report" : (String(n.title ?? "").includes("جودة") || String(n.title ?? "").includes("مرتجع") ? "quality" : (String(n.title ?? "").includes("خزنة") || String(n.title ?? "").includes("دفع") || String(n.title ?? "").includes("فاتورة") ? "finance" : "system")),
         audience: [n.audience] as AlertAudience[],
         tone,
         title: n.title,
@@ -111,12 +114,12 @@ export function NotificationCenter() {
     // Station-specific operational alerts
     if (myAudiences.includes("ironing")) {
       const { data } = await (supabase as any).from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId).is("ironing_completed_at", null).limit(10);
-      (data ?? []).slice(0, 5).forEach((u: any) => next.push({ kind: "computed", id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: `${u.label_code} في انتظار الكي`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
+      (data ?? []).slice(0, 5).forEach((u: any) => next.push({ kind: "computed", category: "ops", id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: `${u.label_code} في انتظار الكي`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
     }
 
     if (myAudiences.includes("cleaning")) {
       const { data } = await (supabase as any).from("orders").select("id,order_number,status").eq("status", "cleaning").limit(5);
-      (data ?? []).forEach((o: any) => next.push({ kind: "computed", id: `clean-${o.id}`, audience: ["cleaning"], tone: "blue", title: `طلب #${o.order_number} في الغسيل`, detail: "راجع القطع داخل الطلب", icon: <Sparkles className="w-4 h-4" />, href: "/stations/cleaning" }));
+      (data ?? []).forEach((o: any) => next.push({ kind: "computed", category: "ops", id: `clean-${o.id}`, audience: ["cleaning"], tone: "blue", title: `طلب #${o.order_number} في الغسيل`, detail: "راجع القطع داخل الطلب", icon: <Sparkles className="w-4 h-4" />, href: "/stations/cleaning" }));
     }
 
     const filtered = next.filter((a) => a.audience.some((x) => myAudiences.includes(x)));
@@ -135,19 +138,28 @@ export function NotificationCenter() {
   }
 
   async function markAllSystemRead() {
-    const ids = alerts.map((a) => a.appNotificationId).filter(Boolean) as string[];
+    const ids = (filter === "all" ? alerts : visibleAlerts).map((a) => a.appNotificationId).filter(Boolean) as string[];
     if (!ids.length) return;
     const { error } = await (supabase as any)
       .from("app_notifications")
       .update({ read_at: new Date().toISOString() })
       .in("id", ids);
-    if (!error) setAlerts((rows) => rows.filter((x) => !x.appNotificationId));
+    if (!error) setAlerts((rows) => rows.filter((x) => !ids.includes(x.appNotificationId ?? "")));
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [station, jobRole, empId]);
 
+  const visibleAlerts = useMemo(() => filter === "all" ? alerts : alerts.filter((a) => a.category === filter), [alerts, filter]);
   const count = alerts.length;
   const urgent = useMemo(() => alerts.filter((a) => a.tone === "red").length, [alerts]);
+  const filterCounts = useMemo(() => ({
+    all: alerts.length,
+    report: alerts.filter((a) => a.category === "report").length,
+    finance: alerts.filter((a) => a.category === "finance").length,
+    quality: alerts.filter((a) => a.category === "quality").length,
+    ops: alerts.filter((a) => a.category === "ops").length,
+    system: alerts.filter((a) => a.category === "system").length,
+  }), [alerts]);
 
   return (
     <Popover>
@@ -162,9 +174,19 @@ export function NotificationCenter() {
           <div className="font-black flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> دائرة الإشعارات</div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={load}><RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} /></Button>
         </div>
+        <div className="p-2 border-b flex flex-wrap gap-1 text-[11px]">
+          {[
+            ["all", "الكل", filterCounts.all],
+            ["report", "تقارير", filterCounts.report],
+            ["finance", "مالية", filterCounts.finance],
+            ["quality", "جودة", filterCounts.quality],
+            ["ops", "تشغيل", filterCounts.ops],
+            ["system", "نظام", filterCounts.system],
+          ].map(([k, label, n]: any) => <button key={k} onClick={() => setFilter(k)} className={`px-2 py-1 rounded-full border ${filter === k ? "bg-teal-600 text-white border-teal-600" : "bg-white"}`}>{label} {n ? `(${n})` : ""}</button>)}
+        </div>
         <div className="max-h-96 overflow-y-auto p-2 space-y-2">
-          {!alerts.length && <div className="p-6 text-center text-sm text-muted-foreground">لا توجد تنبيهات تخصك حالياً ✅</div>}
-          {alerts.map((a) => {
+          {!visibleAlerts.length && <div className="p-6 text-center text-sm text-muted-foreground">لا توجد تنبيهات في هذا التصنيف ✅</div>}
+          {visibleAlerts.map((a) => {
             const card = <div className={`rounded-xl border p-2.5 text-xs ${toneClass[a.tone]}`}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 font-bold">{a.icon}<span>{a.title}</span></div>
@@ -179,7 +201,7 @@ export function NotificationCenter() {
             return <div key={a.id}>{card}</div>;
           })}
         </div>
-        {count > 0 && <div className="p-2 border-t text-xs text-muted-foreground flex items-center justify-between gap-2"><span>تنبيهات حسب دورك فقط</span><div className="flex items-center gap-2"><Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={markAllSystemRead}>إخفاء تقارير النظام</Button><Badge variant="secondary">{count}</Badge></div></div>}
+        {count > 0 && <div className="p-2 border-t text-xs text-muted-foreground flex items-center justify-between gap-2"><span>تنبيهات حسب دورك فقط</span><div className="flex items-center gap-2"><Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={markAllSystemRead}>إخفاء المعروض</Button><Badge variant="secondary">{count}</Badge></div></div>}
       </PopoverContent>
     </Popover>
   );
