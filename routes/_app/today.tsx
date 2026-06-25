@@ -45,6 +45,7 @@ function TodayCenter() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Summary | null>(null);
   const [details, setDetails] = useState<any[]>([]);
+  const [latestReports, setLatestReports] = useState<any[]>([]);
   const [assigning, setAssigning] = useState(false);
 
   async function load() {
@@ -56,7 +57,7 @@ function TodayCenter() {
     const now = new Date().toISOString();
     const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings,
       lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail,
-      deliveredToday, lastClosing, driverCash] = await Promise.all([
+      deliveredToday, lastClosing, driverCash, reportsRes] = await Promise.all([
       (supabase as any).from("orders").select("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
       (supabase as any).from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
@@ -78,6 +79,7 @@ function TodayCenter() {
       (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered").gte("updated_at", startIso),
       (supabase as any).from("daily_cash_closings").select("difference,cash_accounts(name),closed_at").order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
       (supabase as any).from("cash_transactions").select("amount,source_type,happened_at").in("source_type", ["order_payment", "driver_tip_delivery", "driver_tip"]).gte("happened_at", startIso).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("app_notifications").select("id,title,body,href,tone,created_at").ilike("title", "%تقرير%").order("created_at", { ascending: false }).limit(5).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     const os = orders.data ?? [];
     const cs = cash.data ?? [];
@@ -99,6 +101,7 @@ function TodayCenter() {
       ...(proofDetail.data ?? []).map((o: any) => ({ type: "إيصال", title: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}`, tone: "red", icon: CreditCard })),
     ];
     setDetails(issueDetails.slice(0, 12));
+    setLatestReports(reportsRes.data ?? []);
     setData({
       ordersToday: os.length,
       revenueToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
@@ -227,6 +230,12 @@ function TodayCenter() {
     else toast.success("تم حفظ تقرير نهاية اليوم في جرس التنبيهات");
   }
 
+
+  async function copyReport(report: any) {
+    await navigator.clipboard?.writeText(`${report.title}\n${report.body ?? ""}`);
+    toast.success("تم نسخ التقرير");
+  }
+
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">مركز اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
@@ -258,6 +267,18 @@ function TodayCenter() {
       <CardContent className="space-y-2">
         {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">لا توجد عناصر عاجلة الآن ✅</div>}
         {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={d.href as any}>{row}</Link>; })}
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader><CardTitle className="text-base">آخر التقارير المحفوظة</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        {latestReports.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">لا توجد تقارير محفوظة بعد</div>}
+        {latestReports.map((r) => <div key={r.id} className="rounded-xl border p-3 bg-white text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString("ar-EG")}</Badge></div>
+          <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground font-sans max-h-32 overflow-auto">{r.body}</pre>
+          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>نسخ</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={r.href as any}>فتح</Link></Button>}</div>
+        </div>)}
       </CardContent>
     </Card>
 
