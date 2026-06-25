@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { CalendarCheck, ClipboardList, Map, Wallet, BarChart3, ShieldCheck, Bell, Loader2 } from "lucide-react";
+import { CalendarCheck, ClipboardList, Map, Wallet, BarChart3, ShieldCheck, Bell, Loader2, Truck, AlertTriangle, RotateCcw, CreditCard } from "lucide-react";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
 
 export const Route = createFileRoute("/_app/today")({
   head: () => ({ meta: [{ title: "مركز اليوم" }] }),
@@ -36,6 +37,8 @@ function TodayCenter() {
   const canView = hasRole("owner", "ops_manager", "cs_manager");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Summary | null>(null);
+  const [details, setDetails] = useState<any[]>([]);
+  const [assigning, setAssigning] = useState(false);
 
   async function load() {
     if (!canView) return;
@@ -44,7 +47,8 @@ function TodayCenter() {
     const startIso = start.toISOString();
     const todayStr = start.toISOString().slice(0, 10);
     const now = new Date().toISOString();
-    const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings] = await Promise.all([
+    const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings,
+      lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail] = await Promise.all([
       (supabase as any).from("orders").select("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
       (supabase as any).from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
@@ -55,9 +59,29 @@ function TodayCenter() {
       (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
       (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
       (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
+      (supabase as any).from("orders").select("id,order_number,promised_delivery_at,customers(full_name)").lt("promised_delivery_at", now).not("status", "in", "(delivered,cancelled)").limit(4),
+      (supabase as any).from("pickup_requests").select("id,customer_name,status").in("status", ["pending", "assigned"]).limit(4),
+      (supabase as any).from("orders").select("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(4),
+      (supabase as any).from("service_units").select("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(4),
+      (supabase as any).from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("current_stage", "qc_failed").limit(4),
+      (supabase as any).from("orders").select("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(4),
+      (supabase as any).from("orders").select("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(4),
+      (supabase as any).from("orders").select("id,order_number,payment_verification_status,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(4),
     ]);
     const os = orders.data ?? [];
     const cs = cash.data ?? [];
+
+    const issueDetails = [
+      ...(lateDetail.data ?? []).map((o: any) => ({ type: "متأخر", title: `طلب #${o.order_number}`, sub: o.customers?.full_name ?? "عميل", href: `/orders/${o.id}`, tone: "red", icon: AlertTriangle })),
+      ...(pickupDetail.data ?? []).map((p: any) => ({ type: "استلام", title: p.customer_name, sub: p.status === "pending" ? "بانتظار مندوب" : "مندوب في الطريق", href: "/live-map", tone: "blue", icon: Truck })),
+      ...(noDriverDetail.data ?? []).map((o: any) => ({ type: "مندوب", title: `طلب #${o.order_number}`, sub: "جاهز بلا مندوب", href: "/live-map", tone: "amber", icon: Truck, quick: "assignDrivers" })),
+      ...(recleanDetail.data ?? []).map((u: any) => ({ type: "مرتجع", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: RotateCcw })),
+      ...(qcDetail.data ?? []).map((u: any) => ({ type: "جودة", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: ShieldCheck })),
+      ...(unpaidDetail.data ?? []).map((o: any) => ({ type: "دفع", title: `طلب #${o.order_number}`, sub: `${Number(o.total ?? 0).toLocaleString("en-US")} جنيه`, href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
+      ...(invoiceDetail.data ?? []).map((o: any) => ({ type: "فاتورة", title: `طلب #${o.order_number}`, sub: "تحتاج اعتماد", href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
+      ...(proofDetail.data ?? []).map((o: any) => ({ type: "إيصال", title: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}`, tone: "red", icon: CreditCard })),
+    ];
+    setDetails(issueDetails.slice(0, 12));
     setData({
       ordersToday: os.length,
       revenueToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
@@ -83,6 +107,16 @@ function TodayCenter() {
     if (!data) return 0;
     return data.lateOrders + data.reclean + data.qcIssues + data.unpaidReady + data.readyNoDriver + data.proofReview;
   }, [data]);
+
+  async function runAssignDrivers() {
+    setAssigning(true);
+    try {
+      const r = await autoAssignDrivers();
+      toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة` : "لا توجد مهام قابلة للتوزيع الآن");
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "تعذر التوزيع"); }
+    finally { setAssigning(false); }
+  }
 
   async function saveDailyReport() {
     if (!data) return;
@@ -127,6 +161,14 @@ function TodayCenter() {
       <Kpi label="مشاكل تحتاج تدخل" value={critical} warn={critical > 0} />
       <Kpi label="إقفال الخزنة" value={data.cashClosings ? "تم" : "لم يتم"} warn={!data.cashClosings} />
     </div>
+
+    <Card>
+      <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />تفاصيل تحتاج إجراء الآن</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">لا توجد عناصر عاجلة الآن ✅</div>}
+        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={d.href as any}>{row}</Link>; })}
+      </CardContent>
+    </Card>
 
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
       <ActionCard title="فحص النظام" detail="راجع الأساسيات والمشاكل المفتوحة" to="/system-health" icon={<ShieldCheck />} count={critical} />
