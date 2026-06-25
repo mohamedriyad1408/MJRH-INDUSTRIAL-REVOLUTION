@@ -39,7 +39,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "لوحة المدير", url: "/manager", icon: ShieldCheck, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "لوحة السائق", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
       { title: "خريطة المراقبة الحية", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
-      { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager"] },
+      { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
     ],
   },
   {

@@ -35,7 +35,7 @@ type Insight = { title: string; body: string; tone: "good" | "warn" | "bad" | "i
 
 function ReportsPage() {
   const { hasRole } = useAuth();
-  const canView = hasRole("owner", "ops_manager");
+  const canView = hasRole("owner", "ops_manager", "cs_manager");
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
   const [loading, setLoading] = useState(false);
@@ -170,14 +170,14 @@ function ReportsPage() {
   }
 
   const years = useMemo(() => [2024, 2025, 2026, 2027], []);
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">للمالك ومدير التشغيل فقط</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">التقارير متاحة للمالك ومدير التشغيل ومدير خدمة العملاء فقط</CardContent></Card>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black flex items-center gap-2"><Brain className="w-7 h-7 text-teal-600" />التقارير والذكاء التشغيلي</h1>
-          <p className="text-sm text-muted-foreground">النظام لا يعرض أرقام فقط — يكتشف التكدس، تسريب الجودة، خطر المخزون، والتحصيل.</p>
+          <p className="text-sm text-muted-foreground">النظام لا يعرض أرقام فقط — يكتشف التكدس، تسريب الجودة، خطر المخزون، التحصيل، ومتابعات خدمة العملاء.</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
