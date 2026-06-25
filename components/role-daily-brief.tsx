@@ -104,20 +104,36 @@ export function RoleDailyBrief({ role }: { role: Role }) {
     ];
   }, [data, role]);
 
+  const title = role === "owner" ? "تقرير المالك اليومي" : role === "ops" ? "تقرير التشغيل اليومي" : "تقرير خدمة العملاء اليومي";
+  const notificationAudience = role === "owner" ? "owner" : role === "ops" ? "ops" : "cs";
+  const link = role === "owner" ? "/dashboard" : role === "ops" ? "/ops" : "/cs";
+
+  function reportText() {
+    return `${title}\n${rows.map((r) => `- ${r.title}: ${r.value}`).join("\n")}`;
+  }
+
   function copySummary() {
     if (!data) return;
-    const title = role === "owner" ? "ملخص المالك اليومي" : role === "ops" ? "ملخص التشغيل اليومي" : "ملخص خدمة العملاء اليومي";
-    const text = `${title}\n${rows.map((r) => `- ${r.title}: ${r.value}`).join("\n")}`;
-    navigator.clipboard?.writeText(text);
+    navigator.clipboard?.writeText(reportText());
     toast.success("تم نسخ التقرير اليومي");
   }
 
-  const title = role === "owner" ? "تقرير المالك اليومي" : role === "ops" ? "تقرير التشغيل اليومي" : "تقرير خدمة العملاء اليومي";
-  const link = role === "owner" ? "/dashboard" : role === "ops" ? "/ops" : "/cs";
+  async function saveToNotifications() {
+    if (!data) return;
+    const { error } = await (supabase as any).from("app_notifications").insert({
+      audience: notificationAudience,
+      title,
+      body: reportText(),
+      href: link,
+      tone: "info",
+    });
+    if (error) toast.error(error.message);
+    else toast.success("تم حفظ التقرير في جرس التنبيهات");
+  }
 
   if (!data) return null;
   return <Card className="border-teal-200 bg-gradient-to-br from-white to-teal-50">
-    <CardHeader><CardTitle className="text-base flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-600" />{title}</span><Button size="sm" variant="outline" onClick={copySummary}><ClipboardCopy className="w-3 h-3 ms-1" />نسخ</Button></CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-600" />{title}</span><span className="flex gap-2"><Button size="sm" variant="outline" onClick={copySummary}><ClipboardCopy className="w-3 h-3 ms-1" />نسخ</Button><Button size="sm" onClick={saveToNotifications}>حفظ كتنبيه</Button></span></CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-3 gap-2">
       {rows.map((r) => <div key={r.title} className={`rounded-xl border p-3 bg-white ${r.warn ? "border-amber-200" : ""}`}><div className="text-xs text-muted-foreground">{r.title}</div><div className="font-black mt-1">{r.value}</div>{r.warn && <Badge variant="destructive" className="mt-2">راجع</Badge>}</div>)}
       <Link to={link as any} className="md:col-span-3 text-xs text-teal-700 underline font-bold">افتح لوحة الدور</Link>
