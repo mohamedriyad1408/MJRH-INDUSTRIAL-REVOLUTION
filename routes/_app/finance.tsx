@@ -65,7 +65,7 @@ function FinancePage() {
       let oq = supabase.from("orders").select("total,payment_status,payment_method").neq("status", "cancelled");
       if (fromDate) oq = oq.gte("created_at", fromDate);
 
-      let eq = supabase.from("expenses").select("*").order("spent_at", { ascending: false });
+      let eq = (supabase as any).from("expenses").select("*").neq("status", "void").order("spent_at", { ascending: false });
       if (fromDate) eq = eq.gte("spent_at", fromDate);
 
       const [ordRes, expRes, advRes, empRes] = await Promise.all([
@@ -111,14 +111,17 @@ function FinancePage() {
     load();
   }
 
-  const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0);
   const pendingAdvances = advances.filter((a) => a.status === "pending");
   const approvedAdvancesTotal = advances.filter((a) => a.status === "approved").reduce((s, a) => s + Number(a.amount), 0);
   const payrollGrossFromSync = Number(payrollSync?.gross_total ?? 0);
-  const payrollExpenses = Math.max(expenses.filter((e) => e.category === "salaries").reduce((s, e) => s + Number(e.amount), 0), payrollGrossFromSync);
-  const payablePayroll = Math.max(expenses.filter((e) => e.category === "salaries" && e.status === "payable").reduce((s, e) => s + Number(e.amount), 0), payrollGrossFromSync);
-  const expectedMonthlySalaries = Math.max(employees.reduce((s, e) => s + Number(e.monthly_salary ?? 0), 0), payrollGrossFromSync);
-  const netProfit = revenue.total - totalExpenses - approvedAdvancesTotal;
+  const payrollNetFromSync = Number(payrollSync?.net_total ?? payrollGrossFromSync);
+  const expectedMonthlySalaries = payrollGrossFromSync || employees.reduce((s, e) => s + Number(e.monthly_salary ?? 0), 0);
+  const payablePayroll = payrollGrossFromSync;
+  const visibleExpenses = expenses.filter((e) => !(e.category === "salaries" && ["payroll_line", "auto_payroll_line"].includes(e.source_type ?? "")));
+  const nonPayrollExpenses = visibleExpenses.filter((e) => e.category !== "salaries").reduce((s, e) => s + Number(e.amount), 0);
+  const dailyAndAdvanceSalaryExpenses = visibleExpenses.filter((e) => e.category === "salaries").reduce((s, e) => s + Number(e.amount), 0);
+  const totalExpenses = nonPayrollExpenses + payrollGrossFromSync + dailyAndAdvanceSalaryExpenses;
+  const netProfit = revenue.total - totalExpenses;
 
   return (
     <div className="space-y-6">
@@ -160,12 +163,18 @@ function FinancePage() {
             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Stat title="رواتب مسجلة" value={fmtMoney(expectedMonthlySalaries)} />
-            <Stat title="مصروفات رواتب ظاهرة" value={fmtMoney(payrollExpenses)} />
+            <Stat title="رواتب الشهر" value={fmtMoney(expectedMonthlySalaries)} />
+            <Stat title="صافي يصرف بعد السلف" value={fmtMoney(payrollNetFromSync)} />
             <Stat title="رواتب آجلة" value={fmtMoney(payablePayroll)} />
-            <Stat title="سلف معتمدة" value={fmtMoney(approvedAdvancesTotal)} />
+            <Stat title="سلف تخصم من الراتب" value={fmtMoney(approvedAdvancesTotal)} />
           </div>
-          {payrollSync && <div className="text-xs text-teal-700 font-bold">آخر مزامنة: {payrollSync.employees_count ?? 0} موظف · إجمالي مستحق {fmtMoney(Number(payrollSync.gross_total ?? 0))} · صافي بعد السلف {fmtMoney(Number(payrollSync.net_total ?? 0))}</div>}
+          {payrollSync && <div className="text-xs text-teal-700 font-bold">آخر مزامنة: {payrollSync.employees_count ?? 0} موظف · إجمالي رواتب الشهر {fmtMoney(Number(payrollSync.gross_total ?? 0))} · صافي بعد السلف {fmtMoney(Number(payrollSync.net_total ?? 0))}</div>}
+        </CardContent>
+      </Card>
+
+      <Card className="border-blue-100 bg-blue-50/40">
+        <CardContent className="p-3 text-sm text-blue-800">
+          ملاحظة: الرواتب الشهرية تظهر مرة واحدة من مسير الرواتب، والسلف تخصم من الصافي. بنود الرواتب الفنية القديمة أو المكررة لا تظهر في جدول المصروفات حتى لا تضاعف الرقم على صاحب العمل.
         </CardContent>
       </Card>
 
@@ -192,8 +201,8 @@ function FinancePage() {
                   {isOwner && <th className="p-3 w-12"></th>}
                 </tr></thead>
                 <tbody>
-                  {expenses.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد مصروفات</td></tr>}
-                  {expenses.map((e) => (
+                  {visibleExpenses.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد مصروفات</td></tr>}
+                  {visibleExpenses.map((e) => (
                     <tr key={e.id} className="border-t">
                       <td className="p-3">{fmtDate(e.spent_at)}</td>
                       <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{EXPENSE_CATEGORIES.find(c=>c.value===e.category)?.label ?? e.category}</Badge>{e.status === "payable" && <Badge variant="outline" className="border-amber-300 text-amber-700">آجل</Badge>}{e.source_type === "auto_payroll_line" && <Badge className="bg-teal-600">تلقائي</Badge>}</div></td>
