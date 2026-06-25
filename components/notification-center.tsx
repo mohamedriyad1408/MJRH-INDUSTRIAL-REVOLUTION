@@ -56,13 +56,14 @@ export function NotificationCenter() {
     const next: Alert[] = [];
     const myAudiences = audiencesForMe();
 
-    const [lateRes, unpaidRes, unassignedDeliveryRes, noLocationOrdersRes, recleanRes, pickupNoLocationRes] = await Promise.all([
+    const [lateRes, unpaidRes, unassignedDeliveryRes, noLocationOrdersRes, recleanRes, pickupNoLocationRes, appNotifsRes] = await Promise.all([
       supabase.from("orders").select("id,order_number,promised_delivery_at,status").not("status", "in", '("delivered","cancelled")').lt("promised_delivery_at", now).limit(5),
       supabase.from("orders").select("id,order_number,total,payment_status,status").eq("payment_status", "unpaid").not("status", "eq", "cancelled").limit(5),
       (supabase as any).from("orders").select("id,order_number,status").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
       (supabase as any).from("orders").select("id,order_number,order_type,delivery_address,delivery_lat,delivery_lng,status").eq("order_type", "delivery").in("status", ["received", "cleaning", "ironing", "packing", "ready"]).is("delivery_lat", null).limit(5),
       (supabase as any).from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,reclean_reason,reclean_photo_url,orders(order_number)").eq("needs_reclean", true).limit(5),
       (supabase as any).from("pickup_requests").select("id,customer_name,status,scheduled_at,lat,lng").in("status", ["pending", "assigned"]).is("lat", null).limit(5),
+      (supabase as any).from("app_notifications").select("id,audience,title,body,href,tone,created_at").in("audience", myAudiences).is("read_at", null).order("created_at", { ascending: false }).limit(10).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     (lateRes.data ?? []).forEach((o: any) => {
@@ -90,6 +91,19 @@ export function NotificationCenter() {
       const aud: AlertAudience[] = ["owner", "ops", "cleaning"];
       if (!u.assigned_ironing_employee_id || u.assigned_ironing_employee_id === empId) aud.push("ironing");
       next.push({ id: `reclean-${u.id}`, audience: aud, tone: "red", title: `${u.label_code} مرتجع تنظيف`, detail: `طلب #${u.orders?.order_number ?? "?"} — ${u.name} — ${u.reclean_reason ?? "مرتجع تنظيف"}`, icon: <RotateCcw className="w-4 h-4" />, href: u.order_id ? `/orders/${u.order_id}` : undefined });
+    });
+
+    (appNotifsRes.data ?? []).forEach((n: any) => {
+      const tone: AlertTone = n.tone === "danger" ? "red" : n.tone === "warning" ? "amber" : "blue";
+      next.push({
+        id: `app-${n.id}`,
+        audience: [n.audience] as AlertAudience[],
+        tone,
+        title: n.title,
+        detail: n.body ?? "تنبيه من النظام",
+        icon: tone === "red" ? <AlertTriangle className="w-4 h-4" /> : <Bell className="w-4 h-4" />,
+        href: n.href ?? undefined,
+      });
     });
 
     // Station-specific operational alerts
