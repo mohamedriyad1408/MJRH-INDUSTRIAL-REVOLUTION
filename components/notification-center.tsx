@@ -7,11 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bell, Clock, CreditCard, MapPinOff, Truck, RotateCcw, AlertTriangle, RefreshCw, Shirt, Sparkles } from "lucide-react";
 import { dueInfo } from "@/lib/geo";
+import { autoAssignDrivers } from "@/lib/driver-assignment";
+import { toast } from "sonner";
 
 type AlertTone = "red" | "amber" | "blue";
 type AlertAudience = "owner" | "ops" | "cs" | "ironing" | "cleaning" | "packing" | "driver";
 type AlertCategory = "report" | "finance" | "quality" | "ops" | "system";
-type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed"; category?: AlertCategory };
+type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed"; category?: AlertCategory; quickAction?: "assignDrivers" | "openDriverLocation" };
 
 const toneClass: Record<AlertTone, string> = {
   red: "border-red-200 bg-red-50 text-red-800",
@@ -58,13 +60,14 @@ export function NotificationCenter() {
     const next: Alert[] = [];
     const myAudiences = audiencesForMe();
 
-    const [lateRes, unpaidRes, unassignedDeliveryRes, noLocationOrdersRes, recleanRes, pickupNoLocationRes, appNotifsRes] = await Promise.all([
+    const [lateRes, unpaidRes, unassignedDeliveryRes, noLocationOrdersRes, recleanRes, pickupNoLocationRes, pickupPendingRes, appNotifsRes] = await Promise.all([
       supabase.from("orders").select("id,order_number,promised_delivery_at,status").not("status", "in", '("delivered","cancelled")').lt("promised_delivery_at", now).limit(5),
       supabase.from("orders").select("id,order_number,total,payment_status,status").eq("payment_status", "unpaid").not("status", "eq", "cancelled").limit(5),
       (supabase as any).from("orders").select("id,order_number,status").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
       (supabase as any).from("orders").select("id,order_number,order_type,delivery_address,delivery_lat,delivery_lng,status").eq("order_type", "delivery").in("status", ["received", "cleaning", "ironing", "packing", "ready"]).is("delivery_lat", null).limit(5),
       (supabase as any).from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,reclean_reason,reclean_photo_url,orders(order_number)").eq("needs_reclean", true).limit(5),
       (supabase as any).from("pickup_requests").select("id,customer_name,status,scheduled_at,lat,lng").in("status", ["pending", "assigned"]).is("lat", null).limit(5),
+      (supabase as any).from("pickup_requests").select("id,customer_name,status").eq("status", "pending").limit(5),
       (supabase as any).from("app_notifications").select("id,audience,title,body,href,tone,created_at").in("audience", myAudiences).is("read_at", null).order("created_at", { ascending: false }).limit(10).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
@@ -78,7 +81,7 @@ export function NotificationCenter() {
     });
 
     (unassignedDeliveryRes.data ?? []).forEach((o: any) => {
-      next.push({ kind: "computed", category: "ops", id: `unassigned-${o.id}`, audience: ["owner", "ops", "driver"], tone: "blue", title: `طلب #${o.order_number} جاهز بلا مندوب`, detail: "اضغط توزيع المناديب من الخريطة", icon: <Truck className="w-4 h-4" />, href: "/live-map" });
+      next.push({ kind: "computed", category: "ops", id: `unassigned-${o.id}`, audience: ["owner", "ops", "driver"], tone: "blue", title: `طلب #${o.order_number} جاهز بلا مندوب`, detail: "اضغط توزيع المناديب من الخريطة", icon: <Truck className="w-4 h-4" />, href: "/live-map", quickAction: "assignDrivers" });
     });
 
     (noLocationOrdersRes.data ?? []).forEach((o: any) => {
@@ -87,6 +90,10 @@ export function NotificationCenter() {
 
     (pickupNoLocationRes.data ?? []).forEach((p: any) => {
       next.push({ kind: "computed", category: "ops", id: `noloc-pickup-${p.id}`, audience: ["owner", "ops", "cs"], tone: "amber", title: `طلب استلام بلا موقع`, detail: p.customer_name, icon: <MapPinOff className="w-4 h-4" />, href: "/orders/new" });
+    });
+
+    (pickupPendingRes.data ?? []).forEach((p: any) => {
+      next.push({ kind: "computed", category: "ops", id: `pickup-pending-${p.id}`, audience: ["owner", "ops", "driver"], tone: "blue", title: `استلام ينتظر مندوب`, detail: p.customer_name, icon: <Truck className="w-4 h-4" />, href: "/live-map", quickAction: "assignDrivers" });
     });
 
     (recleanRes.data ?? []).forEach((u: any) => {
@@ -147,6 +154,19 @@ export function NotificationCenter() {
     if (!error) setAlerts((rows) => rows.filter((x) => !ids.includes(x.appNotificationId ?? "")));
   }
 
+  async function runQuickAction(alert: Alert) {
+    if (alert.quickAction === "assignDrivers") {
+      try {
+        const r = await autoAssignDrivers();
+        if (r.assigned) toast.success(`تم توزيع ${r.assigned} مهمة على ${r.drivers} مناديب`);
+        else toast.info("لا توجد مهام قابلة للتوزيع الآن");
+        load();
+      } catch (e: any) {
+        toast.error(e?.message ?? "تعذر توزيع المناديب");
+      }
+    }
+  }
+
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [station, jobRole, empId]);
 
   const visibleAlerts = useMemo(() => filter === "all" ? alerts : alerts.filter((a) => a.category === filter), [alerts, filter]);
@@ -195,6 +215,7 @@ export function NotificationCenter() {
               <div className="mt-1 opacity-80 whitespace-pre-line pe-1">{a.detail}</div>
               {(a.href || a.appNotificationId) && <div className="flex gap-2 mt-2">
                 {a.href && <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={a.href as any}>فتح</Link></Button>}
+                {a.quickAction && <Button size="sm" variant="default" className="h-7 text-[11px]" onClick={() => runQuickAction(a)}>تنفيذ</Button>}
                 {a.appNotificationId && <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => markRead(a)}>تمت المعالجة</Button>}
               </div>}
             </div>;
