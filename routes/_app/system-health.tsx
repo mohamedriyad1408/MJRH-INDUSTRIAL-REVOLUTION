@@ -72,6 +72,16 @@ function SystemHealthPage() {
         (supabase as any).from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true).is("current_lat", null).limit(5),
       ]);
 
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const [ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders] = await Promise.all([
+        (supabase as any).from("orders").select("id,order_number,delivery_address,customers(full_name)").eq("order_type", "delivery").not("status", "in", "(delivered,cancelled)").is("delivery_lat", null).limit(5),
+        (supabase as any).from("customers").select("id,full_name,phone").is("address", null).limit(5),
+        (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
+        (supabase as any).from("expenses").select("id,amount,description,due_at,spent_at").eq("status", "payable").lt("spent_at", todayStr).limit(5),
+        (supabase as any).from("orders").select("id,order_number,status,updated_at,customers(full_name)").not("status", "in", "(delivered,cancelled)").lt("updated_at", yesterdayIso).limit(5),
+      ]);
+
       const activeOrders = orders.data ?? [];
       const activeUnits = (units.data ?? []).filter((u: any) => u.status !== "cancelled" && u.current_stage !== "cancelled");
       const orderIdsWithPieces = new Set(activeUnits.map((u: any) => u.order_id));
@@ -89,6 +99,10 @@ function SystemHealthPage() {
       const invoiceDetails = (invoiceDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: `${o.customers?.full_name ?? "عميل"} — ${o.status}`, href: `/orders/${o.id}` }));
       const proofDetails = (proofDetail.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "المبلغ أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}` }));
       const driverNoLocDetails = (driversNoLocDetail.data ?? []).map((d: any) => ({ label: d.full_name, sub: d.phone ?? "لم يحدث موقعه", href: "/driver" }));
+      const orderNoLocationDetails = (ordersNoLocation.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: o.delivery_address || o.customers?.full_name || "بلا موقع", href: `/orders/${o.id}` }));
+      const customersNoAddressDetails = (customersNoAddress.data ?? []).map((c: any) => ({ label: c.full_name, sub: c.phone || "لا يوجد عنوان", href: "/customers" }));
+      const oldPayablesDetails = (oldPayables.data ?? []).map((e: any) => ({ label: e.description || "مصروف آجل", sub: `${Number(e.amount ?? 0).toLocaleString("en-US")} جنيه`, href: "/accounting" }));
+      const stuckOrderDetails = (stuckOrders.data ?? []).map((o: any) => ({ label: `طلب #${o.order_number}`, sub: `${o.customers?.full_name ?? "عميل"} — واقف في ${o.status}`, href: `/orders/${o.id}` }));
 
       const next: Check[] = [
         { key: "settings", title: "إعدادات المغسلة", count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: "يتم إنشاؤها تلقائيًا عند فتح مغسلة جديدة" },
@@ -106,6 +120,11 @@ function SystemHealthPage() {
         { key: "invoice", title: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: "راجع الطلب واضغط تأكيد وإشعار", details: invoiceDetails },
         { key: "proof", title: "إيصالات دفع تحتاج مراجعة", count: paymentReview.count ?? 0, okWhenZero: true, severity: severityFor(paymentReview.count ?? 0, true), href: "/orders", fix: "راجع صورة الإيصال والمبلغ", details: proofDetails },
         { key: "driverLocation", title: "مندوبون بلا موقع", count: driversNoLocation.count ?? 0, okWhenZero: true, severity: (driversNoLocation.count ?? 0) ? "warn" : "ok", href: "/driver", fix: "اطلب من المندوب الضغط على زر موقعي", details: driverNoLocDetails },
+        { key: "ordersNoLocation", title: "طلبات توصيل بلا موقع", count: ordersNoLocation.data?.length ?? 0, okWhenZero: true, severity: (ordersNoLocation.data?.length ?? 0) ? "warn" : "ok", href: "/live-map", fix: "افتح الطلب وسجل موقع التسليم أو عنوان واضح", details: orderNoLocationDetails },
+        { key: "customersNoAddress", title: "عملاء بلا عنوان", count: customersNoAddress.data?.length ?? 0, okWhenZero: true, severity: (customersNoAddress.data?.length ?? 0) ? "warn" : "ok", href: "/customers", fix: "أكمل عنوان العميل حتى تظهر الطلبات على الخريطة", details: customersNoAddressDetails },
+        { key: "cashClosing", title: "إقفال خزنة اليوم", count: closingToday.count ?? 0, severity: (closingToday.count ?? 0) > 0 ? "ok" : "warn", href: "/cash-closing", fix: (closingToday.count ?? 0) > 0 ? "تم إقفال خزنة واحدة على الأقل اليوم" : "آخر اليوم افتح إقفال الخزنة واكتب النقدية الموجودة فعليًا" },
+        { key: "oldPayables", title: "مصروفات آجلة قديمة", count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: "راجع المصروفات الآجلة القديمة وادفعها أو ألغيها بسبب", details: oldPayablesDetails },
+        { key: "stuckOrders", title: "طلبات واقفة أكثر من يوم", count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: "افتح الطلب لمعرفة سبب التوقف والخطوة التالية", details: stuckOrderDetails },
       ];
       setChecks(next);
     } finally {
