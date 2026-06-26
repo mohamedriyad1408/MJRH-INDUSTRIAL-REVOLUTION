@@ -56,7 +56,7 @@ function ReportsPage() {
     const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes, lateDetailsRes] = await Promise.all([
       (supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)").gte("created_at", from).lte("created_at", to),
       (supabase as any).from("orders").select("id,total,status,created_at").gte("created_at", prevFrom).lte("created_at", prevTo),
-      (supabase as any).from("expenses").select("amount,category,spent_at").gte("spent_at", from).lte("spent_at", to),
+      (supabase as any).from("expenses").select("amount,category,status,source_type,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void"),
       (supabase as any).from("employees").select("id,full_name,job_role").eq("is_active", true),
       (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at").gte("created_at", from).lte("created_at", to),
       (supabase as any).from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to),
@@ -85,7 +85,11 @@ function ReportsPage() {
 
     const totalRevenue = orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
     const prevRevenue = prevOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-    const totalExpenses = expenses.reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
+    const paidExpenses = expenses.filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
+    const payableExpenses = expenses.filter((e: any) => e.status === "payable").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
+    const payrollAccrual = expenses.filter((e: any) => e.status === "payable" && e.category === "salaries").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
+    const accruedExpenses = paidExpenses + payableExpenses;
+    const totalExpenses = paidExpenses;
     const delivered = orders.filter((o: any) => o.status === "delivered").length;
     const cancelled = orders.filter((o: any) => o.status === "cancelled").length;
     const urgent = orders.filter((o: any) => o.is_urgent).length;
@@ -168,7 +172,7 @@ function ReportsPage() {
     if (!insights.length) insights.push({ tone: "good", title: "التشغيل مستقر", body: "لا توجد مؤشرات خطر واضحة في الفترة المختارة.", action: "استمر في متابعة الجودة والمخزون يوميًا." });
 
     setData({
-      totalRevenue, prevRevenue, revenueDelta, totalExpenses, netProfit: totalRevenue - totalExpenses,
+      totalRevenue, prevRevenue, revenueDelta, totalExpenses, paidExpenses, payableExpenses, payrollAccrual, accruedExpenses, netProfit: totalRevenue - totalExpenses, accruedNetProfit: totalRevenue - accruedExpenses,
       totalOrders: orders.length, delivered, cancelled, urgent, unpaidValue, avgOrder, avgCycleHours,
       stageCounts, bottleneck, recleanCount, qcFailed, qcCount: qc.length, qcRate, lowStock,
       stations, topEmployees, topServices, insights,
@@ -185,7 +189,9 @@ function ReportsPage() {
     const rows = [
       ["المؤشر", "القيمة"],
       ["الإيرادات", data.totalRevenue],
-      ["المصروفات", data.totalExpenses],
+      ["المصروفات المدفوعة", data.totalExpenses],
+      ["مصروفات آجلة", data.payableExpenses],
+      ["رواتب مستحقة ضمن الآجل", data.payrollAccrual],
       ["صافي الربح", data.netProfit],
       ["إجمالي الطلبات", data.totalOrders],
       ["متوسط الفاتورة", data.avgOrder],
@@ -228,7 +234,8 @@ function ReportsPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
             <Kpi label="الإيرادات" value={fmtMoney(data.totalRevenue)} tone="teal" sub={data.revenueDelta === null ? "لا يوجد شهر سابق" : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
-            <Kpi label="صافي الربح" value={fmtMoney(data.netProfit)} tone={data.netProfit >= 0 ? "green" : "red"} />
+            <Kpi label="صافي نقدي" value={fmtMoney(data.netProfit)} tone={data.netProfit >= 0 ? "green" : "red"} />
+            <Kpi label="مصروفات آجلة" value={fmtMoney(data.payableExpenses)} tone="amber" sub={`رواتب: ${fmtMoney(data.payrollAccrual)}`} />
             <Kpi label="الطلبات" value={data.totalOrders} tone="blue" sub={`${data.delivered} مسلّم`} />
             <Kpi label="متوسط الفاتورة" value={fmtMoney(data.avgOrder)} tone="slate" />
             <Kpi label="الآجل" value={fmtMoney(data.unpaidValue)} tone="amber" />
@@ -311,7 +318,8 @@ function DelayResponsibility({ data }: { data: any }) {
 function RoleFocus({ isOwner, isOps, isCs, data }: { isOwner: boolean; isOps: boolean; isCs: boolean; data: any }) {
   return <div className="grid lg:grid-cols-3 gap-4">
     {isOwner && <Card className="border-emerald-200 bg-emerald-50/50"><CardHeader><CardTitle className="text-sm">ملخص المالك</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-      <FocusRow label="صافي الشهر" value={fmtMoney(data.netProfit)} warn={data.netProfit < 0} />
+      <FocusRow label="صافي نقدي للشهر" value={fmtMoney(data.netProfit)} warn={data.netProfit < 0} />
+      <FocusRow label="رواتب/مصروفات آجلة" value={fmtMoney(data.payableExpenses)} warn={data.payableExpenses > 0} />
       <FocusRow label="آجل عند العملاء" value={fmtMoney(data.unpaidValue)} warn={data.unpaidValue > 0} />
       <FocusRow label="مخزون تحت الحد" value={data.lowStock.length} warn={data.lowStock.length > 0} />
     </CardContent></Card>}

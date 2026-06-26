@@ -30,6 +30,7 @@ type Summary = {
   invoiceReview: number;
   proofReview: number;
   cashClosings: number;
+  cashSafes: number;
   deliveredToday: number;
   lastClosingDiff: number | null;
   lastClosingAccount: string | null;
@@ -57,7 +58,7 @@ function TodayCenter() {
     const now = new Date().toISOString();
     const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings,
       lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail,
-      deliveredToday, lastClosing, driverCash, reportsRes] = await Promise.all([
+      deliveredToday, lastClosing, driverCash, reportsRes, cashSafesRes] = await Promise.all([
       (supabase as any).from("orders").select("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
       (supabase as any).from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
@@ -80,6 +81,7 @@ function TodayCenter() {
       (supabase as any).from("daily_cash_closings").select("difference,cash_accounts(name),closed_at").order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
       (supabase as any).from("cash_transactions").select("amount,source_type,happened_at").in("source_type", ["order_payment", "driver_tip_delivery", "driver_tip"]).gte("happened_at", startIso).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("app_notifications").select("id,title,body,href,tone,created_at").ilike("title", "%تقرير%").order("created_at", { ascending: false }).limit(5).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true).then((r: any) => r).catch(() => ({ count: 0 })),
     ]);
     const os = orders.data ?? [];
     const cs = cash.data ?? [];
@@ -105,8 +107,8 @@ function TodayCenter() {
     setData({
       ordersToday: os.length,
       revenueToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
-      cashIn: cs.filter((x: any) => x.direction === "in").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
-      cashOut: cs.filter((x: any) => x.direction === "out").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
+      cashIn: cs.filter((x: any) => x.direction === "in" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
+      cashOut: cs.filter((x: any) => x.direction === "out" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       activeOrders: os.filter((o: any) => !["delivered", "cancelled"].includes(o.status)).length,
       lateOrders: os.filter((o: any) => o.promised_delivery_at && o.promised_delivery_at < now && !["delivered", "cancelled"].includes(o.status)).length,
       openPickups: pickups.count ?? 0,
@@ -117,6 +119,7 @@ function TodayCenter() {
       invoiceReview: invoices.count ?? 0,
       proofReview: proofs.count ?? 0,
       cashClosings: closings.count ?? 0,
+      cashSafes: cashSafesRes.count ?? 0,
       deliveredToday: deliveredToday.count ?? 0,
       lastClosingDiff: lastClosing.data ? Number(lastClosing.data.difference ?? 0) : null,
       lastClosingAccount: lastClosing.data?.cash_accounts?.name ?? null,
@@ -158,7 +161,7 @@ function TodayCenter() {
       `مرتجعات غسيل: ${data.reclean}`,
       `مشاكل جودة: ${data.qcIssues}`,
       `جاهز غير مدفوع: ${data.unpaidReady}`,
-      `إقفالات خزنة اليوم: ${data.cashClosings}`,
+      `إقفالات خزنة اليوم: ${data.cashClosings}/${data.cashSafes}`,
     ].join("\n");
     const { error } = await (supabase as any).from("app_notifications").insert({
       audience: "owner",
@@ -196,7 +199,7 @@ function TodayCenter() {
       `- تحصيلات المندوبين: ${fmtMoney(data.driverCollections)}`,
       `- بقشيش المندوبين: ${fmtMoney(data.driverTips)}`,
       `- جاهز غير مدفوع: ${data.unpaidReady}`,
-      `- إقفال الخزنة: ${data.cashClosings ? "تم" : "لم يتم"}`,
+      `- إقفال الخزنة: ${data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "تم لكل الخزن" : `لم يكتمل (${data.cashClosings}/${data.cashSafes})`}`,
       data.lastClosingDiff !== null ? `- آخر فرق خزنة (${data.lastClosingAccount ?? "خزنة"}): ${fmtMoney(data.lastClosingDiff)}` : `- لا يوجد إقفال خزنة مسجل`,
       "",
       "ثالثًا: الجودة والتشغيل",
@@ -221,10 +224,10 @@ function TodayCenter() {
     const body = endOfDayReportText();
     const { error } = await (supabase as any).from("app_notifications").insert({
       audience: "owner",
-      title: data.cashClosings ? "تقرير نهاية اليوم" : "تقرير نهاية اليوم - الخزنة لم تقفل",
+      title: data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "تقرير نهاية اليوم" : "تقرير نهاية اليوم - الخزن لم تكتمل",
       body,
-      href: data.cashClosings ? "/today" : "/cash-closing",
-      tone: !data.cashClosings || critical ? "warning" : "success",
+      href: data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "/today" : "/cash-closing",
+      tone: !(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) || critical ? "warning" : "success",
     });
     if (error) toast.error(error.message);
     else toast.success("تم حفظ تقرير نهاية اليوم في جرس التنبيهات");
@@ -254,10 +257,10 @@ function TodayCenter() {
       <Kpi label="إيراد اليوم" value={fmtMoney(data.revenueToday)} />
       <Kpi label="تحصيل مندوبين" value={fmtMoney(data.driverCollections)} />
       <Kpi label="مشاكل تحتاج تدخل" value={critical} warn={critical > 0} />
-      <Kpi label="إقفال الخزنة" value={data.cashClosings ? "تم" : "لم يتم"} warn={!data.cashClosings} />
+      <Kpi label="إقفال الخزن" value={`${data.cashClosings}/${data.cashSafes}`} warn={!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes)} />
     </div>
 
-    {!data.cashClosings && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>الخزنة لم تقفل اليوم.</b><div className="text-xs mt-1">قبل نهاية اليوم افتح إقفال الخزنة واكتب النقدية الموجودة فعليًا.</div></div><Button asChild size="sm"><Link to="/cash-closing">إقفال الخزنة</Link></Button></CardContent></Card>}
+    {!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>إقفال الخزن لم يكتمل اليوم.</b><div className="text-xs mt-1">المقفول: {data.cashClosings} من {data.cashSafes}. افتح إقفال الخزن واقفل الكل في حركة واحدة.</div></div><Button asChild size="sm"><Link to="/cash-closing">إقفال الخزن</Link></Button></CardContent></Card>}
     {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>آخر إقفال خزنة فيه فرق:</b> {data.lastClosingAccount ?? "خزنة"} — {fmtMoney(data.lastClosingDiff)}. راجع سبب الفرق.</CardContent></Card>}
 
     {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">من أين يأتي التأخير؟</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage)}: {count}</Badge>)}</CardContent></Card>}
@@ -286,7 +289,7 @@ function TodayCenter() {
       <ActionCard title="فحص النظام" detail="راجع الأساسيات والمشاكل المفتوحة" to="/system-health" icon={<ShieldCheck />} count={critical} />
       <ActionCard title="الطلبات" detail="طلبات بلا قطع، فواتير، إيصالات، مشاكل" to="/orders" icon={<ClipboardList />} count={data.activeOrders} />
       <ActionCard title="الخريطة" detail="استلامات، تسليمات، مناديب ومواقع" to="/live-map" icon={<Map />} count={data.openPickups + data.readyNoDriver} />
-      <ActionCard title="الخزنة" detail="راجع الداخل والخارج واقفل اليوم" to="/cash-closing" icon={<Wallet />} count={data.cashClosings ? 0 : 1} />
+      <ActionCard title="الخزنة" detail="راجع الداخل والخارج واقفل اليوم" to="/cash-closing" icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
       <ActionCard title="التقارير" detail="تحليل أعمق حسب الدور" to="/reports" icon={<BarChart3 />} />
       <ActionCard title="ذمم العملاء" detail="جاهز غير مدفوع والتحصيل" to="/receivables" icon={<Wallet />} count={data.unpaidReady} />
     </div>
