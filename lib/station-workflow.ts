@@ -9,6 +9,8 @@ type Unit = {
   needs_reclean: boolean | null;
   ironing_completed_at?: string | null;
   status?: string | null;
+  label_status?: string | null;
+  assembly_checked_at?: string | null;
 };
 
 export async function validateOrderMove(orderId: string, to: OrderStatus) {
@@ -21,7 +23,7 @@ export async function validateOrderMove(orderId: string, to: OrderStatus) {
 
   const { data: rawUnits, error: uErr } = await (supabase as any)
     .from("service_units")
-    .select("id,service_type,current_stage,needs_reclean,ironing_completed_at,status")
+    .select("id,service_type,current_stage,needs_reclean,ironing_completed_at,status,label_status,assembly_checked_at")
     .eq("order_id", orderId);
   if (uErr) return { ok: false, message: uErr.message };
 
@@ -36,12 +38,19 @@ export async function validateOrderMove(orderId: string, to: OrderStatus) {
     return { ok: false, message: `يوجد ${reclean.length} قطعة مرتجع غسيل. يجب إنهاء المرتجعات أولًا.` };
   }
 
+  const labelIssues = units.filter((u) => u.label_status && u.label_status !== "labeled");
+  if (labelIssues.length && ["packing", "ready", "out_for_delivery", "delivered"].includes(to)) {
+    return { ok: false, message: `يوجد ${labelIssues.length} قطعة بمشكلة مارك/ليبل. يجب حلها في محطة التجفيف والتجميع أولًا.` };
+  }
+
   if (to === "ironing") {
     const notCleaned = units.filter((u) => ["both", "cleaning"].includes(u.service_type) && u.current_stage !== "cleaning_done");
     if (notCleaned.length) return { ok: false, message: `يوجد ${notCleaned.length} قطعة لم يتم تأكيد تنظيفها بعد.` };
   }
 
   if (to === "packing") {
+    const notAssembled = units.filter((u) => ["both", "cleaning"].includes(u.service_type) && ["cleaning", "cleaning_done", "drying_assembly"].includes(String(u.current_stage ?? "")));
+    if (notAssembled.length) return { ok: false, message: `يوجد ${notAssembled.length} قطعة لم تمر بالتجفيف والتجميع بعد.` };
     const notIroned = units.filter((u) => ["both", "ironing"].includes(u.service_type) && !u.ironing_completed_at && u.current_stage !== "ironing_done" && u.current_stage !== "qc_passed");
     if (notIroned.length) return { ok: false, message: `يوجد ${notIroned.length} قطعة لم يتم تأكيد كيها بعد.` };
   }

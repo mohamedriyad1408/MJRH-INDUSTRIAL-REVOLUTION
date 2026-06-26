@@ -21,6 +21,7 @@ type Unit = {
   name: string;
   current_stage: string;
   needs_reclean: boolean;
+  label_status?: string | null;
   order_id: string;
   orders?: { id: string; order_number: number; status: string; customers?: { full_name: string; phone: string } | null } | null;
 };
@@ -37,7 +38,7 @@ function QcStation() {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("service_units")
-      .select("id,label_code,name,current_stage,needs_reclean,order_id,orders(id,order_number,status,customers(full_name,phone))")
+      .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,customers(full_name,phone))")
       .in("current_stage", ["cleaning_done", "ironing_done", "packing", "packing_done", "ready", "qc_failed"])
       .order("updated_at", { ascending: false })
       .limit(120);
@@ -56,6 +57,7 @@ function QcStation() {
 
   async function qc(unit: Unit, res: "passed" | "reclean" | "repair" | "lost" | "damaged") {
     const note = (notes[unit.id] ?? "").trim();
+    if (res === "passed" && unit.label_status && unit.label_status !== "labeled") return toast.error("لا يمكن اعتماد قطعة بها مشكلة مارك/ليبل. افتح التجفيف والتجميع أولًا.");
     if (res !== "passed" && note.length < 3) return toast.error("اكتب سبب واضح قبل رفض القطعة");
 
     let error: any = null;
@@ -113,8 +115,8 @@ function QcStation() {
                 {g.units.map((u) => (
                   <div key={u.id} className="rounded-2xl border p-3 bg-card space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">المرحلة: {u.current_stage}</div></div>
-                      {(u.needs_reclean || u.current_stage === "qc_failed") && <Badge variant="destructive">مشكلة</Badge>}
+                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">المرحلة: {u.current_stage}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">مارك/ليبل: {u.label_status === "missing_label" ? "بدون مارك" : "غير واضح"}</div>}</div>
+                      {(u.needs_reclean || u.current_stage === "qc_failed" || (u.label_status && u.label_status !== "labeled")) && <Badge variant="destructive">مشكلة</Badge>}
                     </div>
                     <Textarea rows={2} placeholder="ملاحظة الفحص / سبب الرفض" value={notes[u.id] ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
                     <div className="grid grid-cols-[1fr_auto_auto] gap-2">
@@ -131,6 +133,7 @@ function QcStation() {
                       <Button onClick={() => qc(u, "passed")} className="bg-emerald-600 hover:bg-emerald-500"><CheckCircle2 className="w-4 h-4 ms-1" /> اعتماد</Button>
                     </div>
                     {u.needs_reclean && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">هذه القطعة مرجعة للغسيل. تظهر الآن في محطة الغسيل ولن تخرج للعميل حتى تنتهي دورة المرتجع.</div>}
+                    {u.label_status && u.label_status !== "labeled" && <div className="rounded-xl bg-red-50 border border-red-200 p-2 text-xs text-red-800">لا تعتمد هذه القطعة قبل حل مشكلة المارك/الليبل في محطة التجفيف والتجميع.</div>}
                   </div>
                 ))}
               </CardContent>

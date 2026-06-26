@@ -27,6 +27,7 @@ type Summary = {
   readyNoDriver: number;
   reclean: number;
   qcIssues: number;
+  labelIssues: number;
   unpaidReady: number;
   invoiceReview: number;
   proofReview: number;
@@ -77,8 +78,8 @@ function TodayCenter() {
     const startIso = start.toISOString();
     const todayStr = start.toISOString().slice(0, 10);
     const now = new Date().toISOString();
-    const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings,
-      lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail,
+    const [orders, cash, pickups, readyNoDriver, reclean, qc, labels, unpaid, invoices, proofs, closings,
+      lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, labelDetail, unpaidDetail, invoiceDetail, proofDetail,
       deliveredToday, lastClosing, driverCash, reportsRes, cashSafesRes] = await Promise.all([
       orderQuery("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
       cashTxQuery("amount,direction,happened_at,source_type").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
@@ -86,6 +87,7 @@ function TodayCenter() {
       orderQuery("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
       unitQuery("id", { count: "exact", head: true }).eq("needs_reclean", true),
       unitQuery("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
+      unitQuery("id", { count: "exact", head: true }).in("label_status", ["missing_label", "unclear_label"]),
       orderQuery("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
       orderQuery("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
       orderQuery("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
@@ -95,6 +97,7 @@ function TodayCenter() {
       orderQuery("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(4),
       unitQuery("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(4),
       unitQuery("id,label_code,name,order_id,orders(order_number)").eq("current_stage", "qc_failed").limit(4),
+      unitQuery("id,label_code,name,order_id,label_status,orders(order_number)").in("label_status", ["missing_label", "unclear_label"]).limit(4),
       orderQuery("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(4),
       orderQuery("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(4),
       orderQuery("id,order_number,payment_verification_status,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(4),
@@ -119,6 +122,7 @@ function TodayCenter() {
       ...(noDriverDetail.data ?? []).map((o: any) => ({ type: "مندوب", title: `طلب #${o.order_number}`, sub: "جاهز بلا مندوب", href: "/live-map", tone: "amber", icon: Truck, quick: "assignDrivers" })),
       ...(recleanDetail.data ?? []).map((u: any) => ({ type: "مرتجع", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: RotateCcw })),
       ...(qcDetail.data ?? []).map((u: any) => ({ type: "جودة", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: ShieldCheck })),
+      ...(labelDetail.data ?? []).map((u: any) => ({ type: "مارك", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status === "missing_label" ? "بدون مارك" : "غير واضح"}`, href: "/stations/drying-assembly", tone: "red", icon: AlertTriangle })),
       ...(unpaidDetail.data ?? []).map((o: any) => ({ type: "دفع", title: `طلب #${o.order_number}`, sub: `${Number(o.total ?? 0).toLocaleString("en-US")} جنيه`, href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
       ...(invoiceDetail.data ?? []).map((o: any) => ({ type: "فاتورة", title: `طلب #${o.order_number}`, sub: "تحتاج اعتماد", href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
       ...(proofDetail.data ?? []).map((o: any) => ({ type: "إيصال", title: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}`, tone: "red", icon: CreditCard })),
@@ -136,6 +140,7 @@ function TodayCenter() {
       readyNoDriver: readyNoDriver.count ?? 0,
       reclean: reclean.count ?? 0,
       qcIssues: qc.count ?? 0,
+      labelIssues: labels.count ?? 0,
       unpaidReady: unpaid.count ?? 0,
       invoiceReview: invoices.count ?? 0,
       proofReview: proofs.count ?? 0,
@@ -161,7 +166,7 @@ function TodayCenter() {
 
   const critical = useMemo(() => {
     if (!data) return 0;
-    return data.lateOrders + data.reclean + data.qcIssues + data.unpaidReady + data.readyNoDriver + data.proofReview;
+    return data.lateOrders + data.reclean + data.qcIssues + data.labelIssues + data.unpaidReady + data.readyNoDriver + data.proofReview;
   }, [data]);
 
   async function runAssignDrivers() {
@@ -187,6 +192,7 @@ function TodayCenter() {
       `استلامات مفتوحة: ${data.openPickups}`,
       `مرتجعات غسيل: ${data.reclean}`,
       `مشاكل جودة: ${data.qcIssues}`,
+      `مشاكل مارك/ليبل: ${data.labelIssues}`,
       `جاهز غير مدفوع: ${data.unpaidReady}`,
       `إقفالات خزنة اليوم: ${data.cashClosings}/${data.cashSafes}`,
     ].join("\n");
@@ -232,6 +238,7 @@ function TodayCenter() {
       "ثالثًا: الجودة والتشغيل",
       `- مرتجعات غسيل: ${data.reclean}`,
       `- مشاكل جودة: ${data.qcIssues}`,
+      `- مشاكل مارك/ليبل: ${data.labelIssues}`,
       `- فواتير تحتاج اعتماد: ${data.invoiceReview}`,
       `- إيصالات تحتاج مراجعة: ${data.proofReview}`,
       "",
