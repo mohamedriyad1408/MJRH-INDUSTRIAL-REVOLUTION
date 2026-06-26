@@ -36,7 +36,7 @@ type AdvanceRequest = { id: string; employee_id: string | null; employee_name: s
 type Employee = { id: string; full_name: string; monthly_salary?: number; commission_percent?: number };
 
 function FinancePage() {
-  const { hasRole, user } = useAuth();
+  const { hasRole, user, tenantId } = useAuth();
   const isOwner = hasRole("owner");
   const [loading, setLoading] = useState(true);
   const [revenue, setRevenue] = useState({ total: 0, paid: 0, unpaid: 0, count: 0 });
@@ -46,6 +46,9 @@ function FinancePage() {
   const [payrollSync, setPayrollSync] = useState<any>(null);
   const [syncingPayroll, setSyncingPayroll] = useState(false);
   const [range, setRange] = useState<"7d"|"30d"|"all">("30d");
+  const [branches, setBranches] = useState<any[]>([]);
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
 
   const fromDate = useMemo(() => {
     if (range === "all") return null;
@@ -62,13 +65,14 @@ function FinancePage() {
       if (payrollError) toast.error(`تعذر تجهيز الرواتب: ${payrollError.message}`);
       setPayrollSync(payrollData ?? null);
 
-      let oq = supabase.from("orders").select("total,payment_status,payment_method").neq("status", "cancelled");
+      const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
+      let oq = addBranch(supabase.from("orders").select("total,payment_status,payment_method,branch_id").neq("status", "cancelled"));
       if (fromDate) oq = oq.gte("created_at", fromDate);
 
-      let eq = (supabase as any).from("expenses").select("*").neq("status", "void").order("spent_at", { ascending: false });
+      let eq = addBranch((supabase as any).from("expenses").select("*,branches(name),cash_accounts(name)").neq("status", "void")).order("spent_at", { ascending: false });
       if (fromDate) eq = eq.gte("spent_at", fromDate);
 
-      const [ordRes, expRes, advRes, empRes] = await Promise.all([
+      const [ordRes, expRes, advRes, empRes, brRes, caRes] = await Promise.all([
         oq,
         eq,
         supabase
@@ -76,13 +80,17 @@ function FinancePage() {
           .select("id,employee_id,amount,reason,status,created_at,decided_at,employees(full_name)")
           .eq("type", "advance")
           .order("created_at", { ascending: false }),
-        supabase.from("employees").select("id,full_name,monthly_salary,commission_percent").eq("is_active", true).order("full_name"),
+        addBranch(supabase.from("employees").select("id,full_name,monthly_salary,commission_percent,branch_id").eq("is_active", true)).order("full_name"),
+        tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
+        branchId === "all" ? (supabase as any).from("cash_accounts").select("id,name,branch_id").eq("is_active", true).order("name") : (supabase as any).from("cash_accounts").select("id,name,branch_id").eq("is_active", true).eq("branch_id", branchId).order("name"),
       ]);
 
       if (ordRes.error) toast.error(ordRes.error.message);
       if (expRes.error) toast.error(expRes.error.message);
       if (advRes.error) toast.error(advRes.error.message);
       if (empRes.error) toast.error(empRes.error.message);
+      if ((brRes as any).error) toast.error((brRes as any).error.message);
+      if ((caRes as any).error) toast.error((caRes as any).error.message);
 
       const orders = ordRes.data ?? [];
       const rev = orders.reduce((acc: any, o: any) => {
@@ -94,12 +102,14 @@ function FinancePage() {
       setExpenses((expRes.data ?? []) as any);
       setAdvances(((advRes.data ?? []) as any).map((a: any) => ({ ...a, employee_name: a.employees?.full_name ?? "—" })));
       setEmployees((empRes.data ?? []) as any);
+      setBranches(((brRes as any).data ?? []) as any);
+      setCashAccounts(((caRes as any).data ?? []) as any);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, [fromDate]);
+  useEffect(() => { load(); }, [fromDate, branchId, tenantId]);
 
   async function syncPayrollNow() {
     setSyncingPayroll(true);
@@ -131,6 +141,11 @@ function FinancePage() {
           <p className="text-sm text-muted-foreground">إيرادات، مصروفات، وطلبات السلف</p>
         </div>
         <div className="flex items-center gap-2">
+          <Label className="text-sm">الفرع:</Label>
+          <Select value={branchId} onValueChange={setBranchId}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+          </Select>
           <Label className="text-sm">الفترة:</Label>
           <Select value={range} onValueChange={(v) => setRange(v as any)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -189,7 +204,7 @@ function FinancePage() {
         </TabsList>
 
         <TabsContent value="expenses" className="space-y-3">
-          <div className="flex justify-end"><NewExpenseDialog onCreated={load} userId={user?.id} /></div>
+          <div className="flex justify-end"><NewExpenseDialog onCreated={load} userId={user?.id} tenantId={tenantId ?? undefined} branches={branches} cashAccounts={cashAccounts} defaultBranchId={branchId !== "all" ? branchId : branches[0]?.id} /></div>
           {loading ? <Spinner /> : (
             <Card><CardContent className="p-0">
               <table className="w-full text-sm">
@@ -206,7 +221,7 @@ function FinancePage() {
                     <tr key={e.id} className="border-t">
                       <td className="p-3">{fmtDate(e.spent_at)}</td>
                       <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{EXPENSE_CATEGORIES.find(c=>c.value===e.category)?.label ?? e.category}</Badge>{e.status === "payable" && <Badge variant="outline" className="border-amber-300 text-amber-700">آجل</Badge>}{e.source_type === "auto_payroll_line" && <Badge className="bg-teal-600">تلقائي</Badge>}</div></td>
-                      <td className="p-3 text-muted-foreground">{e.description || "—"}</td>
+                      <td className="p-3 text-muted-foreground"><div>{e.description || "—"}</div><div className="text-[11px] text-teal-700">{(e as any).branches?.name ?? "بدون فرع"}{(e as any).cash_accounts?.name ? ` · ${(e as any).cash_accounts.name}` : ""}</div></td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(e.amount)}</td>
                       {isOwner && <td className="p-3">
                         <Button size="icon" variant="ghost" onClick={async () => {
@@ -293,23 +308,40 @@ function AdvanceStatus({ s }: { s: string }) {
   if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
   return <Badge variant="destructive">مرفوض</Badge>;
 }
-function NewExpenseDialog({ onCreated, userId }: { onCreated: () => void; userId?: string }) {
+function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts, defaultBranchId }: { onCreated: () => void; userId?: string; tenantId?: string; branches: any[]; cashAccounts: any[]; defaultBranchId?: string }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0].value);
+  const [status, setStatus] = useState<"paid" | "payable">("paid");
+  const [branchId, setBranchId] = useState(defaultBranchId ?? "");
+  const [cashAccountId, setCashAccountId] = useState("");
   const [amount, setAmount] = useState(""); const [description, setDescription] = useState(""); const [saving, setSaving] = useState(false);
+  const visibleSafes = cashAccounts.filter((c) => !branchId || c.branch_id === branchId);
+  useEffect(() => { if (open) setBranchId((old) => old || defaultBranchId || branches[0]?.id || ""); }, [open, defaultBranchId, branches]);
+  useEffect(() => { if (status === "paid" && visibleSafes.length && !visibleSafes.some((c) => c.id === cashAccountId)) setCashAccountId(visibleSafes[0].id); }, [status, branchId, cashAccounts]);
   async function submit() {
     const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
+    if (!branchId) { toast.error("اختار الفرع"); return; }
+    if (status === "paid" && !cashAccountId) { toast.error("اختار الخزنة التي دفعت المصروف"); return; }
     setSaving(true);
-    const { error } = await supabase.from("expenses").insert({ category: category as any, amount: amt, description: description || null, created_by: userId });
+    const { data: expense, error } = await (supabase as any).from("expenses").insert({ tenant_id: tenantId, category: category as any, amount: amt, description: description || null, created_by: userId, branch_id: branchId, status, cash_account_id: status === "paid" ? cashAccountId : null, paid_at: status === "paid" ? new Date().toISOString() : null }).select("id").single();
+    if (!error && expense?.id && status === "paid") {
+      await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, branch_id: branchId, cash_account_id: cashAccountId, direction: "out", amount: amt, description: description || "مصروف", source_type: "expense", source_id: expense.id, created_by: userId }).then(() => null);
+    }
+    if (!error && expense?.id) {
+      await (supabase as any).rpc("record_operation_event", { _process_key: "expense_created", _process_name: status === "paid" ? "تسجيل مصروف مدفوع" : "تسجيل مصروف آجل", _source_type: "expense", _source_id: expense.id, _branch_id: branchId, _cash_account_id: status === "paid" ? cashAccountId : null, _report_bucket: "finance/reports", _requires_notification: false, _data: { tenant_id: tenantId, category, amount: amt, status }, _output: { cash_impact: status === "paid", journal_required: true, appears_in_report: true } }).then(() => null);
+    }
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف وربطه بالفرع والخزنة والتقارير"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" />مصروف جديد</Button></DialogTrigger>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle>إضافة مصروف</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          <div><Label>الفرع</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>الفئة</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>الحالة</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">مدفوع الآن</SelectItem><SelectItem value="payable">آجل / مستحق</SelectItem></SelectContent></Select></div>
+          {status === "paid" && <div><Label>الخزنة التي دفعت</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder="اختار الخزنة" /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
           <div><Label>المبلغ</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           <div><Label>الوصف (اختياري)</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
         </div>

@@ -20,34 +20,43 @@ export const Route = createFileRoute("/_app/inventory")({
 });
 
 function InventoryPage() {
-  const { hasRole, user } = useAuth();
+  const { hasRole, user, tenantId } = useAuth();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [moves, setMoves] = useState<any[]>([]);
   const [assets, setAssets] = useState<any[]>([]);
-  const [itemForm, setItemForm] = useState({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "" });
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
+  const [itemForm, setItemForm] = useState({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: "" });
   const [moveForm, setMoveForm] = useState({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" });
-  const [assetForm, setAssetForm] = useState({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "" });
+  const [assetForm, setAssetForm] = useState({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "", branch_id: "" });
 
   async function load() {
     setLoading(true);
     try {
-      const [i, m, a] = await Promise.all([
-        (supabase as any).from("inventory_items").select("*").order("name"),
-        (supabase as any).from("inventory_movements").select("*,inventory_items(name,unit)").order("created_at", { ascending: false }).limit(30),
-        (supabase as any).from("equipment_assets").select("*").order("created_at", { ascending: false }),
+      const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
+      const [i, m, a, br] = await Promise.all([
+        addBranch((supabase as any).from("inventory_items").select("*,branches(name)")).order("name"),
+        addBranch((supabase as any).from("inventory_movements").select("*,branches(name),inventory_items(name,unit)")).order("created_at", { ascending: false }).limit(30),
+        addBranch((supabase as any).from("equipment_assets").select("*,branches(name)")).order("created_at", { ascending: false }),
+        tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
       ]);
       if (i.error) toast.error(i.error.message);
       if (m.error) toast.error(m.error.message);
       if (a.error) toast.error(a.error.message);
+      if ((br as any).error) toast.error((br as any).error.message);
+      const branchList = ((br as any).data ?? []) as any[];
+      setBranches(branchList);
+      setItemForm((old) => ({ ...old, branch_id: old.branch_id || (branchId !== "all" ? branchId : branchList[0]?.id || "") }));
+      setAssetForm((old) => ({ ...old, branch_id: old.branch_id || (branchId !== "all" ? branchId : branchList[0]?.id || "") }));
       setItems(i.data ?? []); setMoves(m.data ?? []); setAssets(a.data ?? []);
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { if (canUse) load(); }, [canUse]);
+  useEffect(() => { if (canUse) load(); }, [canUse, branchId, tenantId]);
 
   const stats = useMemo(() => {
     const low = items.filter((x) => Number(x.current_qty) <= Number(x.reorder_level));
@@ -58,36 +67,45 @@ function InventoryPage() {
 
   async function addItem() {
     if (!itemForm.name.trim()) return toast.error("اكتب اسم الصنف");
+    const selectedBranchId = itemForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
+    if (!selectedBranchId) return toast.error("اختار الفرع");
     const { data, error } = await (supabase as any).from("inventory_items").insert({
-      name: itemForm.name.trim(), category: itemForm.category, unit: itemForm.unit || "وحدة",
+      name: itemForm.name.trim(), category: itemForm.category, unit: itemForm.unit || "وحدة", branch_id: selectedBranchId,
       reorder_level: Number(itemForm.reorder_level || 0), avg_unit_cost: Number(itemForm.avg_unit_cost || 0), supplier: itemForm.supplier || null,
     }).select("id").single();
     if (error) toast.error(error.message); else {
       const qty = Number(itemForm.initial_qty || 0);
       const cost = Number(itemForm.avg_unit_cost || 0);
       if (qty > 0) {
-        await (supabase as any).from("inventory_movements").insert({ item_id: data.id, movement_type: "purchase", qty, unit_cost: cost, notes: "رصيد بداية/شراء أول", created_by: user?.id });
+        await (supabase as any).from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: "رصيد بداية/شراء أول", created_by: user?.id });
       }
-      toast.success("تم إضافة الصنف وتسجيل القيد المحاسبي لو فيه كمية");
-      setItemForm({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "" });
+      await (supabase as any).rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: "إضافة صنف مخزون", _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
+      toast.success("تم إضافة الصنف وربطه بالفرع والتقارير");
+      setItemForm({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: selectedBranchId });
       load();
     }
   }
 
   async function addMovement() {
     if (!moveForm.item_id) return toast.error("اختار صنف");
-    const { error } = await (supabase as any).from("inventory_movements").insert({
-      item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0), unit_cost: Number(moveForm.unit_cost || 0), notes: moveForm.notes || null, created_by: user?.id,
-    });
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل حركة المخزون"); setMoveForm({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" }); load(); }
+    const item = items.find((x) => x.id === moveForm.item_id);
+    const selectedBranchId = item?.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
+    if (!selectedBranchId) return toast.error("تعذر تحديد فرع حركة المخزون");
+    const { data, error } = await (supabase as any).from("inventory_movements").insert({
+      item_id: moveForm.item_id, branch_id: selectedBranchId, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0), unit_cost: Number(moveForm.unit_cost || 0), notes: moveForm.notes || null, created_by: user?.id,
+    }).select("id").single();
+    if (!error && data?.id) await (supabase as any).rpc("record_operation_event", { _process_key: "inventory_movement", _process_name: "تسجيل حركة مخزون", _source_type: "inventory_movement", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: ["usage", "waste"].includes(moveForm.movement_type), _data: { tenant_id: tenantId, item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0) }, _output: { cash_impact: false, journal_required: ["purchase", "adjustment"].includes(moveForm.movement_type), appears_in_report: true } }).then(() => null);
+    if (error) toast.error(error.message); else { toast.success("تم تسجيل حركة المخزون وربطها بالفرع"); setMoveForm({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" }); load(); }
   }
 
   async function addAsset() {
     if (!assetForm.name.trim()) return toast.error("اكتب اسم المعدة");
+    const selectedBranchId = assetForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
+    if (!selectedBranchId) return toast.error("اختار الفرع");
     const { error } = await (supabase as any).from("equipment_assets").insert({
-      name: assetForm.name.trim(), asset_type: assetForm.asset_type, status: assetForm.status, next_maintenance_at: assetForm.next_maintenance_at || null, purchase_cost: Number(assetForm.purchase_cost || 0), notes: assetForm.notes || null,
+      name: assetForm.name.trim(), branch_id: selectedBranchId, asset_type: assetForm.asset_type, status: assetForm.status, next_maintenance_at: assetForm.next_maintenance_at || null, purchase_cost: Number(assetForm.purchase_cost || 0), notes: assetForm.notes || null,
     });
-    if (error) toast.error(error.message); else { toast.success("تم إضافة المعدة"); setAssetForm({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "" }); load(); }
+    if (error) toast.error(error.message); else { toast.success("تم إضافة المعدة وربطها بالفرع"); setAssetForm({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "", branch_id: selectedBranchId }); load(); }
   }
 
   async function updateAsset(id: string, status: string) {
@@ -100,7 +118,7 @@ function InventoryPage() {
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h1 className="text-2xl font-black flex items-center gap-2"><Boxes className="w-7 h-7 text-teal-600" />المخزون والمعدات</h1><p className="text-sm text-muted-foreground">تحكم في الكيماويات، الأكياس، الاستهلاك، وصيانة المعدات.</p></div>
-      <Button variant="outline" onClick={load}>تحديث</Button>
+      <div className="flex gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>تحديث</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
@@ -114,6 +132,7 @@ function InventoryPage() {
 
       <TabsContent value="stock" className="grid lg:grid-cols-[360px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />إضافة صنف</CardTitle></CardHeader><CardContent className="space-y-3">
+          <Field label="الفرع"><Select value={itemForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setItemForm({ ...itemForm, branch_id: v })}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
           <Field label="اسم الصنف"><Input value={itemForm.name} onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} placeholder="مسحوق / أكياس / شماعات" /></Field>
           <div className="grid grid-cols-2 gap-2"><Field label="الوحدة"><Input value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} /></Field><Field label="الكمية التي اشتريتها"><Input type="number" value={itemForm.initial_qty} onChange={(e) => setItemForm({ ...itemForm, initial_qty: e.target.value })} /></Field></div>
           <div className="grid grid-cols-2 gap-2"><Field label="حد إعادة الطلب"><Input type="number" value={itemForm.reorder_level} onChange={(e) => setItemForm({ ...itemForm, reorder_level: e.target.value })} /></Field><Field label="تكلفة الوحدة"><Input type="number" value={itemForm.avg_unit_cost} onChange={(e) => setItemForm({ ...itemForm, avg_unit_cost: e.target.value })} /></Field></div>
@@ -122,27 +141,28 @@ function InventoryPage() {
           <Button onClick={addItem} className="w-full">إضافة وتسجيل</Button>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">الأصناف الحالية</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-3">
-          {items.map((x) => <div key={x.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{x.name}</div>{Number(x.current_qty) <= Number(x.reorder_level) && <Badge variant="destructive"><AlertTriangle className="w-3 h-3 ms-1" />اطلب</Badge>}</div><div className="text-sm text-muted-foreground mt-1">{x.current_qty} {x.unit} · حد الطلب {x.reorder_level}</div><div className="text-xs mt-2">القيمة: <b>{fmtMoney(Number(x.current_qty) * Number(x.avg_unit_cost))}</b></div></div>)}
+          {items.map((x) => <div key={x.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{x.name}</div>{Number(x.current_qty) <= Number(x.reorder_level) && <Badge variant="destructive"><AlertTriangle className="w-3 h-3 ms-1" />اطلب</Badge>}</div><div className="text-sm text-muted-foreground mt-1">{x.current_qty} {x.unit} · حد الطلب {x.reorder_level}</div><div className="text-[11px] text-teal-700">{x.branches?.name ?? "بدون فرع"}</div><div className="text-xs mt-2">القيمة: <b>{fmtMoney(Number(x.current_qty) * Number(x.avg_unit_cost))}</b></div></div>)}
           {!items.length && <Empty />}
         </CardContent></Card>
       </TabsContent>
 
       <TabsContent value="moves" className="grid lg:grid-cols-[360px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base">تسجيل حركة</CardTitle></CardHeader><CardContent className="space-y-3">
-          <Field label="الصنف"><Select value={moveForm.item_id} onValueChange={(v) => setMoveForm({ ...moveForm, item_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{items.map((x) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}</SelectContent></Select></Field>
+          <Field label="الصنف"><Select value={moveForm.item_id} onValueChange={(v) => setMoveForm({ ...moveForm, item_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{items.map((x) => <SelectItem key={x.id} value={x.id}>{x.name}{x.branches?.name ? ` — ${x.branches.name}` : ""}</SelectItem>)}</SelectContent></Select></Field>
           <Field label="نوع الحركة"><Select value={moveForm.movement_type} onValueChange={(v) => setMoveForm({ ...moveForm, movement_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="purchase">شراء/توريد</SelectItem><SelectItem value="usage">استهلاك</SelectItem><SelectItem value="waste">هالك</SelectItem><SelectItem value="return">مرتجع للمخزن</SelectItem><SelectItem value="adjustment">تسوية</SelectItem></SelectContent></Select></Field>
           <div className="grid grid-cols-2 gap-2"><Field label="الكمية"><Input type="number" value={moveForm.qty} onChange={(e) => setMoveForm({ ...moveForm, qty: e.target.value })} /></Field><Field label="تكلفة الوحدة"><Input type="number" value={moveForm.unit_cost} onChange={(e) => setMoveForm({ ...moveForm, unit_cost: e.target.value })} /></Field></div>
           <Textarea placeholder="ملاحظات" value={moveForm.notes} onChange={(e) => setMoveForm({ ...moveForm, notes: e.target.value })} />
           <Button onClick={addMovement} className="w-full">حفظ الحركة</Button>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">آخر الحركات</CardTitle></CardHeader><CardContent className="space-y-2">
-          {moves.map((m) => <div key={m.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><div className="font-bold">{m.inventory_items?.name}</div><div className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("ar-EG")}</div></div><Badge variant={["purchase","return","adjustment"].includes(m.movement_type) ? "secondary" : "destructive"}>{m.movement_type} · {m.qty}</Badge></div>)}
+          {moves.map((m) => <div key={m.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><div className="font-bold">{m.inventory_items?.name}</div><div className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("ar-EG")} · {m.branches?.name ?? "بدون فرع"}</div></div><Badge variant={["purchase","return","adjustment"].includes(m.movement_type) ? "secondary" : "destructive"}>{m.movement_type} · {m.qty}</Badge></div>)}
           {!moves.length && <Empty />}
         </CardContent></Card>
       </TabsContent>
 
       <TabsContent value="equipment" className="grid lg:grid-cols-[360px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Wrench className="w-4 h-4" />إضافة معدة</CardTitle></CardHeader><CardContent className="space-y-3">
+          <Field label="الفرع"><Select value={assetForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setAssetForm({ ...assetForm, branch_id: v })}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
           <Field label="اسم المعدة"><Input value={assetForm.name} onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })} placeholder="غسالة / مجفف / مكواة بخار" /></Field>
           <div className="grid grid-cols-2 gap-2"><Field label="النوع"><Input value={assetForm.asset_type} onChange={(e) => setAssetForm({ ...assetForm, asset_type: e.target.value })} /></Field><Field label="التكلفة"><Input type="number" value={assetForm.purchase_cost} onChange={(e) => setAssetForm({ ...assetForm, purchase_cost: e.target.value })} /></Field></div>
           <Field label="الصيانة القادمة"><Input type="date" value={assetForm.next_maintenance_at} onChange={(e) => setAssetForm({ ...assetForm, next_maintenance_at: e.target.value })} /></Field>
