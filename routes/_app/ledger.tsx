@@ -74,11 +74,27 @@ function LedgerPage() {
   }
   useEffect(() => { load(); }, [canUse, tenantId, month]);
 
+  const monthlyPl = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const j of journals) {
+      for (const l of j.journal_lines ?? []) {
+        const acc = l.chart_accounts;
+        if (!acc || !["revenue", "expense"].includes(acc.account_type)) continue;
+        const key = `${acc.code}-${acc.name}`;
+        const amount = acc.account_type === "revenue" ? Number(l.credit ?? 0) - Number(l.debit ?? 0) : Number(l.debit ?? 0) - Number(l.credit ?? 0);
+        const old = map.get(key) ?? { code: acc.code, name: acc.name, account_type: acc.account_type, amount: 0 };
+        old.amount += amount;
+        map.set(key, old);
+      }
+    }
+    return [...map.values()].sort((a, b) => String(a.code).localeCompare(String(b.code)));
+  }, [journals]);
+
   const pnl = useMemo(() => {
-    const revenue = pl.filter((x) => x.account_type === "revenue").reduce((s, x) => s + Number(x.amount ?? 0), 0);
-    const expense = pl.filter((x) => x.account_type === "expense").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+    const revenue = monthlyPl.filter((x) => x.account_type === "revenue").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+    const expense = monthlyPl.filter((x) => x.account_type === "expense").reduce((s, x) => s + Number(x.amount ?? 0), 0);
     return { revenue, expense, net: revenue - expense };
-  }, [pl]);
+  }, [monthlyPl]);
   const trialTotals = useMemo(() => ({ debit: trial.reduce((s, x) => s + Number(x.total_debit ?? 0), 0), credit: trial.reduce((s, x) => s + Number(x.total_credit ?? 0), 0) }), [trial]);
   const isClosed = periods.some((p) => p.status === "closed" && b.start >= p.period_start && b.end <= p.period_end);
 
@@ -207,7 +223,7 @@ function LedgerPage() {
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />قيد يدوي للمحاسب</CardTitle></CardHeader><CardContent className="space-y-3"><Field label="البيان"><Input value={manual.description} onChange={(e) => setManual({ ...manual, description: e.target.value })} /></Field><div className="grid grid-cols-2 gap-2"><Field label="مدين"><AccountSelect accounts={accounts} value={manual.debit_account} onChange={(v) => setManual({ ...manual, debit_account: v })} /></Field><Field label="دائن"><AccountSelect accounts={accounts} value={manual.credit_account} onChange={(v) => setManual({ ...manual, credit_account: v })} /></Field></div><Field label="المبلغ"><Input type="number" value={manual.amount} onChange={(e) => setManual({ ...manual, amount: e.target.value })} /></Field><Textarea placeholder="مذكرة" value={manual.memo} onChange={(e) => setManual({ ...manual, memo: e.target.value })} /><Button onClick={addManualJournal} disabled={isClosed} className="w-full">حفظ القيد</Button></CardContent></Card></div>
         <Card><CardHeader><CardTitle className="text-base">قيود الشهر</CardTitle></CardHeader><CardContent className="space-y-3">{journals.map((j) => <JournalCard key={j.id} journal={j} />)}{!journals.length && <Empty text="لا توجد قيود لهذا الشهر" />}</CardContent></Card>
       </TabsContent>
-      <TabsContent value="pl"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><FileBarChart className="w-4 h-4" />قائمة الأرباح والخسائر</CardTitle></CardHeader><CardContent className="space-y-2">{pl.map((r) => <Row key={r.code} a={`${r.code} — ${r.name}`} b={r.account_type === "revenue" ? "إيراد" : "مصروف"} c={fmtMoney(r.amount)} danger={r.account_type === "expense"} />)}<div className="border-t pt-3 mt-3 flex justify-between font-black text-lg"><span>صافي الربح</span><span className={pnl.net >= 0 ? "text-emerald-700" : "text-red-700"}>{fmtMoney(pnl.net)}</span></div></CardContent></Card></TabsContent>
+      <TabsContent value="pl"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><FileBarChart className="w-4 h-4" />قائمة الأرباح والخسائر لشهر {month}</CardTitle></CardHeader><CardContent className="space-y-2">{monthlyPl.map((r) => <Row key={r.code} a={`${r.code} — ${r.name}`} b={r.account_type === "revenue" ? "إيراد" : "مصروف"} c={fmtMoney(r.amount)} danger={r.account_type === "expense"} />)}{!monthlyPl.length && <Empty text="لا توجد إيرادات أو مصروفات مرحلة لهذا الشهر" />}<div className="border-t pt-3 mt-3 flex justify-between font-black text-lg"><span>صافي الربح</span><span className={pnl.net >= 0 ? "text-emerald-700" : "text-red-700"}>{fmtMoney(pnl.net)}</span></div></CardContent></Card></TabsContent>
       <TabsContent value="trial"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Scale className="w-4 h-4" />ميزان المراجعة</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/50"><tr><th className="text-start p-3">الحساب</th><th className="text-end p-3">مدين</th><th className="text-end p-3">دائن</th><th className="text-end p-3">الرصيد</th></tr></thead><tbody>{trial.map((r) => <tr key={r.account_id} className="border-t"><td className="p-3 font-bold">{r.code} — {r.name}</td><td className="p-3 text-end">{fmtMoney(r.total_debit)}</td><td className="p-3 text-end">{fmtMoney(r.total_credit)}</td><td className="p-3 text-end font-black">{fmtMoney(r.balance)}</td></tr>)}<tr className="border-t bg-muted/30 font-black"><td className="p-3">الإجمالي</td><td className="p-3 text-end">{fmtMoney(trialTotals.debit)}</td><td className="p-3 text-end">{fmtMoney(trialTotals.credit)}</td><td></td></tr></tbody></table></CardContent></Card></TabsContent>
       <TabsContent value="close"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><LockKeyhole className="w-4 h-4" />الإقفال الشهري</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">بعد مراجعة القيود وميزان المراجعة، اقفل الشهر لمنع أي تعديل غير مقصود.</p><Button variant="destructive" onClick={closeMonth} disabled={isClosed}>إقفال شهر {month}</Button><div className="space-y-2 pt-3">{periods.map((p) => <Row key={p.id} a={`${p.period_start} → ${p.period_end}`} b={p.status === "closed" ? "مقفول" : "مفتوح"} c={p.closed_at ? fmtDate(p.closed_at) : "—"} />)}</div></CardContent></Card></TabsContent>
     </Tabs>}
