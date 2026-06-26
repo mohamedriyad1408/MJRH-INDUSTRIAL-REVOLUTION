@@ -134,6 +134,7 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
                 <SelectItem value="none">بدون محطة</SelectItem>
                 <SelectItem value="reception">الاستقبال</SelectItem>
                 <SelectItem value="cleaning">الغسيل</SelectItem>
+                <SelectItem value="drying_assembly">التجفيف والتجميع</SelectItem>
                 <SelectItem value="ironing">الكي</SelectItem>
                 <SelectItem value="packing">التغليف</SelectItem>
                 <SelectItem value="delivery">التوصيل</SelectItem>
@@ -148,6 +149,7 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
                 <SelectItem value="other">أخرى</SelectItem>
                 <SelectItem value="receptionist">استقبال</SelectItem>
                 <SelectItem value="cleaning_tech">فني غسيل</SelectItem>
+                <SelectItem value="assembly_clerk">مسؤول تجفيف وتجميع</SelectItem>
                 <SelectItem value="ironing_tech">فني كي</SelectItem>
                 <SelectItem value="packing_tech">تغليف</SelectItem>
                 <SelectItem value="driver">مندوب</SelectItem>

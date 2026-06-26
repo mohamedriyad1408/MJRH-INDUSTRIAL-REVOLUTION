@@ -125,7 +125,7 @@ export function AppSidebar() {
   }, [user]);
   const groups = isSuperAdmin ? adminGroups : tenantGroups;
   const isManager = hasRole("owner", "ops_manager", "cs_manager");
-  const stationUrl = employeeStation ? `/stations/${employeeStation}` : null;
+  const stationUrl = employeeStation === "drying_assembly" ? "/stations/drying-assembly" : employeeStation ? `/stations/${employeeStation}` : null;
 
   function isVisible(item: NavItem) {
     if (!isSuperAdmin && hasRole("employee") && !isManager) {

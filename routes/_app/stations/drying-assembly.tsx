@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, Image as ImageIcon, Loader2, PackageCheck, Search, Shirt, Tags, Wind } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle2, Image as ImageIcon, Loader2, PackageCheck, Search, Shirt, Tags, Wind } from "lucide-react";
 
 type Row = {
   id: string; tenant_id: string; branch_id?: string | null; order_id: string; label_code: string; name: string; garment_type: string; service_type: string;
@@ -27,6 +27,7 @@ function DryingAssemblyStation() {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [matches, setMatches] = useState<Record<string, any[]>>({});
 
   async function load() {
     setLoading(true);
@@ -69,6 +70,39 @@ function DryingAssemblyStation() {
       _data: { tenant_id: row.tenant_id, order_id: row.order_id, order_number: row.order_number, label_code: row.label_code, notes: notes[row.id] || null },
       _output: { cash_impact: false, journal_required: false, appears_in_report: true, ...output },
     }).then(() => null);
+  }
+
+
+  async function captureAndSearch(row: Row, file: File | null) {
+    setBusy(row.id);
+    try {
+      if (file) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `orders/${row.order_id}/assembly-search/${row.id}-${Date.now()}.${ext}`;
+        const up = await supabase.storage.from("unit-media").upload(path, file, { upsert: true, contentType: file.type });
+        if (!up.error) {
+          const { data } = supabase.storage.from("unit-media").getPublicUrl(path);
+          await (supabase as any).from("service_units").update({ photo_url: data.publicUrl, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id).then(() => null);
+        }
+      }
+      const { data: all } = await (supabase as any)
+        .from("service_units")
+        .select("id,label_code,name,photo_url,current_stage,label_status,unit_number")
+        .eq("order_id", row.order_id)
+        .not("photo_url", "is", null)
+        .order("unit_number");
+      const ranked = (all ?? []).sort((a: any, b: any) => {
+        const an = String(a.name ?? "") === row.name ? 0 : 1;
+        const bn = String(b.name ?? "") === row.name ? 0 : 1;
+        return an - bn;
+      });
+      setMatches((m) => ({ ...m, [row.id]: ranked }));
+      await recordEvent(row, "assembly_photo_search", "تصوير وبحث عن قطعة في صور الطلب", { photo_search: true });
+      toast.success(ranked.length ? `تم البحث في ${ranked.length} صورة داخل الطلب` : "تم التصوير، ولا توجد صور أخرى داخل الطلب للمقارنة");
+      load();
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function startAssembly(row: Row) {
@@ -128,10 +162,12 @@ function DryingAssemblyStation() {
             <Textarea rows={2} placeholder="ملاحظة التجميع أو مشكلة المارك" value={notes[u.id] ?? u.assembly_notes ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
             <div className="flex flex-wrap gap-2 justify-end">
               <Button size="sm" variant="outline" onClick={() => startAssembly(u)} disabled={busy === u.id}><Search className="w-3 h-3 ms-1" /> بدء مراجعة</Button>
+              <label className="inline-flex"><input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => captureAndSearch(u, e.target.files?.[0] ?? null)} /><Button size="sm" type="button" variant="outline" className="border-cyan-300 text-cyan-700" asChild><span><Camera className="w-3 h-3 ms-1" /> تصوير/بحث</span></Button></label>
               <Button size="sm" variant="outline" className="border-amber-300 text-amber-700" onClick={() => reportLabel(u, "unclear_label")} disabled={busy === u.id}><Tags className="w-3 h-3 ms-1" /> مارك غير واضح</Button>
               <Button size="sm" variant="destructive" onClick={() => reportLabel(u, "missing_label")} disabled={busy === u.id}>بدون مارك</Button>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" onClick={() => completeAssembly(u)} disabled={busy === u.id || u.label_status === "missing_label"}>{busy === u.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <CheckCircle2 className="w-3 h-3 ms-1" />} جاهز للكي</Button>
             </div>
+            {matches[u.id]?.length ? <div className="rounded-2xl border bg-cyan-50 p-2"><div className="text-xs font-black text-cyan-900 mb-2">نتائج البحث داخل صور نفس الطلب</div><div className="grid grid-cols-3 gap-2">{matches[u.id].map((m: any) => <div key={m.id} className="rounded-xl bg-white border p-1 text-center"><img src={m.photo_url} className="h-16 w-full object-cover rounded-lg bg-muted" /><div className="text-[10px] font-bold mt-1 truncate">{m.label_code}</div><div className="text-[10px] text-muted-foreground truncate">{m.name}</div></div>)}</div></div> : null}
           </div>)}
         </CardContent>
       </Card>)}

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-type Station = "reception" | "cleaning" | "ironing" | "packing" | "delivery";
+type Station = "reception" | "cleaning" | "drying_assembly" | "ironing" | "packing" | "delivery";
 
 export function AssignEmployeeDialog({
   open, onOpenChange, orderId, station, onAssigned,
@@ -31,7 +31,7 @@ export function AssignEmployeeDialog({
     // Prefer employees explicitly assigned to this station; fall back to all active employees
     (async () => {
       const byStation = await supabase.from("employees").select("id, full_name, job_role")
-        .eq("is_active", true).eq("station", station).order("full_name");
+        .eq("is_active", true).eq("station", station as any).order("full_name");
       if ((byStation.data ?? []).length) { setEmps(byStation.data as any); return; }
       const all = await supabase.from("employees").select("id, full_name, job_role")
         .eq("is_active", true).order("full_name");
@@ -43,7 +43,7 @@ export function AssignEmployeeDialog({
     if (!empId) { toast.error("اختر موظف"); return; }
     setSaving(true);
     const { error } = await supabase.from("task_assignments").insert({
-      order_id: orderId, station, employee_id: empId, assigned_by: user?.id, notes: notes || null,
+      order_id: orderId, station: station as any, employee_id: empId, assigned_by: user?.id, notes: notes || null,
     });
     setSaving(false);
     if (error) return toast.error(error.message);

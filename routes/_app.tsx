@@ -66,7 +66,8 @@ function AppLayout() {
             if (!allowed.some((x) => path.startsWith(x))) nav({ to: "/orders/new" });
             return;
           }
-          const target = data?.job_role === "driver" ? "/driver" : data?.station ? `/stations/${data.station}` : null;
+          const stationPath = data?.station === "drying_assembly" ? "/stations/drying-assembly" : data?.station ? `/stations/${data.station}` : null;
+          const target = data?.job_role === "driver" ? "/driver" : stationPath;
           if (target && !path.startsWith(target)) nav({ to: target as any });
         });
     }
