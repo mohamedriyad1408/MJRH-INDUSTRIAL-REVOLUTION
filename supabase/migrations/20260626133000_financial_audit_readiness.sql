@@ -55,7 +55,7 @@ SELECT
   o.created_at
 FROM public.orders o
 WHERE o.payment_status <> 'paid'
-  AND o.status NOT IN ('cancelled','draft')
+  AND o.status <> 'cancelled'
   AND COALESCE(o.total,0) > 0
   AND NOT EXISTS (
     SELECT 1 FROM public.journal_entries je
