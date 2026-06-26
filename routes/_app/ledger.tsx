@@ -27,7 +27,7 @@ function boundsFromMonth(month: string) {
 }
 
 function LedgerPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const canUse = hasRole("owner");
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -37,29 +37,42 @@ function LedgerPage() {
   const [trial, setTrial] = useState<any[]>([]);
   const [pl, setPl] = useState<any[]>([]);
   const [manual, setManual] = useState({ description: "", debit_account: "", credit_account: "", amount: "0", memo: "" });
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
+  const [repairing, setRepairing] = useState(false);
   const b = useMemo(() => boundsFromMonth(month), [month]);
 
   async function load() {
     if (!canUse) { setLoading(false); return; }
+    if (!tenantId) {
+      setLoading(false);
+      setLoadErrors(["لم يتم تحديد مغسلة للحساب الحالي. سجل خروج ودخول أو راجع دور المستخدم."]);
+      return;
+    }
     setLoading(true);
+    setLoadErrors([]);
     try {
-      await (supabase as any).rpc("ensure_default_chart_accounts").catch(() => null);
+      const ensureFor = await (supabase as any).rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId });
+      if (ensureFor.error) {
+        const ensure = await (supabase as any).rpc("ensure_default_chart_accounts");
+        if (ensure.error) setLoadErrors((old) => [...old, ensureFor.error.message, ensure.error.message]);
+      }
       const results = await Promise.allSettled([
-        (supabase as any).from("chart_accounts").select("*").eq("is_active", true).order("code"),
-        (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
-        (supabase as any).from("accounting_periods").select("*").order("period_start", { ascending: false }).limit(18),
-        (supabase as any).from("v_trial_balance").select("*").order("code"),
-        (supabase as any).from("v_profit_loss").select("*").order("code"),
+        (supabase as any).from("chart_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("code"),
+        (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").eq("tenant_id", tenantId).gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
+        (supabase as any).from("accounting_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(18),
+        (supabase as any).from("v_trial_balance").select("*").eq("tenant_id", tenantId).order("code"),
+        (supabase as any).from("v_profit_loss").select("*").eq("tenant_id", tenantId).order("code"),
       ]);
       const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
       const a = val(0), j = val(1), p = val(2), t = val(3), profit = val(4);
-      [a, j, p, t, profit].forEach((r: any) => r.error && toast.error(r.error.message ?? "تعذر تحميل جزء من البيانات"));
+      const errs = [a, j, p, t, profit].map((r: any) => r.error?.message).filter(Boolean);
+      if (errs.length) setLoadErrors((old) => [...new Set([...old, ...errs])].slice(0, 8));
       setAccounts(a.data ?? []); setJournals(j.data ?? []); setPeriods(p.data ?? []); setTrial(t.data ?? []); setPl(profit.data ?? []);
     } finally {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, [canUse, month]);
+  useEffect(() => { load(); }, [canUse, tenantId, month]);
 
   const pnl = useMemo(() => {
     const revenue = pl.filter((x) => x.account_type === "revenue").reduce((s, x) => s + Number(x.amount ?? 0), 0);
@@ -70,22 +83,53 @@ function LedgerPage() {
   const isClosed = periods.some((p) => p.status === "closed" && b.start >= p.period_start && b.end <= p.period_end);
 
   async function createJournal(description: string, sourceType: string | null, sourceId: string | null, lines: any[]) {
-    const { error } = await (supabase as any).rpc("create_journal_entry", {
+    if (!tenantId) throw new Error("لم يتم تحديد المغسلة");
+    const forTenant = await (supabase as any).rpc("create_journal_entry_for_tenant", {
+      _tenant_id: tenantId,
       _entry_date: b.end,
       _description: description,
       _source_type: sourceType,
       _source_id: sourceId,
       _lines: lines,
     });
-    if (error) throw error;
+    if (!forTenant.error) return;
+
+    // Fallback for databases before tenant-explicit RPC exists.
+    const legacy = await (supabase as any).rpc("create_journal_entry", {
+      _entry_date: b.end,
+      _description: description,
+      _source_type: sourceType,
+      _source_id: sourceId,
+      _lines: lines,
+    });
+    if (legacy.error) throw new Error(`${forTenant.error.message} | ${legacy.error.message}`);
+  }
+
+  async function repairLedger() {
+    if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
+    setRepairing(true);
+    const errs: string[] = [];
+    try {
+      const base = await (supabase as any).rpc("repair_ledger_basics");
+      if (base.error) {
+        const r1 = await (supabase as any).rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
+        const r2 = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r2.error) errs.push(r2.error.message);
+        const r3 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
+        const r4 = await (supabase as any).rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
+      }
+      if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح أساسيات دفتر القيود والخزنة");
+      await load();
+    } finally {
+      setRepairing(false);
+    }
   }
 
   async function postMonthAutomatically() {
     try {
       if (isClosed) return toast.error("الشهر مقفول ولا يمكن ترحيله");
       const [{ data: orders }, { data: expenses }] = await Promise.all([
-        (supabase as any).from("orders").select("id,total,delivery_fee,payment_status,payment_method,status").neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
-        (supabase as any).from("expenses").select("id,amount,category,status,description").neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
+        (supabase as any).from("orders").select("id,total,delivery_fee,payment_status,payment_method,status").eq("tenant_id", tenantId).neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
+        (supabase as any).from("expenses").select("id,amount,category,status,description").eq("tenant_id", tenantId).neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
       ]);
       const paidRevenue = (orders ?? []).filter((o: any) => o.payment_status === "paid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
       const unpaidRevenue = (orders ?? []).filter((o: any) => o.payment_status !== "paid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
@@ -129,7 +173,7 @@ function LedgerPage() {
 
   async function closeMonth() {
     if (!confirm("إقفال الشهر يمنع إضافة أو تعديل قيود داخل الفترة. متأكد؟")) return;
-    const { error } = await (supabase as any).from("accounting_periods").upsert({ period_start: b.start, period_end: b.end, status: "closed", closed_at: new Date().toISOString() }, { onConflict: "tenant_id,period_start,period_end" });
+    const { error } = await (supabase as any).from("accounting_periods").upsert({ tenant_id: tenantId, period_start: b.start, period_end: b.end, status: "closed", closed_at: new Date().toISOString() }, { onConflict: "tenant_id,period_start,period_end" });
     if (error) toast.error(error.message); else { toast.success("تم إقفال الشهر"); load(); }
   }
 
@@ -148,6 +192,18 @@ function LedgerPage() {
     </div>
     {isClosed && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 font-bold text-amber-800">هذا الشهر مقفول محاسبيًا. لا يمكن إضافة قيود جديدة داخله.</CardContent></Card>}
     <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4 text-sm text-blue-900"><b>تنبيه:</b> لا تستخدم هذه الصفحة في التشغيل اليومي إلا لو أنت فاهم القيود. النظام ينشئ أغلب القيود تلقائيًا من الطلبات، المصروفات، الخزنة، المخزون، والرواتب.</CardContent></Card>
+
+    {!loading && loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
+      <div className="font-black">دفتر القيود لم يُقرأ بشكل كامل، لذلك الأرقام الظاهرة قد تكون ناقصة.</div>
+      {loadErrors.map((e, i) => <div key={i} className="rounded-lg bg-white/80 border border-red-100 px-3 py-2 text-xs break-words">{e}</div>)}
+      <Button size="sm" onClick={repairLedger} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح دفتر القيود الآن</Button>
+    </CardContent></Card>}
+
+    {!loading && !loadErrors.length && accounts.length === 0 && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-900 space-y-2">
+      <div className="font-black">شجرة الحسابات غير ظاهرة لهذه المغسلة.</div>
+      <div>اضغط إصلاح ليتم إنشاء الحسابات الأساسية: الخزنة، الذمم، الإيرادات، المصروفات، الرواتب.</div>
+      <Button size="sm" onClick={repairLedger} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إنشاء شجرة الحسابات</Button>
+    </CardContent></Card>}
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="journals" className="space-y-4">
       <TabsList><TabsTrigger value="journals">القيود</TabsTrigger><TabsTrigger value="pl">الأرباح والخسائر</TabsTrigger><TabsTrigger value="trial">ميزان المراجعة</TabsTrigger><TabsTrigger value="close">الإقفال</TabsTrigger></TabsList>
