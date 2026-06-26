@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
 
       // ============ Owner: إنشاء مستخدم داخل المغسلة ============
       case "createTenantUser": {
-        const { tenantId, email, password, fullName, role, station, jobRole, monthlySalary, commissionPercent } = body;
+        const { tenantId, email, password, fullName, role, station, jobRole, monthlySalary, commissionPercent, branchId } = body;
         await assertTenantOwner(sb, callerId, tenantId);
 
         const { data: created, error } = await sb.auth.admin.createUser({
@@ -129,6 +129,7 @@ Deno.serve(async (req) => {
             role,
             station: station || (role === "courier" ? "delivery" : null),
             job_role: jobRole || (role === "courier" ? "driver" : "other"),
+            branch_id: branchId || null,
             monthly_salary: Number(monthlySalary ?? 0),
             commission_percent: Number(commissionPercent ?? 0),
             is_active: true,

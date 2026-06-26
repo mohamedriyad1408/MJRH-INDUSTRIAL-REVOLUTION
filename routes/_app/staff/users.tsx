@@ -75,7 +75,7 @@ function StaffUsersPage() {
   );
 }
 
-type CreateFn = (args: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier"; station?: string | null; jobRole?: string | null; monthlySalary?: number; commissionPercent?: number }) => Promise<unknown>;
+type CreateFn = (args: { tenantId: string; email: string; password: string; fullName: string; role: "cs_manager" | "ops_manager" | "employee" | "customer" | "courier"; station?: string | null; jobRole?: string | null; monthlySalary?: number; commissionPercent?: number; branchId?: string | null }) => Promise<unknown>;
 
 function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn; onDone: () => void }) {
   const [email, setEmail] = useState("");
@@ -87,10 +87,13 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
   const [monthlySalary, setMonthlySalary] = useState("0");
   const [commissionPercent, setCommissionPercent] = useState("0");
   const [loading, setLoading] = useState(false);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("");
+  useEffect(() => { (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old) => old || list[0]?.id || ""); }); }, [tenantId]);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0) }); toast.success("تم إنشاء المستخدم وربطه بموظف عند الحاجة"); onDone(); }
+    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0), branchId: branchId || null }); toast.success("تم إنشاء المستخدم وربطه بموظف عند الحاجة"); onDone(); }
     catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
     finally { setLoading(false); }
   }
@@ -116,6 +119,13 @@ function NewUserForm({ tenantId, fn, onDone }: { tenantId: string; fn: CreateFn;
       {role !== "customer" && (
         <div className="border rounded-lg p-3 space-y-3">
           <div className="text-sm font-bold">بيانات التشغيل والراتب</div>
+          <div>
+            <Label>الفرع</Label>
+            <Select value={branchId} onValueChange={setBranchId}>
+              <SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger>
+              <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
           <div>
             <Label>المحطة</Label>
             <Select value={station} onValueChange={setStation}>

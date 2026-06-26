@@ -53,8 +53,11 @@ const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ c
 ];
 
 function NewOrderPage() {
-  const { hasRole, user } = useAuth();
+  const { hasRole, user, tenantId } = useAuth();
   const [employeeStation, setEmployeeStation] = useState<string | null>(null);
+  const [employeeBranchId, setEmployeeBranchId] = useState<string | null>(null);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("");
   const canCreate = hasRole("cs_manager", "owner") || employeeStation === "reception";
   const nav = useNavigate();
 
@@ -86,10 +89,11 @@ function NewOrderPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("station,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployeeStation(data?.station ?? null));
+    (supabase as any).from("employees").select("station,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => { setEmployeeStation(data?.station ?? null); setEmployeeBranchId(data?.branch_id ?? null); if (data?.branch_id) setBranchId((old) => old || data.branch_id); });
   }, [user]);
 
   useEffect(() => {
+    if (tenantId) (supabase as any).from("branches").select("id,name,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old) => old || employeeBranchId || list[0]?.id || ""); });
     supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }) => setServices((data ?? []) as Service[]));
     (supabase as any).from("service_areas").select("id,name,area_type,lat,lng,default_delivery_fee,aliases").eq("is_active", true).order("area_type").order("name").then(({ data }: any) => setAreas((data ?? []) as ServiceArea[]));
     supabase.from("app_settings").select("*").limit(1).maybeSingle().then(({ data }) => {
@@ -99,7 +103,7 @@ function NewOrderPage() {
         setUrgentFeeInput(String(data.urgent_service_fee ?? 0));
       }
     });
-  }, []);
+  }, [tenantId, employeeBranchId]);
 
   useEffect(() => {
     if (!customerSearch || customer) { setCustomerMatches([]); return; }
@@ -192,6 +196,7 @@ function NewOrderPage() {
     const effectivePhone = customer?.phone ?? newCustomer.phone;
     if (phoneDigits(effectivePhone).length < 11) { toast.error("رقم الهاتف يجب أن يكون 11 رقم على الأقل"); return; }
     if (!items.length) { toast.error("أضف قطعة أو خدمة واحدة على الأقل"); return; }
+    if (!branchId) { toast.error("اختار الفرع قبل إنشاء الطلب"); return; }
     setSaving(true);
 
     let customerId = customer?.id;
@@ -205,6 +210,7 @@ function NewOrderPage() {
 
     const { data: order, error: oErr } = await (supabase as any).from("orders").insert({
       customer_id: customerId,
+      branch_id: branchId,
       order_type: orderType,
       is_urgent: isUrgent,
       payment_method: paymentMethod as any,
@@ -379,6 +385,10 @@ function NewOrderPage() {
                   <div className="rounded-2xl bg-slate-100 p-3 space-y-3">
                     <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> التشغيل والدفع</div>
                     <div className="grid grid-cols-2 gap-2">
+                      <Select value={branchId} onValueChange={setBranchId}>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder="الفرع" /></SelectTrigger>
+                        <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                      </Select>
                       <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent><SelectItem value="walk_in">داخلي</SelectItem><SelectItem value="delivery">توصيل</SelectItem></SelectContent>

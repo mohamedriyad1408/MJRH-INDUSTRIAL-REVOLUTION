@@ -17,7 +17,7 @@ export const adminApi = {
   createTenant:      (p: { name: string; slug: string; ownerEmail: string; ownerPassword: string; ownerFullName: string; lat?: number | null; lng?: number | null; locationUrl?: string | null; operatingRadiusKm?: number | null }) =>
     call<{ tenant_id: string }>("createTenant", p),
 
-  createTenantUser:  (p: { tenantId: string; email: string; password: string; fullName: string; role: string; station?: string | null; jobRole?: string | null; monthlySalary?: number; commissionPercent?: number }) =>
+  createTenantUser:  (p: { tenantId: string; email: string; password: string; fullName: string; role: string; station?: string | null; jobRole?: string | null; monthlySalary?: number; commissionPercent?: number; branchId?: string | null }) =>
     call<{ user_id: string }>("createTenantUser", p),
 
   listAllUsers:      () =>

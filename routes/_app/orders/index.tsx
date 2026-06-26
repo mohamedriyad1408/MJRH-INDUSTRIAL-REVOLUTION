@@ -18,27 +18,32 @@ export const Route = createFileRoute("/_app/orders/")({
 type Row = {
   id: string; order_number: number; status: string; payment_status: string; payment_verification_status?: string | null; invoice_finalized_at?: string | null;
   total: number; is_urgent: boolean; created_at: string; customer_id: string;
-  customers?: { full_name: string; phone: string } | null;
+  customers?: { full_name: string; phone: string } | null; branch_id?: string | null; branches?: { name: string } | null;
   pieces_count?: number; reclean_count?: number; qc_failed_count?: number; open_pickup?: boolean;
 };
 
 function OrdersPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const canCreate = hasRole("cs_manager", "owner");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [quick, setQuick] = useState("all");
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
 
   async function load() {
     setLoading(true);
     try {
-      const { data, error } = await (supabase as any)
+      if (tenantId) (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+      let q = (supabase as any)
         .from("orders")
-        .select("id, order_number, status, payment_status, payment_verification_status, invoice_finalized_at, total, is_urgent, created_at, customer_id, customers(full_name, phone)")
+        .select("id, order_number, status, payment_status, payment_verification_status, invoice_finalized_at, total, is_urgent, created_at, customer_id, branch_id, customers(full_name, phone), branches(name)")
         .order("created_at", { ascending: false })
         .limit(200);
+      if (branchId !== "all") q = q.eq("branch_id", branchId);
+      const { data, error } = await q;
       if (error) throw error;
       const base = (data ?? []) as any[];
       const ids = base.map((r) => r.id);
@@ -63,7 +68,7 @@ function OrdersPage() {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [tenantId, branchId]);
 
   const filtered = rows.filter((r) => {
     if (status !== "all" && r.status !== status) return false;
@@ -96,6 +101,10 @@ function OrdersPage() {
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="رقم طلب / اسم / تليفون..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
+        <Select value={branchId} onValueChange={setBranchId}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="الفرع" /></SelectTrigger>
+          <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+        </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -144,7 +153,7 @@ function OrdersPage() {
                     </td>
                     <td className="p-3">
                       <div className="font-medium">{r.customers?.full_name ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{r.customers?.phone ?? ""}</div>
+                      <div className="text-xs text-muted-foreground">{r.customers?.phone ?? ""}</div>{r.branches?.name && <div className="text-xs text-teal-600">{r.branches.name}</div>}
                     </td>
                     <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{ORDER_STATUS_AR[r.status] ?? r.status}</Badge>{r.open_pickup && <Badge className="bg-blue-600">استلام مفتوح</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">بلا قطع</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">مرتجع</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">جودة</Badge>}</div></td>
                     <td className="p-3">
