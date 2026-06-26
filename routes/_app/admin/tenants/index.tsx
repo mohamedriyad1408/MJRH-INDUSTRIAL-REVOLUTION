@@ -96,6 +96,8 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
   const [fullName, setFullName] = useState("");
   const [businessType, setBusinessType] = useState("laundry");
   const [locationUrl, setLocationUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [publicUrl, setPublicUrl] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [radius, setRadius] = useState("8");
@@ -115,7 +117,7 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await fn({ name, slug, businessType, ownerEmail: email, ownerPassword: password, ownerFullName: fullName, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, locationUrl: locationUrl || null, operatingRadiusKm: Number(radius || 8) });
+      await fn({ name, slug, businessType, logoUrl: logoUrl || null, publicUrl: publicUrl || null, ownerEmail: email, ownerPassword: password, ownerFullName: fullName, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, locationUrl: locationUrl || null, operatingRadiusKm: Number(radius || 8) });
       toast.success("تم إنشاء المغسلة والمالك");
       onDone();
     } catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
@@ -124,11 +126,17 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <div><Label>اسم النشاط</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+      <div><Label>اسم المغسلة / المشروع</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
       <div><Label>نوع النشاط</Label><Select value={businessType} onValueChange={setBusinessType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="laundry">مغسلة / Laundry</SelectItem><SelectItem value="retail">تجاري / Retail</SelectItem><SelectItem value="manufacturing">صناعي / Manufacturing</SelectItem><SelectItem value="services">خدمات / Services</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground mt-1">النواة واحدة: فروع، خزن، مخزون، عمليات APDO. المغسلة تحصل أيضًا على كتالوج خدمات افتراضي.</p></div>
       <div>
         <Label>الكود (slug — حروف إنجليزية صغيرة وأرقام)</Label>
         <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} required pattern="[a-z0-9\-]+" />
+      </div>
+      <div className="border rounded-lg p-3 space-y-2">
+        <Label>هوية المشروع</Label>
+        <Input placeholder="رابط لوجو المغسلة / المشروع" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
+        <Input placeholder="URL العام للمغسلة / المشروع مثل https://brand.com أو /mybrand" value={publicUrl} onChange={(e) => setPublicUrl(e.target.value)} />
+        {logoUrl && <img src={logoUrl} alt="logo" className="h-14 w-14 rounded-2xl object-cover border" />}
       </div>
       <div className="border rounded-lg p-3 space-y-2">
         <Label>موقع المغسلة ونطاق التشغيل</Label>

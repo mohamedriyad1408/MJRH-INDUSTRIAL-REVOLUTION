@@ -55,10 +55,10 @@ Deno.serve(async (req) => {
       // ============ Super Admin: إنشاء مغسلة جديدة بمالكها ============
       case "createTenant": {
         await assertSuperAdmin(sb, callerId);
-        const { name, slug, ownerEmail, ownerPassword, ownerFullName, lat, lng, locationUrl, operatingRadiusKm, businessType } = body;
+        const { name, slug, ownerEmail, ownerPassword, ownerFullName, lat, lng, locationUrl, operatingRadiusKm, businessType, logoUrl, publicUrl } = body;
         const btype = businessType || "laundry";
 
-        const { data: tenant, error: tErr } = await sb.from("tenants").insert({ name, slug, business_type: btype, industry_profile: { source: "admin", apdo: true }, lat: lat ?? null, lng: lng ?? null, location_url: locationUrl ?? null, operating_radius_km: operatingRadiusKm ?? 8 }).select().single();
+        const { data: tenant, error: tErr } = await sb.from("tenants").insert({ name, slug, business_type: btype, industry_profile: { source: "admin", apdo: true }, logo_url: logoUrl ?? null, public_url: publicUrl ?? null, lat: lat ?? null, lng: lng ?? null, location_url: locationUrl ?? null, operating_radius_km: operatingRadiusKm ?? 8 }).select().single();
         if (tErr) throw new Error(tErr.message);
 
         let ownerId: string;

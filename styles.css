@@ -90,3 +90,27 @@
   .print-area { position: absolute; inset: 0; padding: 12px; }
   .no-print { display: none !important; }
 }
+
+@layer base {
+  body {
+    background:
+      radial-gradient(circle at top right, color-mix(in oklab, var(--primary) 14%, transparent), transparent 34rem),
+      radial-gradient(circle at bottom left, color-mix(in oklab, var(--accent) 20%, transparent), transparent 30rem),
+      linear-gradient(135deg, oklch(0.985 0.015 210), oklch(0.99 0.02 95));
+    min-height: 100vh;
+  }
+}
+@layer components {
+  .joy-card, .rounded-3xl, [class*="rounded-2xl"] {
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .joy-card:hover, .rounded-3xl:hover {
+    transform: translateY(-1px);
+  }
+  main .bg-card, main .border {
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .045);
+  }
+  main h1, main h2, main .font-black {
+    letter-spacing: -0.01em;
+  }
+}
