@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Zap, ArrowLeft, UserPlus } from "lucide-react";
+import { Loader2, Zap, ArrowLeft, UserPlus, PlayCircle, CheckCircle2, Trophy } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
@@ -15,7 +15,7 @@ import { validateOrderMove } from "@/lib/station-workflow";
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
 type Order = {
-  id: string; order_number: number; status: OrderStatus; is_urgent: boolean;
+  id: string; order_number: number; status: OrderStatus; is_urgent: boolean; branch_id?: string | null;
   created_at: string; total: number; notes: string | null;
   customers?: { full_name: string; phone: string } | null;
 };
@@ -39,7 +39,7 @@ export function StationBoard({
     setLoading(true);
     const { data } = await supabase
       .from("orders")
-      .select("id, order_number, status, is_urgent, created_at, total, notes, customers(full_name, phone)")
+      .select("id, order_number, status, is_urgent, branch_id, created_at, total, notes, customers(full_name, phone)")
       .in("status", [incoming, current])
       .order("is_urgent", { ascending: false })
       .order("created_at");
@@ -57,6 +57,8 @@ export function StationBoard({
       order_id: id, from_status: from, to_status: to, changed_by: user?.id,
       notes: `محطة: ${title}`,
     });
+    const movedOrder = rows.find((r) => r.id === id);
+    await (supabase as any).rpc("record_operation_event", { _process_key: "station_move", _process_name: `تحريك طلب في ${title}`, _source_type: "order", _source_id: id, _branch_id: movedOrder?.branch_id ?? null, _cash_account_id: null, _report_bucket: "operations/stations", _requires_notification: false, _data: { from_status: from, to_status: to, station, order_number: movedOrder?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     if (to === "ironing") {
       try {
         const r = await autoAssignIroningPieces(id);
@@ -73,13 +75,31 @@ export function StationBoard({
 
   const queue = rows.filter((r) => r.status === incoming);
   const active = rows.filter((r) => r.status === current);
+  const nextTask = active[0] ?? queue[0] ?? null;
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">{title}</h1>
-        <p className="text-sm text-muted-foreground">قائمة الانتظار: {queue.length} • قيد التنفيذ: {active.length}</p>
+      <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-800 text-white p-5 shadow-xl overflow-hidden relative">
+        <div className="absolute -top-16 -left-14 h-36 w-36 rounded-full bg-teal-300/20 blur-3xl" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div><h1 className="text-2xl font-black flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" />{title}</h1><p className="text-sm text-white/70">قائمة الانتظار: {queue.length} • قيد التنفيذ: {active.length}</p></div>
+          <Badge className="bg-white/15 text-white border-white/20 text-sm px-3 py-1">خطوة بخطوة</Badge>
+        </div>
       </div>
+
+      {!loading && nextTask && <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white shadow-md">
+        <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-xs text-teal-700 font-bold mb-1">مهمتك التالية</div>
+            <div className="font-black text-lg">طلب #{nextTask.order_number} — {nextTask.customers?.full_name ?? "عميل"}</div>
+            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? "ابدأ المعالجة الآن" : `جاهز للتحويل إلى ${ORDER_STATUS_AR[nextStatus]}`}</div>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>فتح الطلب</Link></Button>
+            {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />ابدأ</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />إنهاء وتحويل</Button>)}
+          </div>
+        </CardContent>
+      </Card>}
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -114,12 +134,12 @@ export function StationBoard({
 
 function Column({ title, list, action }: { title: string; list: Order[]; action: (o: Order) => React.ReactNode }) {
   return (
-    <Card>
+    <Card className="bg-white/85 backdrop-blur">
       <CardContent className="p-4 space-y-2">
         <div className="font-bold text-sm mb-2">{title}</div>
         {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">لا توجد طلبات</div>}
         {list.map((o) => (
-          <div key={o.id} className="rounded-lg border p-3 space-y-1">
+          <div key={o.id} className="rounded-2xl border p-3 space-y-2 bg-white/90 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="font-bold">
                 #{o.order_number}{" "}
@@ -129,7 +149,7 @@ function Column({ title, list, action }: { title: string; list: Order[]; action:
             </div>
             <div className="text-sm">{o.customers?.full_name ?? "—"}</div>
             {o.notes && <div className="text-xs text-muted-foreground">{o.notes}</div>}
-            <div className="flex justify-end pt-1">{action(o)}</div>
+            <div className="flex justify-end pt-1 [&_button]:rounded-xl [&_button]:font-bold">{action(o)}</div>
           </div>
         ))}
       </CardContent>
