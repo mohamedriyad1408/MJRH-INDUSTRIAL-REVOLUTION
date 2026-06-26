@@ -44,6 +44,7 @@ function SystemHealthPage() {
   const [apdoError, setApdoError] = useState<string | null>(null);
   const [tenantReady, setTenantReady] = useState<any | null>(null);
   const [financialAuditRows, setFinancialAuditRows] = useState<any[]>([]);
+  const [deliveryBlockedRows, setDeliveryBlockedRows] = useState<any[]>([]);
 
   async function load() {
     if (!canUse) return;
@@ -94,7 +95,7 @@ function SystemHealthPage() {
 
       setTenantReady(tenantHealth.data ?? null);
 
-      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues] = await Promise.all([
+      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, deliveryReadiness] = await Promise.all([
         (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
         (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
         (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
@@ -102,6 +103,7 @@ function SystemHealthPage() {
         (supabase as any).from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
         (supabase as any).from("financial_operation_audit").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
         (supabase as any).from("service_units").select("id,label_code,name,order_id,label_status,orders(order_number)").in("label_status", ["missing_label", "unclear_label"]).limit(20).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        (supabase as any).from("delivery_readiness_audit").select("*").eq("deliverable", false).order("updated_at", { ascending: false }).limit(40).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
       ]);
 
       const activeOrders = orders.data ?? [];
@@ -152,8 +154,10 @@ function SystemHealthPage() {
       setApdoError(apdoMatrix.error?.message ?? null);
       const financialRows = financialAudit.data ?? [];
       setFinancialAuditRows(financialRows.slice(0, 12));
+      const deliveryRows = deliveryReadiness.data ?? [];
+      setDeliveryBlockedRows(deliveryRows.slice(0, 12));
 
-      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, tenantHealth];
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, deliveryReadiness, tenantHealth];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
@@ -171,6 +175,7 @@ function SystemHealthPage() {
         { key: "noPieces", title: "طلبات بلا قطع", count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: "افتح الطلب وسجل القطع", details: noPieceDetails },
         { key: "pickups", title: "استلامات مفتوحة", count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: "وزعها على مندوبين من الخريطة", details: pickupDetails },
         { key: "readyNoDriver", title: "طلبات جاهزة بلا مندوب", count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: "عين مندوب قبل خروج الطلب للتسليم", details: readyNoDriverDetails },
+        { key: "deliveryReadiness", title: "طلبات جاهزة لا تصلح للتسليم", count: deliveryRows.length, okWhenZero: true, severity: deliveryReadiness.error ? "warn" : severityFor(deliveryRows.length, true), href: "/driver", fix: deliveryRows.length ? "هذه الطلبات جاهزة اسميًا لكنها بها مشكلة مارك/QC/مرتجع/مندوب/دفع" : "كل الطلبات الجاهزة صالحة للتسليم", details: deliveryRows.slice(0, 5).map((r: any) => ({ label: `طلب #${r.order_number}`, sub: deliveryIssuesAr(r.issue_codes), href: `/orders/${r.order_id}` })), error: deliveryReadiness.error?.message },
         { key: "reclean", title: "مرتجعات غسيل مفتوحة", count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: "أنه المرتجع من محطة الغسيل", details: recleanDetails },
         { key: "labelIssues", title: "قطع بمشكلة مارك/ليبل", count: labelIssues.data?.length ?? 0, okWhenZero: true, severity: (labelIssues.data?.length ?? 0) ? "danger" : "ok", href: "/stations/drying-assembly", fix: "لا تدخل هذه القطع الكي أو التسليم قبل حل المارك/الليبل", details: (labelIssues.data ?? []).slice(0,5).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status}`, href: "/stations/drying-assembly" })), error: labelIssues.error?.message },
         { key: "qc", title: "مشاكل جودة مفتوحة", count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: "راجع قرار الجودة وتواصل مع العميل عند الحاجة", details: qcDetails },
@@ -309,6 +314,18 @@ function SystemHealthPage() {
       </CardContent>
     </Card>}
 
+
+
+    {!loading && <Card className={deliveryBlockedRows.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
+      <CardHeader><CardTitle className="text-base">جاهزية التسليم الفعلية</CardTitle></CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        {deliveryBlockedRows.length === 0 ? <div className="font-bold text-emerald-800">كل الطلبات الجاهزة تصلح للتسليم فعليًا ✅</div> : <>
+          <div className="font-bold text-red-900">طلبات جاهزة اسميًا لكنها ممنوعة من الخروج:</div>
+          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">طلب #{r.order_number}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">قطع {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">مرتجع {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">غير مدفوع</Badge>}</div></div></Link>)}</div>
+        </>}
+      </CardContent>
+    </Card>}
+
     {!loading && <Card className={apdoRows.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
       <CardHeader><CardTitle className="text-base">Actor → Process → Data → Output</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
@@ -354,6 +371,11 @@ function SystemHealthPage() {
   </div>;
 }
 
+function deliveryIssuesAr(codes: string[] = []) {
+  const m: Record<string,string> = { no_units: "لا توجد قطع", reclean_open: "مرتجع مفتوح", label_issue: "مشكلة مارك/ليبل", qc_missing: "قطع غير معتمدة QC", no_driver: "بلا مندوب", unpaid: "غير مدفوع" };
+  return codes.map((c) => m[c] ?? c).join("، ") || "غير جاهز";
+}
+
 const healthGroups = [
   { key: "readiness", title: "١) جاهزية التشغيل" },
   { key: "finance", title: "٢) الماليات والخزن" },
@@ -366,7 +388,7 @@ function groupForCheck(key: string) {
   if (["tenantReady", "settings", "employees", "services", "customers"].includes(key)) return "readiness";
   if (["cash", "chart", "cashBalanceIntegrity", "journal", "manualNoJournal", "cashClosing", "oldPayables", "financialAudit"].includes(key)) return "finance";
   if (["noPieces", "stuckOrders", "invoice"].includes(key)) return "operations";
-  if (["pickups", "readyNoDriver", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
+  if (["pickups", "readyNoDriver", "deliveryReadiness", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
   if (["reclean", "qc", "labelIssues", "unpaid", "proof"].includes(key)) return "quality";
   return "apdo";
 }
