@@ -40,6 +40,8 @@ function SystemHealthPage() {
   const [fixingKey, setFixingKey] = useState<string | null>(null);
   const [checks, setChecks] = useState<Check[]>([]);
   const [diagnostics, setDiagnostics] = useState<string[]>([]);
+  const [apdoRows, setApdoRows] = useState<any[]>([]);
+  const [apdoError, setApdoError] = useState<string | null>(null);
 
   async function load() {
     if (!canUse) return;
@@ -87,11 +89,12 @@ function SystemHealthPage() {
         (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
       ]);
 
-      const [cashHealth, journalEntries, manualCashTx, manualCashJournals] = await Promise.all([
+      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix] = await Promise.all([
         (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
         (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
         (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
         (supabase as any).from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
+        (supabase as any).from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
       ]);
 
       const activeOrders = orders.data ?? [];
@@ -136,7 +139,12 @@ function SystemHealthPage() {
         href: "/accounting",
       }));
 
-      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals];
+      const apdoData = apdoMatrix.data ?? [];
+      const apdoIncomplete = apdoData.filter((r: any) => r.branch_answer !== "answered" || r.cash_answer === "missing_cash_account" || r.journal_answer === "missing_journal" || r.report_answer !== "answered" || r.notification_answer === "missing_notification");
+      setApdoRows(apdoIncomplete.slice(0, 12));
+      setApdoError(apdoMatrix.error?.message ?? null);
+
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
@@ -164,6 +172,7 @@ function SystemHealthPage() {
         { key: "cashClosing", title: "إقفال كل خزن اليوم", count: closingToday.count ?? 0, severity: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? "ok" : "warn", href: "/cash-closing", fix: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? `تم إقفال كل الخزن اليوم (${closingToday.count}/${activeCashForClosing.count})` : `المقفول ${closingToday.count ?? 0} من ${activeCashForClosing.count ?? 0}. افتح إقفال الخزن واقفل الكل في حركة واحدة` },
         { key: "oldPayables", title: "مصروفات آجلة قديمة", count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: "راجع المصروفات الآجلة القديمة وادفعها أو ألغيها بسبب", details: oldPayablesDetails },
         { key: "stuckOrders", title: "طلبات واقفة أكثر من يوم", count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: "افتح الطلب لمعرفة سبب التوقف والخطوة التالية", details: stuckOrderDetails },
+        { key: "apdo", title: "اكتمال APDO للعمليات", count: apdoIncomplete.length, okWhenZero: true, severity: apdoMatrix.error ? "warn" : severityFor(apdoIncomplete.length, true), href: "/system-health", fix: apdoMatrix.error ? "طبّق migration الخاص بـ APDO حتى تظهر مصفوفة الإجابات" : (apdoIncomplete.length ? "فيه عمليات لا تجيب على الفرع/الخزنة/القيد/التقرير/الإشعار بالكامل" : "كل العمليات المسجلة تجيب على الأسئلة الخمسة"), details: apdoIncomplete.slice(0, 5).map((r: any) => ({ label: r.process_name, sub: `${r.branch_answer} · ${r.cash_answer} · ${r.journal_answer} · ${r.report_answer} · ${r.notification_answer}` })), error: apdoMatrix.error?.message },
       ];
       setChecks(next);
     } finally {
@@ -258,6 +267,28 @@ function SystemHealthPage() {
       <Kpi title="بنود الفحص" value={checks.length} tone="ok" />
     </div>
 
+
+
+    {!loading && <Card className={apdoRows.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
+      <CardHeader><CardTitle className="text-base">Actor → Process → Data → Output</CardTitle></CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {apdoError ? <div className="text-amber-800">لم يتم تفعيل مصفوفة APDO بعد أو لم تُطبق الـ migration: {apdoError}</div> : apdoRows.length === 0 ? <div className="font-bold text-emerald-800">كل العمليات المسجلة مكتملة الإجابات الخمسة ✅</div> : <>
+          <div className="font-bold text-amber-900">عمليات تحتاج استكمال ربط:</div>
+          <div className="grid md:grid-cols-2 gap-2">{apdoRows.map((r) => <div key={r.id} className="rounded-xl border bg-white/70 p-3 text-xs">
+            <div className="font-black">{r.process_name}</div>
+            <div className="text-muted-foreground mt-1">{new Date(r.created_at).toLocaleString("ar-EG")} · {r.branch_name ?? "بلا فرع"}</div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              <Badge variant={r.branch_answer === "answered" ? "secondary" : "destructive"}>فرع: {answerAr(r.branch_answer)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.cash_answer) ? "secondary" : "destructive"}>خزنة: {answerAr(r.cash_answer)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>قيد: {answerAr(r.journal_answer)}</Badge>
+              <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>تقرير: {answerAr(r.report_answer)}</Badge>
+              <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>إشعار: {answerAr(r.notification_answer)}</Badge>
+            </div>
+          </div>)}</div>
+        </>}
+      </CardContent>
+    </Card>}
+
     {diagnostics.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
       <div className="font-black">فيه استعلامات فشلت أثناء الفحص، لذلك أي رقم ظاهر ممكن يكون غير دقيق:</div>
       {diagnostics.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{d}</div>)}
@@ -286,6 +317,10 @@ function SystemHealthPage() {
       })}
     </div>}
   </div>;
+}
+
+function answerAr(s: string) {
+  return ({ answered: "مكتمل", missing_branch: "ناقص", missing_cash_account: "ناقص", missing_journal: "ناقص", missing_report_bucket: "ناقص", missing_notification: "ناقص", not_applicable: "لا ينطبق", not_required: "غير مطلوب" } as Record<string, string>)[s] ?? s;
 }
 
 function Kpi({ title, value, tone }: { title: string; value: number; tone: "ok" | "warn" | "danger" }) {
