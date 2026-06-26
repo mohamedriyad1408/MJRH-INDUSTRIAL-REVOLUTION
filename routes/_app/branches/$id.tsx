@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Building2, Banknote, Receipt, Users, ClipboardList, AlertTriangle } from "lucide-react";
 
-// @ts-expect-error routeTree is generated during Vite build after TypeScript in this project
 export const Route = createFileRoute("/_app/branches/$id")({
   head: () => ({ meta: [{ title: "شاشة الفرع" }] }),
   component: BranchScreen,
