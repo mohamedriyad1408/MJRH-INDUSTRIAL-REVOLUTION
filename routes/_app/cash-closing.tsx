@@ -9,116 +9,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { LockKeyhole, Loader2, Calculator, RefreshCw, Plus } from "lucide-react";
+import { LockKeyhole, Loader2, Calculator, RefreshCw, Plus, Banknote } from "lucide-react";
 
 export const Route = createFileRoute("/_app/cash-closing")({
-  head: () => ({ meta: [{ title: "إقفال الخزنة اليومي" }] }),
+  head: () => ({ meta: [{ title: "إقفال الخزائن" }] }),
   component: CashClosingPage,
 });
+
+type CashRow = {
+  account: any;
+  opening: number;
+  cashIn: number;
+  cashOut: number;
+  transferIn: number;
+  transferOut: number;
+  operatingIn: number;
+  operatingOut: number;
+  expected: number;
+  counted: number;
+  diff: number;
+  tx: any[];
+};
+
+function effectOf(t: any) {
+  return t.status === "posted" ? (t.direction === "in" ? Number(t.amount ?? 0) : -Number(t.amount ?? 0)) : 0;
+}
 
 function CashClosingPage() {
   const { hasRole, user, tenantId } = useAuth();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [repairing, setRepairing] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [accountId, setAccountId] = useState("");
-  const [tx, setTx] = useState<any[]>([]);
+  const [dayTx, setDayTx] = useState<any[]>([]);
+  const [afterTx, setAfterTx] = useState<any[]>([]);
   const [closings, setClosings] = useState<any[]>([]);
-  const [counted, setCounted] = useState("0");
+  const [countedMap, setCountedMap] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [loadErrors, setLoadErrors] = useState<string[]>([]);
-  const [repairing, setRepairing] = useState(false);
-
-  async function load() {
-    if (!canUse) { setLoading(false); return; }
-    if (!tenantId) {
-      setLoading(false);
-      setLoadErrors(["لم يتم تحديد مغسلة للحساب الحالي. سجل خروج ودخول أو راجع دور المستخدم."]);
-      return;
-    }
-    setLoading(true);
-    setLoadErrors([]);
-    try {
-      const errs: string[] = [];
-      const ensureFor = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId });
-      if (ensureFor.error) {
-        errs.push(ensureFor.error.message);
-        const legacy = await (supabase as any).rpc("ensure_default_cash_account");
-        if (legacy.error) errs.push(legacy.error.message);
-      }
-
-      let { data: acc, error: accErr } = await (supabase as any)
-        .from("cash_accounts")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .eq("is_active", true)
-        .order("created_at");
-
-      if (accErr) errs.push(accErr.message);
-      if ((!acc || acc.length === 0) && tenantId) {
-        const ins = await (supabase as any).from("cash_accounts").insert({
-          tenant_id: tenantId,
-          name: "الخزنة الرئيسية",
-          account_type: "cash",
-          opening_balance: 0,
-          current_balance: 0,
-          is_active: true,
-        }).select("*").single();
-        if (!ins.error && ins.data) acc = [ins.data];
-        else if (ins.error) errs.push(ins.error.message);
-      }
-
-      const safeAccounts = acc ?? [];
-      const first = safeAccounts.some((a: any) => a.id === accountId) ? accountId : safeAccounts[0]?.id || "";
-      setAccounts(safeAccounts);
-      if (first !== accountId) setAccountId(first);
-
-      if (!first) {
-        setTx([]); setClosings([]);
-        if (errs.length) setLoadErrors([...new Set(errs)].slice(0, 6));
-        return;
-      }
-
-      const from = new Date(date + "T00:00:00").toISOString();
-      const to = new Date(date + "T23:59:59").toISOString();
-      const [t, c] = await Promise.all([
-        (supabase as any).from("cash_transactions")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .eq("cash_account_id", first)
-          .eq("status", "posted")
-          .gte("happened_at", from)
-          .lte("happened_at", to)
-          .order("happened_at", { ascending: false }),
-        (supabase as any).from("daily_cash_closings")
-          .select("*,cash_accounts(name)")
-          .eq("tenant_id", tenantId)
-          .eq("cash_account_id", first)
-          .order("closing_date", { ascending: false })
-          .limit(30),
-      ]);
-      if (t.error) errs.push(t.error.message);
-      if (c.error) errs.push(c.error.message);
-      setTx(t.data ?? []); setClosings(c.data ?? []);
-      if (errs.length) setLoadErrors([...new Set(errs)].slice(0, 6));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => { load(); }, [canUse, date, accountId]);
-
-  const totals = useMemo(() => {
-    const cashIn = tx.filter((x) => x.direction === "in").reduce((s, x) => s + Number(x.amount), 0);
-    const cashOut = tx.filter((x) => x.direction === "out").reduce((s, x) => s + Number(x.amount), 0);
-    const acc = accounts.find((a) => a.id === accountId);
-    const expected = Number(acc?.current_balance ?? 0);
-    const opening = expected - cashIn + cashOut;
-    return { cashIn, cashOut, opening, expected, diff: Number(counted || 0) - expected };
-  }, [tx, accounts, accountId, counted]);
 
   async function repairCashClosing() {
     if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
@@ -131,110 +62,202 @@ function CashClosingPage() {
         const r2 = await (supabase as any).rpc("repair_cash_account_balances"); if (r2.error) errs.push(r2.error.message);
         const r3 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
       }
-      if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح وتجهيز الخزنة للإقفال");
+      if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم تجهيز الخزن للإقفال");
       await load();
     } finally {
       setRepairing(false);
     }
   }
 
-  async function closeDay() {
-    if (!accountId) return toast.error("لا توجد خزنة. اضغط تحديث وسيقوم النظام بإنشاء الخزنة الرئيسية.");
-    if (totals.diff !== 0 && notes.trim().length < 3) return toast.error("يوجد فرق في الخزنة. اكتب سبب الفرق قبل الإقفال.");
-    const acc = accounts.find((a) => a.id === accountId);
-    const { error } = await (supabase as any).from("daily_cash_closings").upsert({
-      cash_account_id: accountId,
-      closing_date: date,
-      tenant_id: tenantId,
-      opening_balance: totals.opening,
-      cash_in: totals.cashIn,
-      cash_out: totals.cashOut,
-      expected_balance: totals.expected,
-      counted_balance: Number(counted || 0),
-      difference: totals.diff,
-      status: "closed",
-      notes: notes || null,
-      closed_by: user?.id,
-      closed_at: new Date().toISOString(),
-    }, { onConflict: "tenant_id,cash_account_id,closing_date" });
-    if (error) return toast.error(error.message);
+  async function load() {
+    if (!canUse) { setLoading(false); return; }
+    if (!tenantId) {
+      setLoading(false);
+      setLoadErrors(["لم يتم تحديد مغسلة للحساب الحالي. سجل خروج ودخول أو راجع دور المستخدم."]);
+      return;
+    }
+    setLoading(true);
+    setLoadErrors([]);
+    try {
+      const errs: string[] = [];
+      const ensure = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId });
+      if (ensure.error) errs.push(ensure.error.message);
 
-    const dayStart = new Date(date + "T00:00:00").toISOString();
-    const dayEnd = new Date(date + "T23:59:59").toISOString();
-    const [ordersToday, deliveredToday, reclean, qcIssues, unpaidReady, invoiceReview] = await Promise.all([
-      (supabase as any).from("orders").select("id,total,status", { count: "exact" }).eq("tenant_id", tenantId).gte("created_at", dayStart).lte("created_at", dayEnd),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "delivered").gte("updated_at", dayStart).lte("updated_at", dayEnd),
-      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("needs_reclean", true),
-      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("current_stage", "qc_failed"),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
-    ]);
-    const dayOrders = ordersToday.data ?? [];
-    const dayRevenue = dayOrders.reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
-    const active = dayOrders.filter((o: any) => !["delivered", "cancelled"].includes(o.status)).length;
+      const from = new Date(date + "T00:00:00").toISOString();
+      const to = new Date(date + "T23:59:59").toISOString();
+      const [acc, tx, future, close] = await Promise.all([
+        (supabase as any).from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("created_at"),
+        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).eq("status", "posted").gte("happened_at", from).lte("happened_at", to).order("happened_at", { ascending: false }),
+        (supabase as any).from("cash_transactions").select("id,cash_account_id,direction,amount,status,happened_at").eq("tenant_id", tenantId).eq("status", "posted").gt("happened_at", to),
+        (supabase as any).from("daily_cash_closings").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("closing_date", { ascending: false }).limit(40),
+      ]);
+      [acc, tx, future, close].forEach((r: any) => r.error && errs.push(r.error.message));
+      setAccounts(acc.data ?? []);
+      setDayTx(tx.data ?? []);
+      setAfterTx(future.data ?? []);
+      setClosings(close.data ?? []);
+      if (errs.length) setLoadErrors([...new Set(errs)].slice(0, 8));
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(); }, [canUse, tenantId, date]);
 
-    const body = [
-      `تقرير نهاية اليوم وإقفال الخزنة`,
-      `الخزنة: ${acc?.name ?? "خزنة"}`,
-      `اليوم: ${date}`,
-      "",
-      "الخزنة:",
-      `- داخل اليوم: ${fmtMoney(totals.cashIn)}`,
-      `- خارج اليوم: ${fmtMoney(totals.cashOut)}`,
-      `- الرصيد المتوقع: ${fmtMoney(totals.expected)}`,
-      `- النقدية الموجودة فعليًا: ${fmtMoney(Number(counted || 0))}`,
-      `- الفرق: ${fmtMoney(totals.diff)}`,
-      notes ? `- سبب الفرق: ${notes}` : null,
-      "",
-      "الحركة:",
-      `- طلبات اليوم: ${ordersToday.count ?? dayOrders.length}`,
-      `- تم تسليمها اليوم: ${deliveredToday.count ?? 0}`,
-      `- طلبات نشطة من طلبات اليوم: ${active}`,
-      `- إيراد اليوم: ${fmtMoney(dayRevenue)}`,
-      "",
-      "المتابعات المفتوحة:",
-      `- مرتجعات غسيل: ${reclean.count ?? 0}`,
-      `- مشاكل جودة: ${qcIssues.count ?? 0}`,
-      `- جاهز غير مدفوع: ${unpaidReady.count ?? 0}`,
-      `- فواتير تحتاج اعتماد: ${invoiceReview.count ?? 0}`,
-    ].filter(Boolean).join("\n");
+  const rows: CashRow[] = useMemo(() => {
+    return accounts.map((account) => {
+      const tx = dayTx.filter((t) => t.cash_account_id === account.id);
+      const futureEffect = afterTx.filter((t) => t.cash_account_id === account.id).reduce((s, t) => s + effectOf(t), 0);
+      const expected = Number(account.current_balance ?? 0) - futureEffect;
+      const cashIn = tx.filter((x) => x.direction === "in").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+      const cashOut = tx.filter((x) => x.direction === "out").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+      const transferIn = tx.filter((x) => x.direction === "in" && x.source_type === "cash_transfer").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+      const transferOut = tx.filter((x) => x.direction === "out" && x.source_type === "cash_transfer").reduce((s, x) => s + Number(x.amount ?? 0), 0);
+      const operatingIn = cashIn - transferIn;
+      const operatingOut = cashOut - transferOut;
+      const opening = expected - cashIn + cashOut;
+      const counted = countedMap[account.id] === undefined ? expected : Number(countedMap[account.id] || 0);
+      return { account, opening, cashIn, cashOut, transferIn, transferOut, operatingIn, operatingOut, expected, counted, diff: counted - expected, tx };
+    });
+  }, [accounts, dayTx, afterTx, countedMap]);
 
-    await (supabase as any).from("app_notifications").insert({
-      tenant_id: tenantId,
-      audience: "owner",
-      title: totals.diff !== 0 ? "تقرير نهاية اليوم - فرق خزنة" : "تقرير نهاية اليوم",
-      body,
-      href: "/today",
-      tone: totals.diff !== 0 ? "warning" : (active || (reclean.count ?? 0) || (qcIssues.count ?? 0) ? "warning" : "success"),
-    }).then(() => null);
+  useEffect(() => {
+    if (!rows.length) return;
+    setCountedMap((old) => {
+      const next = { ...old };
+      for (const r of rows) if (next[r.account.id] === undefined) next[r.account.id] = String(r.expected);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accounts.length, dayTx.length, afterTx.length]);
 
-    toast.success("تم إقفال الخزنة وحفظ تقرير في التنبيهات");
-    setNotes("");
-    load();
+  const totals = useMemo(() => ({
+    opening: rows.reduce((s, r) => s + r.opening, 0),
+    operatingIn: rows.reduce((s, r) => s + r.operatingIn, 0),
+    operatingOut: rows.reduce((s, r) => s + r.operatingOut, 0),
+    transferIn: rows.reduce((s, r) => s + r.transferIn, 0),
+    transferOut: rows.reduce((s, r) => s + r.transferOut, 0),
+    expected: rows.reduce((s, r) => s + r.expected, 0),
+    counted: rows.reduce((s, r) => s + r.counted, 0),
+    diff: rows.reduce((s, r) => s + r.diff, 0),
+  }), [rows]);
+
+  function fillExpected() {
+    const next: Record<string, string> = {};
+    rows.forEach((r) => { next[r.account.id] = String(r.expected); });
+    setCountedMap(next);
+    toast.success("تم ملء النقدية الفعلية بالرصيد المتوقع لكل الخزن");
   }
 
-  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">إقفال الخزنة للمالك ومدير التشغيل فقط.</CardContent></Card>;
+  async function closeAllSafes() {
+    if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
+    if (!rows.length) return toast.error("لا توجد خزائن لإقفالها");
+    const hasDiff = rows.some((r) => Math.abs(r.diff) >= 0.01);
+    if (hasDiff && notes.trim().length < 3) return toast.error("يوجد فرق في خزنة أو أكثر. اكتب سبب الفرق قبل الإقفال.");
+    setSaving(true);
+    try {
+      const errs: string[] = [];
+      for (const r of rows) {
+        const { error } = await (supabase as any).from("daily_cash_closings").upsert({
+          tenant_id: tenantId,
+          cash_account_id: r.account.id,
+          closing_date: date,
+          opening_balance: r.opening,
+          cash_in: r.cashIn,
+          cash_out: r.cashOut,
+          expected_balance: r.expected,
+          counted_balance: r.counted,
+          difference: r.diff,
+          status: "closed",
+          notes: notes || null,
+          closed_by: user?.id,
+          closed_at: new Date().toISOString(),
+        }, { onConflict: "tenant_id,cash_account_id,closing_date" });
+        if (error) errs.push(`${r.account.name}: ${error.message}`);
+      }
+      if (errs.length) return toast.error(errs.join(" | "));
+
+      const body = [
+        "تقرير إقفال كل الخزن",
+        `اليوم: ${date}`,
+        `دخل تشغيل: ${fmtMoney(totals.operatingIn)}`,
+        `خرج تشغيل: ${fmtMoney(totals.operatingOut)}`,
+        `تحويلات داخلية: داخل ${fmtMoney(totals.transferIn)} / خارج ${fmtMoney(totals.transferOut)}`,
+        `الرصيد المتوقع: ${fmtMoney(totals.expected)}`,
+        `النقدية الفعلية: ${fmtMoney(totals.counted)}`,
+        `إجمالي الفرق: ${fmtMoney(totals.diff)}`,
+        notes ? `سبب الفرق: ${notes}` : null,
+        "",
+        ...rows.map((r) => `- ${r.account.name}: متوقع ${fmtMoney(r.expected)} / فعلي ${fmtMoney(r.counted)} / فرق ${fmtMoney(r.diff)}`),
+      ].filter(Boolean).join("\n");
+
+      await (supabase as any).from("app_notifications").insert({
+        tenant_id: tenantId,
+        audience: "owner",
+        title: Math.abs(totals.diff) >= 0.01 ? "إقفال الخزن - يوجد فرق" : "إقفال الخزن اليومي",
+        body,
+        href: "/cash-closing",
+        tone: Math.abs(totals.diff) >= 0.01 ? "warning" : "success",
+      }).then(() => null);
+
+      toast.success("تم إقفال كل الخزن في حركة واحدة");
+      setNotes("");
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">إقفال الخزن للمالك ومدير التشغيل فقط.</CardContent></Card>;
+
   return <div className="space-y-5">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-black flex items-center gap-2"><LockKeyhole className="w-7 h-7 text-teal-600" />إقفال الخزنة اليومي</h1><p className="text-sm text-muted-foreground">آخر اليوم: اختار الخزنة، اكتب النقدية الموجودة فعليًا، والنظام يحسب الفرق.</p></div><div className="flex gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح الخزنة</Button></div></div>
-    <div className="grid md:grid-cols-3 gap-3"><div><Label>اليوم</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div><div><Label>الخزنة</Label><Select value={accountId} onValueChange={setAccountId}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {fmtMoney(a.current_balance)}</SelectItem>)}</SelectContent></Select></div><div><Label>النقدية الموجودة فعليًا</Label><Input type="number" value={counted} onChange={(e) => setCounted(e.target.value)} /></div></div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 className="text-2xl font-black flex items-center gap-2"><LockKeyhole className="w-7 h-7 text-teal-600" />إقفال الخزن اليومي</h1>
+        <p className="text-sm text-muted-foreground">اكتب النقدية الفعلية لكل خزنة، ثم اقفل كل الخزن بضغطة واحدة. التحويلات الداخلية تظهر منفصلة حتى لا تلخبط دخل/خرج التشغيل.</p>
+      </div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح</Button></div>
+    </div>
 
-    {!loading && loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
-      <div className="font-black">إقفال الخزنة لم يقرأ البيانات بشكل كامل، لذلك الأصفار الحالية قد تكون غير صحيحة.</div>
+    <div className="grid md:grid-cols-[240px_auto] gap-3 items-end">
+      <div><Label>اليوم</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+      <div className="flex flex-wrap gap-2"><Button onClick={fillExpected} variant="outline">ملء المتوقع كفعلي</Button><Button onClick={closeAllSafes} disabled={saving || !rows.length}>{saving ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Calculator className="w-4 h-4 ms-1" />}إقفال كل الخزن</Button></div>
+    </div>
+
+    {loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
+      <div className="font-black">لم يتم قراءة الإقفال بشكل كامل؛ لا تعتمد على الأرقام قبل الإصلاح.</div>
       {loadErrors.map((e, i) => <div key={i} className="rounded-lg bg-white/80 border border-red-100 px-3 py-2 text-xs break-words">{e}</div>)}
-      <Button size="sm" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح وقراءة الخزنة الآن</Button>
+      <Button size="sm" onClick={repairCashClosing} disabled={repairing}>إصلاح وقراءة الخزن</Button>
     </CardContent></Card>}
 
-    {!loading && accounts.length === 0 && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-900 space-y-2">
-      <div className="font-black">لا توجد خزنة مقروءة لهذه المغسلة.</div>
-      <div>اضغط الزر التالي لإنشاء الخزنة الرئيسية ثم أعد الإقفال.</div>
-      <Button size="sm" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Plus className="w-4 h-4 ms-1" />}إنشاء/إصلاح الخزنة الرئيسية</Button>
-    </CardContent></Card>}
+    {!loading && rows.length === 0 && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-900 space-y-2"><div className="font-black">لا توجد خزائن مقروءة.</div><Button size="sm" onClick={repairCashClosing}><Plus className="w-4 h-4 ms-1" />إنشاء الخزنة الرئيسية</Button></CardContent></Card>}
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <>
-      <div className="grid md:grid-cols-5 gap-3"><Kpi label="بداية اليوم" value={fmtMoney(totals.opening)} /><Kpi label="داخل اليوم" value={fmtMoney(totals.cashIn)} /><Kpi label="خارج اليوم" value={fmtMoney(totals.cashOut)} /><Kpi label="الرصيد المتوقع" value={fmtMoney(totals.expected)} /><Kpi label="الفرق" value={fmtMoney(totals.diff)} warn={totals.diff !== 0} /></div>
-      <div className="grid lg:grid-cols-[1fr_380px] gap-4"><Card><CardHeader><CardTitle className="text-base">حركات اليوم</CardTitle></CardHeader><CardContent className="space-y-2">{tx.map((t) => <div key={t.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{t.description}</b><div className="text-xs text-muted-foreground">{fmtDate(t.happened_at)}</div></div><Badge variant={t.direction === "out" ? "destructive" : "secondary"}>{t.direction === "in" ? "+" : "-"} {fmtMoney(t.amount)}</Badge></div>)}{!tx.length && <div className="p-8 text-center text-muted-foreground">لا توجد حركات اليوم</div>}</CardContent></Card>
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Calculator className="w-4 h-4" />إقفال</CardTitle></CardHeader><CardContent className="space-y-3"><Textarea placeholder="سبب الفرق إن وجد" value={notes} onChange={(e) => setNotes(e.target.value)} /><Button onClick={closeDay} className="w-full">إقفال اليوم</Button><div className="pt-3 space-y-2">{closings.map((c) => <div key={c.id} className="rounded-xl border p-3 text-xs"><div className="font-bold">{c.cash_accounts?.name} — {c.closing_date}</div><div>فرق: <b>{fmtMoney(c.difference)}</b></div></div>)}</div></CardContent></Card></div>
+      <div className="grid md:grid-cols-4 gap-3">
+        <Kpi label="دخل تشغيل اليوم" value={fmtMoney(totals.operatingIn)} />
+        <Kpi label="خرج تشغيل اليوم" value={fmtMoney(totals.operatingOut)} warn={totals.operatingOut > 0} />
+        <Kpi label="الرصيد المتوقع" value={fmtMoney(totals.expected)} />
+        <Kpi label="إجمالي الفرق" value={fmtMoney(totals.diff)} warn={Math.abs(totals.diff) >= 0.01} />
+      </div>
+
+      {(totals.transferIn || totals.transferOut) ? <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4 text-sm text-blue-900"><b>تحويلات داخلية اليوم:</b> داخل {fmtMoney(totals.transferIn)} / خارج {fmtMoney(totals.transferOut)} — لا تعتبر دخل أو مصروف، فقط نقل بين الخزن.</CardContent></Card> : null}
+
+      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Banknote className="w-4 h-4" />النقدية الفعلية لكل خزنة</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+        {rows.map((r) => <div key={r.account.id} className={`rounded-2xl border p-4 space-y-3 ${Math.abs(r.diff) >= 0.01 ? "border-amber-300 bg-amber-50" : ""}`}>
+          <div className="flex items-start justify-between gap-2"><div><div className="font-black text-lg">{r.account.name}</div><div className="text-xs text-muted-foreground">بداية: {fmtMoney(r.opening)}</div></div><Badge variant={r.diff ? "destructive" : "secondary"}>فرق {fmtMoney(r.diff)}</Badge></div>
+          <div className="grid grid-cols-2 gap-2 text-xs"><Mini label="دخل تشغيل" value={fmtMoney(r.operatingIn)} /><Mini label="خرج تشغيل" value={fmtMoney(r.operatingOut)} /><Mini label="تحويل داخل" value={fmtMoney(r.transferIn)} /><Mini label="تحويل خارج" value={fmtMoney(r.transferOut)} /><Mini label="المتوقع" value={fmtMoney(r.expected)} /></div>
+          <div><Label>النقدية الموجودة فعليًا</Label><Input type="number" value={countedMap[r.account.id] ?? String(r.expected)} onChange={(e) => setCountedMap({ ...countedMap, [r.account.id]: e.target.value })} /></div>
+        </div>)}
+      </CardContent></Card>
+
+      <Card><CardHeader><CardTitle className="text-base">سبب الفرق إن وجد</CardTitle></CardHeader><CardContent className="space-y-3"><Textarea placeholder="مثال: عجز/زيادة عند الجرد، تحويل لم يسجل، مصروف لم يدخل..." value={notes} onChange={(e) => setNotes(e.target.value)} /><Button onClick={closeAllSafes} disabled={saving || !rows.length} className="w-full">إقفال كل الخزن اليوم</Button></CardContent></Card>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card><CardHeader><CardTitle className="text-base">آخر حركات اليوم</CardTitle></CardHeader><CardContent className="space-y-2">{dayTx.slice(0, 20).map((t) => <div key={t.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{t.description}</b><div className="text-xs text-muted-foreground">{t.cash_accounts?.name} · {fmtDate(t.happened_at)}</div></div><Badge variant={t.direction === "out" ? "destructive" : "secondary"}>{t.direction === "in" ? "+" : "-"} {fmtMoney(t.amount)}</Badge></div>)}{!dayTx.length && <Empty text="لا توجد حركات اليوم" />}</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">آخر الإقفالات</CardTitle></CardHeader><CardContent className="space-y-2">{closings.slice(0, 12).map((c) => <div key={c.id} className="rounded-xl border p-3 text-xs"><div className="font-bold">{c.cash_accounts?.name} — {c.closing_date}</div><div>متوقع: {fmtMoney(c.expected_balance)} · فعلي: {fmtMoney(c.counted_balance)} · فرق: <b>{fmtMoney(c.difference)}</b></div></div>)}{!closings.length && <Empty text="لا توجد إقفالات سابقة" />}</CardContent></Card>
+      </div>
     </>}
   </div>;
 }
 function Kpi({ label, value, warn = false }: { label: string; value: any; warn?: boolean }) { return <Card className={warn ? "border-amber-200 bg-amber-50" : ""}><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black mt-1">{value}</div></CardContent></Card>; }
+function Mini({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-muted/60 p-2"><div className="text-[11px] text-muted-foreground">{label}</div><div className="font-black">{value}</div></div>; }
+function Empty({ text }: { text: string }) { return <div className="p-8 text-center text-muted-foreground">{text}</div>; }
