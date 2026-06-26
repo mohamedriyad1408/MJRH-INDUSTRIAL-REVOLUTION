@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { AttendanceWidget } from "@/components/attendance-widget";
 import { NotificationCenter } from "@/components/notification-center";
 import { MotivationalPopups } from "@/components/motivational-popups";
+import { MobileWorkDock } from "@/components/mobile-work-dock";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -109,6 +110,7 @@ function AppLayout() {
             <footer className="mt-8 rounded-3xl border bg-white/70 backdrop-blur p-4 text-center text-xs text-slate-600 shadow-sm">© {new Date().getFullYear()} MJRH INDSTUREL REVOLUTION — BY MUHAMMAD RIYAD +201130804784</footer>
           </main>
           <MotivationalPopups />
+          <MobileWorkDock />
         </div>
       </div>
     </SidebarProvider>
