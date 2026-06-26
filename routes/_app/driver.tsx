@@ -82,7 +82,7 @@ function DriverPage() {
       (supabase as any)
         .from("orders")
         .select(
-          "id, order_number, status, is_urgent, created_at, total, payment_status, payment_method, delivery_address, delivery_lat, delivery_lng, assigned_driver_employee_id, customers(full_name, phone), task_assignments(employee_id)"
+          "id, order_number, status, branch_id, is_urgent, created_at, total, payment_status, payment_method, delivery_address, delivery_lat, delivery_lng, assigned_driver_employee_id, customers(full_name, phone), task_assignments(employee_id)"
         )
         .in("status", ["ready", "out_for_delivery"])
         .order("is_urgent", { ascending: false })
@@ -221,6 +221,7 @@ function DriverPage() {
     }
     setActing(null);
     if (error) return toast.error(error.message);
+    await (supabase as any).rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? "تأكيد تسليم مع تحصيل" : "تأكيد تسليم", _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
     const extra = Number(res?.overpayment ?? 0);
     toast.success(extra > 0 ? `🎉 تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "🎉 تم التسليم بنجاح!");
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });

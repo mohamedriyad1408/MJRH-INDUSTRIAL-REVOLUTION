@@ -26,13 +26,18 @@ type Tenant = { id: string; name: string; slug: string; business_type?: string |
 function TenantsPage() {
   const { isSuperAdmin } = useAuth();
   const [list, setList] = useState<Tenant[]>([]);
+  const [health, setHealth] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("tenants").select("*").order("created_at", { ascending: false });
+    const [{ data }, { data: healthRows }] = await Promise.all([
+      supabase.from("tenants").select("*").order("created_at", { ascending: false }),
+      (supabase as any).from("tenant_bootstrap_health").select("*").then((r: any) => r).catch(() => ({ data: [] })),
+    ]);
     setList((data ?? []) as Tenant[]);
+    setHealth(Object.fromEntries(((healthRows ?? []) as any[]).map((h) => [h.tenant_id, h])));
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -66,7 +71,7 @@ function TenantsPage() {
                 <div className="text-xs text-muted-foreground">{t.slug} · {businessTypeAr(t.business_type ?? "laundry")}</div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "مفعلة" : "موقوفة"}</Badge>
+                <Badge variant={health[t.id]?.is_ready ? "default" : "destructive"}>{health[t.id]?.is_ready ? "جاهز" : "ناقص إعداد"}</Badge><Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "مفعلة" : "موقوفة"}</Badge>
                 <Button variant="outline" size="sm" onClick={() => toggle(t)}>{t.is_active ? "إيقاف" : "تفعيل"}</Button>
               </div>
             </Card>

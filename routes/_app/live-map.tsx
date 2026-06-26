@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { dueInfo } from "@/lib/geo";
@@ -107,7 +108,7 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
 }
 
 function LiveMapPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const canView = hasRole("owner", "ops_manager");
   const [pins, setPins] = useState<MapPin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,17 +116,22 @@ function LiveMapPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [routeMode, setRouteMode] = useState(false);
   const [stats, setStats] = useState({ pickups: 0, deliveries: 0, drivers: 0 });
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
     const raw: MapPin[] = [];
 
-    const [{ data: pickups }, { data: orders }, { data: drivers }] = await Promise.all([
-      (supabase as any).from("pickup_requests").select("id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id").in("status", ["pending", "assigned"]),
-      (supabase as any).from("orders").select("id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)").in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
-      (supabase as any).from("employees").select("id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true),
+    const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
+    const [{ data: pickups }, { data: orders }, { data: drivers }, { data: branchRows }] = await Promise.all([
+      addBranch((supabase as any).from("pickup_requests").select("id,branch_id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id")).in("status", ["pending", "assigned"]),
+      addBranch((supabase as any).from("orders").select("id,branch_id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)")).in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
+      addBranch((supabase as any).from("employees").select("id,branch_id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true)),
+      tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
     ]);
+    setBranches(branchRows ?? []);
 
     const openPickupOrderIds = new Set((pickups ?? []).map((p: any) => p.converted_order_id).filter(Boolean));
     const orderIds = (orders ?? []).map((o: any) => o.id);
@@ -195,7 +201,7 @@ function LiveMapPage() {
       setGeocoding(false);
       setLoading(false);
     }
-  }, []);
+  }, [branchId, tenantId]);
 
   useEffect(() => {
     loadData();
@@ -234,6 +240,7 @@ function LiveMapPage() {
           ))}
         </div>
         <div className="flex gap-2">
+          <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
           {selectedIds.size > 0 && <>
             <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={() => { if (selectedIds.size < 2) { toast.error("اختر نقطتين على الأقل"); return; } setRouteMode(true); toast.success(`خط سير لـ ${selectedIds.size} نقاط`); }}>
               <RouteIcon className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedIds.size})
