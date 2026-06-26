@@ -162,6 +162,25 @@ function ReportsPage() {
     });
     const lateEmployees = Object.values(lateByEmployee).sort((a, b) => b.count - a.count).slice(0, 6);
 
+    const branchRows = branches.length ? branches : ((await (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at")).data ?? []);
+    const [cmpOrdRes, cmpExpRes, cmpUnitsRes] = await Promise.all([
+      (supabase as any).from("orders").select("id,branch_id,total,status,payment_status,is_urgent,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("expenses").select("branch_id,amount,status,category,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("service_units").select("id,current_stage,needs_reclean,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+    ]);
+    const branchComparison = (branchRows as any[]).map((b: any) => {
+      const bo = (cmpOrdRes.data ?? []).filter((o: any) => o.branch_id === b.id);
+      const be = (cmpExpRes.data ?? []).filter((e: any) => e.branch_id === b.id);
+      const bu = (cmpUnitsRes.data ?? []).filter((u: any) => u.orders?.branch_id === b.id);
+      const revenue = bo.reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
+      const paidExpenses = be.filter((e: any) => e.status === "paid").reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
+      const payableExpenses = be.filter((e: any) => e.status === "payable").reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
+      const unpaid = bo.filter((o: any) => o.payment_status !== "paid").reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
+      const reclean = bu.filter((u: any) => u.needs_reclean).length;
+      const qcFailedUnits = bu.filter((u: any) => u.current_stage === "qc_failed").length;
+      return { id: b.id, name: b.name, orders: bo.length, delivered: bo.filter((o: any) => o.status === "delivered").length, revenue, paidExpenses, payableExpenses, netCash: revenue - paidExpenses, avgOrder: bo.length ? revenue / bo.length : 0, unpaid, urgent: bo.filter((o: any) => o.is_urgent).length, pieces: bu.length, reclean, qcFailed: qcFailedUnits };
+    }).sort((a: any, b: any) => b.revenue - a.revenue);
+
     const insights: Insight[] = [];
     if (revenueDelta !== null) insights.push({
       tone: revenueDelta >= 0 ? "good" : "bad",
@@ -181,7 +200,7 @@ function ReportsPage() {
       stageCounts, bottleneck, recleanCount, qcFailed, qcCount: qc.length, qcRate, lowStock,
       stations, topEmployees, topServices, insights,
       queuedMessages, sentMessages, proofIssues: proofIssues.length, invoiceNeedsReview: invoiceNeedsReview.length, pendingPickups,
-      lateByStage, lateEmployees,
+      lateByStage, lateEmployees, branchComparison,
     });
     setLoading(false);
   }
@@ -256,6 +275,8 @@ function ReportsPage() {
             <Kpi label="جودة QC" value={`${data.qcRate.toFixed(1)}%`} tone={data.qcRate > 8 ? "red" : "green"} sub="نسبة الفشل" />
           </div>
 
+          <BranchComparison rows={data.branchComparison ?? []} />
+
           <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} />
 
           <DelayResponsibility data={data} />
@@ -314,6 +335,17 @@ function ReportsPage() {
 }
 
 
+
+function BranchComparison({ rows }: { rows: any[] }) {
+  if (!rows.length) return <Card><CardContent className="p-4 text-sm text-muted-foreground text-center">لا توجد فروع للمقارنة في الفترة المختارة</CardContent></Card>;
+  const best = rows[0];
+  return <Card className="border-teal-200 bg-teal-50/30"><CardHeader><CardTitle className="text-base">مقارنة الفروع</CardTitle></CardHeader><CardContent className="space-y-3">
+    <div className="rounded-xl bg-white/80 border p-3 text-sm"><b>أفضل فرع بالإيراد:</b> {best.name} — {fmtMoney(best.revenue)} · صافي نقدي {fmtMoney(best.netCash)}</div>
+    <div className="overflow-x-auto"><table className="w-full text-xs bg-white rounded-xl overflow-hidden"><thead className="bg-muted/60"><tr><th className="text-start p-2">الفرع</th><th className="text-end p-2">طلبات</th><th className="text-end p-2">إيراد</th><th className="text-end p-2">مصروف مدفوع</th><th className="text-end p-2">صافي نقدي</th><th className="text-end p-2">آجل عملاء</th><th className="text-end p-2">قطع</th><th className="text-end p-2">جودة</th></tr></thead><tbody>
+      {rows.map((r) => <tr key={r.id} className="border-t"><td className="p-2 font-bold">{r.name}</td><td className="p-2 text-end">{r.orders}</td><td className="p-2 text-end font-black text-teal-700">{fmtMoney(r.revenue)}</td><td className="p-2 text-end">{fmtMoney(r.paidExpenses)}</td><td className={`p-2 text-end font-black ${r.netCash >= 0 ? "text-emerald-700" : "text-red-700"}`}>{fmtMoney(r.netCash)}</td><td className="p-2 text-end text-amber-700">{fmtMoney(r.unpaid)}</td><td className="p-2 text-end">{r.pieces}</td><td className="p-2 text-end">QC {r.qcFailed} / مرتجع {r.reclean}</td></tr>)}
+    </tbody></table></div>
+  </CardContent></Card>;
+}
 
 function DelayResponsibility({ data }: { data: any }) {
   const stages = Object.entries(data.lateByStage ?? {}).sort((a: any, b: any) => b[1] - a[1]);
