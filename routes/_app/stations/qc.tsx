@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft, Loader2 } from "lucide-react";
+import { validateOrderMove } from "@/lib/station-workflow";
+import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft, Loader2, Trophy, Tags } from "lucide-react";
 
 export const Route = createFileRoute("/_app/stations/qc")({
   head: () => ({ meta: [{ title: "محطة الجودة QC" }] }),
@@ -23,7 +24,7 @@ type Unit = {
   needs_reclean: boolean;
   label_status?: string | null;
   order_id: string;
-  orders?: { id: string; order_number: number; status: string; customers?: { full_name: string; phone: string } | null } | null;
+  orders?: { id: string; order_number: number; status: string; branch_id?: string | null; customers?: { full_name: string; phone: string } | null } | null;
 };
 
 function QcStation() {
@@ -33,12 +34,13 @@ function QcStation() {
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("service_units")
-      .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,customers(full_name,phone))")
+      .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,branch_id,customers(full_name,phone))")
       .in("current_stage", ["cleaning_done", "ironing_done", "packing", "packing_done", "ready", "qc_failed"])
       .order("updated_at", { ascending: false })
       .limit(120);
@@ -54,6 +56,44 @@ function QcStation() {
     units.forEach((u) => map.set(u.order_id, [...(map.get(u.order_id) ?? []), u]));
     return Array.from(map.entries()).map(([orderId, rows]) => ({ orderId, order: rows[0].orders, units: rows }));
   }, [units]);
+
+  function groupChecks(units: Unit[]) {
+    const label = units.filter((u) => u.label_status && u.label_status !== "labeled").length;
+    const reclean = units.filter((u) => u.needs_reclean).length;
+    const qcFailed = units.filter((u) => u.current_stage === "qc_failed").length;
+    const notPacked = units.filter((u) => !["packing_done", "qc_passed", "ready"].includes(u.current_stage)).length;
+    const passed = units.filter((u) => u.current_stage === "qc_passed").length;
+    const safe = units.filter((u) => !u.needs_reclean && !(u.label_status && u.label_status !== "labeled") && ["packing_done", "ready", "qc_failed"].includes(u.current_stage));
+    return { label, reclean, qcFailed, notPacked, passed, safe, allPassed: units.length > 0 && passed === units.length };
+  }
+
+  async function approveSafeGroup(g: { orderId: string; order: Unit["orders"]; units: Unit[] }) {
+    const c = groupChecks(g.units);
+    if (!c.safe.length) return toast.error("لا توجد قطع سليمة قابلة للاعتماد الآن");
+    setBusy(g.orderId);
+    let ok = 0;
+    for (const u of c.safe) {
+      if (u.current_stage === "qc_passed") continue;
+      const r = await (supabase as any).rpc("pass_qc_unit", { _unit_id: u.id, _notes: "اعتماد جماعي من محطة الجودة" });
+      if (!r.error) ok++;
+    }
+    await (supabase as any).rpc("record_operation_event", { _process_key: "qc_bulk_passed", _process_name: "اعتماد جماعي لقطع سليمة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, passed: ok }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    setBusy(null);
+    toast.success(`تم اعتماد ${ok} قطعة سليمة`);
+    load();
+  }
+
+  async function markReady(g: { orderId: string; order: Unit["orders"]; units: Unit[] }) {
+    const c = groupChecks(g.units);
+    if (!c.allPassed) return toast.error("لا يمكن جعل الطلب جاهز قبل اعتماد كل القطع من الجودة");
+    const v = await validateOrderMove(g.orderId, "ready");
+    if (!v.ok) return toast.error(v.message);
+    setBusy(g.orderId);
+    const { error } = await (supabase as any).from("orders").update({ status: "ready" }).eq("id", g.orderId);
+    if (!error) await (supabase as any).rpc("record_operation_event", { _process_key: "qc_order_ready", _process_name: "اعتماد الطلب جاهز من الجودة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, pieces: g.units.length }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    setBusy(null);
+    if (error) toast.error(error.message); else { toast.success("تم اعتماد الطلب جاهز للتسليم"); load(); }
+  }
 
   async function qc(unit: Unit, res: "passed" | "reclean" | "repair" | "lost" | "damaged") {
     const note = (notes[unit.id] ?? "").trim();
@@ -92,34 +132,40 @@ function QcStation() {
           </div>
           <Button variant="secondary" onClick={load}>تحديث</Button>
         </div>
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <Mini label="طلبات تحت الفحص" value={groups.length} />
-          <Mini label="قطع تحت الفحص" value={units.length} />
-          <Mini label="مرتجعات ظاهرة" value={units.filter((u) => u.needs_reclean || u.current_stage === "qc_failed").length} warn />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+          <Mini label="طلبات" value={groups.length} />
+          <Mini label="قطع" value={units.length} />
+          <Mini label="تم اعتمادها" value={units.filter((u) => u.current_stage === "qc_passed").length} />
+          <Mini label="مشاكل مارك" value={units.filter((u) => u.label_status && u.label_status !== "labeled").length} warn />
+          <Mini label="مشاكل جودة" value={units.filter((u) => u.needs_reclean || u.current_stage === "qc_failed").length} warn />
         </div>
       </div>
+
+      {!loading && groups[0] && <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-md"><CardContent className="p-4 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs text-emerald-700 font-bold mb-1">مهمة الجودة التالية</div><div className="font-black text-lg">طلب #{groups[0].order?.order_number} — {groups[0].order?.customers?.full_name ?? "عميل"}</div><div className="text-xs text-muted-foreground">راجع القطع، اعتمد السليم، وأرجع المشكلة للمحطة المناسبة.</div></div><Button asChild variant="outline"><Link to="/orders/$id" params={{ id: groups[0].orderId }}>فتح الطلب</Link></Button></CardContent></Card>}
 
       {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : (
         <div className="space-y-3">
           {!groups.length && <Card><CardContent className="p-10 text-center text-muted-foreground">لا توجد قطع تنتظر فحص الجودة ✅</CardContent></Card>}
           {groups.map((g) => (
-            <Card key={g.orderId} className="overflow-hidden">
+            <Card key={g.orderId} className="overflow-hidden bg-white/85 backdrop-blur">
               <CardHeader className="bg-muted/40 pb-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> طلب #{g.order?.order_number}<Badge variant="outline">{g.units.length} قطعة</Badge></CardTitle>
+                {(() => { const c = groupChecks(g.units); return <><div className="flex flex-wrap items-center justify-between gap-2">
+                  <CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> طلب #{g.order?.order_number}<Badge variant="outline">{g.units.length} قطعة</Badge>{c.allPassed && <Badge className="bg-emerald-600">كل القطع معتمدة</Badge>}{(c.label || c.reclean || c.qcFailed) ? <Badge variant="destructive">يحتاج تدخل</Badge> : null}</CardTitle>
                   {g.order?.id && <Button asChild size="sm" variant="outline"><Link to="/orders/$id" params={{ id: g.order.id }}>فتح الطلب <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
                 </div>
                 <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs"><Check label="المارك سليم" ok={!c.label} bad={c.label} /><Check label="لا مرتجعات" ok={!c.reclean} bad={c.reclean} /><Check label="تم التغليف" ok={!c.notPacked} bad={c.notPacked} /><Check label="معتمد QC" ok={c.allPassed} bad={g.units.length - c.passed} /><Check label="مشاكل" ok={!c.qcFailed} bad={c.qcFailed} /></div>
+                <div className="flex flex-wrap justify-end gap-2 mt-3"><Button size="sm" variant="outline" disabled={busy === g.orderId} onClick={() => approveSafeGroup(g)}><CheckCircle2 className="w-4 h-4 ms-1" />اعتماد كل السليم</Button><Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" disabled={busy === g.orderId || !c.allPassed} onClick={() => markReady(g)}><Trophy className="w-4 h-4 ms-1" />اعتماد الطلب جاهز</Button></div></>; })()}
               </CardHeader>
               <CardContent className="p-3 grid md:grid-cols-2 gap-3">
                 {g.units.map((u) => (
-                  <div key={u.id} className="rounded-2xl border p-3 bg-card space-y-3">
+                  <div key={u.id} className={`rounded-2xl border p-3 space-y-3 ${u.label_status && u.label_status !== "labeled" ? "bg-amber-50 border-amber-200" : u.current_stage === "qc_passed" ? "bg-emerald-50 border-emerald-200" : "bg-card"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">المرحلة: {u.current_stage}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">مارك/ليبل: {u.label_status === "missing_label" ? "بدون مارك" : "غير واضح"}</div>}</div>
                       {(u.needs_reclean || u.current_stage === "qc_failed" || (u.label_status && u.label_status !== "labeled")) && <Badge variant="destructive">مشكلة</Badge>}
                     </div>
                     <Textarea rows={2} placeholder="ملاحظة الفحص / سبب الرفض" value={notes[u.id] ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
-                    <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+                    <div className="grid md:grid-cols-[1fr_auto_auto] gap-2">
                       <Select value={result[u.id] ?? "reclean"} onValueChange={(v) => setResult((m) => ({ ...m, [u.id]: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -133,7 +179,7 @@ function QcStation() {
                       <Button onClick={() => qc(u, "passed")} className="bg-emerald-600 hover:bg-emerald-500"><CheckCircle2 className="w-4 h-4 ms-1" /> اعتماد</Button>
                     </div>
                     {u.needs_reclean && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">هذه القطعة مرجعة للغسيل. تظهر الآن في محطة الغسيل ولن تخرج للعميل حتى تنتهي دورة المرتجع.</div>}
-                    {u.label_status && u.label_status !== "labeled" && <div className="rounded-xl bg-red-50 border border-red-200 p-2 text-xs text-red-800">لا تعتمد هذه القطعة قبل حل مشكلة المارك/الليبل في محطة التجفيف والتجميع.</div>}
+                    {u.label_status && u.label_status !== "labeled" && <div className="rounded-xl bg-red-50 border border-red-200 p-2 text-xs text-red-800 flex flex-wrap items-center justify-between gap-2"><span>لا تعتمد هذه القطعة قبل حل مشكلة المارك/الليبل في محطة التجفيف والتجميع.</span><Button asChild size="sm" variant="outline"><Link to="/stations/drying-assembly"><Tags className="w-3 h-3 ms-1" />فتح التجميع</Link></Button></div>}
                   </div>
                 ))}
               </CardContent>
@@ -144,6 +190,8 @@ function QcStation() {
     </div>
   );
 }
+
+function Check({ label, ok, bad }: { label: string; ok: boolean; bad: number }) { return <div className={`rounded-2xl border p-2 text-center font-bold ${ok ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>{label}<div>{ok ? "✅" : bad}</div></div>; }
 
 function Mini({ label, value, warn = false }: { label: string; value: number; warn?: boolean }) {
   return <div className={`rounded-2xl p-3 border border-white/10 ${warn ? "bg-amber-400/15" : "bg-white/10"}`}><div className="text-xs text-white/70">{label}</div><div className="text-2xl font-black">{value}</div></div>;
