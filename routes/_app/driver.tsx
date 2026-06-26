@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { distanceKm, formatDistance, type LatLng } from "@/lib/geo";
+import { validateOrderMove } from "@/lib/station-workflow";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +22,13 @@ export const Route = createFileRoute("/_app/driver")({
 
 /* ─── types ─── */
 type Pickup = {
-  id: string; customer_name: string; phone: string;
+  id: string; branch_id?: string | null; customer_name: string; phone: string;
   address: string; location_url: string | null; lat?: number | null; lng?: number | null; estimated_pieces?: number | null;
   status: string; scheduled_at: string | null;
   created_at: string; notes: string | null; converted_order_id?: string | null; customer_id?: string | null;
 };
 type Delivery = {
-  id: string; order_number: number; status: string;
+  id: string; order_number: number; status: string; branch_id?: string | null;
   is_urgent: boolean; created_at: string; total: number; payment_status: string; payment_method?: string | null;
   delivery_address: string | null; delivery_lat?: number | null; delivery_lng?: number | null; assigned_driver_employee_id?: string | null;
   customers?: { full_name: string; phone: string } | null;
@@ -50,6 +51,7 @@ function DriverPage() {
   const [tab, setTab] = useState<"pickups" | "deliveries">("pickups");
   const [pickups, setPickups] = useState<Pickup[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [deliveryIssues, setDeliveryIssues] = useState<Record<string, { label: number; reclean: number; notQc: number; total: number }>>({});
   const [loading, setLoading] = useState(true);
   const [confirmCode, setConfirmCode] = useState<Record<string, string>>({});
   const [acting, setActing] = useState<string | null>(null);
@@ -89,7 +91,23 @@ function DriverPage() {
         .order("created_at"),
     ]);
     setPickups((pRes.data ?? []) as Pickup[]);
-    setDeliveries((dRes.data ?? []) as Delivery[]);
+    const deliveryRows = (dRes.data ?? []) as Delivery[];
+    setDeliveries(deliveryRows);
+    const ids = deliveryRows.map((d) => d.id);
+    if (ids.length) {
+      const { data: units } = await (supabase as any).from("service_units").select("id,order_id,label_status,needs_reclean,current_stage,status").in("order_id", ids);
+      const issueMap: Record<string, { label: number; reclean: number; notQc: number; total: number }> = {};
+      ids.forEach((id) => { issueMap[id] = { label: 0, reclean: 0, notQc: 0, total: 0 }; });
+      (units ?? []).forEach((u: any) => {
+        if (u.status === "cancelled" || u.current_stage === "cancelled") return;
+        const m = issueMap[u.order_id] ?? (issueMap[u.order_id] = { label: 0, reclean: 0, notQc: 0, total: 0 });
+        m.total += 1;
+        if (u.label_status && u.label_status !== "labeled") m.label += 1;
+        if (u.needs_reclean) m.reclean += 1;
+        if (!["qc_passed", "ready"].includes(String(u.current_stage))) m.notQc += 1;
+      });
+      setDeliveryIssues(issueMap);
+    } else setDeliveryIssues({});
     setLoading(false);
   }, []);
 
@@ -164,7 +182,7 @@ function DriverPage() {
       if (ce) { setActing(null); return toast.error(ce.message); }
       customerId = ins.id;
     }
-    const { data: ord, error: oe } = await (supabase as any).from("orders").insert({ customer_id: customerId, order_type: "delivery", status: "received", pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null, notes: p.notes, created_by: user?.id, assigned_driver_employee_id: empId ?? null }).select("id, order_number").single();
+    const { data: ord, error: oe } = await (supabase as any).from("orders").insert({ customer_id: customerId, branch_id: (p as any).branch_id ?? null, order_type: "delivery", status: "received", pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null, notes: p.notes, created_by: user?.id, assigned_driver_employee_id: empId ?? null }).select("id, order_number").single();
     if (oe) { setActing(null); return toast.error(oe.message); }
     await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
     await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
@@ -175,6 +193,11 @@ function DriverPage() {
 
   /* ─── DELIVERY: start out_for_delivery ─── */
   async function startDelivery(d: Delivery) {
+    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
+    const issue = deliveryIssues[d.id];
+    if (issue && (issue.label || issue.reclean || issue.notQc)) {
+      return toast.error(`لا يمكن الخروج للتسليم: مارك ${issue.label} / مرتجع ${issue.reclean} / غير معتمد QC ${issue.notQc}`);
+    }
     setActing(d.id);
     const { error } = await (supabase as any)
       .from("orders")
@@ -186,6 +209,7 @@ function DriverPage() {
         to_status: "out_for_delivery", changed_by: user?.id,
         notes: "السائق خرج للتسليم",
       });
+      await (supabase as any).rpc("record_operation_event", { _process_key: "delivery_started", _process_name: "خروج المندوب للتسليم", _source_type: "order", _source_id: d.id, _branch_id: d.branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, total: Number(d.total ?? 0) }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     }
     setActing(null);
     if (error) return toast.error(error.message);
@@ -316,6 +340,7 @@ function DriverPage() {
           onStart={startDelivery}
           onConfirm={confirmDelivery}
           myLoc={myLoc}
+          deliveryIssues={deliveryIssues}
         />
       )}
     </div>
@@ -469,7 +494,7 @@ function PickupCard({
 
 /* ─── Deliveries sub-component ─── */
 function DeliveriesList({
-  list, acting, confirmCode, setConfirmCode, onStart, onConfirm, myLoc,
+  list, acting, confirmCode, setConfirmCode, onStart, onConfirm, myLoc, deliveryIssues,
 }: {
   list: Delivery[]; acting: string | null;
   confirmCode: Record<string, string>;
@@ -477,6 +502,7 @@ function DeliveriesList({
   onStart: (d: Delivery) => void;
   onConfirm: (d: Delivery) => void;
   myLoc: LatLng | null;
+  deliveryIssues: Record<string, { label: number; reclean: number; notQc: number; total: number }>;
 }) {
   if (!list.length)
     return (
@@ -509,6 +535,7 @@ function DeliveriesList({
                   {d.customers?.full_name}
                 </div>
                 <div className="text-xs text-muted-foreground">الإجمالي: {Number(d.total ?? 0).toLocaleString("en-US")} جنيه · {d.payment_status === "paid" ? "مدفوع" : "تحصيل عند التسليم"}</div>
+                {(() => { const i = deliveryIssues[d.id]; return i && (i.label || i.reclean || i.notQc) ? <div className="mt-2 flex flex-wrap gap-1"><Badge variant="destructive">لا يخرج</Badge>{i.label > 0 && <Badge variant="destructive">مارك {i.label}</Badge>}{i.reclean > 0 && <Badge className="bg-amber-500">مرتجع {i.reclean}</Badge>}{i.notQc > 0 && <Badge variant="outline">QC ناقص {i.notQc}</Badge>}</div> : <div className="mt-2"><Badge className="bg-emerald-600">جاهز للتسليم فعليًا</Badge></div>; })()}
               </div>
               <Badge variant={d.status === "out_for_delivery" ? "default" : "secondary"}>
                 {d.status === "ready" ? "جاهز للتسليم" : "خرج للتسليم"}
@@ -537,7 +564,7 @@ function DeliveriesList({
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={acting === d.id}
+                  disabled={acting === d.id || !!(deliveryIssues[d.id]?.label || deliveryIssues[d.id]?.reclean || deliveryIssues[d.id]?.notQc)}
                   onClick={() => onStart(d)}
                   className="flex-1"
                 >
