@@ -41,6 +41,8 @@ function AccountingPage() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [cashForm, setCashForm] = useState({ name: "", account_type: "cash", opening_balance: "0" });
   const [txForm, setTxForm] = useState({ cash_account_id: "", direction: "in", amount: "0", description: "" });
+  const [loadErrors, setLoadErrors] = useState<string[]>([]);
+  const [fixingCash, setFixingCash] = useState(false);
 
   const bounds = useMemo(() => {
     const [y, m] = month.split("-").map(Number);
@@ -49,38 +51,69 @@ function AccountingPage() {
 
 
   async function ensureCashAccount() {
-    await (supabase as any).rpc("ensure_default_cash_account").catch(() => null);
-    let { data } = await (supabase as any).from("cash_accounts").select("*").eq("is_active", true).order("created_at");
-    if ((!data || data.length === 0) && tenantId) {
-      const ins = await (supabase as any).from("cash_accounts").insert({ tenant_id: tenantId, name: "الخزنة الرئيسية", account_type: "cash", opening_balance: 0, current_balance: 0 }).select("*").single();
-      if (!ins.error && ins.data) data = [ins.data];
+    if (!tenantId) return [];
+    const errs: string[] = [];
+    const rpcFor = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId });
+    if (rpcFor.error) {
+      errs.push(rpcFor.error.message);
+      const rpc = await (supabase as any).rpc("ensure_default_cash_account");
+      if (rpc.error) errs.push(rpc.error.message);
     }
+
+    let { data, error } = await (supabase as any)
+      .from("cash_accounts")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("created_at");
+    if (error) errs.push(error.message);
+
+    if ((!data || data.length === 0) && tenantId) {
+      const ins = await (supabase as any).from("cash_accounts").insert({
+        tenant_id: tenantId,
+        name: "الخزنة الرئيسية",
+        account_type: "cash",
+        opening_balance: 0,
+        current_balance: 0,
+        is_active: true,
+      }).select("*").single();
+      if (!ins.error && ins.data) data = [ins.data];
+      else if (ins.error) errs.push(ins.error.message);
+    }
+    if (errs.length) setLoadErrors((old) => [...new Set([...old, ...errs])].slice(0, 6));
     return data ?? [];
   }
 
   async function load() {
     if (!canUse) { setLoading(false); return; }
+    if (!tenantId) {
+      setLoading(false);
+      setLoadErrors(["لم يتم تحديد مغسلة للحساب الحالي. سجل خروج ثم دخول، أو راجع دور المستخدم من لوحة الإدارة."]);
+      return;
+    }
     setLoading(true);
+    setLoadErrors([]);
     try {
       const ensuredCash = await ensureCashAccount();
       const results = await Promise.allSettled([
         Promise.resolve({ data: ensuredCash, error: null }),
-        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").order("happened_at", { ascending: false }).limit(80),
-        (supabase as any).from("expenses").select("*,employees(full_name)").gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
-        (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("is_active", true).order("full_name"),
-        (supabase as any).from("payroll_periods").select("*").order("period_start", { ascending: false }).limit(12),
-        (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").order("created_at", { ascending: false }).limit(100),
-        (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").order("entry_at", { ascending: false }).limit(120),
+        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("happened_at", { ascending: false }).limit(80),
+        (supabase as any).from("expenses").select("*,employees(full_name)").eq("tenant_id", tenantId).gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
+        (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("full_name"),
+        (supabase as any).from("payroll_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(12),
+        (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100),
+        (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("tenant_id", tenantId).order("entry_at", { ascending: false }).limit(120),
       ]);
       const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
       const ca = val(0), ct = val(1), ex = val(2), em = val(3), pp = val(4), pl = val(5), lg = val(6);
-      [ca, ct, ex, em, pp, pl, lg].forEach((r: any) => r.error && toast.error(r.error.message ?? "تعذر تحميل جزء من البيانات"));
+      const errs = [ca, ct, ex, em, pp, pl, lg].map((r: any) => r.error?.message).filter(Boolean);
+      if (errs.length) setLoadErrors((old) => [...new Set([...old, ...errs])].slice(0, 6));
       setCashAccounts(ca.data ?? []); setCashTx(ct.data ?? []); setExpenses(ex.data ?? []); setEmployees(em.data ?? []); setPeriods(pp.data ?? []); setLines(pl.data ?? []); setLedger(lg.data ?? []);
     } finally {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, [canUse, month]);
+  useEffect(() => { load(); }, [canUse, tenantId, month]);
 
   const kpis = useMemo(() => {
     const cash = cashAccounts.reduce((s, x) => s + Number(x.current_balance ?? 0), 0);
@@ -91,23 +124,68 @@ function AccountingPage() {
   }, [cashAccounts, expenses, lines]);
 
   async function addCashAccount() {
+    if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
     if (!cashForm.name.trim()) return toast.error("اكتب اسم الخزنة/الحساب");
     const opening = Number(cashForm.opening_balance || 0);
-    const { error } = await (supabase as any).rpc("create_cash_account_with_opening", {
+    const rpc = await (supabase as any).rpc("create_cash_account_with_opening", {
       _name: cashForm.name.trim(),
       _account_type: cashForm.account_type,
       _opening_balance: opening,
     });
-    if (error) toast.error(error.message); else { toast.success("تم إضافة الحساب وتسجيل الرصيد في الخزنة والقيود"); setCashForm({ name: "", account_type: "cash", opening_balance: "0" }); load(); }
+    if (rpc.error) {
+      // Fallback for old deployments/database before the RPC migration: keep the owner working now.
+      const { data: account, error: insErr } = await (supabase as any).from("cash_accounts").insert({
+        tenant_id: tenantId,
+        name: cashForm.name.trim(),
+        account_type: cashForm.account_type,
+        opening_balance: opening,
+        current_balance: 0,
+        is_active: true,
+      }).select("*").single();
+      if (insErr) return toast.error(insErr.message || rpc.error.message);
+      if (opening > 0 && account?.id) {
+        const tx = await (supabase as any).from("cash_transactions").insert({
+          tenant_id: tenantId,
+          cash_account_id: account.id,
+          direction: "in",
+          amount: opening,
+          description: `رصيد افتتاحي: ${cashForm.name.trim()}`,
+          source_type: "cash_opening_balance",
+          source_id: account.id,
+          created_by: user?.id,
+        });
+        if (tx.error) await (supabase as any).from("cash_accounts").update({ current_balance: opening }).eq("id", account.id);
+      }
+      toast.success("تم إضافة الحساب. وسيتم ترحيل القيد المحاسبي تلقائيًا بعد تحديث قاعدة البيانات.");
+    } else {
+      toast.success("تم إضافة الحساب وتسجيل الرصيد في الخزنة والقيود");
+    }
+    setCashForm({ name: "", account_type: "cash", opening_balance: "0" });
+    load();
   }
 
   async function addCashTx() {
+    if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
     if (!txForm.cash_account_id) return toast.error("اختار الخزنة");
     if (!Number(txForm.amount)) return toast.error("اكتب مبلغ صحيح");
     const { error } = await (supabase as any).from("cash_transactions").insert({
-      cash_account_id: txForm.cash_account_id, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية", created_by: user?.id,
+      tenant_id: tenantId, cash_account_id: txForm.cash_account_id, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية", source_type: "manual_cash_transaction", created_by: user?.id,
     });
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل الحركة"); setTxForm({ cash_account_id: "", direction: "in", amount: "0", description: "" }); load(); }
+    if (error) toast.error(error.message); else { toast.success("تم تسجيل الحركة وتحديث الخزنة"); setTxForm({ cash_account_id: "", direction: "in", amount: "0", description: "" }); load(); }
+  }
+
+  async function repairCashNow() {
+    setFixingCash(true);
+    try {
+      const errs: string[] = [];
+      const r1 = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
+      const r2 = await (supabase as any).rpc("repair_cash_account_balances"); if (r2.error) errs.push(r2.error.message);
+      const r3 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
+      if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم فحص وإصلاح الخزنة والحسابات");
+      await load();
+    } finally {
+      setFixingCash(false);
+    }
   }
 
   async function syncApprovedAdvances() {
@@ -125,11 +203,11 @@ function AccountingPage() {
       const amount = Number(a.amount ?? 0); if (!amount) continue;
       const desc = `سلفة موظف: ${a.employees?.full_name ?? "موظف"}`;
       const { data: exp, error: eErr } = await (supabase as any).from("expenses").upsert({
-        category: "salaries", amount, description: desc, spent_at: a.created_at, status: "paid", employee_id: a.employee_id, source_type: "employee_advance", source_id: a.id, paid_at: a.created_at, created_by: user?.id,
+        tenant_id: tenantId, category: "salaries", amount, description: desc, spent_at: a.created_at, status: "paid", employee_id: a.employee_id, source_type: "employee_advance", source_id: a.id, paid_at: a.created_at, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
       if (!eErr) {
-        await (supabase as any).from("cash_transactions").insert({ cash_account_id: mainCash, direction: "out", amount, description: desc, source_type: "employee_advance", source_id: a.id, created_by: user?.id }).then(() => null);
-        await (supabase as any).from("employee_financial_ledger").insert({ employee_id: a.employee_id, entry_type: "advance", amount, direction: "employee_owes", source_type: "employee_advance", source_id: a.id, description: desc, created_by: user?.id }).then(() => null);
+        await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount, description: desc, source_type: "employee_advance", source_id: a.id, created_by: user?.id }).then(() => null);
+        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: a.employee_id, entry_type: "advance", amount, direction: "employee_owes", source_type: "employee_advance", source_id: a.id, description: desc, created_by: user?.id }).then(() => null);
         if (exp) created++;
       }
     }
@@ -150,11 +228,11 @@ function AccountingPage() {
       const gross = Number(l.gross_pay ?? 0); if (!gross) continue;
       const desc = `استحقاق راتب ${l.employees?.full_name ?? "موظف"} عن ${l.payroll_periods?.period_start}`;
       const { data: exp } = await (supabase as any).from("expenses").upsert({
-        category: "salaries", amount: gross, description: desc, spent_at: bounds.toIso, status: "payable", employee_id: l.employee_id, source_type: "payroll_line", source_id: l.id, due_at: bounds.toIso, created_by: user?.id,
+        tenant_id: tenantId, category: "salaries", amount: gross, description: desc, spent_at: bounds.toIso, status: "payable", employee_id: l.employee_id, source_type: "payroll_line", source_id: l.id, due_at: bounds.toIso, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
-      await (supabase as any).from("employee_financial_ledger").insert({ employee_id: l.employee_id, entry_type: "salary_accrual", amount: gross, direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
+      await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_accrual", amount: gross, direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
       if (Number(l.advances_deducted ?? 0) > 0) {
-        await (supabase as any).from("employee_financial_ledger").insert({ employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: "خصم سلف من الراتب", created_by: user?.id }).then(() => null);
+        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: "خصم سلف من الراتب", created_by: user?.id }).then(() => null);
       }
       await (supabase as any).from("payroll_lines").update({ status: "posted", expense_id: exp?.id ?? l.expense_id }).eq("id", l.id);
     }
@@ -171,11 +249,11 @@ function AccountingPage() {
     for (const l of periodLines) {
       const net = Number(l.net_pay ?? 0); if (!net) continue;
       const desc = `صرف راتب ${l.employees?.full_name ?? "موظف"}`;
-      const { data: tx, error } = await (supabase as any).from("cash_transactions").insert({ cash_account_id: mainCash, direction: "out", amount: net, description: desc, source_type: "payroll_payment", source_id: l.id, created_by: user?.id }).select("id").single();
+      const { data: tx, error } = await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount: net, description: desc, source_type: "payroll_payment", source_id: l.id, created_by: user?.id }).select("id").single();
       if (!error) {
         if (l.expense_id) await (supabase as any).from("expenses").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", l.expense_id);
         await (supabase as any).from("payroll_lines").update({ status: "paid", cash_transaction_id: tx?.id }).eq("id", l.id);
-        await (supabase as any).from("employee_financial_ledger").insert({ employee_id: l.employee_id, entry_type: "salary_payment", amount: net, direction: "employee_due", source_type: "payroll_payment", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
+        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_payment", amount: net, direction: "employee_due", source_type: "payroll_payment", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
       }
     }
     await (supabase as any).from("payroll_periods").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", periodId);
@@ -202,6 +280,18 @@ function AccountingPage() {
       <div>١) افتح رواتب الشهر واضغط <b>جهّز رواتب الشهر</b> لو الرواتب غير ظاهرة.</div>
       <div>٢) اضغط <b>اعتماد كمصروف آجل</b> ليظهر الراتب كمصروف حتى قبل الدفع.</div>
       <div>٣) عند الدفع اضغط <b>صرف الرواتب</b> فيخصم من الخزنة تلقائيًا.</div>
+    </CardContent></Card>}
+
+    {!loading && loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
+      <div className="font-black">الحسابات لم تُقرأ بشكل كامل، لذلك الأصفار الحالية ليست نتيجة مالية مؤكدة.</div>
+      {loadErrors.map((e, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{e}</div>)}
+      <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح وقراءة الخزنة الآن</Button>
+    </CardContent></Card>}
+
+    {!loading && cashAccounts.length === 0 && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-900 space-y-2">
+      <div className="font-black">لا توجد خزنة مقروءة لهذه المغسلة.</div>
+      <div>اضغط الزر التالي لإنشاء الخزنة الرئيسية تلقائيًا، أو أضف خزنة من تبويب الخزنة واكتب الرصيد الموجود الآن.</div>
+      <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Plus className="w-4 h-4 ms-1" />}إنشاء/إصلاح الخزنة الرئيسية</Button>
     </CardContent></Card>}
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="payroll" className="space-y-4">
