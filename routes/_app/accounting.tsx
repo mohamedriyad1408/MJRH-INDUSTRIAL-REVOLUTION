@@ -39,7 +39,9 @@ function AccountingPage() {
   const [lines, setLines] = useState<any[]>([]);
   const [ledger, setLedger] = useState<any[]>([]);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [cashForm, setCashForm] = useState({ name: "", account_type: "cash", opening_balance: "0" });
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
+  const [cashForm, setCashForm] = useState({ name: "", account_type: "cash", opening_balance: "0", branch_id: "" });
   const [txForm, setTxForm] = useState({ cash_account_id: "", direction: "in", amount: "0", description: "" });
   const [transferForm, setTransferForm] = useState({ from_cash_account_id: "", to_cash_account_id: "", amount: "0", notes: "" });
   const [loadErrors, setLoadErrors] = useState<string[]>([]);
@@ -61,23 +63,25 @@ function AccountingPage() {
       if (rpc.error) errs.push(rpc.error.message);
     }
 
-    let { data, error } = await (supabase as any)
+    let dataQuery = (supabase as any)
       .from("cash_accounts")
-      .select("*")
+      .select("*,branches(name)")
       .eq("tenant_id", tenantId)
-      .eq("is_active", true)
-      .order("created_at");
+      .eq("is_active", true);
+    if (branchId !== "all") dataQuery = dataQuery.eq("branch_id", branchId);
+    let { data, error } = await dataQuery.order("created_at");
     if (error) errs.push(error.message);
 
-    if ((!data || data.length === 0) && tenantId) {
+    if ((!data || data.length === 0) && tenantId && branchId === "all") {
       const ins = await (supabase as any).from("cash_accounts").insert({
         tenant_id: tenantId,
         name: "الخزنة الرئيسية",
         account_type: "cash",
         opening_balance: 0,
         current_balance: 0,
+        branch_id: branches[0]?.id || null,
         is_active: true,
-      }).select("*").single();
+      }).select("*,branches(name)").single();
       if (!ins.error && ins.data) data = [ins.data];
       else if (ins.error) errs.push(ins.error.message);
     }
@@ -96,14 +100,17 @@ function AccountingPage() {
     setLoadErrors([]);
     try {
       const ensuredCash = await ensureCashAccount();
+      const addBranch = (q: any, column = "branch_id") => branchId === "all" ? q : q.eq(column, branchId);
+      const branchCashSelect = branchId === "all" ? "*,cash_accounts(name)" : "*,cash_accounts!inner(name,branch_id)";
+      const branchEmployeeSelect = branchId === "all" ? "*,employees(full_name)" : "*,employees!inner(full_name,branch_id)";
       const results = await Promise.allSettled([
         Promise.resolve({ data: ensuredCash, error: null }),
-        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("happened_at", { ascending: false }).limit(80),
-        (supabase as any).from("expenses").select("*,employees(full_name)").eq("tenant_id", tenantId).gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
-        (supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("full_name"),
+        (branchId === "all" ? (supabase as any).from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId) : (supabase as any).from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId).eq("cash_accounts.branch_id", branchId)).order("happened_at", { ascending: false }).limit(80),
+        addBranch((supabase as any).from("expenses").select("*,employees(full_name)").eq("tenant_id", tenantId)).gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
+        addBranch((supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("tenant_id", tenantId)).eq("is_active", true).order("full_name"),
         (supabase as any).from("payroll_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(12),
-        (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100),
-        (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("tenant_id", tenantId).order("entry_at", { ascending: false }).limit(120),
+        (branchId === "all" ? (supabase as any).from("payroll_lines").select("*,employees(full_name),payroll_periods(period_start,period_end,status)").eq("tenant_id", tenantId) : (supabase as any).from("payroll_lines").select(`${branchEmployeeSelect},payroll_periods(period_start,period_end,status)`).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("created_at", { ascending: false }).limit(100),
+        (branchId === "all" ? (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("tenant_id", tenantId) : (supabase as any).from("employee_financial_ledger").select(branchEmployeeSelect).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("entry_at", { ascending: false }).limit(120),
       ]);
       const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
       const ca = val(0), ct = val(1), ex = val(2), em = val(3), pp = val(4), pl = val(5), lg = val(6);
@@ -114,7 +121,16 @@ function AccountingPage() {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, [canUse, tenantId, month]);
+  useEffect(() => {
+    if (!tenantId) return;
+    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => {
+      const list = data ?? [];
+      setBranches(list);
+      setCashForm((old) => ({ ...old, branch_id: old.branch_id || list[0]?.id || "" }));
+    });
+  }, [tenantId]);
+
+  useEffect(() => { load(); }, [canUse, tenantId, month, branchId]);
 
   const kpis = useMemo(() => {
     const cash = cashAccounts.reduce((s, x) => s + Number(x.current_balance ?? 0), 0);
@@ -127,6 +143,8 @@ function AccountingPage() {
   async function addCashAccount() {
     if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
     if (!cashForm.name.trim()) return toast.error("اكتب اسم الخزنة/الحساب");
+    const selectedBranchId = cashForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
+    if (branches.length && !selectedBranchId) return toast.error("اختار الفرع قبل إضافة الخزنة");
     const opening = Number(cashForm.opening_balance || 0);
     const rpc = await (supabase as any).rpc("create_cash_account_with_opening", {
       _name: cashForm.name.trim(),
@@ -141,6 +159,7 @@ function AccountingPage() {
         account_type: cashForm.account_type,
         opening_balance: opening,
         current_balance: 0,
+        branch_id: selectedBranchId || null,
         is_active: true,
       }).select("*").single();
       if (insErr) return toast.error(insErr.message || rpc.error.message);
@@ -159,9 +178,10 @@ function AccountingPage() {
       }
       toast.success("تم إضافة الحساب. وسيتم ترحيل القيد المحاسبي تلقائيًا بعد تحديث قاعدة البيانات.");
     } else {
+      if (rpc.data && selectedBranchId) await (supabase as any).from("cash_accounts").update({ branch_id: selectedBranchId }).eq("id", rpc.data);
       toast.success("تم إضافة الحساب وتسجيل الرصيد في الخزنة والقيود");
     }
-    setCashForm({ name: "", account_type: "cash", opening_balance: "0" });
+    setCashForm({ name: "", account_type: "cash", opening_balance: "0", branch_id: selectedBranchId || "" });
     load();
   }
 
@@ -285,7 +305,7 @@ function AccountingPage() {
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />الخزنة والرواتب</h1><p className="text-sm text-muted-foreground">صفحة تشغيل يومية بسيطة: رصيد الخزنة، الرواتب المستحقة، المصروفات، وصرف الرواتب. التفاصيل المحاسبية موجودة في صفحة القيود للمحاسب.</p></div>
-      <div className="flex gap-2"><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>تحديث</Button></div>
+      <div className="flex gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>تحديث</Button></div>
     </div>
     <div className="grid md:grid-cols-4 gap-3">
       <Kpi label="رصيد الخزن" value={fmtMoney(kpis.cash)} icon={<Landmark />} />
@@ -326,10 +346,10 @@ function AccountingPage() {
       </TabsContent>
 
       <TabsContent value="cash" className="grid lg:grid-cols-[360px_1fr] gap-4">
-        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base"><Plus className="w-4 h-4 inline ms-1" />إضافة خزنة أو حساب</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-blue-50 border border-blue-100 p-2 text-xs text-blue-800">اكتب اسم الخزنة والفلوس الموجودة فيها الآن. النظام سيضيفها للرصيد ويسجل قيد افتتاحي تلقائيًا.</div><Field label="الاسم"><Input value={cashForm.name} onChange={(e) => setCashForm({ ...cashForm, name: e.target.value })} /></Field><Field label="النوع"><Select value={cashForm.account_type} onValueChange={(v) => setCashForm({ ...cashForm, account_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">خزنة نقدية</SelectItem><SelectItem value="bank">بنك</SelectItem><SelectItem value="wallet">محفظة</SelectItem><SelectItem value="instapay">InstaPay</SelectItem></SelectContent></Select></Field><Field label="الفلوس الموجودة الآن"><Input type="number" value={cashForm.opening_balance} onChange={(e) => setCashForm({ ...cashForm, opening_balance: e.target.value })} /></Field><Button onClick={addCashAccount} className="w-full">إضافة</Button></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">حركة يدوية</CardTitle></CardHeader><CardContent className="space-y-3"><Field label="الحساب"><Select value={txForm.cash_account_id} onValueChange={(v) => setTxForm({ ...txForm, cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></Field><div className="grid grid-cols-2 gap-2"><Field label="النوع"><Select value={txForm.direction} onValueChange={(v) => setTxForm({ ...txForm, direction: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in">داخل</SelectItem><SelectItem value="out">خارج</SelectItem></SelectContent></Select></Field><Field label="المبلغ"><Input type="number" value={txForm.amount} onChange={(e) => setTxForm({ ...txForm, amount: e.target.value })} /></Field></div><Textarea placeholder="البيان" value={txForm.description} onChange={(e) => setTxForm({ ...txForm, description: e.target.value })} /><Button onClick={addCashTx} className="w-full">تسجيل</Button></CardContent></Card>
-        <Card className="border-teal-200"><CardHeader><CardTitle className="text-base">تحويل بين الخزن</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-teal-50 border border-teal-100 p-2 text-xs text-teal-800">استخدمها لما خزنة تكون بالسالب وخزنة أخرى فيها رصيد. التحويل لا يزود إيرادات ولا مصروفات.</div><Field label="من خزنة"><Select value={transferForm.from_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, from_cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label="إلى خزنة"><Select value={transferForm.to_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, to_cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label="المبلغ"><Input type="number" value={transferForm.amount} onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })} /></Field><Textarea placeholder="سبب التحويل" value={transferForm.notes} onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })} /><Button onClick={transferCash} className="w-full">تنفيذ التحويل</Button></CardContent></Card></div>
-        <div className="space-y-4"><div className="grid md:grid-cols-2 gap-3">{cashAccounts.map((c) => <Card key={c.id}><CardContent className="p-4"><div className="text-sm text-muted-foreground">{typeAr(c.account_type)}</div><div className="text-xl font-black">{c.name}</div><div className={`mt-2 text-2xl font-black ${Number(c.current_balance ?? 0) < 0 ? "text-red-600" : "text-teal-700"}`}>{fmtMoney(c.current_balance)}</div></CardContent></Card>)}</div><Card><CardHeader><CardTitle className="text-base">سجل المعاملات</CardTitle></CardHeader><CardContent className="space-y-2">{cashTx.map((t) => <Row key={t.id} a={fmtDate(t.happened_at)} b={t.description} c={`${t.direction === "in" ? "+" : "-"} ${fmtMoney(t.amount)}`} danger={t.direction === "out"} />)}{!cashTx.length && <Empty text="لا توجد معاملات" />}</CardContent></Card></div>
+        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base"><Plus className="w-4 h-4 inline ms-1" />إضافة خزنة أو حساب</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-blue-50 border border-blue-100 p-2 text-xs text-blue-800">اكتب اسم الخزنة والفلوس الموجودة فيها الآن. النظام سيضيفها للرصيد ويسجل قيد افتتاحي تلقائيًا.</div><Field label="الاسم"><Input value={cashForm.name} onChange={(e) => setCashForm({ ...cashForm, name: e.target.value })} /></Field><Field label="الفرع"><Select value={cashForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setCashForm({ ...cashForm, branch_id: v })}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field><Field label="النوع"><Select value={cashForm.account_type} onValueChange={(v) => setCashForm({ ...cashForm, account_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">خزنة نقدية</SelectItem><SelectItem value="bank">بنك</SelectItem><SelectItem value="wallet">محفظة</SelectItem><SelectItem value="instapay">InstaPay</SelectItem></SelectContent></Select></Field><Field label="الفلوس الموجودة الآن"><Input type="number" value={cashForm.opening_balance} onChange={(e) => setCashForm({ ...cashForm, opening_balance: e.target.value })} /></Field><Button onClick={addCashAccount} className="w-full">إضافة</Button></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">حركة يدوية</CardTitle></CardHeader><CardContent className="space-y-3"><Field label="الحساب"><Select value={txForm.cash_account_id} onValueChange={(v) => setTxForm({ ...txForm, cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""}</SelectItem>)}</SelectContent></Select></Field><div className="grid grid-cols-2 gap-2"><Field label="النوع"><Select value={txForm.direction} onValueChange={(v) => setTxForm({ ...txForm, direction: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in">داخل</SelectItem><SelectItem value="out">خارج</SelectItem></SelectContent></Select></Field><Field label="المبلغ"><Input type="number" value={txForm.amount} onChange={(e) => setTxForm({ ...txForm, amount: e.target.value })} /></Field></div><Textarea placeholder="البيان" value={txForm.description} onChange={(e) => setTxForm({ ...txForm, description: e.target.value })} /><Button onClick={addCashTx} className="w-full">تسجيل</Button></CardContent></Card>
+        <Card className="border-teal-200"><CardHeader><CardTitle className="text-base">تحويل بين الخزن</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-teal-50 border border-teal-100 p-2 text-xs text-teal-800">استخدمها لما خزنة تكون بالسالب وخزنة أخرى فيها رصيد. التحويل لا يزود إيرادات ولا مصروفات.</div><Field label="من خزنة"><Select value={transferForm.from_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, from_cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label="إلى خزنة"><Select value={transferForm.to_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, to_cash_account_id: v })}><SelectTrigger><SelectValue placeholder="اختار" /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label="المبلغ"><Input type="number" value={transferForm.amount} onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })} /></Field><Textarea placeholder="سبب التحويل" value={transferForm.notes} onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })} /><Button onClick={transferCash} className="w-full">تنفيذ التحويل</Button></CardContent></Card></div>
+        <div className="space-y-4"><div className="grid md:grid-cols-2 gap-3">{cashAccounts.map((c) => <Card key={c.id}><CardContent className="p-4"><div className="text-sm text-muted-foreground">{typeAr(c.account_type)}{c.branches?.name ? ` — ${c.branches.name}` : ""}</div><div className="text-xl font-black">{c.name}</div><div className={`mt-2 text-2xl font-black ${Number(c.current_balance ?? 0) < 0 ? "text-red-600" : "text-teal-700"}`}>{fmtMoney(c.current_balance)}</div></CardContent></Card>)}</div><Card><CardHeader><CardTitle className="text-base">سجل المعاملات</CardTitle></CardHeader><CardContent className="space-y-2">{cashTx.map((t) => <Row key={t.id} a={fmtDate(t.happened_at)} b={t.description} c={`${t.direction === "in" ? "+" : "-"} ${fmtMoney(t.amount)}`} danger={t.direction === "out"} />)}{!cashTx.length && <Empty text="لا توجد معاملات" />}</CardContent></Card></div>
       </TabsContent>
 
       <TabsContent value="expenses"><Card><CardHeader><CardTitle className="text-base">مصروفات الشهر: المدفوعة والآجلة</CardTitle></CardHeader><CardContent className="space-y-2">{expenses.map((e) => <Row key={e.id} a={fmtDate(e.spent_at)} b={`${catAr(e.category)} — ${e.description ?? ""}`} c={fmtMoney(e.amount)} danger={e.status === "payable"} badge={e.status === "payable" ? "آجل" : "مدفوع"} />)}{!expenses.length && <Empty text="لا توجد مصروفات لهذا الشهر" />}</CardContent></Card></TabsContent>

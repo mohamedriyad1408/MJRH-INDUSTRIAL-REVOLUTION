@@ -6,6 +6,7 @@ import { fmtMoney } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { CalendarCheck, ClipboardList, Map, Wallet, BarChart3, ShieldCheck, Bell, Loader2, Truck, AlertTriangle, RotateCcw, CreditCard } from "lucide-react";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
@@ -41,13 +42,33 @@ type Summary = {
 };
 
 function TodayCenter() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const canView = hasRole("owner", "ops_manager", "cs_manager");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Summary | null>(null);
   const [details, setDetails] = useState<any[]>([]);
   const [latestReports, setLatestReports] = useState<any[]>([]);
   const [assigning, setAssigning] = useState(false);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
+
+  function withBranch(q: any, table = "branch_id") {
+    return branchId === "all" ? q : q.eq(table, branchId);
+  }
+
+  function orderQuery(select: string, options?: any) {
+    return withBranch((supabase as any).from("orders").select(select, options));
+  }
+
+  function unitQuery(select: string, options?: any) {
+    const q = (supabase as any).from("service_units").select(branchId === "all" ? select : `${select},orders!inner(branch_id)`, options);
+    return branchId === "all" ? q : q.eq("orders.branch_id", branchId);
+  }
+
+  function cashTxQuery(select: string) {
+    const q = (supabase as any).from("cash_transactions").select(branchId === "all" ? select : `${select},cash_accounts!inner(branch_id)`);
+    return branchId === "all" ? q : q.eq("cash_accounts.branch_id", branchId);
+  }
 
   async function load() {
     if (!canView) return;
@@ -59,29 +80,29 @@ function TodayCenter() {
     const [orders, cash, pickups, readyNoDriver, reclean, qc, unpaid, invoices, proofs, closings,
       lateDetail, pickupDetail, noDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail,
       deliveredToday, lastClosing, driverCash, reportsRes, cashSafesRes] = await Promise.all([
-      (supabase as any).from("orders").select("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
-      (supabase as any).from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
+      orderQuery("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
+      cashTxQuery("amount,direction,happened_at,source_type").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
-      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("needs_reclean", true),
-      (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
-      (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
-      (supabase as any).from("orders").select("id,order_number,status,promised_delivery_at,customers(full_name)").lt("promised_delivery_at", now).not("status", "in", "(delivered,cancelled)").limit(4),
+      orderQuery("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
+      unitQuery("id", { count: "exact", head: true }).eq("needs_reclean", true),
+      unitQuery("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
+      orderQuery("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
+      orderQuery("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+      orderQuery("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
+      withBranch((supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true })).eq("closing_date", todayStr),
+      orderQuery("id,order_number,status,promised_delivery_at,customers(full_name)").lt("promised_delivery_at", now).not("status", "in", "(delivered,cancelled)").limit(4),
       (supabase as any).from("pickup_requests").select("id,customer_name,status").in("status", ["pending", "assigned"]).limit(4),
-      (supabase as any).from("orders").select("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(4),
-      (supabase as any).from("service_units").select("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(4),
-      (supabase as any).from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("current_stage", "qc_failed").limit(4),
-      (supabase as any).from("orders").select("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(4),
-      (supabase as any).from("orders").select("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(4),
-      (supabase as any).from("orders").select("id,order_number,payment_verification_status,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(4),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "delivered").gte("updated_at", startIso),
-      (supabase as any).from("daily_cash_closings").select("difference,cash_accounts(name),closed_at").order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
-      (supabase as any).from("cash_transactions").select("amount,source_type,happened_at").in("source_type", ["order_payment", "driver_tip_delivery", "driver_tip"]).gte("happened_at", startIso).then((r: any) => r).catch(() => ({ data: [] })),
+      orderQuery("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(4),
+      unitQuery("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(4),
+      unitQuery("id,label_code,name,order_id,orders(order_number)").eq("current_stage", "qc_failed").limit(4),
+      orderQuery("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(4),
+      orderQuery("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(4),
+      orderQuery("id,order_number,payment_verification_status,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(4),
+      orderQuery("id", { count: "exact", head: true }).eq("status", "delivered").gte("updated_at", startIso),
+      withBranch((supabase as any).from("daily_cash_closings").select("difference,cash_accounts(name),closed_at")).order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
+      cashTxQuery("amount,source_type,happened_at").in("source_type", ["order_payment", "driver_tip_delivery", "driver_tip"]).gte("happened_at", startIso).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("app_notifications").select("id,title,body,href,tone,created_at").ilike("title", "%تقرير%").order("created_at", { ascending: false }).limit(5).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true).then((r: any) => r).catch(() => ({ count: 0 })),
+      withBranch((supabase as any).from("cash_accounts").select("id", { count: "exact", head: true })).eq("is_active", true).then((r: any) => r).catch(() => ({ count: 0 })),
     ]);
     const os = orders.data ?? [];
     const cs = cash.data ?? [];
@@ -131,7 +152,12 @@ function TodayCenter() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [canView]);
+  useEffect(() => {
+    if (!tenantId) return;
+    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+  }, [tenantId]);
+
+  useEffect(() => { load(); }, [canView, branchId]);
 
   const critical = useMemo(() => {
     if (!data) return 0;
@@ -150,8 +176,9 @@ function TodayCenter() {
 
   async function saveDailyReport() {
     if (!data) return;
+    const branchName = branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد";
     const body = [
-      "مركز اليوم",
+      `مركز اليوم - ${branchName}`,
       `طلبات اليوم: ${data.ordersToday}`,
       `إيراد اليوم: ${fmtMoney(data.revenueToday)}`,
       `داخل الخزنة: ${fmtMoney(data.cashIn)}`,
@@ -181,7 +208,7 @@ function TodayCenter() {
       ? details.map((d) => `- ${d.type}: ${d.title} — ${d.sub}`).join("\n")
       : "لا توجد مشاكل عاجلة مفتوحة";
     return [
-      `تقرير نهاية اليوم - ${today}`,
+      `تقرير نهاية اليوم - ${today} - ${branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد"}`,
       "",
       "أولًا: الحركة",
       `- طلبات اليوم: ${data.ordersToday}`,
@@ -248,7 +275,7 @@ function TodayCenter() {
         <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />مركز اليوم</h1>
         <p className="text-sm text-muted-foreground">افتح هذه الصفحة أول اليوم وآخر اليوم: تعرض أهم ما يحتاج متابعة الآن.</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />حفظ تقرير اليوم</Button><Button variant="outline" onClick={copyEndOfDayReport}>نسخ نهاية اليوم</Button><Button onClick={saveEndOfDayReport}>تقرير نهاية اليوم</Button></div>
+      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />حفظ تقرير اليوم</Button><Button variant="outline" onClick={copyEndOfDayReport}>نسخ نهاية اليوم</Button><Button onClick={saveEndOfDayReport}>تقرير نهاية اليوم</Button></div>
     </div>
 
     <div className="grid md:grid-cols-6 gap-3">

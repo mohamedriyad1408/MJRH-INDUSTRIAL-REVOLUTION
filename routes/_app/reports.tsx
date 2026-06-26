@@ -34,7 +34,7 @@ const STAGE_AR: Record<string, string> = {
 type Insight = { title: string; body: string; tone: "good" | "warn" | "bad" | "info"; action: string };
 
 function ReportsPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const canView = hasRole("owner", "ops_manager", "cs_manager");
   const isOwner = hasRole("owner");
   const isOps = hasRole("ops_manager");
@@ -43,6 +43,8 @@ function ReportsPage() {
   const [month, setMonth] = useState(new Date().getMonth());
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<any>(null);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
 
   async function load() {
     setLoading(true);
@@ -53,20 +55,22 @@ function ReportsPage() {
     const prevFrom = new Date(year, month - 1, 1).toISOString();
     const prevTo = new Date(year, month, 0, 23, 59, 59).toISOString();
 
+    const addBranch = (q: any, column = "branch_id") => branchId === "all" ? q : q.eq(column, branchId);
+    const branchOrderSelect = branchId === "all" ? "" : ",orders!inner(branch_id)";
     const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes, lateDetailsRes] = await Promise.all([
-      (supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)").gte("created_at", from).lte("created_at", to),
-      (supabase as any).from("orders").select("id,total,status,created_at").gte("created_at", prevFrom).lte("created_at", prevTo),
-      (supabase as any).from("expenses").select("amount,category,status,source_type,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void"),
-      (supabase as any).from("employees").select("id,full_name,job_role").eq("is_active", true),
-      (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at").gte("created_at", from).lte("created_at", to),
-      (supabase as any).from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to),
+      addBranch((supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)")).gte("created_at", from).lte("created_at", to),
+      addBranch((supabase as any).from("orders").select("id,total,status,created_at")).gte("created_at", prevFrom).lte("created_at", prevTo),
+      addBranch((supabase as any).from("expenses").select("amount,category,status,source_type,spent_at")).gte("spent_at", from).lte("spent_at", to).neq("status", "void"),
+      addBranch((supabase as any).from("employees").select("id,full_name,job_role")).eq("is_active", true),
+      (branchId === "all" ? (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at").gte("created_at", from).lte("created_at", to) : (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
+      (branchId === "all" ? (supabase as any).from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to) : (supabase as any).from("service_units").select(`id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at${branchOrderSelect}`).gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
       (supabase as any).from("qc_checks").select("id,result,severity,checked_at,service_unit_id").gte("checked_at", from).lte("checked_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("inventory_items").select("id,name,current_qty,reorder_level,avg_unit_cost,is_active").eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch((supabase as any).from("inventory_items").select("id,name,current_qty,reorder_level,avg_unit_cost,is_active")).eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("customer_messages").select("id,status,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("orders").select("id,payment_verification_status,total,created_at").in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("orders").select("id,status,invoice_finalized_at,created_at").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch((supabase as any).from("orders").select("id,payment_verification_status,total,created_at")).in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch((supabase as any).from("orders").select("id,status,invoice_finalized_at,created_at")).in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("pickup_requests").select("id,status,created_at,driver_employee_id").in("status", ["pending", "assigned"]).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("orders").select("id,order_number,status,promised_delivery_at,updated_at,customers(full_name),task_assignments(employee_id,station,assigned_at,completed_at,employees(full_name))").not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString()).limit(50).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch((supabase as any).from("orders").select("id,order_number,status,promised_delivery_at,updated_at,customers(full_name),task_assignments(employee_id,station,assigned_at,completed_at,employees(full_name))")).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString()).limit(50).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     const orders = ordRes.data ?? [];
@@ -182,11 +186,17 @@ function ReportsPage() {
     setLoading(false);
   }
 
-  useEffect(() => { if (canView) load(); }, [year, month]);
+  useEffect(() => {
+    if (!tenantId) return;
+    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+  }, [tenantId]);
+
+  useEffect(() => { if (canView) load(); }, [year, month, branchId]);
 
   function exportCSV() {
     if (!data) return;
     const rows = [
+      ["الفرع", branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد"],
       ["المؤشر", "القيمة"],
       ["الإيرادات", data.totalRevenue],
       ["المصروفات المدفوعة", data.totalExpenses],
@@ -203,7 +213,7 @@ function ReportsPage() {
     const csv = rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `mjrh-intelligence-${year}-${month+1}.csv`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `mjrh-intelligence-${branchId === "all" ? "all" : branchId}-${year}-${month+1}.csv`; a.click();
     toast.success("تم تصدير التقرير");
   }
 
@@ -218,6 +228,10 @@ function ReportsPage() {
           <p className="text-sm text-muted-foreground">النظام لا يعرض أرقام فقط — يكتشف التكدس، تسريب الجودة، خطر المخزون، التحصيل، ومتابعات خدمة العملاء.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Select value={branchId} onValueChange={setBranchId}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+          </Select>
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>{MONTHS.map((m, i) => <SelectItem key={i} value={String(i)}>{m}</SelectItem>)}</SelectContent>
