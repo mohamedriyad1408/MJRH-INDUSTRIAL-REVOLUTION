@@ -85,20 +85,25 @@ function DryingAssemblyStation() {
           await (supabase as any).from("service_units").update({ photo_url: data.publicUrl, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id).then(() => null);
         }
       }
+      const since = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
       const { data: all } = await (supabase as any)
         .from("service_units")
-        .select("id,label_code,name,photo_url,current_stage,label_status,unit_number")
-        .eq("order_id", row.order_id)
+        .select("id,label_code,name,photo_url,current_stage,label_status,unit_number,order_id,orders!inner(id,order_number,created_at,branch_id,customers(full_name,phone))")
+        .gte("orders.created_at", since)
         .not("photo_url", "is", null)
-        .order("unit_number");
-      const ranked = (all ?? []).sort((a: any, b: any) => {
-        const an = String(a.name ?? "") === row.name ? 0 : 1;
-        const bn = String(b.name ?? "") === row.name ? 0 : 1;
-        return an - bn;
-      });
+        .limit(120);
+      const ranked = (all ?? []).filter((x: any) => x.id !== row.id).sort((a: any, b: any) => {
+        const sameOrderA = a.order_id === row.order_id ? 0 : 5;
+        const sameOrderB = b.order_id === row.order_id ? 0 : 5;
+        const sameNameA = String(a.name ?? "") === row.name ? 0 : 2;
+        const sameNameB = String(b.name ?? "") === row.name ? 0 : 2;
+        const sameBranchA = a.orders?.branch_id === row.branch_id ? 0 : 1;
+        const sameBranchB = b.orders?.branch_id === row.branch_id ? 0 : 1;
+        return (sameOrderA + sameNameA + sameBranchA) - (sameOrderB + sameNameB + sameBranchB);
+      }).slice(0, 30);
       setMatches((m) => ({ ...m, [row.id]: ranked }));
-      await recordEvent(row, "assembly_photo_search", "تصوير وبحث عن قطعة في صور الطلب", { photo_search: true });
-      toast.success(ranked.length ? `تم البحث في ${ranked.length} صورة داخل الطلب` : "تم التصوير، ولا توجد صور أخرى داخل الطلب للمقارنة");
+      await recordEvent(row, "assembly_photo_search", "تصوير وبحث عن قطعة في صور آخر 15 يوم", { photo_search: true, search_window_days: 15, matches: ranked.length });
+      toast.success(ranked.length ? `تم البحث في صور آخر 15 يوم ووجدنا ${ranked.length} نتيجة محتملة` : "تم التصوير، ولا توجد صور مطابقة ضمن آخر 15 يوم");
       load();
     } finally {
       setBusy(null);
@@ -167,7 +172,7 @@ function DryingAssemblyStation() {
               <Button size="sm" variant="destructive" onClick={() => reportLabel(u, "missing_label")} disabled={busy === u.id}>بدون مارك</Button>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" onClick={() => completeAssembly(u)} disabled={busy === u.id || u.label_status === "missing_label"}>{busy === u.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <CheckCircle2 className="w-3 h-3 ms-1" />} جاهز للكي</Button>
             </div>
-            {matches[u.id]?.length ? <div className="rounded-2xl border bg-cyan-50 p-2"><div className="text-xs font-black text-cyan-900 mb-2">نتائج البحث داخل صور نفس الطلب</div><div className="grid grid-cols-3 gap-2">{matches[u.id].map((m: any) => <div key={m.id} className="rounded-xl bg-white border p-1 text-center"><img src={m.photo_url} className="h-16 w-full object-cover rounded-lg bg-muted" /><div className="text-[10px] font-bold mt-1 truncate">{m.label_code}</div><div className="text-[10px] text-muted-foreground truncate">{m.name}</div></div>)}</div></div> : null}
+            {matches[u.id]?.length ? <div className="rounded-2xl border bg-cyan-50 p-2"><div className="text-xs font-black text-cyan-900 mb-2">نتائج البحث داخل صور الطلبات المستلمة خلال آخر 15 يوم</div><div className="grid grid-cols-3 gap-2">{matches[u.id].map((m: any) => <div key={m.id} className="rounded-xl bg-white border p-1 text-center"><img src={m.photo_url} className="h-16 w-full object-cover rounded-lg bg-muted" /><div className="text-[10px] font-bold mt-1 truncate">{m.label_code}</div><div className="text-[10px] text-muted-foreground truncate">{m.name}</div><div className="text-[10px] text-cyan-700 truncate">طلب #{m.orders?.order_number}</div></div>)}</div></div> : null}
           </div>)}
         </CardContent>
       </Card>)}

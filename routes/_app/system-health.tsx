@@ -94,13 +94,14 @@ function SystemHealthPage() {
 
       setTenantReady(tenantHealth.data ?? null);
 
-      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit] = await Promise.all([
+      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues] = await Promise.all([
         (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
         (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
         (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
         (supabase as any).from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
         (supabase as any).from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
         (supabase as any).from("financial_operation_audit").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        (supabase as any).from("service_units").select("id,label_code,name,order_id,label_status,orders(order_number)").in("label_status", ["missing_label", "unclear_label"]).limit(20).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
       ]);
 
       const activeOrders = orders.data ?? [];
@@ -152,7 +153,7 @@ function SystemHealthPage() {
       const financialRows = financialAudit.data ?? [];
       setFinancialAuditRows(financialRows.slice(0, 12));
 
-      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, tenantHealth];
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, tenantHealth];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
@@ -171,6 +172,7 @@ function SystemHealthPage() {
         { key: "pickups", title: "استلامات مفتوحة", count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: "وزعها على مندوبين من الخريطة", details: pickupDetails },
         { key: "readyNoDriver", title: "طلبات جاهزة بلا مندوب", count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: "عين مندوب قبل خروج الطلب للتسليم", details: readyNoDriverDetails },
         { key: "reclean", title: "مرتجعات غسيل مفتوحة", count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: "أنه المرتجع من محطة الغسيل", details: recleanDetails },
+        { key: "labelIssues", title: "قطع بمشكلة مارك/ليبل", count: labelIssues.data?.length ?? 0, okWhenZero: true, severity: (labelIssues.data?.length ?? 0) ? "danger" : "ok", href: "/stations/drying-assembly", fix: "لا تدخل هذه القطع الكي أو التسليم قبل حل المارك/الليبل", details: (labelIssues.data ?? []).slice(0,5).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status}`, href: "/stations/drying-assembly" })), error: labelIssues.error?.message },
         { key: "qc", title: "مشاكل جودة مفتوحة", count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: "راجع قرار الجودة وتواصل مع العميل عند الحاجة", details: qcDetails },
         { key: "unpaid", title: "جاهز أو خارج وغير مدفوع", count: unpaidReady.count ?? 0, okWhenZero: true, severity: severityFor(unpaidReady.count ?? 0, true), href: "/receivables", fix: "حصّل أو راجع ذمم العملاء", details: unpaidDetails },
         { key: "invoice", title: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: "راجع الطلب واضغط تأكيد وإشعار", details: invoiceDetails },
@@ -365,7 +367,7 @@ function groupForCheck(key: string) {
   if (["cash", "chart", "cashBalanceIntegrity", "journal", "manualNoJournal", "cashClosing", "oldPayables", "financialAudit"].includes(key)) return "finance";
   if (["noPieces", "stuckOrders", "invoice"].includes(key)) return "operations";
   if (["pickups", "readyNoDriver", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
-  if (["reclean", "qc", "unpaid", "proof"].includes(key)) return "quality";
+  if (["reclean", "qc", "labelIssues", "unpaid", "proof"].includes(key)) return "quality";
   return "apdo";
 }
 function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }

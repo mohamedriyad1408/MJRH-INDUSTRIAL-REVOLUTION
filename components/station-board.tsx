@@ -21,13 +21,14 @@ type Order = {
 };
 
 export function StationBoard({
-  title, station, incoming, current, nextStatus,
+  title, station, incoming, current, nextStatus, nextLabel,
 }: {
   title: string;
   station: "cleaning" | "ironing" | "packing";
   incoming: OrderStatus;     // status to pull from
   current: OrderStatus;       // status while at this station
   nextStatus: OrderStatus;    // status when forwarded
+  nextLabel?: string;         // human label when operational station differs from broad order status
 }) {
   const { user, hasRole } = useAuth();
   const canMove = hasRole("ops_manager", "owner");
@@ -92,7 +93,7 @@ export function StationBoard({
           <div>
             <div className="text-xs text-teal-700 font-bold mb-1">مهمتك التالية</div>
             <div className="font-black text-lg">طلب #{nextTask.order_number} — {nextTask.customers?.full_name ?? "عميل"}</div>
-            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? "ابدأ المعالجة الآن" : `جاهز للتحويل إلى ${ORDER_STATUS_AR[nextStatus]}`}</div>
+            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? "ابدأ المعالجة الآن" : nextLabel ? `جاهز للتحويل إلى ${nextLabel}` : `جاهز للتحويل إلى ${ORDER_STATUS_AR[nextStatus]}`}</div>
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>فتح الطلب</Link></Button>
@@ -112,7 +113,7 @@ export function StationBoard({
                 <UserPlus className="w-3 h-3 ms-1" />تعيين
               </Button>
               <Button size="sm" variant="default" onClick={() => move(o.id, nextStatus, current)}>
-                تحويل إلى {ORDER_STATUS_AR[nextStatus]} <ArrowLeft className="w-3 h-3 ms-1" />
+                تحويل إلى {nextLabel ?? ORDER_STATUS_AR[nextStatus]} <ArrowLeft className="w-3 h-3 ms-1" />
               </Button>
             </div>
           )} />

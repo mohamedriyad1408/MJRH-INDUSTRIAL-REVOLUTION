@@ -163,10 +163,11 @@ function ReportsPage() {
     const lateEmployees = Object.values(lateByEmployee).sort((a, b) => b.count - a.count).slice(0, 6);
 
     const branchRows = branches.length ? branches : ((await (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at")).data ?? []);
-    const [cmpOrdRes, cmpExpRes, cmpUnitsRes] = await Promise.all([
+    const [cmpOrdRes, cmpExpRes, cmpUnitsRes, labelIssueRes] = await Promise.all([
       (supabase as any).from("orders").select("id,branch_id,total,status,payment_status,is_urgent,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("expenses").select("branch_id,amount,status,category,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("service_units").select("id,current_stage,needs_reclean,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("service_units").select("id,label_status,created_at").in("label_status", ["missing_label", "unclear_label"]).gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     const branchComparison = (branchRows as any[]).map((b: any) => {
       const bo = (cmpOrdRes.data ?? []).filter((o: any) => o.branch_id === b.id);
@@ -200,7 +201,7 @@ function ReportsPage() {
       stageCounts, bottleneck, recleanCount, qcFailed, qcCount: qc.length, qcRate, lowStock,
       stations, topEmployees, topServices, insights,
       queuedMessages, sentMessages, proofIssues: proofIssues.length, invoiceNeedsReview: invoiceNeedsReview.length, pendingPickups,
-      lateByStage, lateEmployees, branchComparison,
+      lateByStage, lateEmployees, branchComparison, labelIssues: labelIssueRes.data?.length ?? 0,
     });
     setLoading(false);
   }
@@ -308,6 +309,7 @@ function ReportsPage() {
               <CardContent className="space-y-3 text-sm">
                 <Leak label="فشل QC" value={data.qcFailed} danger={data.qcFailed > 0} />
                 <Leak label="مرتجع تنظيف" value={data.recleanCount} danger={data.recleanCount > 0} />
+                <Leak label="مشاكل مارك/ليبل" value={data.labelIssues ?? 0} danger={(data.labelIssues ?? 0) > 0} />
                 <Leak label="مخزون تحت الحد" value={data.lowStock.length} danger={data.lowStock.length > 0} />
                 <Leak label="طلبات مستعجلة" value={data.urgent} danger={false} />
               </CardContent>

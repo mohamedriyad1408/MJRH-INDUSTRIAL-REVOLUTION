@@ -36,7 +36,7 @@ function CleaningStation() {
     return (
       <div className="space-y-5">
         <CleaningWorkerView manager />
-        <StationBoard title="تحريك الطلبات من الغسيل إلى الكي" station="cleaning" incoming="received" current="cleaning" nextStatus="ironing" />
+        <StationBoard title="تحريك الطلبات من الغسيل إلى التجفيف والتجميع" station="cleaning" incoming="received" current="cleaning" nextStatus="ironing" nextLabel="التجفيف والتجميع" />
       </div>
     );
   }

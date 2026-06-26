@@ -54,6 +54,7 @@ function IroningManagerPage() {
         .from("service_units")
         .select("id,label_code,name,line_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
         .in("service_type", ["ironing", "both"])
+        .in("current_stage", ["ironing", "ironing_done", "packing", "packing_done", "ready"])
         .in("orders.status", ["ironing", "packing", "ready"])
         .order("ironing_assigned_at", { ascending: true }),
       supabase.from("employees").select("id,full_name").eq("is_active", true).or("station.eq.ironing,job_role.eq.ironing_tech").order("full_name"),
@@ -92,7 +93,7 @@ function IroningManagerPage() {
     const { error } = await (supabase as any).from("service_units").update({
       assigned_ironing_employee_id: toId,
       ironing_assigned_at: new Date().toISOString(),
-    }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["ironing", "both"]);
+    }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["ironing", "both"]).in("current_stage", ["ironing", "ironing_done"]);
     if (error) toast.error(error.message); else { toast.success("تم نقل مهام الفني"); load(); }
   }
 
@@ -194,6 +195,7 @@ function IroningWorkerPage() {
       .eq("assigned_ironing_employee_id", employeeId)
       .eq("needs_reclean", false)
       .in("service_type", ["ironing", "both"])
+      .in("current_stage", ["ironing", "ironing_done"])
       .is("ironing_completed_at", null)
       .order("ironing_assigned_at", { ascending: true });
     setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
