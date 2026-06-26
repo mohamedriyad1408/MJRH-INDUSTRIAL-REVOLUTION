@@ -42,6 +42,7 @@ function SystemHealthPage() {
   const [diagnostics, setDiagnostics] = useState<string[]>([]);
   const [apdoRows, setApdoRows] = useState<any[]>([]);
   const [apdoError, setApdoError] = useState<string | null>(null);
+  const [tenantReady, setTenantReady] = useState<any | null>(null);
 
   async function load() {
     if (!canUse) return;
@@ -80,14 +81,17 @@ function SystemHealthPage() {
 
       const todayStr = new Date().toISOString().slice(0, 10);
       const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const [ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, activeCashForClosing] = await Promise.all([
+      const [ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, activeCashForClosing, tenantHealth] = await Promise.all([
         (supabase as any).from("orders").select("id,order_number,delivery_address,customers(full_name)").eq("order_type", "delivery").not("status", "in", "(delivered,cancelled)").is("delivery_lat", null).limit(5),
         (supabase as any).from("customers").select("id,full_name,phone").is("address", null).limit(5),
         (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
         (supabase as any).from("expenses").select("id,amount,description,due_at,spent_at").eq("status", "payable").lt("spent_at", todayStr).limit(5),
         (supabase as any).from("orders").select("id,order_number,status,updated_at,customers(full_name)").not("status", "in", "(delivered,cancelled)").lt("updated_at", yesterdayIso).limit(5),
         (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
+        tenantId ? (supabase as any).from("tenant_bootstrap_health").select("*").eq("tenant_id", tenantId).maybeSingle().then((r: any) => r).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
       ]);
+
+      setTenantReady(tenantHealth.data ?? null);
 
       const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix] = await Promise.all([
         (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
@@ -144,11 +148,12 @@ function SystemHealthPage() {
       setApdoRows(apdoIncomplete.slice(0, 12));
       setApdoError(apdoMatrix.error?.message ?? null);
 
-      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix];
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, tenantHealth];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
       const next: Check[] = [
+        { key: "tenantReady", title: "جاهزية النشاط للتشغيل", count: tenantHealth.data?.is_ready ? 0 : 1, okWhenZero: true, severity: tenantHealth.data?.is_ready ? "ok" : "danger", href: "/admin/tenants", fix: tenantHealth.data?.is_ready ? "النشاط جاهز: إعدادات، فرع، خزنة، حسابات، موظف وكتالوج حسب النوع" : "يوجد إعداد أساسي ناقص يجب إصلاحه قبل التشغيل الفعلي", details: tenantHealth.data ? ["has_settings", "has_branch", "has_cash_account", "has_chart_accounts", "has_employee", "has_catalog"].filter((k) => !tenantHealth.data[k]).map((k) => ({ label: readinessAr(k), sub: "ناقص" })) : [] },
         { key: "settings", title: "إعدادات المغسلة", count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: "يتم إنشاؤها تلقائيًا عند فتح مغسلة جديدة" },
         { key: "cash", title: "الخزن والحسابات النقدية", count: cashRows.length || cash.count || 0, severity: cashHealth.error ? "danger" : severityFor(cashRows.length || cash.count || 0), href: "/accounting", fix: cashHealth.error ? "فشل قراءة صحة الخزنة؛ اضغط إصلاح الأساسيات ثم حدّث" : "لا يكفي وجود الخزنة؛ يظهر هنا رصيدها وحركاتها للتأكد أنها تعمل", details: cashHealthDetails, error: cashHealth.error?.message },
         { key: "chart", title: "شجرة الحسابات موجودة", count: chart.count ?? 0, severity: chart.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: chart.error ? "فشل قراءة شجرة الحسابات؛ اضغط إصلاح الأساسيات" : "اضغط إصلاح الأساسيات لإنشاء الحسابات", error: chart.error?.message },
@@ -289,34 +294,58 @@ function SystemHealthPage() {
       </CardContent>
     </Card>}
 
+
+
+    {!loading && tenantReady && <Card className={tenantReady.is_ready ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}>
+      <CardHeader><CardTitle className="text-base">جاهزية النشاط للتشغيل الفعلي</CardTitle></CardHeader>
+      <CardContent className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
+        {[["has_settings", "إعدادات"], ["has_branch", "فرع"], ["has_cash_account", "خزنة"], ["has_chart_accounts", "حسابات"], ["has_employee", "موظف"], ["has_catalog", "كتالوج"]].map(([k,label]: any) => <div key={k} className={`rounded-xl border p-2 text-center font-bold ${tenantReady[k] ? "bg-white text-emerald-700" : "bg-white text-red-700"}`}>{label}<div>{tenantReady[k] ? "✅" : "ناقص"}</div></div>)}
+      </CardContent>
+    </Card>}
+
     {diagnostics.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
       <div className="font-black">فيه استعلامات فشلت أثناء الفحص، لذلك أي رقم ظاهر ممكن يكون غير دقيق:</div>
       {diagnostics.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{d}</div>)}
       <div className="text-xs">اضغط <b>إصلاح الأساسيات</b> ثم <b>تحديث</b>. لو استمر الخطأ فالمشكلة في قاعدة البيانات أو الصلاحيات وليست في الواجهة.</div>
     </CardContent></Card>}
 
-    {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid md:grid-cols-2 gap-3">
-      {checks.map((c) => {
-        const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-        const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
-        return <Card key={c.key} className={cls}>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
-            <div className="text-xs text-muted-foreground">{c.fix}</div>
-            {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">خطأ القراءة: {c.error}</div>}
-            {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => {
-              const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>;
-              return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>;
-            })}</div> : null}
-            <div className="flex gap-2 pt-1">
-              {c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>فتح مكان الإصلاح</Link></Button>}
-              {canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح سريع</Button>}
-            </div>
-          </CardContent>
-        </Card>;
+    {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="space-y-5">
+      {healthGroups.map((g) => {
+        const rows = checks.filter((c) => groupForCheck(c.key) === g.key);
+        if (!rows.length) return null;
+        return <div key={g.key} className="space-y-2"><h2 className="font-black text-lg">{g.title}</h2><div className="grid md:grid-cols-2 gap-3">{rows.map((c) => <HealthCard key={c.key} c={c} fixingKey={fixingKey} repairing={repairing} fixCheck={fixCheck} />)}</div></div>;
       })}
     </div>}
   </div>;
+}
+
+const healthGroups = [
+  { key: "readiness", title: "١) جاهزية التشغيل" },
+  { key: "finance", title: "٢) الماليات والخزن" },
+  { key: "operations", title: "٣) الطلبات والتشغيل" },
+  { key: "delivery", title: "٤) المندوبين والخريطة" },
+  { key: "quality", title: "٥) الجودة والتحصيل" },
+  { key: "apdo", title: "٦) اكتمال APDO والرقابة" },
+];
+function groupForCheck(key: string) {
+  if (["tenantReady", "settings", "employees", "services", "customers"].includes(key)) return "readiness";
+  if (["cash", "chart", "cashBalanceIntegrity", "journal", "manualNoJournal", "cashClosing", "oldPayables"].includes(key)) return "finance";
+  if (["noPieces", "stuckOrders", "invoice"].includes(key)) return "operations";
+  if (["pickups", "readyNoDriver", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
+  if (["reclean", "qc", "unpaid", "proof"].includes(key)) return "quality";
+  return "apdo";
+}
+function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }
+function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fixingKey: string | null; repairing: boolean; fixCheck: (key: string) => void }) {
+  const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
+  const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
+  return <Card className={cls}><CardContent className="p-4 space-y-3">
+    <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
+    <div className="text-xs text-muted-foreground">{c.fix}</div>
+    {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">خطأ القراءة: {c.error}</div>}
+    {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => { const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>; return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>; })}</div> : null}
+    <div className="flex gap-2 pt-1">{c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>فتح مكان الإصلاح</Link></Button>}{canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح سريع</Button>}</div>
+  </CardContent></Card>;
 }
 
 function answerAr(s: string) {

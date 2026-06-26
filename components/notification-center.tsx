@@ -22,7 +22,7 @@ const toneClass: Record<AlertTone, string> = {
 };
 
 export function NotificationCenter() {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, tenantId } = useAuth();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
   const [station, setStation] = useState<string | null>(null);
@@ -56,6 +56,9 @@ export function NotificationCenter() {
 
   async function load() {
     setLoading(true);
+    if (tenantId && (hasRole("owner") || hasRole("ops_manager"))) {
+      await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId }).then(() => null);
+    }
     const now = new Date().toISOString();
     const next: Alert[] = [];
     const myAudiences = audiencesForMe();
@@ -167,7 +170,7 @@ export function NotificationCenter() {
     }
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [station, jobRole, empId]);
+  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [station, jobRole, empId, tenantId]);
 
   const visibleAlerts = useMemo(() => filter === "all" ? alerts : alerts.filter((a) => a.category === filter), [alerts, filter]);
   const count = alerts.length;
