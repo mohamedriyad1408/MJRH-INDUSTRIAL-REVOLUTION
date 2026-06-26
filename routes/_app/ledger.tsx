@@ -127,36 +127,31 @@ function LedgerPage() {
   async function postMonthAutomatically() {
     try {
       if (isClosed) return toast.error("الشهر مقفول ولا يمكن ترحيله");
-      const [{ data: orders }, { data: expenses }] = await Promise.all([
-        (supabase as any).from("orders").select("id,total,delivery_fee,payment_status,payment_method,status").eq("tenant_id", tenantId).neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
-        (supabase as any).from("expenses").select("id,amount,category,status,description").eq("tenant_id", tenantId).neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
-      ]);
-      const paidRevenue = (orders ?? []).filter((o: any) => o.payment_status === "paid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-      const unpaidRevenue = (orders ?? []).filter((o: any) => o.payment_status !== "paid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-      const paidExpenses = (expenses ?? []).filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
-      const payableExpenses = (expenses ?? []).filter((e: any) => e.status === "payable").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
+      if (!tenantId) return toast.error("لم يتم تحديد المغسلة");
 
-      const monthSourceId = crypto.randomUUID();
-      if (paidRevenue > 0) await createJournal("ترحيل الإيرادات المحصلة للشهر", "month_paid_revenue_" + month, monthSourceId, [
-        { account_code: "1000", debit: paidRevenue, credit: 0, memo: "تحصيلات العملاء" },
-        { account_code: "4000", debit: 0, credit: paidRevenue, memo: "إيرادات خدمات" },
+      const [{ data: orders, error: oErr }, { data: expenses, error: eErr }] = await Promise.all([
+        (supabase as any).from("orders").select("id").eq("tenant_id", tenantId).neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
+        (supabase as any).from("expenses").select("id").eq("tenant_id", tenantId).neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
       ]);
-      if (unpaidRevenue > 0) await createJournal("ترحيل الإيرادات الآجلة / ذمم العملاء", "month_unpaid_revenue_" + month, crypto.randomUUID(), [
-        { account_code: "1100", debit: unpaidRevenue, credit: 0, memo: "ذمم عملاء" },
-        { account_code: "4000", debit: 0, credit: unpaidRevenue, memo: "إيرادات خدمات آجلة" },
-      ]);
-      if (paidExpenses > 0) await createJournal("ترحيل المصروفات المدفوعة للشهر", "month_paid_expenses_" + month, crypto.randomUUID(), [
-        { account_code: "5100", debit: paidExpenses, credit: 0, memo: "مصروفات تشغيلية" },
-        { account_code: "1000", debit: 0, credit: paidExpenses, memo: "صرف من الخزنة" },
-      ]);
-      if (payableExpenses > 0) await createJournal("ترحيل المصروفات المستحقة للشهر", "month_payable_expenses_" + month, crypto.randomUUID(), [
-        { account_code: "5100", debit: payableExpenses, credit: 0, memo: "مصروفات مستحقة" },
-        { account_code: "2000", debit: 0, credit: payableExpenses, memo: "دائنون/مصروفات مستحقة" },
-      ]);
-      toast.success("تم ترحيل بيانات الشهر إلى قيود محاسبية متوازنة");
+      if (oErr) throw oErr;
+      if (eErr) throw eErr;
+
+      let syncedOrders = 0;
+      let syncedExpenses = 0;
+      for (const o of orders ?? []) {
+        const r = await (supabase as any).rpc("sync_order_financials", { _order_id: o.id });
+        if (!r.error) syncedOrders++;
+      }
+      for (const e of expenses ?? []) {
+        const r = await (supabase as any).rpc("sync_expense_financials", { _expense_id: e.id });
+        if (!r.error) syncedExpenses++;
+      }
+      await (supabase as any).rpc("repair_ledger_basics").then(() => null);
+      toast.success(`تم فحص وترحيل الناقص فقط: ${syncedOrders} طلب و ${syncedExpenses} مصروف. بدون مضاعفة شهرية.`);
       load();
-    } catch (e: any) { toast.error(e.message ?? "تعذر الترحيل"); }
+    } catch (e: any) { toast.error(e.message ?? "تعذر فحص القيود"); }
   }
+
 
   async function addManualJournal() {
     try {
@@ -208,7 +203,7 @@ function LedgerPage() {
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="journals" className="space-y-4">
       <TabsList><TabsTrigger value="journals">القيود</TabsTrigger><TabsTrigger value="pl">الأرباح والخسائر</TabsTrigger><TabsTrigger value="trial">ميزان المراجعة</TabsTrigger><TabsTrigger value="close">الإقفال</TabsTrigger></TabsList>
       <TabsContent value="journals" className="grid lg:grid-cols-[380px_1fr] gap-4">
-        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><RefreshCw className="w-4 h-4" />ترحيل تلقائي</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">يجمع إيرادات الشهر، الذمم، المصروفات المدفوعة والآجلة، ثم ينشئ قيود مزدوجة متوازنة.</p><Button onClick={postMonthAutomatically} disabled={isClosed} className="w-full">إنشاء قيود الشهر تلقائيًا</Button></CardContent></Card>
+        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><RefreshCw className="w-4 h-4" />ترحيل تلقائي</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">يفحص الطلبات والمصروفات داخل الشهر وينشئ القيود الناقصة فقط. لا يجمع الشهر في قيد إجمالي حتى لا تتضاعف الإيرادات أو المصروفات.</p><Button onClick={postMonthAutomatically} disabled={isClosed} className="w-full">فحص وترحيل الناقص فقط</Button></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />قيد يدوي للمحاسب</CardTitle></CardHeader><CardContent className="space-y-3"><Field label="البيان"><Input value={manual.description} onChange={(e) => setManual({ ...manual, description: e.target.value })} /></Field><div className="grid grid-cols-2 gap-2"><Field label="مدين"><AccountSelect accounts={accounts} value={manual.debit_account} onChange={(v) => setManual({ ...manual, debit_account: v })} /></Field><Field label="دائن"><AccountSelect accounts={accounts} value={manual.credit_account} onChange={(v) => setManual({ ...manual, credit_account: v })} /></Field></div><Field label="المبلغ"><Input type="number" value={manual.amount} onChange={(e) => setManual({ ...manual, amount: e.target.value })} /></Field><Textarea placeholder="مذكرة" value={manual.memo} onChange={(e) => setManual({ ...manual, memo: e.target.value })} /><Button onClick={addManualJournal} disabled={isClosed} className="w-full">حفظ القيد</Button></CardContent></Card></div>
         <Card><CardHeader><CardTitle className="text-base">قيود الشهر</CardTitle></CardHeader><CardContent className="space-y-3">{journals.map((j) => <JournalCard key={j.id} journal={j} />)}{!journals.length && <Empty text="لا توجد قيود لهذا الشهر" />}</CardContent></Card>
       </TabsContent>
