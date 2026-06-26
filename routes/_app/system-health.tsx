@@ -43,6 +43,7 @@ function SystemHealthPage() {
   const [apdoRows, setApdoRows] = useState<any[]>([]);
   const [apdoError, setApdoError] = useState<string | null>(null);
   const [tenantReady, setTenantReady] = useState<any | null>(null);
+  const [financialAuditRows, setFinancialAuditRows] = useState<any[]>([]);
 
   async function load() {
     if (!canUse) return;
@@ -93,12 +94,13 @@ function SystemHealthPage() {
 
       setTenantReady(tenantHealth.data ?? null);
 
-      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix] = await Promise.all([
+      const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit] = await Promise.all([
         (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
         (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
         (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
         (supabase as any).from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
         (supabase as any).from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        (supabase as any).from("financial_operation_audit").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
       ]);
 
       const activeOrders = orders.data ?? [];
@@ -147,8 +149,10 @@ function SystemHealthPage() {
       const apdoIncomplete = apdoData.filter((r: any) => r.branch_answer !== "answered" || r.cash_answer === "missing_cash_account" || r.journal_answer === "missing_journal" || r.report_answer !== "answered" || r.notification_answer === "missing_notification");
       setApdoRows(apdoIncomplete.slice(0, 12));
       setApdoError(apdoMatrix.error?.message ?? null);
+      const financialRows = financialAudit.data ?? [];
+      setFinancialAuditRows(financialRows.slice(0, 12));
 
-      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, tenantHealth];
+      const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, tenantHealth];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
@@ -177,6 +181,7 @@ function SystemHealthPage() {
         { key: "cashClosing", title: "إقفال كل خزن اليوم", count: closingToday.count ?? 0, severity: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? "ok" : "warn", href: "/cash-closing", fix: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? `تم إقفال كل الخزن اليوم (${closingToday.count}/${activeCashForClosing.count})` : `المقفول ${closingToday.count ?? 0} من ${activeCashForClosing.count ?? 0}. افتح إقفال الخزن واقفل الكل في حركة واحدة` },
         { key: "oldPayables", title: "مصروفات آجلة قديمة", count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: "راجع المصروفات الآجلة القديمة وادفعها أو ألغيها بسبب", details: oldPayablesDetails },
         { key: "stuckOrders", title: "طلبات واقفة أكثر من يوم", count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: "افتح الطلب لمعرفة سبب التوقف والخطوة التالية", details: stuckOrderDetails },
+        { key: "financialAudit", title: "المراجعة المالية النهائية", count: financialRows.length, okWhenZero: true, severity: financialAudit.error ? "warn" : (financialRows.some((r: any) => r.severity === "danger") ? "danger" : severityFor(financialRows.length, true)), href: "/ledger", fix: financialAudit.error ? "طبّق migration المراجعة المالية" : (financialRows.length ? "يوجد مسارات مالية تحتاج ربط خزنة/قيد/فرع قبل التشغيل الرسمي" : "المسارات المالية الأساسية مكتملة"), details: financialRows.slice(0, 5).map((r: any) => ({ label: r.title, sub: r.detail, href: r.href })), error: financialAudit.error?.message },
         { key: "apdo", title: "اكتمال APDO للعمليات", count: apdoIncomplete.length, okWhenZero: true, severity: apdoMatrix.error ? "warn" : severityFor(apdoIncomplete.length, true), href: "/system-health", fix: apdoMatrix.error ? "طبّق migration الخاص بـ APDO حتى تظهر مصفوفة الإجابات" : (apdoIncomplete.length ? "فيه عمليات لا تجيب على الفرع/الخزنة/القيد/التقرير/الإشعار بالكامل" : "كل العمليات المسجلة تجيب على الأسئلة الخمسة"), details: apdoIncomplete.slice(0, 5).map((r: any) => ({ label: r.process_name, sub: `${r.branch_answer} · ${r.cash_answer} · ${r.journal_answer} · ${r.report_answer} · ${r.notification_answer}` })), error: apdoMatrix.error?.message },
       ];
       setChecks(next);
@@ -274,6 +279,18 @@ function SystemHealthPage() {
 
 
 
+
+
+    {!loading && <Card className={financialAuditRows.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
+      <CardHeader><CardTitle className="text-base">المراجعة المالية النهائية قبل التشغيل</CardTitle></CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        {financialAuditRows.length === 0 ? <div className="font-bold text-emerald-800">لا توجد مشاكل مالية حرجة في المسارات الأساسية ✅</div> : <>
+          <div className="font-bold text-red-900">بنود تحتاج مراجعة قبل التشغيل الرسمي:</div>
+          <div className="grid md:grid-cols-2 gap-2">{financialAuditRows.map((r) => <Link key={`${r.issue_key}-${r.source_id}`} to={(r.href || "/system-health") as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{r.title}</div><div className="text-muted-foreground mt-1">{r.detail}</div><Badge className="mt-2" variant={r.severity === "danger" ? "destructive" : "secondary"}>{r.domain}</Badge></div></Link>)}</div>
+        </>}
+      </CardContent>
+    </Card>}
+
     {!loading && <Card className={apdoRows.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
       <CardHeader><CardTitle className="text-base">Actor → Process → Data → Output</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
@@ -333,6 +350,7 @@ function groupForCheck(key: string) {
   if (["noPieces", "stuckOrders", "invoice"].includes(key)) return "operations";
   if (["pickups", "readyNoDriver", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
   if (["reclean", "qc", "unpaid", "proof"].includes(key)) return "quality";
+  if (["financialAudit"].includes(key)) return "finance";
   return "apdo";
 }
 function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }
