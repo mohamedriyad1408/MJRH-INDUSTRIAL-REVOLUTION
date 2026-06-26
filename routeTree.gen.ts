@@ -47,6 +47,7 @@ import { Route as AppStationsReceptionRouteImport } from './routes/_app/stations
 import { Route as AppStationsQcRouteImport } from './routes/_app/stations/qc'
 import { Route as AppStationsPackingRouteImport } from './routes/_app/stations/packing'
 import { Route as AppStationsIroningRouteImport } from './routes/_app/stations/ironing'
+import { Route as AppStationsDryingAssemblyRouteImport } from './routes/_app/stations/drying-assembly'
 import { Route as AppStationsDeliveryRouteImport } from './routes/_app/stations/delivery'
 import { Route as AppStationsCleaningRouteImport } from './routes/_app/stations/cleaning'
 import { Route as AppStaffUsersRouteImport } from './routes/_app/staff/users'
@@ -256,6 +257,12 @@ const AppStationsIroningRoute = AppStationsIroningRouteImport.update({
   path: '/stations/ironing',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStationsDryingAssemblyRoute =
+  AppStationsDryingAssemblyRouteImport.update({
+    id: '/stations/drying-assembly',
+    path: '/stations/drying-assembly',
+    getParentRoute: () => AppRoute,
+  } as any)
 const AppStationsDeliveryRoute = AppStationsDeliveryRouteImport.update({
   id: '/stations/delivery',
   path: '/stations/delivery',
@@ -399,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/staff/users': typeof AppStaffUsersRoute
   '/stations/cleaning': typeof AppStationsCleaningRoute
   '/stations/delivery': typeof AppStationsDeliveryRoute
+  '/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
   '/stations/ironing': typeof AppStationsIroningRoute
   '/stations/packing': typeof AppStationsPackingRoute
   '/stations/qc': typeof AppStationsQcRoute
@@ -457,6 +465,7 @@ export interface FileRoutesByTo {
   '/staff/users': typeof AppStaffUsersRoute
   '/stations/cleaning': typeof AppStationsCleaningRoute
   '/stations/delivery': typeof AppStationsDeliveryRoute
+  '/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
   '/stations/ironing': typeof AppStationsIroningRoute
   '/stations/packing': typeof AppStationsPackingRoute
   '/stations/qc': typeof AppStationsQcRoute
@@ -517,6 +526,7 @@ export interface FileRoutesById {
   '/_app/staff/users': typeof AppStaffUsersRoute
   '/_app/stations/cleaning': typeof AppStationsCleaningRoute
   '/_app/stations/delivery': typeof AppStationsDeliveryRoute
+  '/_app/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
   '/_app/stations/ironing': typeof AppStationsIroningRoute
   '/_app/stations/packing': typeof AppStationsPackingRoute
   '/_app/stations/qc': typeof AppStationsQcRoute
@@ -577,6 +587,7 @@ export interface FileRouteTypes {
     | '/staff/users'
     | '/stations/cleaning'
     | '/stations/delivery'
+    | '/stations/drying-assembly'
     | '/stations/ironing'
     | '/stations/packing'
     | '/stations/qc'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/staff/users'
     | '/stations/cleaning'
     | '/stations/delivery'
+    | '/stations/drying-assembly'
     | '/stations/ironing'
     | '/stations/packing'
     | '/stations/qc'
@@ -694,6 +706,7 @@ export interface FileRouteTypes {
     | '/_app/staff/users'
     | '/_app/stations/cleaning'
     | '/_app/stations/delivery'
+    | '/_app/stations/drying-assembly'
     | '/_app/stations/ironing'
     | '/_app/stations/packing'
     | '/_app/stations/qc'
@@ -984,6 +997,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStationsIroningRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/stations/drying-assembly': {
+      id: '/_app/stations/drying-assembly'
+      path: '/stations/drying-assembly'
+      fullPath: '/stations/drying-assembly'
+      preLoaderRoute: typeof AppStationsDryingAssemblyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/stations/delivery': {
       id: '/_app/stations/delivery'
       path: '/stations/delivery'
@@ -1172,6 +1192,7 @@ interface AppRouteChildren {
   AppStaffUsersRoute: typeof AppStaffUsersRoute
   AppStationsCleaningRoute: typeof AppStationsCleaningRoute
   AppStationsDeliveryRoute: typeof AppStationsDeliveryRoute
+  AppStationsDryingAssemblyRoute: typeof AppStationsDryingAssemblyRoute
   AppStationsIroningRoute: typeof AppStationsIroningRoute
   AppStationsPackingRoute: typeof AppStationsPackingRoute
   AppStationsQcRoute: typeof AppStationsQcRoute
@@ -1224,6 +1245,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStaffUsersRoute: AppStaffUsersRoute,
   AppStationsCleaningRoute: AppStationsCleaningRoute,
   AppStationsDeliveryRoute: AppStationsDeliveryRoute,
+  AppStationsDryingAssemblyRoute: AppStationsDryingAssemblyRoute,
   AppStationsIroningRoute: AppStationsIroningRoute,
   AppStationsPackingRoute: AppStationsPackingRoute,
   AppStationsQcRoute: AppStationsQcRoute,

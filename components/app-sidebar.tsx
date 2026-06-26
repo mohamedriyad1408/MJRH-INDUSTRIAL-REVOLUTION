@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, ListOrdered, PlusCircle, Sparkles, Shirt, Package,
+  LayoutDashboard, ListOrdered, PlusCircle, Sparkles, Shirt, Package, Wind,
   Users, Tag, Settings, LogOut, Wallet, BriefcaseBusiness,
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
@@ -56,6 +56,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "الاستقبال", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
       { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee"] },
+      { title: "التجفيف والتجميع", url: "/stations/drying-assembly", icon: Wind, roles: ["ops_manager", "owner", "employee"] },
       { title: "الكي", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee"] },
       { title: "التغليف", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee"] },
       { title: "الجودة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee"] },
