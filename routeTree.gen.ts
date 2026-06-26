@@ -59,6 +59,7 @@ import { Route as AppStaffIdRouteImport } from './routes/_app/staff/$id'
 import { Route as AppPickupsNewRouteImport } from './routes/_app/pickups/new'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
 import { Route as AppOrdersIdRouteImport } from './routes/_app/orders/$id'
+import { Route as AppBranchesIdRouteImport } from './routes/_app/branches/$id'
 import { Route as AppAdminPlatformFeesRouteImport } from './routes/_app/admin/platform-fees'
 import { Route as AppAdminBillingRouteImport } from './routes/_app/admin/billing'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
@@ -314,6 +315,11 @@ const AppOrdersIdRoute = AppOrdersIdRouteImport.update({
   path: '/orders/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBranchesIdRoute = AppBranchesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppBranchesRoute,
+} as any)
 const AppAdminPlatformFeesRoute = AppAdminPlatformFeesRouteImport.update({
   id: '/admin/platform-fees',
   path: '/admin/platform-fees',
@@ -348,7 +354,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
-  '/branches': typeof AppBranchesRoute
+  '/branches': typeof AppBranchesRouteWithChildren
   '/budgets': typeof AppBudgetsRoute
   '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
@@ -372,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/track/$token': typeof TrackTokenRoute
   '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/branches/$id': typeof AppBranchesIdRoute
   '/orders/$id': typeof AppOrdersIdRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
@@ -403,7 +410,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
-  '/branches': typeof AppBranchesRoute
+  '/branches': typeof AppBranchesRouteWithChildren
   '/budgets': typeof AppBudgetsRoute
   '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
@@ -428,6 +435,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/branches/$id': typeof AppBranchesIdRoute
   '/orders/$id': typeof AppOrdersIdRoute
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
@@ -461,7 +469,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_app/accounting': typeof AppAccountingRoute
   '/_app/billing': typeof AppBillingRoute
-  '/_app/branches': typeof AppBranchesRoute
+  '/_app/branches': typeof AppBranchesRouteWithChildren
   '/_app/budgets': typeof AppBudgetsRoute
   '/_app/cash-closing': typeof AppCashClosingRoute
   '/_app/crm': typeof AppCrmRoute
@@ -486,6 +494,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/admin/billing': typeof AppAdminBillingRoute
   '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/_app/branches/$id': typeof AppBranchesIdRoute
   '/_app/orders/$id': typeof AppOrdersIdRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
   '/_app/pickups/new': typeof AppPickupsNewRoute
@@ -544,6 +553,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/admin/billing'
     | '/admin/platform-fees'
+    | '/branches/$id'
     | '/orders/$id'
     | '/orders/new'
     | '/pickups/new'
@@ -600,6 +610,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/billing'
     | '/admin/platform-fees'
+    | '/branches/$id'
     | '/orders/$id'
     | '/orders/new'
     | '/pickups/new'
@@ -657,6 +668,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/admin/billing'
     | '/_app/admin/platform-fees'
+    | '/_app/branches/$id'
     | '/_app/orders/$id'
     | '/_app/orders/new'
     | '/_app/pickups/new'
@@ -1044,6 +1056,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/branches/$id': {
+      id: '/_app/branches/$id'
+      path: '/$id'
+      fullPath: '/branches/$id'
+      preLoaderRoute: typeof AppBranchesIdRouteImport
+      parentRoute: typeof AppBranchesRoute
+    }
     '/_app/admin/platform-fees': {
       id: '/_app/admin/platform-fees'
       path: '/admin/platform-fees'
@@ -1082,10 +1101,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppBranchesRouteChildren {
+  AppBranchesIdRoute: typeof AppBranchesIdRoute
+}
+
+const AppBranchesRouteChildren: AppBranchesRouteChildren = {
+  AppBranchesIdRoute: AppBranchesIdRoute,
+}
+
+const AppBranchesRouteWithChildren = AppBranchesRoute._addFileChildren(
+  AppBranchesRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAccountingRoute: typeof AppAccountingRoute
   AppBillingRoute: typeof AppBillingRoute
-  AppBranchesRoute: typeof AppBranchesRoute
+  AppBranchesRoute: typeof AppBranchesRouteWithChildren
   AppBudgetsRoute: typeof AppBudgetsRoute
   AppCashClosingRoute: typeof AppCashClosingRoute
   AppCrmRoute: typeof AppCrmRoute
@@ -1136,7 +1167,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAccountingRoute: AppAccountingRoute,
   AppBillingRoute: AppBillingRoute,
-  AppBranchesRoute: AppBranchesRoute,
+  AppBranchesRoute: AppBranchesRouteWithChildren,
   AppBudgetsRoute: AppBudgetsRoute,
   AppCashClosingRoute: AppCashClosingRoute,
   AppCrmRoute: AppCrmRoute,

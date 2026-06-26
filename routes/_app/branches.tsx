@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -66,9 +66,14 @@ function BranchesPage() {
                 </div>
                 {b.address && <div className="text-xs text-muted-foreground">{b.address}</div>}
                 {b.phone && <div className="text-xs">{b.phone}</div>}
-                <Button size="sm" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}>
-                  <Pencil className="w-3 h-3 ms-1" /> تعديل
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}>
+                    <Pencil className="w-3 h-3 ms-1" /> تعديل
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to={`/branches/${b.id}` as any}>شاشة الفرع</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
