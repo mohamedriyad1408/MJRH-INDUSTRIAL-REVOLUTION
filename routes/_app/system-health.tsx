@@ -212,6 +212,12 @@ function SystemHealthPage() {
         await repairBasics();
         return;
       }
+      if (key === "financialAudit") {
+        const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
+        if (error) toast.error(error.message); else toast.success(`تمت محاولة إصلاح ${data?.fixed ?? 0} بند. المتبقي: ${data?.remaining ?? 0}`);
+        await load();
+        return;
+      }
       if (["pickups", "readyNoDriver"].includes(key)) {
         const r = await autoAssignDrivers();
         toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة على المناديب` : "لا توجد مهام قابلة للتوزيع الآن");
@@ -276,6 +282,16 @@ function SystemHealthPage() {
       <Kpi title="تنبيهات" value={warn} tone={warn ? "warn" : "ok"} />
       <Kpi title="بنود الفحص" value={checks.length} tone="ok" />
     </div>
+
+    {!loading && <Card className={danger === 0 ? "border-emerald-300 bg-emerald-50" : "border-red-300 bg-red-50"}>
+      <CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className={`text-xl font-black ${danger === 0 ? "text-emerald-800" : "text-red-800"}`}>{danger === 0 ? "جاهز للتشغيل الفعلي ✅" : "غير جاهز للتشغيل الرسمي بعد"}</div>
+          <div className="text-sm text-muted-foreground mt-1">يعتمد القرار على الجاهزية، الخزن، القيود، APDO، والمراجعة المالية. عالج المشاكل الحرجة قبل تشغيل كل الفروع.</div>
+        </div>
+        <Button variant={danger === 0 ? "default" : "outline"} onClick={createDailySystemReport}>حفظ حالة الجاهزية</Button>
+      </CardContent>
+    </Card>}
 
 
 
@@ -346,17 +362,16 @@ const healthGroups = [
 ];
 function groupForCheck(key: string) {
   if (["tenantReady", "settings", "employees", "services", "customers"].includes(key)) return "readiness";
-  if (["cash", "chart", "cashBalanceIntegrity", "journal", "manualNoJournal", "cashClosing", "oldPayables"].includes(key)) return "finance";
+  if (["cash", "chart", "cashBalanceIntegrity", "journal", "manualNoJournal", "cashClosing", "oldPayables", "financialAudit"].includes(key)) return "finance";
   if (["noPieces", "stuckOrders", "invoice"].includes(key)) return "operations";
   if (["pickups", "readyNoDriver", "driverLocation", "ordersNoLocation", "customersNoAddress"].includes(key)) return "delivery";
   if (["reclean", "qc", "unpaid", "proof"].includes(key)) return "quality";
-  if (["financialAudit"].includes(key)) return "finance";
   return "apdo";
 }
 function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }
 function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fixingKey: string | null; repairing: boolean; fixCheck: (key: string) => void }) {
   const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
-  const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing"].includes(c.key);
+  const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing", "financialAudit"].includes(c.key);
   return <Card className={cls}><CardContent className="p-4 space-y-3">
     <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
     <div className="text-xs text-muted-foreground">{c.fix}</div>
