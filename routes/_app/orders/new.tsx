@@ -263,6 +263,7 @@ function NewOrderPage() {
       if (uErr) toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`);
     }
 
+    await (supabase as any).rpc("record_operation_event", { _process_key: "order_created", _process_name: "إنشاء طلب", _source_type: "order", _source_id: order!.id, _branch_id: branchId, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: false, _data: { customer_id: customerId, order_type: orderType, pieces: units.length, items: items.length, total, payment_status: paymentStatus }, _output: { cash_impact: paymentStatus === "paid", journal_required: paymentStatus === "paid", appears_in_report: true } }).then(() => null);
     toast.success("تم إنشاء الطلب وترقيم القطع");
     nav({ to: "/orders/$id", params: { id: order!.id } });
   }

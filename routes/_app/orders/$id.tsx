@@ -182,6 +182,7 @@ function OrderDetailPage() {
     const phone = (order.customers?.phone ?? "").replace(/\D/g, "");
     const msg = `فاتورتك النهائية من Dry Tech لطلب #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
     if (phone.length >= 11) window.open(`https://wa.me/2${phone.startsWith("0") ? phone.slice(1) : phone}?text=${encodeURIComponent(msg)}`, "_blank");
+    await (supabase as any).rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: "اعتماد فاتورة", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
     toast.success("تم تأكيد الفاتورة وتجهيز إشعار العميل");
     load();
   }
@@ -208,6 +209,7 @@ function OrderDetailPage() {
       });
     setAddingUnit(false);
     if (error) return toast.error(error.message);
+    await (supabase as any).rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: "إضافة قطعة للطلب", _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     toast.success("تمت إضافة القطعة");
     setForm({ garment_type: "قميص", color: "", notes: "" });
     load();
@@ -236,7 +238,7 @@ function OrderDetailPage() {
       reclean_reported_by: user?.id,
       reclean_reported_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل مرتجع التنظيف"); load(); }
+    if (error) toast.error(error.message); else { await (supabase as any).rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: "تسجيل مرتجع تنظيف", _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success("تم تسجيل مرتجع التنظيف"); load(); }
   }
 
   async function resolveReclean(unit: ServiceUnit) {
@@ -263,7 +265,13 @@ function OrderDetailPage() {
 
   async function togglePayment() {
     const next = order.payment_status === "paid" ? "unpaid" : "paid";
+    let cashAccountId: string | null = null;
+    if (next === "paid") {
+      const { data: safe } = await (supabase as any).from("cash_accounts").select("id").eq("branch_id", order.branch_id).eq("is_active", true).order("created_at").limit(1).maybeSingle();
+      cashAccountId = safe?.id ?? null;
+    }
     const { error } = await supabase.from("orders").update({ payment_status: next }).eq("id", id);
+    if (!error) await (supabase as any).rpc("record_operation_event", { _process_key: next === "paid" ? "payment_recorded" : "payment_marked_unpaid", _process_name: next === "paid" ? "تسجيل تحصيل طلب" : "جعل الطلب آجل", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: cashAccountId, _report_bucket: "finance/receivables", _requires_notification: false, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), payment_method: order.payment_method }, _output: { cash_impact: next === "paid", journal_required: next === "paid", appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success(next === "paid" ? "تم تسجيل الدفع" : "تم جعل الطلب آجل"); load(); }
   }
 
@@ -283,6 +291,7 @@ function OrderDetailPage() {
     }).eq("id", id);
     setProofUploading(false);
     if (uErr) return toast.error(uErr.message);
+    await (supabase as any).rpc("record_operation_event", { _process_key: "payment_proof_uploaded", _process_name: "رفع إيصال دفع", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "finance/payment-review", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), proof_url: data.publicUrl }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
     toast.success("تم حفظ صورة تحويل InstaPay وتسجيل الدفع");
     load();
   }
@@ -293,6 +302,7 @@ function OrderDetailPage() {
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error("لا يمكن إلغاء الطلب بدون سبب واضح");
     const { error } = await (supabase as any).rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
+    if (!error) await (supabase as any).rpc("record_operation_event", { _process_key: "order_cancelled", _process_name: "إلغاء طلب", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason: reason.trim(), total: Number(order.total ?? 0) }, _output: { cash_impact: false, journal_required: Number(order.total ?? 0) > 0, appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success("تم إلغاء الطلب وتسجيل السبب"); load(); }
   }
 
@@ -303,6 +313,7 @@ function OrderDetailPage() {
     const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
     if (!error) {
       await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `إغلاق بتجاوز التحقق: ${reason}` });
+      await (supabase as any).rpc("record_operation_event", { _process_key: "order_delivered_override", _process_name: "تسليم طلب بتجاوز", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/delivery", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason }, _output: { cash_impact: order.payment_status !== "paid", journal_required: order.payment_status !== "paid", appears_in_report: true } }).then(() => null);
       toast.success("تم إغلاق الطلب بتجاوز التحقق");
       load();
     } else toast.error(error.message);

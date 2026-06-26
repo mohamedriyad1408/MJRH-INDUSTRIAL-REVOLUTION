@@ -55,9 +55,10 @@ Deno.serve(async (req) => {
       // ============ Super Admin: إنشاء مغسلة جديدة بمالكها ============
       case "createTenant": {
         await assertSuperAdmin(sb, callerId);
-        const { name, slug, ownerEmail, ownerPassword, ownerFullName, lat, lng, locationUrl, operatingRadiusKm } = body;
+        const { name, slug, ownerEmail, ownerPassword, ownerFullName, lat, lng, locationUrl, operatingRadiusKm, businessType } = body;
+        const btype = businessType || "laundry";
 
-        const { data: tenant, error: tErr } = await sb.from("tenants").insert({ name, slug, lat: lat ?? null, lng: lng ?? null, location_url: locationUrl ?? null, operating_radius_km: operatingRadiusKm ?? 8 }).select().single();
+        const { data: tenant, error: tErr } = await sb.from("tenants").insert({ name, slug, business_type: btype, industry_profile: { source: "admin", apdo: true }, lat: lat ?? null, lng: lng ?? null, location_url: locationUrl ?? null, operating_radius_km: operatingRadiusKm ?? 8 }).select().single();
         if (tErr) throw new Error(tErr.message);
 
         let ownerId: string;
@@ -79,13 +80,16 @@ Deno.serve(async (req) => {
 
         await sb.from("tenants").update({ owner_user_id: ownerId }).eq("id", tenant.id);
         await sb.from("user_roles").insert({ user_id: ownerId, role: "owner", tenant_id: tenant.id });
-        await sb.from("app_settings").insert({ tenant_id: tenant.id, business_name: name });
+        await sb.rpc("seed_tenant_defaults", { _tenant_id: tenant.id, _tenant_name: name }).then(() => null);
+        const { data: defaultBranch } = await sb.rpc("ensure_default_branch_for", { _tenant_id: tenant.id, _tenant_name: name });
+        await sb.from("app_settings").upsert({ tenant_id: tenant.id, business_name: name }, { onConflict: "tenant_id" });
         await sb.from("employees").upsert({
           tenant_id: tenant.id,
+          branch_id: defaultBranch ?? null,
           profile_id: ownerId,
           full_name: ownerFullName || name,
           email: ownerEmail,
-          job_title: "مالك المغسلة",
+          job_title: btype === "laundry" ? "مالك المغسلة" : "مالك النشاط",
           role: "owner",
           job_role: "other",
           monthly_salary: 0,
@@ -94,6 +98,7 @@ Deno.serve(async (req) => {
         }, { onConflict: "tenant_id,email" }).then(() => null);
         await sb.rpc("ensure_default_cash_account_for", { _tenant_id: tenant.id }).then(() => null);
         await sb.rpc("ensure_default_chart_accounts_for", { _tenant_id: tenant.id }).then(() => null);
+        await sb.rpc("record_operation_event", { _process_key: "tenant_bootstrapped", _process_name: "تجهيز نشاط جديد", _source_type: "tenant", _source_id: tenant.id, _branch_id: defaultBranch ?? null, _cash_account_id: null, _report_bucket: "admin/tenants", _requires_notification: false, _data: { tenant_id: tenant.id, business_type: btype }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
 
         return json({ tenant_id: tenant.id });
       }

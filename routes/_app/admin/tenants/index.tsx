@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { parseLatLng } from "@/lib/geo";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/_app/admin/tenants/")({
   component: TenantsPage,
 });
 
-type Tenant = { id: string; name: string; slug: string; is_active: boolean; owner_user_id: string | null; created_at: string };
+type Tenant = { id: string; name: string; slug: string; business_type?: string | null; is_active: boolean; owner_user_id: string | null; created_at: string };
 
 function TenantsPage() {
   const { isSuperAdmin } = useAuth();
@@ -62,7 +63,7 @@ function TenantsPage() {
             <Card key={t.id} className="p-4 flex items-center justify-between">
               <div>
                 <div className="font-bold">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.slug}</div>
+                <div className="text-xs text-muted-foreground">{t.slug} · {businessTypeAr(t.business_type ?? "laundry")}</div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "مفعلة" : "موقوفة"}</Badge>
@@ -88,6 +89,7 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [businessType, setBusinessType] = useState("laundry");
   const [locationUrl, setLocationUrl] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
@@ -108,7 +110,7 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await fn({ name, slug, ownerEmail: email, ownerPassword: password, ownerFullName: fullName, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, locationUrl: locationUrl || null, operatingRadiusKm: Number(radius || 8) });
+      await fn({ name, slug, businessType, ownerEmail: email, ownerPassword: password, ownerFullName: fullName, lat: lat ? Number(lat) : null, lng: lng ? Number(lng) : null, locationUrl: locationUrl || null, operatingRadiusKm: Number(radius || 8) });
       toast.success("تم إنشاء المغسلة والمالك");
       onDone();
     } catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
@@ -117,7 +119,8 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <div><Label>اسم المغسلة</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+      <div><Label>اسم النشاط</Label><Input value={name} onChange={(e) => setName(e.target.value)} required /></div>
+      <div><Label>نوع النشاط</Label><Select value={businessType} onValueChange={setBusinessType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="laundry">مغسلة / Laundry</SelectItem><SelectItem value="retail">تجاري / Retail</SelectItem><SelectItem value="manufacturing">صناعي / Manufacturing</SelectItem><SelectItem value="services">خدمات / Services</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground mt-1">النواة واحدة: فروع، خزن، مخزون، عمليات APDO. المغسلة تحصل أيضًا على كتالوج خدمات افتراضي.</p></div>
       <div>
         <Label>الكود (slug — حروف إنجليزية صغيرة وأرقام)</Label>
         <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} required pattern="[a-z0-9\-]+" />
@@ -145,3 +148,5 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
     </form>
   );
 }
+
+function businessTypeAr(s: string) { return ({ laundry: "مغسلة", retail: "تجاري", manufacturing: "صناعي", services: "خدمات", generic: "عام" } as Record<string,string>)[s] ?? s; }
