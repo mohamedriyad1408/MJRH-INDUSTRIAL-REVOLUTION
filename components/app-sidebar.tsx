@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, ListOrdered, PlusCircle, Sparkles, Shirt, Package,
   Users, Tag, Settings, LogOut, Wallet, BriefcaseBusiness,
-  CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown,
+  CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
   UsersRound, LockKeyhole,
@@ -33,6 +33,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "اللوحات",
     items: [
+      { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "مركز اليوم", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
       { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
