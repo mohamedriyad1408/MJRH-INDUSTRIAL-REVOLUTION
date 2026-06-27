@@ -51,7 +51,7 @@ export async function validateOrderMove(orderId: string, to: OrderStatus) {
   if (to === "packing") {
     const notAssembled = units.filter((u) => ["both", "cleaning"].includes(u.service_type) && ["cleaning", "cleaning_done", "drying_assembly"].includes(String(u.current_stage ?? "")));
     if (notAssembled.length) return { ok: false, message: `يوجد ${notAssembled.length} قطعة لم تمر بالتجفيف والتجميع بعد.` };
-    const notIroned = units.filter((u) => ["both", "ironing"].includes(u.service_type) && !u.ironing_completed_at && u.current_stage !== "ironing_done" && u.current_stage !== "qc_passed");
+    const notIroned = units.filter((u) => ["both", "ironing", "cleaning"].includes(u.service_type) && !u.ironing_completed_at && u.current_stage !== "ironing_done" && u.current_stage !== "qc_passed");
     if (notIroned.length) return { ok: false, message: `يوجد ${notIroned.length} قطعة لم يتم تأكيد كيها بعد.` };
   }
 

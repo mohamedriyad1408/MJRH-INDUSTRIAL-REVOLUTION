@@ -21,6 +21,7 @@ type Unit = {
   name: string;
   photo_url?: string | null;
   line_value?: number | null;
+  ironing_base_value?: number | null;
   is_shirt_like?: boolean | null;
   needs_reclean?: boolean | null;
   reclean_reason?: string | null;
@@ -52,8 +53,8 @@ function IroningManagerPage() {
     const [u, e] = await Promise.all([
       (supabase as any)
         .from("service_units")
-        .select("id,label_code,name,line_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
-        .in("service_type", ["ironing", "both"])
+        .select("id,label_code,name,line_value,ironing_base_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
+        .in("service_type", ["cleaning", "ironing", "both"])
         .in("current_stage", ["ironing", "ironing_done", "packing", "packing_done", "ready"])
         .in("orders.status", ["ironing", "packing", "ready"])
         .order("ironing_assigned_at", { ascending: true }),
@@ -74,11 +75,16 @@ function IroningManagerPage() {
         .select("id")
         .in("status", ["cleaning", "ironing"]);
       let total = 0;
+      let presentEmployees = 0;
+      let lastMessage = "";
       for (const o of orders ?? []) {
         const r = await autoAssignIroningPieces(o.id);
         total += r.assigned;
+        presentEmployees = Math.max(presentEmployees, r.employees);
+        if (r.message) lastMessage = r.message;
       }
-      toast.success(total ? `تم توزيع ${total} قطعة على فنيي الكي` : "لا توجد قطع غير موزعة");
+      if (total) toast.success(`تم توزيع ${total} قطعة على ${presentEmployees} فني كي حاضر`);
+      else toast.info(lastMessage || "لا توجد قطع غير موزعة أو لا يوجد فني كي حاضر الآن");
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي");
@@ -93,7 +99,7 @@ function IroningManagerPage() {
     const { error } = await (supabase as any).from("service_units").update({
       assigned_ironing_employee_id: toId,
       ironing_assigned_at: new Date().toISOString(),
-    }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["ironing", "both"]).in("current_stage", ["ironing", "ironing_done"]);
+    }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["cleaning", "ironing", "both"]).in("current_stage", ["ironing", "ironing_done"]);
     if (error) toast.error(error.message); else { toast.success("تم نقل مهام الفني"); load(); }
   }
 
@@ -105,7 +111,7 @@ function IroningManagerPage() {
         pieces: mine.length,
         done: mine.filter((u) => u.ironing_completed_at).length,
         shirts: mine.filter((u) => u.is_shirt_like).length,
-        value: mine.reduce((s, u) => s + Number(u.line_value ?? 0), 0),
+        value: mine.reduce((s, u) => s + Number(u.ironing_base_value ?? u.line_value ?? 0), 0),
       };
     });
   }, [employees, units]);
@@ -194,18 +200,18 @@ function IroningWorkerPage() {
       .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,reclean_return_to_employee_id,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone))")
       .eq("assigned_ironing_employee_id", employeeId)
       .eq("needs_reclean", false)
-      .in("service_type", ["ironing", "both"])
+      .in("service_type", ["cleaning", "ironing", "both"])
       .in("current_stage", ["ironing", "ironing_done"])
       .is("ironing_completed_at", null)
       .order("ironing_assigned_at", { ascending: true });
     setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
     const today = new Date(); today.setHours(0,0,0,0);
     const [{ data: todayUnits }, { data: rate }] = await Promise.all([
-      (supabase as any).from("service_units").select("line_value,ironing_completed_at").eq("assigned_ironing_employee_id", employeeId).gte("ironing_assigned_at", today.toISOString()),
+      (supabase as any).from("service_units").select("line_value,ironing_base_value,ironing_completed_at").eq("assigned_ironing_employee_id", employeeId).gte("ironing_assigned_at", today.toISOString()),
       (supabase as any).from("ironing_rates").select("percentage").eq("employee_id", employeeId).order("effective_from", { ascending: false }).limit(1).maybeSingle(),
     ]);
-    const allValue = (todayUnits ?? []).reduce((sum: number, u: any) => sum + Number(u.line_value ?? 0), 0);
-    const doneValue = (todayUnits ?? []).filter((u: any) => u.ironing_completed_at).reduce((sum: number, u: any) => sum + Number(u.line_value ?? 0), 0);
+    const allValue = (todayUnits ?? []).reduce((sum: number, u: any) => sum + Number(u.ironing_base_value ?? u.line_value ?? 0), 0);
+    const doneValue = (todayUnits ?? []).filter((u: any) => u.ironing_completed_at).reduce((sum: number, u: any) => sum + Number(u.ironing_base_value ?? u.line_value ?? 0), 0);
     setTodayValue(allValue);
     setTodayDoneValue(doneValue);
     setRatePct(Number(rate?.percentage ?? 0));
@@ -282,7 +288,7 @@ function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean
           {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> تم</Badge>}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          طلب #{u.orders?.order_number} · {u.orders?.customers?.full_name ?? "—"} · قيمة {Number(u.line_value ?? 0).toLocaleString()} ج
+          طلب #{u.orders?.order_number} · {u.orders?.customers?.full_name ?? "—"} · قيمة كي {Number(u.ironing_base_value ?? u.line_value ?? 0).toLocaleString()} ج
         </div>
         {manager && <div className="text-xs text-muted-foreground mt-1">الفني: <b>{u.employees?.full_name ?? "غير موزع"}</b></div>}
         {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">سبب المرتجع: {u.reclean_reason}</div>}

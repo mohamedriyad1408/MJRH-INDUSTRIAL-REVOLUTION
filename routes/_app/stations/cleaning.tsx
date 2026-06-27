@@ -53,7 +53,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
     const { data } = await (supabase as any)
       .from("service_units")
       .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
-      .or("service_type.eq.both,needs_reclean.eq.true")
+      .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
       .in("orders.status", ["cleaning", "ironing", "packing", "ready"])
       .order("unit_number");
     setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
