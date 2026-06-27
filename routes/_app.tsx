@@ -99,16 +99,16 @@ function AppLayout() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full" dir="rtl">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 border-b bg-card flex items-center px-4 gap-3 sticky top-0 z-30">
+        <div className="app-shell flex-1 flex flex-col min-w-0">
+          <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
-            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-violet-600 to-teal-400 p-0.5 shadow-sm shrink-0">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-2xl object-cover bg-white" /> : <div className="h-full w-full rounded-2xl bg-white/20 flex items-center justify-center text-white font-black">MJ</div>}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? "نظام تشغيل ممتع ومنظم"}</div></div></div>
+            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 p-0.5 shadow-sm shrink-0">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-2xl object-cover bg-white" /> : <div className="h-full w-full rounded-2xl bg-white/20 flex items-center justify-center text-white font-black">MJ</div>}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? "نظام تشغيل ممتع ومنظم"}</div></div></div>
             <NotificationCenter />
             <AttendanceWidget />
           </header>
-          <main className="flex-1 p-4 md:p-6 bg-background">
+          <main className="app-main flex-1 p-4 md:p-7">
             <Outlet />
-            <footer className="mt-8 mb-24 md:mb-0 rounded-3xl border bg-white/70 backdrop-blur p-4 text-center text-xs text-slate-600 shadow-sm" dir="ltr">
+            <footer className="app-footer mt-8 mb-24 md:mb-0 rounded-3xl border backdrop-blur p-4 text-center text-xs text-slate-600" dir="ltr">
               <div className="font-semibold tracking-wide whitespace-nowrap">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</div>
               <div className="mt-1 font-semibold whitespace-nowrap">BY MUHAMMAD RIYAD</div>
               <a href="tel:+201130804784" className="mt-1 inline-block whitespace-nowrap text-slate-500 hover:text-teal-700">+20 113 080 4784</a>
