@@ -71,6 +71,40 @@ function extractAmount(text: string): number | null {
   return Math.max(...candidates);
 }
 
+function phoneKey(phone: string) {
+  return String(phone || "").replace(/\D/g, "").slice(-10);
+}
+
+async function assertOrderBelongsToCustomer(
+  sb: ReturnType<typeof admin>,
+  params: { phone: string; slug?: string | null; orderId: string },
+) {
+  const { data, error } = await sb
+    .from("orders")
+    .select("id, customer_id, tenant_id, customers(phone), tenants(slug)")
+    .eq("id", params.orderId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("الطلب غير موجود");
+
+  const customerPhone = Array.isArray((data as any).customers)
+    ? (data as any).customers[0]?.phone
+    : (data as any).customers?.phone;
+  const tenantSlug = Array.isArray((data as any).tenants)
+    ? (data as any).tenants[0]?.slug
+    : (data as any).tenants?.slug;
+
+  if (!customerPhone || phoneKey(customerPhone) !== phoneKey(params.phone)) {
+    throw new Error("الطلب لا يخص رقم الهاتف المرسل");
+  }
+  if (params.slug && tenantSlug && tenantSlug !== params.slug) {
+    throw new Error("الطلب لا يخص رابط المغسلة المرسل");
+  }
+
+  return data;
+}
+
 async function runOcrSpace(imageUrl: string): Promise<OcrResult> {
   const key = Deno.env.get("OCR_SPACE_API_KEY");
   if (!key) return { text: "", amount: null, confidence: null, raw: null, error: "OCR_SPACE_API_KEY is missing" };
@@ -107,6 +141,10 @@ Deno.serve(async (req) => {
     if (!phone || !orderId || !proofUrl) throw new Error("بيانات الدفع ناقصة");
 
     const sb = admin();
+
+    // Important: verify ownership before any service-role update.
+    await assertOrderBelongsToCustomer(sb, { phone, slug: slug ?? null, orderId });
+
     const ocr = await runOcrSpace(proofUrl);
     const typed = Number(typedAmount || 0) || null;
     const amountToUse = ocr.amount ?? typed;

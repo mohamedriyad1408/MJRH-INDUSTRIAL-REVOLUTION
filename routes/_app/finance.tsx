@@ -323,15 +323,36 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
     if (!branchId) { toast.error("اختار الفرع"); return; }
     if (status === "paid" && !cashAccountId) { toast.error("اختار الخزنة التي دفعت المصروف"); return; }
     setSaving(true);
-    const { data: expense, error } = await (supabase as any).from("expenses").insert({ tenant_id: tenantId, category: category as any, amount: amt, description: description || null, created_by: userId, branch_id: branchId, status, cash_account_id: status === "paid" ? cashAccountId : null, paid_at: status === "paid" ? new Date().toISOString() : null }).select("id").single();
-    if (!error && expense?.id && status === "paid") {
-      await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: cashAccountId, direction: "out", amount: amt, description: description || "مصروف", source_type: "expense", source_id: expense.id, created_by: userId }).then(() => null);
-    }
+    const { data: expense, error } = await (supabase as any).from("expenses").insert({
+      tenant_id: tenantId,
+      category: category as any,
+      amount: amt,
+      description: description || null,
+      created_by: userId,
+      branch_id: branchId,
+      status,
+      cash_account_id: status === "paid" ? cashAccountId : null,
+      paid_at: status === "paid" ? new Date().toISOString() : null,
+    }).select("id").single();
+
+    // لا نسجل حركة خزنة يدويًا هنا.
+    // قاعدة البيانات تقوم تلقائيًا بإنشاء حركة الخزنة والقيد المحاسبي عبر trg_expenses_financial_sync.
     if (!error && expense?.id) {
-      await (supabase as any).rpc("record_operation_event", { _process_key: "expense_created", _process_name: status === "paid" ? "تسجيل مصروف مدفوع" : "تسجيل مصروف آجل", _source_type: "expense", _source_id: expense.id, _branch_id: branchId, _cash_account_id: status === "paid" ? cashAccountId : null, _report_bucket: "finance/reports", _requires_notification: false, _data: { tenant_id: tenantId, category, amount: amt, status }, _output: { cash_impact: status === "paid", journal_required: true, appears_in_report: true } }).then(() => null);
+      await (supabase as any).rpc("record_operation_event", {
+        _process_key: "expense_created",
+        _process_name: status === "paid" ? "تسجيل مصروف مدفوع" : "تسجيل مصروف آجل",
+        _source_type: "expense",
+        _source_id: expense.id,
+        _branch_id: branchId,
+        _cash_account_id: status === "paid" ? cashAccountId : null,
+        _report_bucket: "finance/reports",
+        _requires_notification: false,
+        _data: { tenant_id: tenantId, category, amount: amt, status },
+        _output: { cash_impact: status === "paid", journal_required: true, appears_in_report: true },
+      }).then(() => null);
     }
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف وربطه بالفرع والخزنة والتقارير"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف وسيتم إنشاء القيد وحركة الخزنة تلقائيًا"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
