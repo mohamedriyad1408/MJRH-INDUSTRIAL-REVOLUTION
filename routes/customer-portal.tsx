@@ -283,7 +283,7 @@ function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, set
             <div className="grid grid-cols-[1fr_auto] gap-2"><Input type="number" placeholder="المبلغ المدفوع" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /><Button asChild disabled={paying}><label className="cursor-pointer">{paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 ms-1" />رفع الإيصال</>}<input hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUploadProof(order, e.target.files[0])} /></label></Button></div>
             {order.payment_proof_url && <div className="text-xs text-amber-700">تم رفع إيصال سابق — الحالة: {statusAr(order.payment_verification_status)}</div>}
           </div>}
-        </div> : <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">الفاتورة قيد المراجعة. الدفع يظهر بعد اعتماد الفاتورة.</div>}
+        </div> : order.status === "delivered" ? <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-2 text-xs text-emerald-700">تم تسليم الطلب. لو احتجت نسخة فاتورة تواصل مع المغسلة.</div> : <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">الفاتورة قيد المراجعة. الدفع يظهر بعد اعتماد الفاتورة.</div>}
         {order.promised_delivery_at && <div className="text-xs text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3" /> متوقع: {new Date(order.promised_delivery_at).toLocaleString("ar-EG")}</div>}
       </CardContent>
     </Card>
