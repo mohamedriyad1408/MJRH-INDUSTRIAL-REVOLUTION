@@ -108,7 +108,7 @@ function AppLayout() {
           </header>
           <main className="flex-1 p-4 md:p-6 bg-background">
             <Outlet />
-            <footer className="mt-8 rounded-3xl border bg-white/70 backdrop-blur p-4 text-center text-xs text-slate-600 shadow-sm">© {new Date().getFullYear()} MJRH INDSTUREL REVOLUTION — BY MUHAMMAD RIYAD +201130804784</footer>
+            <footer className="mt-8 mb-24 md:mb-0 rounded-3xl border bg-white/70 backdrop-blur p-4 text-center text-xs text-slate-600 shadow-sm">© {new Date().getFullYear()} MJRH INDSTUREL REVOLUTION — BY MUHAMMAD RIYAD +201130804784</footer>
           </main>
           <MotivationalPopups />
           <MobileWorkDock />

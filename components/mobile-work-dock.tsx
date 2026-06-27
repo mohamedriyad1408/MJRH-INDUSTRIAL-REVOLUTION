@@ -66,7 +66,7 @@ export function MobileWorkDock() {
   const total = tasks.reduce((s, t) => s + Number(t.count || 0), 0);
   if (!user) return null;
 
-  return <div className="md:hidden fixed bottom-4 left-4 z-40">
+  return <div className="md:hidden fixed left-4 z-40 bottom-[calc(env(safe-area-inset-bottom)+1rem)]">
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button className="h-14 rounded-full px-5 shadow-2xl bg-gradient-to-l from-violet-700 via-slate-900 to-teal-600 text-white border border-white/20">
