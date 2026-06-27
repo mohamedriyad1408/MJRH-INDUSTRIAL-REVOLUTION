@@ -236,6 +236,10 @@ function SystemHealthPage() {
         if (finance.error) errs.push(`المراجعة المالية: ${finance.error.message}`);
         else notes.push(`المراجعة المالية: أصلح ${finance.data?.fixed ?? 0} والمتبقي ${finance.data?.remaining ?? 0}`);
 
+        const apdo = await (supabase as any).rpc("repair_operation_events_apdo", { _tenant_id: tenantId, _max_items: 300 });
+        if (apdo.error) errs.push(`إصلاح APDO: ${apdo.error.message}`);
+        else notes.push(`APDO: أصلح ${apdo.data?.fixed ?? 0}`);
+
         const alerts = await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
         if (alerts.error) errs.push(`التنبيهات الذكية: ${alerts.error.message}`);
         else notes.push(`التنبيهات الذكية: ${alerts.data ?? 0}`);
@@ -289,6 +293,30 @@ function SystemHealthPage() {
     } finally {
       setFixingKey(null);
     }
+  }
+
+  async function repairApdoEvent(id: string) {
+    setFixingKey(id);
+    try {
+      const { data, error } = await (supabase as any).rpc("repair_operation_event_apdo", { _event_id: id });
+      if (error) throw error;
+      const fixed = Array.isArray(data?.fixed) ? data.fixed.join("، ") : "";
+      toast.success(fixed ? `تم إصلاح: ${fixed}` : "تمت محاولة إصلاح العملية");
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "تعذر إصلاح عملية APDO");
+    } finally {
+      setFixingKey(null);
+    }
+  }
+
+  function apdoHref(r: any) {
+    if (r.source_type === "order" && r.source_id) return `/orders/${r.source_id}`;
+    if (r.source_type === "service_unit" && r.data?.order_id) return `/orders/${r.data.order_id}`;
+    if (["expense", "payroll_line", "payroll_payment", "employee_advance", "manual_cash_transaction", "cash_transfer", "cash_account"].includes(r.source_type)) return "/accounting";
+    if (["inventory_item", "inventory_movement"].includes(r.source_type)) return "/inventory";
+    if (r.source_type === "pickup_request") return "/live-map";
+    return "/system-health";
   }
 
   async function createDailySystemReport() {
@@ -391,6 +419,10 @@ function SystemHealthPage() {
               <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>قيد: {answerAr(r.journal_answer)}</Badge>
               <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>تقرير: {answerAr(r.report_answer)}</Badge>
               <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>إشعار: {answerAr(r.notification_answer)}</Badge>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Button size="sm" className="h-7 text-[11px]" onClick={() => repairApdoEvent(r.id)} disabled={fixingKey === r.id}>{fixingKey === r.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <Wrench className="w-3 h-3 ms-1" />}إصلاح العملية</Button>
+              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={apdoHref(r) as any}>فتح المصدر</Link></Button>
             </div>
           </div>)}</div>
         </>}
