@@ -16,7 +16,8 @@ export function AttendanceWidget() {
   const [shift, setShift] = useState<OpenShift>(null);
   const [busy, setBusy] = useState(false);
 
-  const shouldShow = hasRole("employee", "courier", "cs_manager", "ops_manager", "owner");
+  // الحضور للموظفين والمديرين التشغيليين فقط. المالك ليس مطلوبًا منه حضور/انصراف.
+  const shouldShow = !hasRole("owner", "super_admin") && hasRole("employee", "courier", "cs_manager", "ops_manager");
 
   async function load() {
     if (!user || !shouldShow) return;
