@@ -212,7 +212,8 @@ function LiveMapPage() {
   async function runAutoAssign() {
     try {
       const r = await autoAssignDrivers();
-      toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة على ${r.drivers} مناديب` : "لا توجد مهام تحتاج توزيع");
+      if (r.assigned) toast.success(r.message || `تم توزيع ${r.assigned} مهمة على ${r.drivers} مناديب`);
+      else toast.error(r.message || "لا توجد مهام قابلة للتوزيع الآن");
       loadData();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "تعذر توزيع المناديب");

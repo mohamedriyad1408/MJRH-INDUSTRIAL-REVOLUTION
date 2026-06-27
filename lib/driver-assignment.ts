@@ -32,8 +32,9 @@ function loadScore(l: DriverLoad) {
 
 function assignmentScore(driver: DriverLoad, task: AssignableTask) {
   const dist = distanceKm(driver.loc, task.loc);
-  const noLocationPenalty = dist == null ? 8 : 0;
-  return loadScore(driver) + (dist ?? 5) * 1.7 + noLocationPenalty + taskWeight(task);
+  const noDriverLocationPenalty = driver.loc ? 0 : 10;
+  const noTaskLocationPenalty = task.loc ? 0 : 30;
+  return loadScore(driver) + (dist ?? 8) * 1.7 + noDriverLocationPenalty + noTaskLocationPenalty + taskWeight(task);
 }
 
 async function pieceCountsByOrder(orderIds: string[]) {
@@ -45,24 +46,35 @@ async function pieceCountsByOrder(orderIds: string[]) {
 }
 
 export async function autoAssignDrivers() {
-  const { data: drivers, error: dErr } = await supabase
-    .from("employees")
-    .select("id,full_name,current_lat,current_lng")
-    .eq("is_active", true)
-    .eq("job_role", "driver");
-  if (dErr) throw dErr;
-  const ds = (drivers ?? []) as any[];
-  if (!ds.length) return { assigned: 0, drivers: 0 };
-
-  const [{ data: pickups }, { data: deliveries }, { data: activePickups }, { data: activeDeliveries }] = await Promise.all([
+  const [{ data: drivers, error: dErr }, { data: pickups }, { data: deliveries }, { data: activePickups }, { data: activeDeliveries }] = await Promise.all([
+    supabase
+      .from("employees")
+      .select("id,full_name,current_lat,current_lng")
+      .eq("is_active", true)
+      .eq("job_role", "driver"),
     (supabase as any).from("pickup_requests").select("id,lat,lng,scheduled_at,status").eq("status", "pending"),
     (supabase as any).from("orders").select("id,is_urgent,delivery_lat,delivery_lng,promised_delivery_at,status").eq("status", "ready").is("assigned_driver_employee_id", null),
     (supabase as any).from("pickup_requests").select("id,driver_employee_id,lat,lng").eq("status", "assigned").not("driver_employee_id", "is", null),
     (supabase as any).from("orders").select("id,assigned_driver_employee_id,delivery_lat,delivery_lng,is_urgent").in("status", ["ready", "out_for_delivery"]).not("assigned_driver_employee_id", "is", null),
   ]);
+  if (dErr) throw dErr;
 
+  const ds = (drivers ?? []) as any[];
   const deliveryIds = [...(deliveries ?? []), ...(activeDeliveries ?? [])].map((o: any) => o.id);
   const pieceMap = await pieceCountsByOrder(deliveryIds);
+
+  const tasks: AssignableTask[] = [
+    ...(pickups ?? []).map((p: any) => ({ id: p.id, kind: "pickup" as const, loc: p.lat && p.lng ? { lat: Number(p.lat), lng: Number(p.lng) } : null, pieces: 1, urgent: false, dueAt: p.scheduled_at })),
+    ...(deliveries ?? []).map((o: any) => ({ id: o.id, kind: "delivery" as const, loc: o.delivery_lat && o.delivery_lng ? { lat: Number(o.delivery_lat), lng: Number(o.delivery_lng) } : null, pieces: pieceMap.get(o.id) ?? 1, urgent: Boolean(o.is_urgent), dueAt: o.promised_delivery_at })),
+  ];
+
+  const totalTasks = tasks.length;
+  const noLocationTasks = tasks.filter((t) => !t.loc).length;
+  const assignableTasks = tasks.filter((t) => t.loc);
+
+  if (!totalTasks) return { assigned: 0, drivers: ds.length, tasks: 0, blockedNoLocation: 0, message: "لا توجد مهام مفتوحة للتوزيع الآن" };
+  if (!ds.length) return { assigned: 0, drivers: 0, tasks: totalTasks, blockedNoLocation: noLocationTasks, message: `يوجد ${totalTasks} مهمة لكن لا يوجد مندوب نشط. أضف مندوب أو فعّل مندوب من الموظفين.` };
+  if (!assignableTasks.length) return { assigned: 0, drivers: ds.length, tasks: totalTasks, blockedNoLocation: noLocationTasks, message: `يوجد ${totalTasks} مهمة لكنها بلا موقع واضح. سجل موقع العميل أو العنوان أولًا.` };
 
   const loads = new Map<string, DriverLoad>();
   ds.forEach((d) => loads.set(d.id, {
@@ -91,14 +103,9 @@ export async function autoAssignDrivers() {
     l.distance += distanceKm(l.loc, taskLoc) ?? 0;
   });
 
-  const tasks: AssignableTask[] = [
-    ...(pickups ?? []).map((p: any) => ({ id: p.id, kind: "pickup" as const, loc: p.lat && p.lng ? { lat: Number(p.lat), lng: Number(p.lng) } : null, pieces: 1, urgent: false, dueAt: p.scheduled_at })),
-    ...(deliveries ?? []).map((o: any) => ({ id: o.id, kind: "delivery" as const, loc: o.delivery_lat && o.delivery_lng ? { lat: Number(o.delivery_lat), lng: Number(o.delivery_lng) } : null, pieces: pieceMap.get(o.id) ?? 1, urgent: Boolean(o.is_urgent), dueAt: o.promised_delivery_at })),
-  ];
-
-  tasks.sort((a, b) => taskWeight(b) - taskWeight(a));
+  assignableTasks.sort((a, b) => taskWeight(b) - taskWeight(a));
   let assigned = 0;
-  for (const t of tasks) {
+  for (const t of assignableTasks) {
     const chosen = [...loads.values()].sort((a, b) => assignmentScore(a, t) - assignmentScore(b, t))[0];
     if (!chosen) continue;
     if (t.kind === "pickup") {
@@ -115,5 +122,10 @@ export async function autoAssignDrivers() {
     assigned += 1;
   }
 
-  return { assigned, drivers: ds.length };
+  const blocked = totalTasks - assigned;
+  const message = assigned
+    ? `تم توزيع ${assigned} من ${totalTasks} مهمة على ${ds.length} مندوب${blocked ? `، وباقي ${blocked} بلا موقع واضح` : ""}`
+    : (noLocationTasks ? `لم يتم التوزيع: ${noLocationTasks} مهمة بلا موقع واضح` : "لا توجد مهام قابلة للتوزيع الآن");
+
+  return { assigned, drivers: ds.length, tasks: totalTasks, blockedNoLocation: noLocationTasks, message };
 }
