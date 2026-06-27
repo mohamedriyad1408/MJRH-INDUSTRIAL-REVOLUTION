@@ -13,7 +13,7 @@ import { toast } from "sonner";
 type AlertTone = "red" | "amber" | "blue";
 type AlertAudience = "owner" | "ops" | "cs" | "ironing" | "cleaning" | "packing" | "driver";
 type AlertCategory = "report" | "finance" | "quality" | "ops" | "system";
-type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed"; category?: AlertCategory; quickAction?: "assignDrivers" | "openDriverLocation" };
+type Alert = { id: string; tone: AlertTone; audience: AlertAudience[]; title: string; detail: string; icon: React.ReactNode; href?: string; appNotificationId?: string; kind?: "report" | "problem" | "computed"; category?: AlertCategory; quickAction?: "assignDrivers" | "openDriverLocation" | "repairFinance" };
 
 const toneClass: Record<AlertTone, string> = {
   red: "border-red-200 bg-red-50 text-red-800",
@@ -106,18 +106,25 @@ export function NotificationCenter() {
     });
 
     (appNotifsRes.data ?? []).forEach((n: any) => {
+      const title = String(n.title ?? "");
+      const body = String(n.body ?? "");
+      const text = `${title} ${body}`;
       const tone: AlertTone = n.tone === "danger" ? "red" : n.tone === "warning" ? "amber" : "blue";
+      const isFinance = /مالية|خزنة|دفع|فاتورة|قيد|تحصيل|مصروف|راتب/.test(text);
+      const isQuality = /جودة|مرتجع|مارك|ليبل/.test(text);
+      const isReport = title.includes("تقرير");
       next.push({
         id: `app-${n.id}`,
         appNotificationId: n.id,
-        kind: String(n.title ?? "").includes("تقرير") ? "report" : "problem",
-        category: String(n.title ?? "").includes("تقرير") ? "report" : (String(n.title ?? "").includes("جودة") || String(n.title ?? "").includes("مرتجع") ? "quality" : (String(n.title ?? "").includes("خزنة") || String(n.title ?? "").includes("دفع") || String(n.title ?? "").includes("فاتورة") ? "finance" : "system")),
+        kind: isReport ? "report" : "problem",
+        category: isReport ? "report" : (isQuality ? "quality" : (isFinance ? "finance" : "system")),
         audience: [n.audience] as AlertAudience[],
         tone,
         title: n.title,
         detail: n.body ?? "تنبيه من النظام",
         icon: tone === "red" ? <AlertTriangle className="w-4 h-4" /> : <Bell className="w-4 h-4" />,
-        href: n.href ?? undefined,
+        href: n.href ?? (isFinance ? "/system-health" : undefined),
+        quickAction: isFinance && (hasRole("owner") || hasRole("ops_manager") || hasRole("cs_manager")) ? "repairFinance" : undefined,
       });
     });
 
@@ -166,6 +173,17 @@ export function NotificationCenter() {
         load();
       } catch (e: any) {
         toast.error(e?.message ?? "تعذر توزيع المناديب");
+      }
+    }
+    if (alert.quickAction === "repairFinance") {
+      if (!tenantId) return toast.error("لم يتم تحديد المغسلة لهذا الحساب");
+      try {
+        const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
+        if (error) throw error;
+        toast.success(`تمت محاولة الإصلاح المالي: أصلح ${data?.fixed ?? 0} والمتبقي ${data?.remaining ?? 0}`);
+        load();
+      } catch (e: any) {
+        toast.error(e?.message ?? "تعذر تنفيذ الإصلاح المالي");
       }
     }
   }
@@ -218,7 +236,7 @@ export function NotificationCenter() {
               <div className="mt-1 opacity-80 whitespace-pre-line pe-1">{a.detail}</div>
               {(a.href || a.appNotificationId) && <div className="flex gap-2 mt-2">
                 {a.href && <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={a.href as any}>فتح</Link></Button>}
-                {a.quickAction && <Button size="sm" variant="default" className="h-7 text-[11px]" onClick={() => runQuickAction(a)}>تنفيذ</Button>}
+                {a.quickAction && <Button size="sm" variant="default" className="h-7 text-[11px]" onClick={() => runQuickAction(a)}>{a.quickAction === "repairFinance" ? "إصلاح" : "تنفيذ"}</Button>}
                 {a.appNotificationId && <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => markRead(a)}>تمت المعالجة</Button>}
               </div>}
             </div>;

@@ -188,7 +188,7 @@ function SystemHealthPage() {
         { key: "cashClosing", title: "إقفال كل خزن اليوم", count: closingToday.count ?? 0, severity: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? "ok" : "warn", href: "/cash-closing", fix: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? `تم إقفال كل الخزن اليوم (${closingToday.count}/${activeCashForClosing.count})` : `المقفول ${closingToday.count ?? 0} من ${activeCashForClosing.count ?? 0}. افتح إقفال الخزن واقفل الكل في حركة واحدة` },
         { key: "oldPayables", title: "مصروفات آجلة قديمة", count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: "راجع المصروفات الآجلة القديمة وادفعها أو ألغيها بسبب", details: oldPayablesDetails },
         { key: "stuckOrders", title: "طلبات واقفة أكثر من يوم", count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: "افتح الطلب لمعرفة سبب التوقف والخطوة التالية", details: stuckOrderDetails },
-        { key: "financialAudit", title: "المراجعة المالية النهائية", count: financialRows.length, okWhenZero: true, severity: financialAudit.error ? "warn" : (financialRows.some((r: any) => r.severity === "danger") ? "danger" : severityFor(financialRows.length, true)), href: "/ledger", fix: financialAudit.error ? "طبّق migration المراجعة المالية" : (financialRows.length ? "يوجد مسارات مالية تحتاج ربط خزنة/قيد/فرع قبل التشغيل الرسمي" : "المسارات المالية الأساسية مكتملة"), details: financialRows.slice(0, 5).map((r: any) => ({ label: r.title, sub: r.detail, href: r.href })), error: financialAudit.error?.message },
+        { key: "financialAudit", title: "المراجعة المالية النهائية", count: financialRows.length, okWhenZero: true, severity: financialAudit.error ? "warn" : (financialRows.some((r: any) => r.severity === "danger") ? "danger" : severityFor(financialRows.length, true)), href: "/accounting", fix: financialAudit.error ? "طبّق migration المراجعة المالية" : (financialRows.length ? "اضغط إصلاح سريع. لو بقيت بنود، افتح مكان الإصلاح من كل بند" : "المسارات المالية الأساسية مكتملة"), details: financialRows.slice(0, 5).map((r: any) => ({ label: r.title, sub: r.detail, href: safeFixHref(r.href) })), error: financialAudit.error?.message },
         { key: "apdo", title: "اكتمال APDO للعمليات", count: apdoIncomplete.length, okWhenZero: true, severity: apdoMatrix.error ? "warn" : severityFor(apdoIncomplete.length, true), href: "/system-health", fix: apdoMatrix.error ? "طبّق migration الخاص بـ APDO حتى تظهر مصفوفة الإجابات" : (apdoIncomplete.length ? "فيه عمليات لا تجيب على الفرع/الخزنة/القيد/التقرير/الإشعار بالكامل" : "كل العمليات المسجلة تجيب على الأسئلة الخمسة"), details: apdoIncomplete.slice(0, 5).map((r: any) => ({ label: r.process_name, sub: `${r.branch_answer} · ${r.cash_answer} · ${r.journal_answer} · ${r.report_answer} · ${r.notification_answer}` })), error: apdoMatrix.error?.message },
       ];
       setChecks(next);
@@ -210,6 +210,54 @@ function SystemHealthPage() {
     setRepairing(false);
     if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح الأساسيات: خزنة، حسابات، أرصدة، قيود يدوية، ورواتب الشهر");
     load();
+  }
+
+  async function repairActionableIssues() {
+    setRepairing(true);
+    const errs: string[] = [];
+    const notes: string[] = [];
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const calls: Array<[string, Promise<any>]> = [
+        ["تجهيز الخزنة", (supabase as any).rpc("ensure_default_cash_account")],
+        ["تجهيز شجرة الحسابات", (supabase as any).rpc("ensure_default_chart_accounts")],
+        ["مزامنة رواتب الشهر", (supabase as any).rpc("sync_monthly_payroll_payables", { _month: today })],
+        ["إصلاح أرصدة الخزن", (supabase as any).rpc("repair_cash_account_balances")],
+        ["إصلاح قيود حركات الخزنة", (supabase as any).rpc("sync_manual_cash_transactions_journals")],
+      ];
+      for (const [label, promise] of calls) {
+        const r = await promise;
+        if (r.error) errs.push(`${label}: ${r.error.message}`);
+        else notes.push(label);
+      }
+
+      if (tenantId) {
+        const finance = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
+        if (finance.error) errs.push(`المراجعة المالية: ${finance.error.message}`);
+        else notes.push(`المراجعة المالية: أصلح ${finance.data?.fixed ?? 0} والمتبقي ${finance.data?.remaining ?? 0}`);
+
+        const alerts = await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
+        if (alerts.error) errs.push(`التنبيهات الذكية: ${alerts.error.message}`);
+        else notes.push(`التنبيهات الذكية: ${alerts.data ?? 0}`);
+      }
+
+      try {
+        const assigned = await autoAssignDrivers();
+        notes.push(assigned.assigned ? `توزيع المناديب: ${assigned.assigned}` : "توزيع المناديب: لا توجد مهام قابلة للتوزيع");
+      } catch (e: any) {
+        // Not every tenant has drivers/tasks; show as note, not fatal.
+        notes.push(`توزيع المناديب: ${e?.message ?? "غير متاح الآن"}`);
+      }
+
+      await load();
+      if (errs.length) {
+        toast.error(`تم تنفيذ بعض الإصلاحات لكن بقيت أخطاء: ${errs.slice(0, 3).join(" | ")}`);
+      } else {
+        toast.success(`تم إصلاح المشاكل القابلة للإصلاح. ${notes.slice(0, 3).join(" · ")}`);
+      }
+    } finally {
+      setRepairing(false);
+    }
   }
 
   async function fixCheck(key: string) {
@@ -281,7 +329,7 @@ function SystemHealthPage() {
         <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-teal-600" /> فحص النظام</h1>
         <p className="text-sm text-muted-foreground">مراجعة سريعة لكل أساسيات المغسلة والرحلة التشغيلية. لو فيه مشكلة، اضغط عليها لتذهب لمكان الإصلاح.</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={createDailySystemReport}>حفظ تقرير اليوم</Button><Button onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح الأساسيات</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={createDailySystemReport}>حفظ تقرير اليوم</Button><Button variant="outline" onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح الأساسيات</Button><Button onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح المشاكل القابلة للإصلاح</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
@@ -308,8 +356,11 @@ function SystemHealthPage() {
       <CardHeader><CardTitle className="text-base">المراجعة المالية النهائية قبل التشغيل</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
         {financialAuditRows.length === 0 ? <div className="font-bold text-emerald-800">لا توجد مشاكل مالية حرجة في المسارات الأساسية ✅</div> : <>
-          <div className="font-bold text-red-900">بنود تحتاج مراجعة قبل التشغيل الرسمي:</div>
-          <div className="grid md:grid-cols-2 gap-2">{financialAuditRows.map((r) => <Link key={`${r.issue_key}-${r.source_id}`} to={(r.href || "/system-health") as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{r.title}</div><div className="text-muted-foreground mt-1">{r.detail}</div><Badge className="mt-2" variant={r.severity === "danger" ? "destructive" : "secondary"}>{r.domain}</Badge></div></Link>)}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="font-bold text-red-900">بنود تحتاج مراجعة قبل التشغيل الرسمي:</div>
+            <Button size="sm" onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح المالي الآن</Button>
+          </div>
+          <div className="grid md:grid-cols-2 gap-2">{financialAuditRows.map((r) => <Link key={`${r.issue_key}-${r.source_id}`} to={safeFixHref(r.href) as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{r.title}</div><div className="text-muted-foreground mt-1">{r.detail}</div><Badge className="mt-2" variant={r.severity === "danger" ? "destructive" : "secondary"}>{r.domain}</Badge></div></Link>)}</div>
         </>}
       </CardContent>
     </Card>}
@@ -393,6 +444,13 @@ function groupForCheck(key: string) {
   return "apdo";
 }
 function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }
+function safeFixHref(href?: string | null) {
+  if (!href) return "/system-health";
+  // /ledger is owner-only. For actionable repairs, /accounting is available to owner/ops_manager.
+  if (href === "/ledger" || href.startsWith("/ledger")) return "/accounting";
+  return href;
+}
+
 function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fixingKey: string | null; repairing: boolean; fixCheck: (key: string) => void }) {
   const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
   const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing", "financialAudit"].includes(c.key);
