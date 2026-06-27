@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
@@ -224,12 +225,43 @@ function LiveMapPage() {
     setSelectedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
+  const selectedPins = [...selectedIds]
+    .map((id) => pins.find((p) => p.id === id))
+    .filter((p): p is MapPin => Boolean(p && p.lat && p.lng));
+
+  function drawRoute() {
+    if (selectedPins.length < 2) {
+      toast.error("اختار نقطتين على الأقل من الخريطة أو القائمة لرسم خط السير");
+      return;
+    }
+    setRouteMode(true);
+    toast.success(`تم رسم خط السير بين ${selectedPins.length} نقاط`);
+  }
+
+  function openGoogleRoute() {
+    if (selectedPins.length < 2) {
+      toast.error("اختار نقطتين على الأقل لفتح خط السير في Google Maps");
+      return;
+    }
+    const coords = selectedPins.map((p) => `${p.lat},${p.lng}`);
+    const origin = coords[0];
+    const destination = coords[coords.length - 1];
+    const waypoints = coords.slice(1, -1).join("|");
+    const url = `https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ""}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function clearRoute() {
+    setSelectedIds(new Set());
+    setRouteMode(false);
+  }
+
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">للمالك ومدير التشغيل فقط.</CardContent></Card>;
   const noLocationPins = pins.filter((p) => p.type !== "driver" && (!p.lat || !p.lng));
   const driversNoLocation = pins.filter((p) => p.type === "driver" && (!p.lat || !p.lng));
 
   return (
-    <div className="flex flex-col gap-3" style={{ height: "calc(100vh - 110px)" }}>
+    <div className="flex flex-col gap-3 min-h-[calc(100vh-7rem)]">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Navigation className="w-5 h-5 text-teal-600" />خريطة المراقبة الحية</h1>
@@ -242,12 +274,11 @@ function LiveMapPage() {
         </div>
         <div className="flex gap-2">
           <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
-          {selectedIds.size > 0 && <>
-            <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={() => { if (selectedIds.size < 2) { toast.error("اختر نقطتين على الأقل"); return; } setRouteMode(true); toast.success(`خط سير لـ ${selectedIds.size} نقاط`); }}>
-              <RouteIcon className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedIds.size})
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => { setSelectedIds(new Set()); setRouteMode(false); }}><X className="w-3.5 h-3.5" /></Button>
-          </>}
+          <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={drawRoute}>
+            <RouteIcon className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedPins.length})
+          </Button>
+          <Button size="sm" variant="outline" onClick={openGoogleRoute}>Google Maps</Button>
+          {selectedIds.size > 0 && <Button size="sm" variant="outline" onClick={clearRoute}><X className="w-3.5 h-3.5" /></Button>}
           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={runAutoAssign}>توزيع المناديب</Button>
           <Button size="sm" variant="outline" onClick={loadData}><RefreshCw className="w-3.5 h-3.5" /></Button>
         </div>
@@ -256,7 +287,7 @@ function LiveMapPage() {
       {!routeMode && pins.length > 0 && (
         <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-xs text-teal-700 flex items-center gap-2">
           <CheckSquare className="w-3.5 h-3.5 shrink-0" />
-          اضغط على نقطة في الخريطة أو القائمة لتحديدها، ثم اضغط "رسم خط السير"
+          اضغط على الكروت أو علامات الخريطة لتحديد النقاط بالترتيب، ثم اضغط "رسم خط السير" أو افتحه في Google Maps
         </div>
       )}
 
@@ -267,10 +298,17 @@ function LiveMapPage() {
         </div>
       )}
 
-      <div className="flex gap-3 flex-1 min-h-0">
-        <div className="flex-1 rounded-xl overflow-hidden border shadow bg-white">
+      {selectedPins.length > 0 && (
+        <div className="rounded-2xl border bg-white/80 backdrop-blur px-3 py-2 text-xs text-slate-700 flex flex-wrap items-center gap-2">
+          <span className="font-black text-teal-700">النقاط المحددة:</span>
+          {selectedPins.map((p, i) => <Badge key={p.id} variant="secondary">{i + 1}. {p.label}</Badge>)}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_22rem] gap-3 flex-1 min-h-0">
+        <div className="rounded-3xl overflow-hidden border shadow bg-white min-h-[48vh] md:min-h-[58vh] xl:min-h-0 xl:h-[calc(100vh-17rem)]">
           {loading ? (
-            <div className="flex items-center justify-center h-full flex-col gap-3">
+            <div className="flex items-center justify-center h-full min-h-[48vh] flex-col gap-3">
               <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm text-muted-foreground">جاري تحميل الخريطة...</p>
             </div>
@@ -279,7 +317,7 @@ function LiveMapPage() {
           )}
         </div>
 
-        <div className="w-56 overflow-y-auto space-y-3 shrink-0">
+        <div className="overflow-y-auto space-y-3 shrink-0 max-h-[46vh] xl:max-h-[calc(100vh-17rem)] rounded-3xl border bg-white/70 backdrop-blur p-3">
           {(["pickup", "delivery", "driver"] as PinType[]).map((type) => {
             const group = pins.filter((p) => p.type === type);
             if (!group.length) return null;
@@ -298,7 +336,7 @@ function LiveMapPage() {
                     {pin.dueLabel && <div className={pin.late ? "text-red-600 font-bold" : "text-muted-foreground"}>⏱ {pin.dueLabel}</div>}
                     {pin.pieces && <div className="text-muted-foreground">قطع: {pin.pieces}</div>}
                     {!pin.lat && <div className="text-amber-500 mt-0.5">⚠ موقع غير محدد</div>}
-                    {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />محدد</div>}
+                    {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />محدد رقم {[...selectedIds].indexOf(pin.id) + 1}</div>}
                   </div>
                 ))}
               </div>
