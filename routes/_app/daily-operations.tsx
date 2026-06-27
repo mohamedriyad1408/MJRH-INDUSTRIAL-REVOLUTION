@@ -169,7 +169,11 @@ function DailyOperationsPage() {
     { key: "end-report", title: "احفظ تقرير نهاية اليوم", detail: "يسجل ملخص اليوم لصاحب العمل", ok: !!done["end-report"], action: () => runAction("end-report", () => saveReport("end")) },
   ] : [], [data, done]);
 
-  const score = data ? Math.round(([...startSteps, ...monitorSteps, ...endSteps].filter((s) => s.ok).length / Math.max(1, [...startSteps, ...monitorSteps, ...endSteps].length)) * 100) : 0;
+  // جاهزية العمل أثناء اليوم لا يجب أن تنقص بسبب مهام نهاية اليوم مثل إقفال الخزنة.
+  // إقفال الخزن وتقرير نهاية اليوم يظهران كمهام منفصلة في قسم "أنه اليوم".
+  const workReadinessSteps = [...startSteps, ...monitorSteps];
+  const endOfDayScore = data ? Math.round((endSteps.filter((s) => s.ok).length / Math.max(1, endSteps.length)) * 100) : 0;
+  const score = data ? Math.round((workReadinessSteps.filter((s) => s.ok).length / Math.max(1, workReadinessSteps.length)) * 100) : 0;
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">تشغيل اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
@@ -179,8 +183,8 @@ function DailyOperationsPage() {
       <div className="absolute -top-20 -left-16 w-48 h-48 rounded-full bg-teal-300/20 blur-3xl" />
       <div className="absolute -bottom-24 -right-20 w-56 h-56 rounded-full bg-amber-300/20 blur-3xl" />
       <div className="relative flex flex-wrap items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-200" />تشغيل اليوم</h1><p className="text-sm text-white/75 mt-1">امشي على الخطوات: ابدأ اليوم، راقب اليوم، أنهِ اليوم. النظام يقول لك جاهز ولا ناقص.</p></div>
-        <div className="text-center rounded-3xl bg-white/10 border border-white/15 p-4 min-w-32"><div className="text-xs text-white/70">نسبة الجاهزية</div><div className="text-4xl font-black text-teal-200">{score}%</div></div>
+        <div><h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-200" />تشغيل اليوم</h1><p className="text-sm text-white/75 mt-1">امشي على الخطوات: ابدأ اليوم وراقب التشغيل. مهام نهاية اليوم مثل إقفال الخزنة لها نسبة منفصلة حتى لا تقلل جاهزية العمل أثناء اليوم.</p></div>
+        <div className="text-center rounded-3xl bg-white/10 border border-white/15 p-4 min-w-32"><div className="text-xs text-white/70">جاهزية العمل الآن</div><div className="text-4xl font-black text-teal-200">{score}%</div><div className="text-[11px] text-white/60 mt-1">نهاية اليوم {endOfDayScore}%</div></div>
       </div>
     </div>
 
