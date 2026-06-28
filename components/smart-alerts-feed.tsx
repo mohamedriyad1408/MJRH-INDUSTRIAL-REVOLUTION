@@ -48,9 +48,10 @@ export function SmartAlertsFeed({ compact = false }: { compact?: boolean }) {
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
     const { data: stuck } = await (supabase as any)
       .from("service_units")
-      .select("id, current_stage, orders(order_number)")
+      .select("id, current_stage, orders!inner(order_number,status)")
       .lt("updated_at", threeHoursAgo)
       .not("current_stage", "in", '("delivered","cancelled","ready")')
+      .not("orders.status", "in", "(delivered,cancelled)")
       .limit(3);
     (stuck ?? []).forEach((u: any) => newAlerts.push({
       id: `stuck-${u.id}`,
