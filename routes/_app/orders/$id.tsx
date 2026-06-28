@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon, History, MapPin, ShieldCheck, Truck } from "lucide-react";
+import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon, History, MapPin, ShieldCheck, Truck, Shirt } from "lucide-react";
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
@@ -82,6 +82,12 @@ function OrderDetailPage() {
   const [pickupRows, setPickupRows] = useState<any[]>([]);
   const [cancelRows, setCancelRows] = useState<any[]>([]);
   const [qcRows, setQcRows] = useState<any[]>([]);
+  const [operationRows, setOperationRows] = useState<any[]>([]);
+  const [attachmentRows, setAttachmentRows] = useState<any[]>([]);
+  const [cashRows, setCashRows] = useState<any[]>([]);
+  const [journalRows, setJournalRows] = useState<any[]>([]);
+  const [messageRows, setMessageRows] = useState<any[]>([]);
+  const [employeeLedgerRows, setEmployeeLedgerRows] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -106,6 +112,22 @@ function OrderDetailPage() {
     setPickupRows(pickups ?? []);
     setCancelRows(cancels ?? []);
     setQcRows(qcs ?? []);
+
+    const relatedIds = [id, ...((su ?? []) as any[]).map((u: any) => u.id), ...((pickups ?? []) as any[]).map((p: any) => p.id)].filter(Boolean);
+    const [ops, atts, cash, journals, messages, empLedger] = await Promise.all([
+      relatedIds.length ? (supabase as any).from("operation_events").select("*,cash_accounts(name),journal_entries(description,source_type,status)").in("source_id", relatedIds).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+      (supabase as any).from("order_attachments").select("*").eq("order_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("cash_transactions").select("*,cash_accounts(name,account_type)").eq("source_id", id).order("happened_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").eq("source_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("customer_messages").select("*").eq("order_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("source_id", id).order("entry_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+    ]);
+    setOperationRows(ops.data ?? []);
+    setAttachmentRows(atts.data ?? []);
+    setCashRows(cash.data ?? []);
+    setJournalRows(journals.data ?? []);
+    setMessageRows(messages.data ?? []);
+    setEmployeeLedgerRows(empLedger.data ?? []);
     setLoading(false);
   }, [id]);
 
@@ -380,7 +402,7 @@ function OrderDetailPage() {
         <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">مرتجعات تنظيف</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
       </div>
 
-      <OrderTimeline order={order} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} />
+      <OrderTimeline order={order} units={units} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} operationRows={operationRows} attachmentRows={attachmentRows} cashRows={cashRows} journalRows={journalRows} messageRows={messageRows} employeeLedgerRows={employeeLedgerRows} />
 
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> تعديل الفاتورة النهائية</CardTitle></CardHeader>
@@ -546,29 +568,91 @@ const STATUS_AR: Record<string, string> = {
   cancelled: "تم الإلغاء",
 };
 
-function OrderTimeline({ order, historyRows, pickupRows, cancelRows, qcRows }: { order: any; historyRows: any[]; pickupRows: any[]; cancelRows: any[]; qcRows: any[] }) {
-  const events: { at: string; title: string; detail: string; tone?: string; icon: React.ReactNode }[] = [];
-  events.push({ at: order.created_at, title: "إنشاء الطلب", detail: `تم إنشاء الطلب #${order.order_number}`, icon: <History className="w-4 h-4" /> });
+function OrderTimeline({
+  order, units, historyRows, pickupRows, cancelRows, qcRows, operationRows, attachmentRows, cashRows, journalRows, messageRows, employeeLedgerRows,
+}: {
+  order: any;
+  units: ServiceUnit[];
+  historyRows: any[];
+  pickupRows: any[];
+  cancelRows: any[];
+  qcRows: any[];
+  operationRows: any[];
+  attachmentRows: any[];
+  cashRows: any[];
+  journalRows: any[];
+  messageRows: any[];
+  employeeLedgerRows: any[];
+}) {
+  const events: { at: string; title: string; detail: string; tone?: string; icon: React.ReactNode; href?: string; meta?: React.ReactNode }[] = [];
+  const money = (v: any) => `${Number(v ?? 0).toLocaleString("en-US")} ج`;
+
+  events.push({ at: order.created_at, title: "إنشاء الطلب", detail: `تم إنشاء الطلب #${order.order_number} للعميل ${order.customers?.full_name ?? ""}`, icon: <History className="w-4 h-4" /> });
+
   pickupRows.forEach((p) => {
     events.push({ at: p.created_at, title: "طلب استلام من العميل", detail: `${p.customer_name} — ${p.address}`, icon: <MapPin className="w-4 h-4" />, tone: "blue" });
     if (p.driver_employee_id) events.push({ at: p.updated_at ?? p.created_at, title: "تعيين مندوب للاستلام", detail: p.employees?.full_name ?? "مندوب", icon: <Truck className="w-4 h-4" />, tone: "blue" });
     if (p.picked_up_at) events.push({ at: p.picked_up_at, title: "المندوب استلم الطلب", detail: "دخل الطلب إلى رحلة التشغيل", icon: <CheckCircle2 className="w-4 h-4" />, tone: "ok" });
   });
+
   historyRows.forEach((h) => events.push({ at: h.created_at, title: STATUS_AR[h.to_status] ?? h.to_status, detail: h.notes ?? "تغيير حالة الطلب", icon: <ArrowRight className="w-4 h-4" />, tone: h.to_status === "cancelled" ? "bad" : undefined }));
+
+  units.forEach((u) => {
+    if (u.assigned_ironing_employee_id) events.push({ at: u.ironing_completed_at ?? order.updated_at ?? order.created_at, title: `توزيع كي ${u.label_code}`, detail: `${u.name} → ${u.employees?.full_name ?? "فني كي"}${u.ironing_completed_at ? " — تم الكي" : ""}`, icon: <Shirt className="w-4 h-4" />, tone: u.ironing_completed_at ? "ok" : "blue" });
+    if (u.needs_reclean || u.reclean_reason) events.push({ at: u.reclean_reported_at ?? order.updated_at ?? order.created_at, title: `مرتجع تنظيف ${u.label_code}`, detail: `${u.name} — ${u.reclean_reason ?? "رجوع للتنظيف"}`, icon: <RotateCcw className="w-4 h-4" />, tone: u.needs_reclean ? "bad" : "amber" });
+    if ((u as any).label_status && (u as any).label_status !== "labeled") events.push({ at: order.updated_at ?? order.created_at, title: `مشكلة ليبل ${u.label_code}`, detail: `${u.name} — ${(u as any).label_status}`, icon: <AlertTriangle className="w-4 h-4" />, tone: "bad" });
+  });
+
   qcRows.forEach((q) => events.push({ at: q.checked_at, title: q.result === "passed" ? "اعتماد جودة" : "مشكلة جودة", detail: `${q.service_units?.label_code ?? "قطعة"} — ${q.notes ?? q.result}`, icon: <ShieldCheck className="w-4 h-4" />, tone: q.result === "passed" ? "ok" : "bad" }));
+
+  attachmentRows.forEach((a) => events.push({
+    at: a.created_at,
+    title: a.label ?? "مرفق على الطلب",
+    detail: a.url,
+    icon: <ImageIcon className="w-4 h-4" />,
+    tone: String(a.label ?? "").includes("دفع") || String(a.label ?? "").includes("InstaPay") ? "ok" : "blue",
+    href: a.url,
+    meta: a.url ? <a href={a.url} target="_blank" rel="noreferrer" className="text-xs underline text-teal-700">عرض المستند</a> : null,
+  }));
+
+  if (order.payment_proof_url && !attachmentRows.some((a) => a.url === order.payment_proof_url)) {
+    events.push({ at: order.payment_proof_uploaded_at ?? order.payment_verified_at ?? order.updated_at ?? order.created_at, title: "صورة تحويل InstaPay", detail: order.payment_proof_url, icon: <ImageIcon className="w-4 h-4" />, tone: "ok", href: order.payment_proof_url, meta: <a href={order.payment_proof_url} target="_blank" rel="noreferrer" className="text-xs underline text-teal-700">عرض الإيصال</a> });
+  }
+
+  cashRows.forEach((c) => events.push({ at: c.happened_at, title: c.direction === "in" ? "حركة خزنة داخلة" : "حركة خزنة خارجة", detail: `${c.description} — ${money(c.amount)} — ${c.cash_accounts?.name ?? "خزنة"}`, icon: <CreditCard className="w-4 h-4" />, tone: c.status === "void" ? "bad" : "ok" }));
+
+  journalRows.forEach((j) => events.push({
+    at: j.created_at,
+    title: `قيد محاسبي: ${j.source_type}`,
+    detail: `${j.description} — ${j.status}`,
+    icon: <Scale className="w-4 h-4" />,
+    tone: j.status === "void" ? "bad" : "ok",
+    meta: <div className="mt-1 space-y-1">{(j.journal_lines ?? []).map((l: any) => <div key={l.id} className="text-[11px] text-muted-foreground">{l.chart_accounts?.code} {l.chart_accounts?.name}: مدين {money(l.debit)} / دائن {money(l.credit)}</div>)}</div>,
+  }));
+
+  employeeLedgerRows.forEach((l) => events.push({ at: l.entry_at ?? l.created_at, title: `دفتر الموظف: ${l.employees?.full_name ?? "موظف"}`, detail: `${l.description} — ${money(l.amount)} — ${l.direction}`, icon: <Truck className="w-4 h-4" />, tone: "ok" }));
+
+  messageRows.forEach((m) => events.push({ at: m.sent_at ?? m.created_at, title: `رسالة عميل ${m.channel}`, detail: `${m.status}: ${m.message}`, icon: <Send className="w-4 h-4" />, tone: m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "amber" }));
+
+  operationRows.forEach((op) => {
+    events.push({ at: op.created_at, title: `APDO: ${op.process_name}`, detail: `${op.process_key} — تقرير: ${op.report_bucket ?? "—"}${op.cash_account_id ? ` — خزنة: ${op.cash_accounts?.name ?? "مربوطة"}` : ""}${op.journal_entry_id ? " — قيد مربوط" : ""}`, icon: <History className="w-4 h-4" />, tone: "blue" });
+  });
+
   cancelRows.forEach((c) => events.push({ at: c.created_at, title: c.cancel_type === "order" ? "إلغاء طلب" : "إلغاء بند/قطعة", detail: c.reason, icon: <Trash2 className="w-4 h-4" />, tone: "bad" }));
-  if (order.invoice_finalized_at) events.push({ at: order.invoice_finalized_at, title: "اعتماد الفاتورة", detail: `الإجمالي ${Number(order.total ?? 0).toLocaleString("en-US")} جنيه`, icon: <CreditCard className="w-4 h-4" />, tone: "ok" });
-  if (order.payment_verified_at || order.payment_proof_uploaded_at) events.push({ at: order.payment_verified_at ?? order.payment_proof_uploaded_at, title: "تسجيل الدفع", detail: order.overpayment_amount > 0 ? `مدفوع مع زيادة ${order.overpayment_amount} جنيه` : "تم تسجيل الدفع", icon: <CreditCard className="w-4 h-4" />, tone: "ok" });
+
+  if (order.invoice_finalized_at) events.push({ at: order.invoice_finalized_at, title: "اعتماد الفاتورة", detail: `الإجمالي ${money(order.total)}${order.invoice_finalized_at ? " — تم الاعتماد" : ""}`, icon: <CreditCard className="w-4 h-4" />, tone: "ok" });
+  if (order.payment_verified_at || order.payment_proof_uploaded_at) events.push({ at: order.payment_verified_at ?? order.payment_proof_uploaded_at, title: "تسجيل الدفع", detail: order.overpayment_amount > 0 ? `مدفوع ${money(order.customer_payment_amount ?? order.total)} مع زيادة ${money(order.overpayment_amount)}` : `تم تسجيل الدفع ${money(order.customer_payment_amount ?? order.total)}`, icon: <CreditCard className="w-4 h-4" />, tone: "ok" });
+  if (order.delivered_at) events.push({ at: order.delivered_at, title: "تم التسليم النهائي", detail: "انتهت رحلة الطلب وتم التسليم للعميل", icon: <CheckCircle2 className="w-4 h-4" />, tone: "ok" });
 
   events.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
-  const cls = (tone?: string) => tone === "bad" ? "border-red-200 bg-red-50" : tone === "ok" ? "border-emerald-200 bg-emerald-50" : tone === "blue" ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-white";
+  const cls = (tone?: string) => tone === "bad" ? "border-red-200 bg-red-50" : tone === "ok" ? "border-emerald-200 bg-emerald-50" : tone === "blue" ? "border-blue-200 bg-blue-50" : tone === "amber" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white";
 
   return <Card>
-    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> رحلة الطلب كاملة</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> رحلة الطلب الكاملة — تشغيل، دفع، مستندات، قيود، رسائل</CardTitle></CardHeader>
     <CardContent className="space-y-2">
       {events.map((e, i) => <div key={i} className={`rounded-xl border p-3 flex items-start gap-3 ${cls(e.tone)}`}>
         <div className="mt-0.5 text-teal-700">{e.icon}</div>
-        <div className="flex-1 min-w-0"><div className="font-black text-sm">{e.title}</div><div className="text-xs text-muted-foreground mt-0.5">{e.detail}</div></div>
+        <div className="flex-1 min-w-0"><div className="font-black text-sm">{e.title}</div><div className="text-xs text-muted-foreground mt-0.5 break-words">{e.detail}</div>{e.meta}</div>
         <div className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(e.at).toLocaleString("ar-EG")}</div>
       </div>)}
     </CardContent>
