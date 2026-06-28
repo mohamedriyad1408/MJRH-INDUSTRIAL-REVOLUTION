@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 
 export const Route = createFileRoute("/_app/stations/reception")({
   head: () => ({ meta: [{ title: "الاستقبال" }] }),
@@ -65,16 +66,45 @@ function ReceptionPage() {
     const { data: openPickup } = await (supabase as any).from("pickup_requests").select("id,status").eq("converted_order_id", id).in("status", ["pending", "assigned"]).maybeSingle();
     if (openPickup) {
       setActing(null);
-      toast.error("لا يمكن تحويل الطلب للتنظيف قبل أن يستلمه المندوب من العميل");
+      toast.error("لا يمكن تحويل الطلب للتشغيل قبل أن يستلمه المندوب من العميل");
       return;
     }
-    const { error } = await supabase.from("orders").update({ status: "cleaning" }).eq("id", id);
+
+    const { data: units, error: unitsErr } = await (supabase as any)
+      .from("service_units")
+      .select("id,service_type")
+      .eq("order_id", id)
+      .neq("status", "cancelled");
+    if (unitsErr) { setActing(null); toast.error(unitsErr.message); return; }
+    if (!units?.length) { setActing(null); toast.error("لا يمكن تشغيل طلب بلا قطع"); return; }
+
+    const hasCleaning = units.some((u: any) => ["cleaning", "both"].includes(u.service_type));
+    const hasIroning = units.some((u: any) => ["ironing", "both", "cleaning"].includes(u.service_type));
+    const nextStatus = hasCleaning ? "cleaning" : hasIroning ? "ironing" : "packing";
+
+    if (nextStatus === "ironing") {
+      await (supabase as any).from("service_units").update({ current_stage: "ironing" }).eq("order_id", id).in("service_type", ["ironing", "cleaning", "both"]);
+    }
+
+    const { error } = await supabase.from("orders").update({ status: nextStatus }).eq("id", id);
     if (!error) {
       await supabase.from("order_status_history").insert({
-        order_id: id, from_status: "received", to_status: "cleaning",
+        order_id: id, from_status: "received", to_status: nextStatus,
         changed_by: user?.id, notes: "محطة الاستلام",
       });
-      toast.success("تم تحويل الطلب للتشغيل");
+      if (nextStatus === "ironing") {
+        try {
+          const r = await autoAssignIroningPieces(id);
+          toast.success(r.assigned ? `تم تحويل الطلب للكي وتوزيع ${r.assigned} قطعة` : (r.message || "تم تحويل الطلب للكي ولا يوجد فني حاضر للتوزيع"));
+        } catch (e: any) {
+          toast.success("تم تحويل الطلب للكي");
+          toast.error(e?.message ?? "تعذر توزيع الكي تلقائيًا");
+        }
+      } else if (nextStatus === "cleaning") {
+        toast.success("تم تحويل الطلب للتنظيف");
+      } else {
+        toast.success("تم تحويل الطلب للمرحلة التالية");
+      }
     } else {
       toast.error(error.message);
     }
@@ -209,7 +239,7 @@ function OrderCard({
             <Button size="sm" disabled={acting === o.id} onClick={() => onMove(o.id)}>
               {acting === o.id
                 ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <><ArrowLeft className="w-3 h-3 ms-1" />تنظيف</>}
+                : <><ArrowLeft className="w-3 h-3 ms-1" />تشغيل</>}
             </Button>
           </div>
         )}
