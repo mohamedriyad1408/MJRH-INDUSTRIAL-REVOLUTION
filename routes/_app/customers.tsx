@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Search, Pencil, Upload, LocateFixed, MapPin } from "lucide-react";
-import * as XLSX from "xlsx";
 
 export const Route = createFileRoute("/_app/customers")({
   head: () => ({ meta: [{ title: "العملاء" }] }),
@@ -160,32 +159,64 @@ function CustomersPage() {
   );
 }
 
+function parseCsv(text: string) {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (ch === '"') {
+      if (quoted && next === '"') { cell += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === "," && !quoted) {
+      row.push(cell.trim()); cell = "";
+    } else if ((ch === "\n" || ch === "\r") && !quoted) {
+      if (ch === "\r" && next === "\n") i++;
+      row.push(cell.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = []; cell = "";
+    } else {
+      cell += ch;
+    }
+  }
+  row.push(cell.trim());
+  if (row.some(Boolean)) rows.push(row);
+  return rows;
+}
+
 function ImportExcelButton({ onDone }: { onDone: () => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   async function handle(file: File) {
     setLoading(true);
     try {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      // Columns RTL: الاسم | الهاتف | العنوان — XLSX reads them as visual order regardless
-      const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1 });
+      if (!/\.csv$/i.test(file.name)) {
+        toast.error("حاليًا الاستيراد الآمن يدعم CSV فقط. احفظ Excel بصيغة CSV ثم ارفعه.");
+        return;
+      }
+      if (file.size > 1024 * 1024) {
+        toast.error("ملف العملاء كبير جدًا. الحد الحالي 1MB لتقليل أخطاء الاستيراد.");
+        return;
+      }
+      const text = await file.text();
+      const rows = parseCsv(text.replace(/^﻿/, ""));
       const records: { full_name: string; phone: string; address: string | null }[] = [];
       for (let i = 0; i < rows.length; i++) {
-        const r = rows[i] ?? [];
-        const [a, b, c] = r;
+        const [a, b, c] = rows[i] ?? [];
         if (!a || !b) continue;
-        // Skip header
-        if (i === 0 && (String(a).includes("اسم") || String(b).includes("هات"))) continue;
-        records.push({ full_name: String(a).trim(), phone: String(b).trim(), address: c ? String(c).trim() : null });
+        if (i === 0 && (String(a).includes("اسم") || String(a).toLowerCase().includes("name") || String(b).includes("هات") || String(b).toLowerCase().includes("phone"))) continue;
+        const phone = String(b).trim();
+        if (phone.replace(/\D/g, "").length < 10) continue;
+        records.push({ full_name: String(a).trim(), phone, address: c ? String(c).trim() : null });
       }
-      if (!records.length) { toast.error("الملف فارغ أو غير صالح"); return; }
+      if (!records.length) { toast.error("الملف فارغ أو غير صالح. الأعمدة: الاسم, الهاتف, العنوان"); return; }
       const { error } = await supabase.from("customers").insert(records);
       if (error) toast.error(error.message);
       else { toast.success(`تم استيراد ${records.length} عميل`); onDone(); }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "فشل القراءة");
+      toast.error(e instanceof Error ? e.message : "فشل قراءة CSV");
     } finally {
       setLoading(false);
       if (ref.current) ref.current.value = "";
@@ -193,9 +224,9 @@ function ImportExcelButton({ onDone }: { onDone: () => void }) {
   }
   return (
     <>
-      <input ref={ref} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => e.target.files?.[0] && handle(e.target.files[0])} />
+      <input ref={ref} type="file" accept=".csv,text/csv" hidden onChange={(e) => e.target.files?.[0] && handle(e.target.files[0])} />
       <Button variant="outline" onClick={() => ref.current?.click()} disabled={loading}>
-        {loading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} استيراد Excel
+        {loading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} استيراد CSV
       </Button>
     </>
   );
