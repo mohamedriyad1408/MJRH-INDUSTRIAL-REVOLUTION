@@ -88,6 +88,7 @@ function OrderDetailPage() {
   const [journalRows, setJournalRows] = useState<any[]>([]);
   const [messageRows, setMessageRows] = useState<any[]>([]);
   const [employeeLedgerRows, setEmployeeLedgerRows] = useState<any[]>([]);
+  const [customerReturnRows, setCustomerReturnRows] = useState<any[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -114,13 +115,14 @@ function OrderDetailPage() {
     setQcRows(qcs ?? []);
 
     const relatedIds = [id, ...((su ?? []) as any[]).map((u: any) => u.id), ...((pickups ?? []) as any[]).map((p: any) => p.id)].filter(Boolean);
-    const [ops, atts, cash, journals, messages, empLedger] = await Promise.all([
+    const [ops, atts, cash, journals, messages, empLedger, customerReturns] = await Promise.all([
       relatedIds.length ? (supabase as any).from("operation_events").select("*,cash_accounts(name),journal_entries(description,source_type,status)").in("source_id", relatedIds).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
       (supabase as any).from("order_attachments").select("*").eq("order_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("cash_transactions").select("*,cash_accounts(name,account_type)").eq("source_id", id).order("happened_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").eq("source_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("customer_messages").select("*").eq("order_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
       (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("source_id", id).order("entry_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
+      (supabase as any).from("customer_returns").select("*,service_units(label_code,name,photo_url)").eq("order_id", id).order("created_at", { ascending: true }).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     setOperationRows(ops.data ?? []);
     setAttachmentRows(atts.data ?? []);
@@ -128,6 +130,7 @@ function OrderDetailPage() {
     setJournalRows(journals.data ?? []);
     setMessageRows(messages.data ?? []);
     setEmployeeLedgerRows(empLedger.data ?? []);
+    setCustomerReturnRows(customerReturns.data ?? []);
     setLoading(false);
   }, [id]);
 
@@ -318,6 +321,34 @@ function OrderDetailPage() {
     load();
   }
 
+  async function registerCustomerReturn(unit: ServiceUnit) {
+    if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error("تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط");
+    const typeRaw = prompt("نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى", "تنظيف");
+    if (typeRaw === null) return;
+    const t = typeRaw.trim();
+    const returnType = /كي/.test(t) ? "reiron" : /تصليح|repair/.test(t) ? "repair" : /اخرى|أخرى|other/.test(t) ? "other" : "reclean";
+    const reason = prompt("سبب المرتجع من العميل؟");
+    if (reason === null) return;
+    if (reason.trim().length < 3) return toast.error("سبب المرتجع مطلوب");
+    const { error } = await (supabase as any).rpc("register_customer_return", {
+      _order_id: id,
+      _service_unit_id: unit.id,
+      _return_type: returnType,
+      _reason: reason.trim(),
+      _photo_url: null,
+      _billable: false,
+      _amount: 0,
+    });
+    if (error) toast.error(error.message); else { toast.success("تم تسجيل مرتجع العميل وربطه بالقطعة والمحطات"); load(); }
+  }
+
+  async function completeCustomerReturn(row: any) {
+    const note = prompt("ملاحظات إغلاق المرتجع؟", "تم الحل والتسليم للعميل");
+    if (note === null) return;
+    const { error } = await (supabase as any).rpc("complete_customer_return", { _return_id: row.id, _notes: note });
+    if (error) toast.error(error.message); else { toast.success("تم إغلاق مرتجع العميل"); load(); }
+  }
+
   async function cancelOrder() {
     if (!hasRole("owner")) return toast.error("إلغاء الطلب بالكامل للمالك فقط");
     const reason = prompt("سبب إلغاء الطلب بالكامل؟");
@@ -402,7 +433,21 @@ function OrderDetailPage() {
         <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">مرتجعات تنظيف</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
       </div>
 
-      <OrderTimeline order={order} units={units} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} operationRows={operationRows} attachmentRows={attachmentRows} cashRows={cashRows} journalRows={journalRows} messageRows={messageRows} employeeLedgerRows={employeeLedgerRows} />
+      <OrderTimeline order={order} units={units} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} operationRows={operationRows} attachmentRows={attachmentRows} cashRows={cashRows} journalRows={journalRows} messageRows={messageRows} employeeLedgerRows={employeeLedgerRows} customerReturnRows={customerReturnRows} />
+
+      {customerReturnRows.length > 0 && <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> مرتجعات العميل بعد التسليم</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {customerReturnRows.map((r) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type)} · {returnStatusAr(r.status)}</div>
+              {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>إغلاق المرتجع</Button>}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">السبب: {r.reason}</div>
+          </div>)}
+        </CardContent>
+      </Card>}
+
 
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> تعديل الفاتورة النهائية</CardTitle></CardHeader>
@@ -465,7 +510,7 @@ function OrderDetailPage() {
                 {u.needs_reclean && <div className="text-xs text-amber-700">سبب المرتجع: {u.reclean_reason} · سيرجع لنفس فني الكي بعد تنظيفه</div>}
               </div>
               {canOperate && <div className="flex md:flex-col gap-2 justify-end">
-                <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> مرتجع تنظيف</Button>
+                {order.status === "delivered" ? <Button size="sm" variant="outline" onClick={() => registerCustomerReturn(u)}><RotateCcw className="w-3 h-3 ms-1" /> مرتجع عميل</Button> : <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> مرتجع تنظيف</Button>}
                 {u.needs_reclean && <Button size="sm" onClick={() => resolveReclean(u)}><CheckCircle2 className="w-3 h-3 ms-1" /> تم تنظيفه</Button>}
               </div>}
             </div>
@@ -557,6 +602,9 @@ function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
   </Card>;
 }
 
+function returnTypeAr(t: string) { return ({ reclean: "إعادة تنظيف", reiron: "إعادة كي", repair: "تصليح", refund: "رد مبلغ", other: "أخرى" } as Record<string,string>)[t] ?? t; }
+function returnStatusAr(s: string) { return ({ open: "مفتوح", in_cleaning: "في التنظيف", in_ironing: "في الكي", in_packing: "في التغليف", in_qc: "في الجودة", ready_for_delivery: "جاهز للتسليم", resolved: "مغلق", cancelled: "ملغي" } as Record<string,string>)[s] ?? s; }
+
 const STATUS_AR: Record<string, string> = {
   received: "دخل الاستقبال",
   cleaning: "دخل الغسيل",
@@ -569,7 +617,7 @@ const STATUS_AR: Record<string, string> = {
 };
 
 function OrderTimeline({
-  order, units, historyRows, pickupRows, cancelRows, qcRows, operationRows, attachmentRows, cashRows, journalRows, messageRows, employeeLedgerRows,
+  order, units, historyRows, pickupRows, cancelRows, qcRows, operationRows, attachmentRows, cashRows, journalRows, messageRows, employeeLedgerRows, customerReturnRows,
 }: {
   order: any;
   units: ServiceUnit[];
@@ -583,6 +631,7 @@ function OrderTimeline({
   journalRows: any[];
   messageRows: any[];
   employeeLedgerRows: any[];
+  customerReturnRows: any[];
 }) {
   const events: { at: string; title: string; detail: string; tone?: string; icon: React.ReactNode; href?: string; meta?: React.ReactNode }[] = [];
   const money = (v: any) => `${Number(v ?? 0).toLocaleString("en-US")} ج`;
@@ -631,6 +680,11 @@ function OrderTimeline({
   }));
 
   employeeLedgerRows.forEach((l) => events.push({ at: l.entry_at ?? l.created_at, title: `دفتر الموظف: ${l.employees?.full_name ?? "موظف"}`, detail: `${l.description} — ${money(l.amount)} — ${l.direction}`, icon: <Truck className="w-4 h-4" />, tone: "ok" }));
+
+  customerReturnRows.forEach((r) => {
+    events.push({ at: r.created_at, title: `مرتجع عميل: ${returnTypeAr(r.return_type)}`, detail: `${r.service_units?.label_code ?? "قطعة"} — ${r.reason} — ${returnStatusAr(r.status)}`, icon: <RotateCcw className="w-4 h-4" />, tone: r.status === "resolved" ? "ok" : "amber" });
+    if (r.resolved_at) events.push({ at: r.resolved_at, title: "إغلاق مرتجع العميل", detail: `${r.service_units?.label_code ?? "قطعة"} — تم الحل`, icon: <CheckCircle2 className="w-4 h-4" />, tone: "ok" });
+  });
 
   messageRows.forEach((m) => events.push({ at: m.sent_at ?? m.created_at, title: `رسالة عميل ${m.channel}`, detail: `${m.status}: ${m.message}`, icon: <Send className="w-4 h-4" />, tone: m.status === "failed" ? "bad" : m.status === "sent" ? "ok" : "amber" }));
 

@@ -56,7 +56,7 @@ function IroningManagerPage() {
         .select("id,label_code,name,line_value,ironing_base_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
         .in("service_type", ["cleaning", "ironing", "both"])
         .in("current_stage", ["ironing", "ironing_done", "packing", "packing_done", "ready"])
-        .in("orders.status", ["ironing", "packing", "ready"])
+        .in("orders.status", ["ironing", "packing", "ready", "delivered"])
         .order("ironing_assigned_at", { ascending: true }),
       supabase.from("employees").select("id,full_name").eq("is_active", true).or("station.eq.ironing,job_role.eq.ironing_tech").order("full_name"),
     ]);

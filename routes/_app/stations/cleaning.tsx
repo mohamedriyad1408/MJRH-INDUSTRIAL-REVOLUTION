@@ -54,9 +54,9 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
       .from("service_units")
       .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
       .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
-      .in("orders.status", ["cleaning", "ironing", "packing", "ready"])
+      .in("orders.status", ["cleaning", "ironing", "packing", "ready", "delivered"])
       .order("unit_number");
-    setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
+    setUnits((data ?? []).filter((x: any) => x.orders && (x.orders.status !== "delivered" || x.status === "customer_return" || x.needs_reclean || ["customer_return_cleaning", "recleaning"].includes(x.current_stage))) as Unit[]);
     setLoading(false);
   }
 

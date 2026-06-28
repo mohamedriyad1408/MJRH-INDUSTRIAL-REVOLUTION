@@ -42,11 +42,11 @@ function PackingStation() {
     const { data, error } = await (supabase as any)
       .from("service_units")
       .select("id,label_code,name,photo_url,service_type,current_stage,needs_reclean,label_status,ironing_completed_at,order_id,orders(id,order_number,status,branch_id,customers(full_name,phone))")
-      .in("orders.status", ["ironing", "packing", "ready"])
+      .in("orders.status", ["ironing", "packing", "ready", "delivered"])
       .neq("status", "cancelled")
       .order("updated_at", { ascending: true });
     if (error) toast.error(error.message);
-    setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
+    setUnits((data ?? []).filter((x: any) => x.orders && (x.orders.status !== "delivered" || x.status === "customer_return")) as Unit[]);
     setLoading(false);
   }
 
