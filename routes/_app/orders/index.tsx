@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Search, Eye, Zap, AlertTriangle, PackageOpen, ShieldCheck, RotateCcw, CreditCard } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/orders/")({
   head: () => ({ meta: [{ title: "كل الطلبات" }] }),
@@ -24,6 +25,7 @@ type Row = {
 
 function OrdersPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canCreate = hasRole("cs_manager", "owner");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,13 +89,13 @@ function OrdersPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={dir}>
       <div className="flex flex-wrap justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">كل الطلبات</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} طلب</p>
+          <h1 className="text-2xl font-bold">{t("orders.allOrders")}</h1>
+          <p className="text-sm text-muted-foreground">{filtered.length} {t("station.common.orders")}</p>
         </div>
-        {canCreate && <Button asChild><Link to="/orders/new"><Plus className="w-4 h-4 ms-1" /> طلب جديد</Link></Button>}
+        {canCreate && <Button asChild><Link to="/orders/new"><Plus className="w-4 h-4 ms-1" /> {t("orders.newOrder")}</Link></Button>}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -102,13 +104,13 @@ function OrdersPage() {
           <Input placeholder="رقم طلب / اسم / تليفون..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
         <Select value={branchId} onValueChange={setBranchId}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="الفرع" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+          <SelectTrigger className="w-48"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
+          <SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الحالات</SelectItem>
+            <SelectItem value="all">{t("orders.allStatuses")}</SelectItem>
             {Object.entries(ORDER_STATUS_AR).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -136,16 +138,16 @@ function OrdersPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-start p-3">#</th>
-                  <th className="text-start p-3">العميل</th>
-                  <th className="text-start p-3">الحالة</th>
-                  <th className="text-start p-3">الدفع</th>
-                  <th className="text-start p-3">الإجمالي</th>
-                  <th className="text-start p-3">التاريخ</th>
+                  <th className="text-start p-3">{t("orders.customer")}</th>
+                  <th className="text-start p-3">{t("orders.status")}</th>
+                  <th className="text-start p-3">{t("orders.payment")}</th>
+                  <th className="text-start p-3">{t("orders.total")}</th>
+                  <th className="text-start p-3">{t("orders.date")}</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">لا توجد طلبات</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{t("orders.noOrders")}</td></tr>}
                 {filtered.map((r) => (
                   <tr key={r.id} className="border-t hover:bg-muted/30">
                     <td className="p-3 font-bold">
@@ -162,7 +164,7 @@ function OrdersPage() {
                       </Badge>
                       {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">إيصال مراجعة</Badge>}
                     </td>
-                    <td className="p-3 font-medium">{fmtMoney(r.total)}</td>
+                    <td className="p-3 font-medium">{fmtMoney(r.total, t("common.egp"))}</td>
                     <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.created_at)}</td>
                     <td className="p-3">
                       <Button asChild size="sm" variant="ghost">
