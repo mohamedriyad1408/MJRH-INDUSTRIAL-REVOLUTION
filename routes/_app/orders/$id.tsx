@@ -442,7 +442,7 @@ function OrderDetailPage() {
         <CardContent className="space-y-2">
           {customerReturnRows.map((r) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type)} · {returnStatusAr(r.status)}</div>
+              <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type, t)} · {returnStatusAr(r.status, t)}</div>
               {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>{t("order.closeReturn")}</Button>}
             </div>
             <div className="text-xs text-muted-foreground mt-1">{t("order.reason")}: {r.reason}</div>
@@ -608,8 +608,8 @@ function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
   </Card>;
 }
 
-function returnTypeAr(t: string) { return ({ reclean: "إعادة تنظيف", reiron: "إعادة كي", repair: "تصليح", refund: "رد مبلغ", other: "أخرى" } as Record<string,string>)[t] ?? t; }
-function returnStatusAr(s: string) { return ({ open: "مفتوح", in_cleaning: "في التنظيف", in_ironing: "في الكي", in_packing: "في التغليف", in_qc: "في الجودة", ready_for_delivery: "جاهز للتسليم", resolved: "مغلق", cancelled: "ملغي" } as Record<string,string>)[s] ?? s; }
+function returnTypeAr(t: string, fn: any) { return ({ reclean: fn("return.type.reclean", "إعادة تنظيف"), reiron: fn("return.type.reiron", "إعادة كي"), repair: fn("return.type.repair", "تصليح"), refund: fn("return.type.refund", "رد مبلغ"), other: fn("return.type.other", "أخرى") } as Record<string,string>)[t] ?? t; }
+function returnStatusAr(s: string, fn: any) { return ({ open: fn("return.status.open", "مفتوح"), in_cleaning: fn("return.status.in_cleaning", "في التنظيف"), in_ironing: fn("return.status.in_ironing", "في الكي"), in_packing: fn("return.status.in_packing", "في التغليف"), in_qc: fn("return.status.in_qc", "في الجودة"), ready_for_delivery: fn("return.status.ready_for_delivery", "جاهز للتسليم"), resolved: fn("return.status.resolved", "مغلق"), cancelled: fn("return.status.cancelled", "ملغي") } as Record<string,string>)[s] ?? s; }
 
 const STATUS_AR: Record<string, string> = {
   received: "دخل الاستقبال",
@@ -689,7 +689,7 @@ function OrderTimeline({
   employeeLedgerRows.forEach((l) => events.push({ at: l.entry_at ?? l.created_at, title: `دفتر الموظف: ${l.employees?.full_name ?? "موظف"}`, detail: `${l.description} — ${money(l.amount)} — ${l.direction}`, icon: <Truck className="w-4 h-4" />, tone: "ok" }));
 
   customerReturnRows.forEach((r) => {
-    events.push({ at: r.created_at, title: `مرتجع عميل: ${returnTypeAr(r.return_type)}`, detail: `${r.service_units?.label_code ?? "قطعة"} — ${r.reason} — ${returnStatusAr(r.status)}`, icon: <RotateCcw className="w-4 h-4" />, tone: r.status === "resolved" ? "ok" : "amber" });
+    events.push({ at: r.created_at, title: `مرتجع عميل: ${returnTypeAr(r.return_type, t)}`, detail: `${r.service_units?.label_code ?? "قطعة"} — ${r.reason} — ${returnStatusAr(r.status, t)}`, icon: <RotateCcw className="w-4 h-4" />, tone: r.status === "resolved" ? "ok" : "amber" });
     if (r.resolved_at) events.push({ at: r.resolved_at, title: "إغلاق مرتجع العميل", detail: `${r.service_units?.label_code ?? "قطعة"} — تم الحل`, icon: <CheckCircle2 className="w-4 h-4" />, tone: "ok" });
   });
 

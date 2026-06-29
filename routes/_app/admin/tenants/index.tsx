@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { parseLatLng } from "@/lib/geo";
 import { Plus, Loader2, Building2, LocateFixed } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/tenants/")({
   head: () => ({ meta: [{ title: "إدارة المغاسل" }] }),
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/_app/admin/tenants/")({
 type Tenant = { id: string; name: string; slug: string; business_type?: string | null; is_active: boolean; owner_user_id: string | null; created_at: string };
 
 function TenantsPage() {
+  const { t, dir } = useI18n();
   const { isSuperAdmin } = useAuth();
   const [list, setList] = useState<Tenant[]>([]);
   const [health, setHealth] = useState<Record<string, any>>({});
@@ -68,7 +70,7 @@ function TenantsPage() {
             <Card key={t.id} className="p-4 flex items-center justify-between">
               <div>
                 <div className="font-bold">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.slug} · {businessTypeAr(t.business_type ?? "laundry")}</div>
+                <div className="text-xs text-muted-foreground">{t.slug} · {businessTypeAr(t.business_type ?? "laundry", t)}</div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={health[t.id]?.is_ready ? "default" : "destructive"}>{health[t.id]?.is_ready ? "جاهز" : "ناقص إعداد"}</Badge><Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "مفعلة" : "موقوفة"}</Badge>
@@ -162,4 +164,4 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-function businessTypeAr(s: string) { return ({ laundry: "مغسلة", retail: "تجاري", manufacturing: "صناعي", services: "خدمات", generic: "عام" } as Record<string,string>)[s] ?? s; }
+function businessTypeAr(s: string, t: any) { return ({ laundry: t("biz.laundry", "مغسلة"), retail: t("biz.retail", "تجاري"), manufacturing: t("biz.manufacturing", "صناعي"), services: t("biz.services", "خدمات"), generic: t("biz.generic", "عام") } as Record<string,string>)[s] ?? s; }

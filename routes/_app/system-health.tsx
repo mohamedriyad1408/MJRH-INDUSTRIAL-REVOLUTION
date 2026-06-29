@@ -174,7 +174,7 @@ function SystemHealthPage() {
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
       const next: Check[] = [
-        { key: "tenantReady", title: t("system.check.tenantReady.title"), count: tenantHealth.data?.is_ready ? 0 : 1, okWhenZero: true, severity: tenantHealth.data?.is_ready ? "ok" : "danger", href: "/admin/tenants", fix: tenantHealth.data?.is_ready ? t("system.check.tenantReady.ready") : t("system.check.tenantReady.missing"), details: tenantHealth.data ? ["has_settings", "has_branch", "has_cash_account", "has_chart_accounts", "has_employee", "has_catalog"].filter((k) => !tenantHealth.data[k]).map((k) => ({ label: readinessAr(k), sub: "ناقص" })) : [] },
+        { key: "tenantReady", title: t("system.check.tenantReady.title"), count: tenantHealth.data?.is_ready ? 0 : 1, okWhenZero: true, severity: tenantHealth.data?.is_ready ? "ok" : "danger", href: "/admin/tenants", fix: tenantHealth.data?.is_ready ? t("system.check.tenantReady.ready") : t("system.check.tenantReady.missing"), details: tenantHealth.data ? ["has_settings", "has_branch", "has_cash_account", "has_chart_accounts", "has_employee", "has_catalog"].filter((k) => !tenantHealth.data[k]).map((k) => ({ label: readinessAr(k, t), sub: t("system.missing", "ناقص") })) : [] },
         { key: "settings", title: t("system.check.settings.title"), count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: t("system.check.settings.fix") },
         { key: "cash", title: t("system.check.cash.title"), count: cashRows.length || cash.count || 0, severity: cashHealth.error ? "danger" : severityFor(cashRows.length || cash.count || 0), href: "/accounting", fix: cashHealth.error ? t("system.check.cash.fixError") : t("system.check.cash.fixOk"), details: cashHealthDetails, error: cashHealth.error?.message },
         { key: "chart", title: t("system.check.chart.title"), count: chart.count ?? 0, severity: chart.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: chart.error ? t("system.check.chart.error") : t("system.check.chart.fix"), error: chart.error?.message },
@@ -187,7 +187,7 @@ function SystemHealthPage() {
         { key: "noPieces", title: t("system.check.noPieces.title"), count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: t("system.check.noPieces.fix"), details: noPieceDetails },
         { key: "pickups", title: t("system.check.pickups.title"), count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: t("system.check.pickups.fix"), details: pickupDetails },
         { key: "readyNoDriver", title: t("system.check.readyNoDriver.title"), count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: t("system.check.readyNoDriver.fix"), details: readyNoDriverDetails },
-        { key: "deliveryReadiness", title: t("system.check.deliveryReadiness.title"), count: deliveryRows.length, okWhenZero: true, severity: deliveryReadiness.error ? "warn" : severityFor(deliveryRows.length, true), href: "/driver", fix: deliveryRows.length ? t("system.check.deliveryReadiness.fix") : t("system.check.deliveryReadiness.ok"), details: deliveryRows.slice(0, 5).map((r: any) => ({ label: `طلب #${r.order_number}`, sub: deliveryIssuesAr(r.issue_codes), href: `/orders/${r.order_id}` })), error: deliveryReadiness.error?.message },
+        { key: "deliveryReadiness", title: t("system.check.deliveryReadiness.title"), count: deliveryRows.length, okWhenZero: true, severity: deliveryReadiness.error ? "warn" : severityFor(deliveryRows.length, true), href: "/driver", fix: deliveryRows.length ? t("system.check.deliveryReadiness.fix") : t("system.check.deliveryReadiness.ok"), details: deliveryRows.slice(0, 5).map((r: any) => ({ label: `طلب #${r.order_number}`, sub: deliveryIssuesAr(r.issue_codes, t), href: `/orders/${r.order_id}` })), error: deliveryReadiness.error?.message },
         { key: "reclean", title: t("system.check.reclean.title"), count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: t("system.check.reclean.fix"), details: recleanDetails },
         { key: "labelIssues", title: t("system.check.labelIssues.title"), count: labelIssues.data?.length ?? 0, okWhenZero: true, severity: (labelIssues.data?.length ?? 0) ? "danger" : "ok", href: "/stations/drying-assembly", fix: t("system.check.labelIssues.fix"), details: (labelIssues.data ?? []).slice(0,5).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status}`, href: "/stations/drying-assembly" })), error: labelIssues.error?.message },
         { key: "qc", title: t("system.check.qc.title"), count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: t("system.check.qc.fix"), details: qcDetails },
@@ -441,7 +441,7 @@ function SystemHealthPage() {
       <CardContent className="space-y-2 text-sm">
         {deliveryBlockedRows.length === 0 ? <div className="font-bold text-emerald-800">{t("system.deliveryReadinessOk")}</div> : <>
           <div className="font-bold text-red-900">{t("system.deliveryBlocked")}</div>
-          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{t("order.orderNo", "طلب #{order}").replace("{order}", String(r.order_number))}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">{t("order.piecesCount")} {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">{t("order.reclean")} {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">{t("system.check.unpaid.title")}</Badge>}</div></div></Link>)}</div>
+          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{t("order.orderNo", "طلب #{order}").replace("{order}", String(r.order_number))}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes, t)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">{t("order.piecesCount")} {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">{t("order.reclean")} {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">{t("system.check.unpaid.title")}</Badge>}</div></div></Link>)}</div>
         </>}
       </CardContent>
     </Card>}
@@ -455,11 +455,11 @@ function SystemHealthPage() {
             <div className="font-black">{r.process_name}</div>
             <div className="text-muted-foreground mt-1">{new Date(r.created_at).toLocaleString("ar-EG")} · {r.branch_name ?? "بلا فرع"}</div>
             <div className="flex flex-wrap gap-1 mt-2">
-              <Badge variant={r.branch_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.branch")}: {answerAr(r.branch_answer)}</Badge>
-              <Badge variant={["answered", "not_applicable"].includes(r.cash_answer) ? "secondary" : "destructive"}>{t("system.apdo.cash")}: {answerAr(r.cash_answer)}</Badge>
-              <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>{t("system.apdo.journal")}: {answerAr(r.journal_answer)}</Badge>
-              <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.report")}: {answerAr(r.report_answer)}</Badge>
-              <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>{t("system.apdo.notification")}: {answerAr(r.notification_answer)}</Badge>
+              <Badge variant={r.branch_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.branch")}: {answerAr(r.branch_answer, t)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.cash_answer) ? "secondary" : "destructive"}>{t("system.apdo.cash")}: {answerAr(r.cash_answer, t)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>{t("system.apdo.journal")}: {answerAr(r.journal_answer, t)}</Badge>
+              <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.report")}: {answerAr(r.report_answer, t)}</Badge>
+              <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>{t("system.apdo.notification")}: {answerAr(r.notification_answer, t)}</Badge>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               <Button size="sm" className="h-7 text-[11px]" onClick={() => repairApdoEvent(r.id)} disabled={fixingKey === r.id}>{fixingKey === r.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <Wrench className="w-3 h-3 ms-1" />}{t("system.repairOperation")}</Button>
@@ -524,9 +524,9 @@ function SystemHealthPage() {
   </div>;
 }
 
-function deliveryIssuesAr(codes: string[] = []) {
-  const m: Record<string,string> = { no_units: "لا توجد قطع", reclean_open: "مرتجع مفتوح", label_issue: "مشكلة مارك/ليبل", qc_missing: "قطع غير معتمدة QC", no_driver: "بلا مندوب", unpaid: "غير مدفوع" };
-  return codes.map((c) => m[c] ?? c).join("، ") || "غير جاهز";
+function deliveryIssuesAr(codes: string[] = [], t: any) {
+  const m: Record<string,string> = { no_units: t("del.issue.no_units", "لا توجد قطع"), reclean_open: t("del.issue.reclean_open", "مرتجع مفتوح"), label_issue: t("del.issue.label_issue", "مشكلة مارك/ليبل"), qc_missing: t("del.issue.qc_missing", "قطع غير معتمدة QC"), no_driver: t("del.issue.no_driver", "بلا مندوب"), unpaid: t("del.issue.unpaid", "غير مدفوع") };
+  return codes.map((c) => m[c] ?? c).join("، ") || t("system.deliveryBlocked", "غير جاهز");
 }
 
 const healthGroups = [
@@ -545,7 +545,7 @@ function groupForCheck(key: string) {
   if (["reclean", "qc", "labelIssues", "unpaid", "proof"].includes(key)) return "quality";
   return "apdo";
 }
-function readinessAr(k: string) { return ({ has_settings: "الإعدادات", has_branch: "الفرع", has_cash_account: "الخزنة", has_chart_accounts: "شجرة الحسابات", has_employee: "موظف نشط", has_catalog: "كتالوج الخدمات" } as Record<string,string>)[k] ?? k; }
+function readinessAr(k: string, t: any) { return ({ has_settings: t("readiness.has_settings", "الإعدادات"), has_branch: t("readiness.has_branch", "الفرع"), has_cash_account: t("readiness.has_cash_account", "الخزنة"), has_chart_accounts: t("readiness.has_chart_accounts", "شجرة الحسابات"), has_employee: t("readiness.has_employee", "موظف نشط"), has_catalog: t("readiness.has_catalog", "كتالوج الخدمات") } as Record<string,string>)[k] ?? k; }
 function safeFixHref(href?: string | null) {
   if (!href) return "/system-health";
   // /ledger is owner-only. For actionable repairs, /accounting is available to owner/ops_manager.
@@ -566,8 +566,8 @@ function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fixingKey
   </CardContent></Card>;
 }
 
-function answerAr(s: string) {
-  return ({ answered: "مكتمل", missing_branch: "ناقص", missing_cash_account: "ناقص", missing_journal: "ناقص", missing_report_bucket: "ناقص", missing_notification: "ناقص", not_applicable: "لا ينطبق", not_required: "غير مطلوب" } as Record<string, string>)[s] ?? s;
+function answerAr(s: string, t: any) {
+  return ({ answered: t("apdo.answered", "مكتمل"), missing_branch: t("apdo.missing", "ناقص"), missing_cash_account: t("apdo.missing", "ناقص"), missing_journal: t("apdo.missing", "ناقص"), missing_report_bucket: t("apdo.missing", "ناقص"), missing_notification: t("apdo.missing", "ناقص"), not_applicable: t("apdo.not_applicable", "لا ينطبق"), not_required: t("apdo.not_required", "غير مطلوب") } as Record<string, string>)[s] ?? s;
 }
 
 function Kpi({ title, value, tone }: { title: string; value: number; tone: "ok" | "warn" | "danger" }) {

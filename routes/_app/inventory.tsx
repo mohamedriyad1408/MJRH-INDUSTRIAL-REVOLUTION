@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Boxes, Plus, AlertTriangle, Wrench, Loader2, TrendingDown, TrendingUp } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "المخزون والمعدات" }] }),
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_app/inventory")({
 });
 
 function InventoryPage() {
+  const { t, dir } = useI18n();
   const { hasRole, user, tenantId } = useAuth();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ function InventoryPage() {
           <Button onClick={addAsset} className="w-full">إضافة المعدة</Button>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">المعدات</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-3">
-          {assets.map((a) => <div key={a.id} className="rounded-2xl border p-3 space-y-2"><div className="flex justify-between gap-2"><div className="font-black">{a.name}</div><Badge variant={a.status === "working" ? "secondary" : "destructive"}>{statusAr(a.status)}</Badge></div><div className="text-xs text-muted-foreground">الصيانة القادمة: {a.next_maintenance_at ?? "—"}</div><Select value={a.status} onValueChange={(v) => updateAsset(a.id, v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="working">تعمل</SelectItem><SelectItem value="needs_service">تحتاج صيانة</SelectItem><SelectItem value="out_of_service">خارج الخدمة</SelectItem><SelectItem value="retired">مكهّنة</SelectItem></SelectContent></Select></div>)}
+          {assets.map((a) => <div key={a.id} className="rounded-2xl border p-3 space-y-2"><div className="flex justify-between gap-2"><div className="font-black">{a.name}</div><Badge variant={a.status === "working" ? "secondary" : "destructive"}>{statusAr(a.status, t)}</Badge></div><div className="text-xs text-muted-foreground">الصيانة القادمة: {a.next_maintenance_at ?? "—"}</div><Select value={a.status} onValueChange={(v) => updateAsset(a.id, v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="working">تعمل</SelectItem><SelectItem value="needs_service">تحتاج صيانة</SelectItem><SelectItem value="out_of_service">خارج الخدمة</SelectItem><SelectItem value="retired">مكهّنة</SelectItem></SelectContent></Select></div>)}
           {!assets.length && <Empty />}
         </CardContent></Card>
       </TabsContent>
@@ -183,4 +185,4 @@ function Kpi({ title, value, warn = false }: { title: string; value: any; warn?:
 }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1"><Label>{label}</Label>{children}</div>; }
 function Empty() { return <div className="col-span-full p-8 text-center text-muted-foreground">لا توجد بيانات</div>; }
-function statusAr(s: string) { return ({ working: "تعمل", needs_service: "تحتاج صيانة", out_of_service: "خارج الخدمة", retired: "مكهّنة" } as any)[s] ?? s; }
+function statusAr(s: string, t: any) { return ({ working: t("inv.status.working", "تعمل"), needs_service: t("inv.status.needs_service", "تحتاج صيانة"), out_of_service: t("inv.status.out_of_service", "خارج الخدمة"), retired: t("inv.status.retired", "مكهّنة") } as any)[s] ?? s; }

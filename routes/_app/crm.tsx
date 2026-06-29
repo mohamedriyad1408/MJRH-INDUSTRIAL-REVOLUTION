@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { HeartHandshake, MessageCircle, Star, Loader2, RefreshCw, Send } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/crm")({
   head: () => ({ meta: [{ title: "CRM والولاء" }] }),
@@ -27,6 +28,7 @@ const templates: Record<string, string> = {
 };
 
 function CrmPage() {
+  const { t, dir } = useI18n();
   const { hasRole, user } = useAuth();
   const canUse = hasRole("owner", "cs_manager", "ops_manager");
   const [loading, setLoading] = useState(true);
@@ -125,7 +127,7 @@ function CrmPage() {
       <TabsList><TabsTrigger value="loyalty">الولاء</TabsTrigger><TabsTrigger value="messages">الرسائل</TabsTrigger></TabsList>
       <TabsContent value="loyalty">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-amber-500" />أفضل العملاء</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {loyalty.map((l) => <div key={l.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{l.customers?.full_name ?? "عميل"}</div><Badge>{tierAr(l.tier)}</Badge></div><div className="text-xs text-muted-foreground mt-1">{l.customers?.phone}</div><div className="grid grid-cols-2 gap-2 mt-3 text-sm"><div className="rounded-xl bg-teal-50 p-2"><div className="text-xs text-teal-700">النقاط</div><b>{l.points}</b></div><div className="rounded-xl bg-slate-50 p-2"><div className="text-xs text-slate-500">إجمالي الشراء</div><b>{fmtMoney(l.lifetime_spend)}</b></div></div></div>)}
+          {loyalty.map((l) => <div key={l.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{l.customers?.full_name ?? "عميل"}</div><Badge>{tierAr(l.tier, t)}</Badge></div><div className="text-xs text-muted-foreground mt-1">{l.customers?.phone}</div><div className="grid grid-cols-2 gap-2 mt-3 text-sm"><div className="rounded-xl bg-teal-50 p-2"><div className="text-xs text-teal-700">النقاط</div><b>{l.points}</b></div><div className="rounded-xl bg-slate-50 p-2"><div className="text-xs text-slate-500">إجمالي الشراء</div><b>{fmtMoney(l.lifetime_spend)}</b></div></div></div>)}
           {!loyalty.length && <div className="col-span-full text-center text-muted-foreground p-10">اضغط “تحديث الولاء” لبناء نقاط العملاء من الطلبات.</div>}
         </CardContent></Card>
       </TabsContent>
@@ -138,7 +140,7 @@ function CrmPage() {
           <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => saveMessage("draft")}>مسودة</Button><Button onClick={() => saveMessage("queued")}><Send className="w-4 h-4 ms-1" />فتح واتساب للإرسال</Button></div>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">سجل الرسائل</CardTitle></CardHeader><CardContent className="space-y-2">
-          {messages.map((m) => <div key={m.id} className="rounded-2xl border p-3 space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{m.customers?.full_name ?? m.phone}</div><Badge variant={m.status === "sent" ? "secondary" : "outline"}>{statusAr(m.status)}</Badge></div><p className="text-sm text-muted-foreground">{m.message}</p><div className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={whatsappUrl(m.phone ?? m.customers?.phone, m.message)} target="_blank">فتح واتساب</a></Button>{m.status !== "sent" && <Button size="sm" onClick={() => markSent(m)}>تم الإرسال</Button>}</div></div>)}
+          {messages.map((m) => <div key={m.id} className="rounded-2xl border p-3 space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{m.customers?.full_name ?? m.phone}</div><Badge variant={m.status === "sent" ? "secondary" : "outline"}>{statusAr(m.status, t)}</Badge></div><p className="text-sm text-muted-foreground">{m.message}</p><div className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={whatsappUrl(m.phone ?? m.customers?.phone, m.message)} target="_blank">فتح واتساب</a></Button>{m.status !== "sent" && <Button size="sm" onClick={() => markSent(m)}>تم الإرسال</Button>}</div></div>)}
           {!messages.length && <div className="text-center text-muted-foreground p-10">لا توجد رسائل بعد</div>}
         </CardContent></Card>
       </TabsContent>
@@ -148,5 +150,5 @@ function CrmPage() {
 
 function Kpi({ label, value }: { label: string; value: any }) { return <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black mt-1">{value}</div></CardContent></Card>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1"><Label>{label}</Label>{children}</div>; }
-function tierAr(s: string) { return ({ basic: "Basic", silver: "Silver", gold: "Gold", vip: "VIP" } as any)[s] ?? s; }
-function statusAr(s: string) { return ({ draft: "مسودة", queued: "جاهزة للإرسال", sent: "مرسلة", failed: "فشلت" } as any)[s] ?? s; }
+function tierAr(s: string, t: any) { return ({ basic: t("crm.tier.basic", "Basic"), silver: t("crm.tier.silver", "Silver"), gold: t("crm.tier.gold", "Gold"), vip: t("crm.tier.vip", "VIP") } as any)[s] ?? s; }
+function statusAr(s: string, t: any) { return ({ draft: t("crm.status.draft", "مسودة"), queued: t("crm.status.queued", "جاهزة للإرسال"), sent: t("crm.status.sent", "مرسلة"), failed: t("crm.status.failed", "فشلت") } as any)[s] ?? s; }

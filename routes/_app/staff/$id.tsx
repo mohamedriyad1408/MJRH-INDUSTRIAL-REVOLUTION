@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2, ArrowRight, Save, Trash2 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/$id")({
   component: StaffDetailPage,
@@ -25,6 +26,7 @@ type Employee = any;
 type Schedule = { id?: string; day_of_week: number; start_time: string | null; end_time: string | null; is_off: boolean };
 
 function StaffDetailPage() {
+  const { t, dir } = useI18n();
   const { id } = Route.useParams();
   const { hasRole, tenantId } = useAuth();
   const nav = useNavigate();
@@ -260,7 +262,7 @@ function StaffDetailPage() {
                   {leaves.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد طلبات إجازة</td></tr>}
                   {leaves.map((l) => (
                     <tr key={l.id} className="border-t">
-                      <td className="p-3">{leaveTypeAr(l.leave_type)}</td>
+                      <td className="p-3">{leaveTypeAr(l.leave_type, t)}</td>
                       <td className="p-3 text-xs">{fmtDate(l.start_date)}</td>
                       <td className="p-3 text-xs">{fmtDate(l.end_date)}</td>
                       <td className="p-3 text-muted-foreground">{l.reason || "—"}</td>
@@ -304,8 +306,8 @@ function StaffDetailPage() {
 function Fld({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><Label className="text-sm">{label}</Label>{children}</div>;
 }
-function leaveTypeAr(t: string) {
-  return { annual: "سنوية", sick: "مرضية", unpaid: "بدون أجر", emergency: "طارئة" }[t] ?? t;
+function leaveTypeAr(t: string, fn: any) {
+  return { annual: fn("leave.annual", "سنوية"), sick: fn("leave.sick", "مرضية"), unpaid: fn("leave.unpaid", "بدون أجر"), emergency: fn("leave.emergency", "طارئة") }[t] ?? t;
 }
 function LeaveStatusBadge({ s }: { s: string }) {
   if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;

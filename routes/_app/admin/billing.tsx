@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Plus, ReceiptText } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/billing")({
   head: () => ({ meta: [{ title: "فواتير المنصة" }] }),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_app/admin/billing")({
 });
 
 function AdminBillingPage() {
+  const { t, dir } = useI18n();
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<any[]>([]);
   const [rows, setRows] = useState<any[]>([]);
@@ -52,7 +54,7 @@ function AdminBillingPage() {
     if (error) toast.error(error.message); else { toast.success("تم تحديث الفاتورة"); load(); }
   }
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div><h1 className="text-2xl font-black flex items-center gap-2"><ReceiptText className="w-7 h-7 text-teal-600" />فواتير المنصة SaaS</h1><p className="text-sm text-muted-foreground">إصدار فواتير اشتراك للمغاسل ومتابعة السداد.</p></div>
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid lg:grid-cols-[380px_1fr] gap-4">
       <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />إصدار فاتورة</CardTitle></CardHeader><CardContent className="space-y-3">
@@ -63,11 +65,11 @@ function AdminBillingPage() {
         <Button onClick={createInvoice} className="w-full">إصدار</Button>
       </CardContent></Card>
       <Card><CardHeader><CardTitle className="text-base">آخر الفواتير</CardTitle></CardHeader><CardContent className="space-y-2">
-        {rows.map((r) => <div key={r.id} className="rounded-2xl border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.tenants?.name ?? "مغسلة"}</div><Badge variant={r.status === "paid" ? "secondary" : r.status === "overdue" ? "destructive" : "outline"}>{statusAr(r.status)}</Badge></div><div className="text-sm text-muted-foreground mt-1">{r.period_start} → {r.period_end} · {fmtMoney(r.amount)}</div><div className="flex flex-wrap gap-2 mt-3"><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "paid")}>مدفوعة</Button><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "overdue")}>متأخرة</Button><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "void")}>إلغاء</Button></div></div>)}
+        {rows.map((r) => <div key={r.id} className="rounded-2xl border p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.tenants?.name ?? "مغسلة"}</div><Badge variant={r.status === "paid" ? "secondary" : r.status === "overdue" ? "destructive" : "outline"}>{statusAr(r.status, t)}</Badge></div><div className="text-sm text-muted-foreground mt-1">{r.period_start} → {r.period_end} · {fmtMoney(r.amount)}</div><div className="flex flex-wrap gap-2 mt-3"><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "paid")}>مدفوعة</Button><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "overdue")}>متأخرة</Button><Button size="sm" variant="outline" onClick={() => setStatus(r.id, "void")}>إلغاء</Button></div></div>)}
         {!rows.length && <div className="text-center text-muted-foreground p-10">لا توجد فواتير بعد</div>}
       </CardContent></Card>
     </div>}
   </div>;
 }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1"><Label>{label}</Label>{children}</div>; }
-function statusAr(s: string) { return ({ draft: "مسودة", issued: "صادرة", paid: "مدفوعة", overdue: "متأخرة", void: "ملغية" } as any)[s] ?? s; }
+function statusAr(s: string, t: any) { return ({ draft: t("billing.status.draft", "مسودة"), issued: t("billing.status.issued", "صادرة"), paid: t("billing.status.paid", "مدفوعة"), overdue: t("billing.status.overdue", "متأخرة"), void: t("billing.status.void", "ملغية") } as any)[s] ?? s; }

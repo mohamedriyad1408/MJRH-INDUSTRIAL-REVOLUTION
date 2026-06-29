@@ -15,12 +15,14 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Check, X, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/leaves")({
   component: LeavesPage,
 });
 
 function LeavesPage() {
+  const { t, dir } = useI18n();
   const { hasRole, user } = useAuth();
   const isOwner = hasRole("owner");
   const canDecide = isOwner || hasRole("ops_manager") || hasRole("cs_manager");
@@ -107,7 +109,7 @@ function LeavesPage() {
                     {visibleLeaves.map((l) => (
                       <tr key={l.id} className="border-t">
                         <td className="p-3 font-medium">{empMap.get(l.employee_id) ?? "—"}</td>
-                        <td className="p-3">{leaveTypeAr(l.leave_type)}</td>
+                        <td className="p-3">{leaveTypeAr(l.leave_type, t)}</td>
                         <td className="p-3 text-xs">{fmtDate(l.start_date)}</td>
                         <td className="p-3 text-xs">{fmtDate(l.end_date)}</td>
                         <td className="p-3 text-muted-foreground">{l.reason || "—"}</td>
@@ -179,8 +181,8 @@ function LeavesPage() {
 }
 
 function Spinner() { return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>; }
-function leaveTypeAr(t: string) {
-  return { annual: "سنوية", sick: "مرضية", unpaid: "بدون أجر", emergency: "طارئة" }[t] ?? t;
+function leaveTypeAr(t: string, fn: any) {
+  return { annual: fn("leave.annual", "سنوية"), sick: fn("leave.sick", "مرضية"), unpaid: fn("leave.unpaid", "بدون أجر"), emergency: fn("leave.emergency", "طارئة") }[t] ?? t;
 }
 function LeaveStatusBadge({ s }: { s: string }) {
   if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;
