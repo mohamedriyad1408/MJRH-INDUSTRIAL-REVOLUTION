@@ -317,7 +317,6 @@ function CashClosingPage() {
       </div>
     </>}
   </div>;
-  </div>;
 }
 function Kpi({ label, value, warn = false }: { label: string; value: any; warn?: boolean }) { return <Card className={warn ? "border-amber-200 bg-amber-50" : ""}><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black mt-1">{value}</div></CardContent></Card>; }
 function Mini({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-muted/60 p-2"><div className="text-[11px] text-muted-foreground">{label}</div><div className="font-black">{value}</div></div>; }
