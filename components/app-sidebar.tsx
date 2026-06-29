@@ -5,7 +5,7 @@ import {
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
-  UsersRound, LockKeyhole,
+  UsersRound, LockKeyhole, HelpCircle,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -97,6 +97,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "كتالوج الخدمات", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
       { title: "نقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
       { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
+      { title: "دليل الاستخدام", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
     ],
   },
 ];
