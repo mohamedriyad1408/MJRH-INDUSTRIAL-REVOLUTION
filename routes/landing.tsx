@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { ArrowLeft, BarChart3, Calculator, CheckCircle2, ClipboardList, Map, ShieldCheck, Shirt, Sparkles, Truck, Users, WalletCards } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
@@ -33,7 +34,8 @@ function LandingPage() {
             <div className="text-xs text-slate-500">Industrial Revolution for Laundry Operations</div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <LanguageSwitcher compact />
           <Button asChild variant="outline"><Link to="/login">دخول النظام</Link></Button>
           <Button asChild><a href="https://wa.me/201130804784" target="_blank" rel="noreferrer">طلب تجربة</a></Button>
         </div>

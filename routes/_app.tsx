@@ -11,6 +11,8 @@ import { AttendanceWidget } from "@/components/attendance-widget";
 import { NotificationCenter } from "@/components/notification-center";
 import { MotivationalPopups } from "@/components/motivational-popups";
 import { MobileWorkDock } from "@/components/mobile-work-dock";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const { session, user, loading, roles, isSuperAdmin, hasRole, signOut, tenantId } = useAuth();
+  const { dir, t } = useI18n();
   const [tenantBrand, setTenantBrand] = useState<any>(null);
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -85,11 +88,11 @@ function AppLayout() {
           <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center">
             <Hourglass className="w-7 h-7 text-muted-foreground" />
           </div>
-          <h1 className="text-xl font-bold">بانتظار التفعيل</h1>
+          <h1 className="text-xl font-bold">{t("waiting.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            تم إنشاء حسابك بنجاح. يجب على مالك المغسلة أو مدير المنصة تعيين دورك للوصول إلى النظام.
+            {t("waiting.body")}
           </p>
-          <Button variant="outline" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> خروج</Button>
+          <Button variant="outline" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut")}</Button>
         </Card>
       </div>
     );
@@ -97,12 +100,13 @@ function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full" dir="rtl">
+      <div className="min-h-screen flex w-full" dir={dir}>
         <AppSidebar />
         <div className="app-shell flex-1 flex flex-col min-w-0">
           <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
-            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 p-0.5 shadow-sm shrink-0">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-2xl object-cover bg-white" /> : <div className="h-full w-full rounded-2xl bg-white/20 flex items-center justify-center text-white font-black">MJ</div>}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? "نظام تشغيل ممتع ومنظم"}</div></div></div>
+            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 p-0.5 shadow-sm shrink-0">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-2xl object-cover bg-white" /> : <div className="h-full w-full rounded-2xl bg-white/20 flex items-center justify-center text-white font-black">MJ</div>}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("app.tagline")}</div></div></div>
+            <LanguageSwitcher compact />
             <NotificationCenter />
             <AttendanceWidget />
           </header>

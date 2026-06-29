@@ -14,6 +14,7 @@ import {
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[] };
 
@@ -105,6 +106,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
 export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { roles, hasRole, user, signOut, isSuperAdmin } = useAuth();
+  const { dir, t } = useI18n();
   const { setOpenMobile } = useSidebar();
   const [employeeStation, setEmployeeStation] = useState<string | null>(null);
   const [employeeJobRole, setEmployeeJobRole] = useState<string | null>(null);
@@ -145,7 +147,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar side="right" collapsible="icon">
+    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-primary-glow flex items-center justify-center shrink-0">
@@ -163,7 +165,7 @@ export function AppSidebar() {
           if (!visible.length) return null;
           return (
             <SidebarGroup key={g.label}>
-              <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
+              <SidebarGroupLabel>{t(`navGroup.${g.label}`, g.label)}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visible.map((item) => {
@@ -173,7 +175,7 @@ export function AppSidebar() {
                         <SidebarMenuButton asChild isActive={active}>
                           <Link to={item.url} className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
                             <item.icon className="w-4 h-4 shrink-0" />
-                            <span>{item.title}</span>
+                            <span>{t(`nav.${item.url}`, item.title)}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -187,19 +189,19 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <div className="px-2 pb-2 text-xs opacity-70">
-          {roles.length ? `الدور: ${roles.map(roleAr).join("، ")}` : "بدون دور"}
+          {roles.length ? `${dir === "rtl" ? "الدور" : "Role"}: ${roles.map((r) => t(`role.${r}`, roleAr(r))).join(dir === "rtl" ? "، " : ", ")}` : (dir === "rtl" ? "بدون دور" : "No role")}
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <a href="/customer-portal" target="_blank" className="flex items-center gap-2 text-teal-600" onClick={() => setOpenMobile(false)}>
-                <UserCircle className="w-4 h-4" /><span>بوابة العميل</span>
+                <UserCircle className="w-4 h-4" /><span>{t("app.portal")}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={() => signOut()}>
-              <LogOut className="w-4 h-4" /><span>خروج</span>
+              <LogOut className="w-4 h-4" /><span>{t("app.signOut")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

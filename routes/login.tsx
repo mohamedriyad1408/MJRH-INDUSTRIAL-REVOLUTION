@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, Shirt } from "lucide-react";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "تسجيل الدخول" }] }),
@@ -22,6 +24,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
   const { session } = useAuth();
+  const { t, dir } = useI18n();
 
   useEffect(() => {
     if (session) nav({ to: "/dashboard" });
@@ -62,39 +65,39 @@ function LoginPage() {
     }
   }
 
-  const title = mode === "signin" ? "ادخل بياناتك للمتابعة" : mode === "signup" ? "أنشئ حساب جديد" : "استرجاع كلمة المرور";
+  const title = mode === "signin" ? t("login.signinTitle") : mode === "signup" ? t("login.signupTitle") : t("login.forgotTitle");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4">
-      <Card className="w-full max-w-md p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4" dir={dir}>
+      <Card className="w-full max-w-md p-8 shadow-xl relative"><div className="absolute top-3 left-3"><LanguageSwitcher compact /></div>
         <div className="flex flex-col items-center mb-6">
           <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
             <Shirt className="w-7 h-7" />
           </div>
-          <h1 className="mt-3 text-2xl font-bold">نظام إدارة المغسلة</h1>
+          <h1 className="mt-3 text-2xl font-bold">{t("login.heading")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{title}</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
           {mode === "signup" && (
             <div>
-              <Label htmlFor="name">الاسم الكامل</Label>
+              <Label htmlFor="name">{t("login.fullName")}</Label>
               <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             </div>
           )}
           <div>
-            <Label htmlFor="email">البريد الإلكتروني</Label>
+            <Label htmlFor="email">{t("login.email")}</Label>
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           {mode !== "forgot" && (
             <div>
-              <Label htmlFor="password">كلمة المرور</Label>
+              <Label htmlFor="password">{t("login.password")}</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
-            {mode === "signin" ? "دخول" : mode === "signup" ? "إنشاء حساب" : "إرسال الرابط"}
+            {mode === "signin" ? t("login.signIn") : mode === "signup" ? t("login.signUp") : t("login.sendLink")}
           </Button>
         </form>
 
@@ -102,24 +105,24 @@ function LoginPage() {
           {mode === "signin" && (
             <>
               <button onClick={() => setMode("forgot")} className="block w-full text-primary hover:underline">
-                نسيت كلمة المرور؟
+                {t("login.forgotPassword")}
               </button>
               <button onClick={() => setMode("signup")} className="block w-full text-primary hover:underline">
-                ليس عندك حساب؟ سجّل الآن
+                {t("login.noAccount")}
               </button>
             </>
           )}
           {mode !== "signin" && (
             <button onClick={() => setMode("signin")} className="text-primary hover:underline">
-              العودة لتسجيل الدخول
+              {t("login.backToSignin")}
             </button>
           )}
         </div>
         <p className="mt-4 text-xs text-muted-foreground text-center">
-          أول حساب يتسجّل في النظام يأخذ صلاحية مدير المنصة تلقائياً. باقي الحسابات تُفعَّل من الإدارة.
+          {t("login.firstAccountNote")}
         </p>
         <div className="mt-4 text-center">
-          <Link to="/landing" className="text-xs text-muted-foreground hover:underline">العودة للرئيسية</Link>
+          <Link to="/landing" className="text-xs text-muted-foreground hover:underline">{t("login.backHome")}</Link>
         </div>
       </Card>
     </div>
