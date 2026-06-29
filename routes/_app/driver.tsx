@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 import {
   Loader2, MapPin, Phone, Truck, CheckCircle2,
   PackageOpen, Zap, ArrowLeft, Navigation,
@@ -46,6 +47,7 @@ const PICKUP_STATUS_AR: Record<string, string> = {
 /* ─── main component ─── */
 function DriverPage() {
   const { user, hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const allowed = hasRole("courier", "owner", "ops_manager");
 
   const [tab, setTab] = useState<"pickups" | "deliveries">("pickups");
@@ -271,21 +273,21 @@ function DriverPage() {
   const myPickups = pickups.filter((p) => p.status === "assigned");
 
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-4 max-w-2xl" dir={dir}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Truck className="w-6 h-6 text-primary" /> لوحة السائق
+            <Truck className="w-6 h-6 text-primary" /> {t("nav./driver")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            استلامات بانتظارك: {pendingPickups.length + myPickups.length} •
-            توصيلات: {myDeliveries.length}
+            {t("stage.received")} : {pendingPickups.length + myPickups.length} ·
+            {t("stage.delivery")} : {myDeliveries.length}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={updateMyLocation}>موقعي</Button>
-          <Button variant="outline" size="sm" onClick={load}>تحديث</Button>
+          <Button variant="secondary" size="sm" onClick={updateMyLocation}>GPS</Button>
+          <Button variant="outline" size="sm" onClick={load}>{t("common.refresh")}</Button>
         </div>
       </div>
 
@@ -300,7 +302,7 @@ function DriverPage() {
           }`}
         >
           <PackageOpen className="w-4 h-4 inline ms-1" />
-          استلام ({pendingPickups.length + myPickups.length})
+          {t("stage.received")} ({pendingPickups.length + myPickups.length})
         </button>
         <button
           onClick={() => setTab("deliveries")}
@@ -311,11 +313,11 @@ function DriverPage() {
           }`}
         >
           <Truck className="w-4 h-4 inline ms-1" />
-          توصيل ({myDeliveries.length})
+          {t("stage.delivery")} ({myDeliveries.length})
         </button>
       </div>
 
-      {!loading && <DriverNextAction pendingPickups={pendingPickups} myPickups={myPickups} deliveries={myDeliveries} myLoc={myLoc} />}
+      {!loading && <DriverNextAction pendingPickups={pendingPickups} myPickups={myPickups} deliveries={myDeliveries} myLoc={myLoc} t={t} />}
 
       {loading ? (
         <div className="flex justify-center p-10">
@@ -330,6 +332,7 @@ function DriverPage() {
           onAssign={assignSelf}
           onConfirm={confirmPickup}
           myLoc={myLoc}
+          t={t}
         />
       ) : (
         <DeliveriesList
@@ -341,6 +344,7 @@ function DriverPage() {
           onConfirm={confirmDelivery}
           myLoc={myLoc}
           deliveryIssues={deliveryIssues}
+          t={t}
         />
       )}
     </div>
@@ -348,34 +352,35 @@ function DriverPage() {
 }
 
 
-function DriverNextAction({ pendingPickups, myPickups, deliveries, myLoc }: { pendingPickups: Pickup[]; myPickups: Pickup[]; deliveries: Delivery[]; myLoc: LatLng | null }) {
+function DriverNextAction({ pendingPickups, myPickups, deliveries, myLoc, t }: { pendingPickups: Pickup[]; myPickups: Pickup[]; deliveries: Delivery[]; myLoc: LatLng | null; t: any }) {
   const dueDelivery = deliveries.find((d) => d.status === "out_for_delivery" && d.payment_status !== "paid") || deliveries.find((d) => d.status === "out_for_delivery") || deliveries.find((d) => d.status === "ready");
-  let title = "ابدأ بمهمة الاستلام";
-  let detail = "لا توجد مهام عاجلة. لو أنت قريب من طلب استلام، خذه وابدأ.";
+  let title = t("driver.action.startPickup");
+  let detail = t("driver.action.noTasks");
   let tone = "bg-blue-50 border-blue-200 text-blue-800";
-  if (!myLoc) { title = "حدّث موقعك أولًا"; detail = "اضغط زر موقعي عشان الخريطة والتوزيع يشتغلوا صح."; tone = "bg-amber-50 border-amber-200 text-amber-800"; }
-  else if (myPickups.length) { title = "عندك استلام مكلف به"; detail = `${myPickups[0].customer_name} — اذهب للعميل واضغط تأكيد الاستلام بعد الاستلام.`; }
-  else if (dueDelivery) { title = dueDelivery.payment_status === "paid" ? "عندك تسليم جاهز" : "عندك تسليم مع تحصيل"; detail = `طلب #${dueDelivery.order_number} — ${dueDelivery.payment_status === "paid" ? "سلمه بكود العميل" : `حصل ${Number(dueDelivery.total ?? 0).toLocaleString("en-US")} جنيه عند التسليم`}`; tone = dueDelivery.payment_status === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-800"; }
-  else if (pendingPickups.length) { title = "يوجد استلامات غير مسندة"; detail = `أقرب طلب: ${pendingPickups[0].customer_name}. لو مناسب اضغط خذ الطلب.`; }
+  if (!myLoc) { title = t("driver.action.updateLocation"); detail = t("driver.action.updateLocationDetail"); tone = "bg-amber-50 border-amber-200 text-amber-800"; }
+  else if (myPickups.length) { title = t("driver.action.assignedPickup"); detail = `${myPickups[0].customer_name} — go and confirm the pickup after receiving pieces.`; }
+  else if (dueDelivery) { title = dueDelivery.payment_status === "paid" ? t("driver.action.readyDelivery") : t("driver.action.codDelivery"); detail = `Order #${dueDelivery.order_number} — ${dueDelivery.payment_status === "paid" ? "Handover with client code" : `Collect ${Number(dueDelivery.total ?? 0).toLocaleString("en-US")} ${t("common.egp")} on delivery`}`; tone = dueDelivery.payment_status === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-amber-50 border-amber-200 text-amber-800"; }
+  else if (pendingPickups.length) { title = t("driver.action.unassignedPickups"); detail = `Closest: ${pendingPickups[0].customer_name}. If near, take order.`; }
   return <Card className={`border ${tone}`}><CardContent className="p-3 text-sm"><div className="font-black">{title}</div><div className="text-xs mt-1 opacity-80">{detail}</div></CardContent></Card>;
 }
 
 /* ─── Pickups sub-component ─── */
 function PickupsList({
-  pending, assigned, acting, empId, onAssign, onConfirm, myLoc,
+  pending, assigned, acting, empId, onAssign, onConfirm, myLoc, t,
 }: {
   pending: Pickup[]; assigned: Pickup[];
   acting: string | null; empId: string | null;
   onAssign: (p: Pickup) => void;
   onConfirm: (p: Pickup) => void;
   myLoc: LatLng | null;
+  t: any;
 }) {
   const all = [...assigned, ...pending];
   if (!all.length)
     return (
       <Card>
         <CardContent className="p-10 text-center text-muted-foreground">
-          لا توجد طلبات استلام الآن ✅
+          {t("cs.noOrdersInProgress")}
         </CardContent>
       </Card>
     );
@@ -384,24 +389,24 @@ function PickupsList({
     <div className="space-y-3">
       {assigned.length > 0 && (
         <p className="text-xs font-bold text-primary uppercase tracking-wider">
-          مُكلَّف بها أنت
+          {t("pickupStatus.assigned")}
         </p>
       )}
       {assigned.map((p) => (
         <PickupCard
           key={p.id} p={p} acting={acting} isAssigned
-          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc}
+          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc} t={t}
         />
       ))}
       {pending.length > 0 && (
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mt-4">
-          بانتظار سائق
+          {t("pickupStatus.pending")}
         </p>
       )}
       {pending.map((p) => (
         <PickupCard
           key={p.id} p={p} acting={acting} isAssigned={false}
-          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc}
+          onAssign={onAssign} onConfirm={onConfirm} myLoc={myLoc} t={t}
         />
       ))}
     </div>
@@ -409,12 +414,13 @@ function PickupsList({
 }
 
 function PickupCard({
-  p, acting, isAssigned, onAssign, onConfirm, myLoc,
+  p, acting, isAssigned, onAssign, onConfirm, myLoc, t,
 }: {
   p: Pickup; acting: string | null; isAssigned: boolean;
   onAssign: (p: Pickup) => void;
   onConfirm: (p: Pickup) => void;
   myLoc: LatLng | null;
+  t: any;
 }) {
   return (
     <Card className={isAssigned ? "border-primary/40 bg-primary/5" : ""}>
@@ -466,7 +472,7 @@ function PickupCard({
               {acting === p.id ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                "خذ الطلب"
+                t("station.common.assign")
               )}
             </Button>
           )}
@@ -481,7 +487,7 @@ function PickupCard({
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4 ms-1" /> تأكيد الاستلام وإنشاء الطلب
+                  <CheckCircle2 className="w-4 h-4 ms-1" /> {t("driver.confirmPickup")}
                 </>
               )}
             </Button>
@@ -494,7 +500,7 @@ function PickupCard({
 
 /* ─── Deliveries sub-component ─── */
 function DeliveriesList({
-  list, acting, confirmCode, setConfirmCode, onStart, onConfirm, myLoc, deliveryIssues,
+  list, acting, confirmCode, setConfirmCode, onStart, onConfirm, myLoc, deliveryIssues, t,
 }: {
   list: Delivery[]; acting: string | null;
   confirmCode: Record<string, string>;
@@ -503,12 +509,13 @@ function DeliveriesList({
   onConfirm: (d: Delivery) => void;
   myLoc: LatLng | null;
   deliveryIssues: Record<string, { label: number; reclean: number; notQc: number; total: number }>;
+  t: any;
 }) {
   if (!list.length)
     return (
       <Card>
         <CardContent className="p-10 text-center text-muted-foreground">
-          لا توجد طلبات توصيل الآن ✅
+          {t("cs.noOrdersInProgress")}
         </CardContent>
       </Card>
     );
@@ -524,21 +531,21 @@ function DeliveriesList({
             <div className="flex justify-between items-start">
               <div>
                 <div className="font-bold text-base flex items-center gap-2">
-                  طلب #{d.order_number}
+                  {t("order.orderNo", "Order #{order}").replace("{order}", String(d.order_number))}
                   {d.is_urgent && (
                     <Badge className="bg-amber-500 text-white">
-                      <Zap className="w-3 h-3 ms-1" /> عاجل
+                      <Zap className="w-3 h-3 ms-1" /> {t("station.common.urgent")}
                     </Badge>
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {d.customers?.full_name}
                 </div>
-                <div className="text-xs text-muted-foreground">الإجمالي: {Number(d.total ?? 0).toLocaleString("en-US")} جنيه · {d.payment_status === "paid" ? "مدفوع" : "تحصيل عند التسليم"}</div>
-                {(() => { const i = deliveryIssues[d.id]; return i && (i.label || i.reclean || i.notQc) ? <div className="mt-2 flex flex-wrap gap-1"><Badge variant="destructive">لا يخرج</Badge>{i.label > 0 && <Badge variant="destructive">مارك {i.label}</Badge>}{i.reclean > 0 && <Badge className="bg-amber-500">مرتجع {i.reclean}</Badge>}{i.notQc > 0 && <Badge variant="outline">QC ناقص {i.notQc}</Badge>}</div> : <div className="mt-2"><Badge className="bg-emerald-600">جاهز للتسليم فعليًا</Badge></div>; })()}
+                <div className="text-xs text-muted-foreground">{t("orders.total")}: {Number(d.total ?? 0).toLocaleString("en-US")} {t("common.egp")} · {d.payment_status === "paid" ? t("order.paid") : t("driver.cod")}</div>
+                {(() => { const i = deliveryIssues[d.id]; return i && (i.label || i.reclean || i.notQc) ? <div className="mt-2 flex flex-wrap gap-1"><Badge variant="destructive">{t("driver.dontLeave")}</Badge>{i.label > 0 && <Badge variant="destructive">{t("station.common.mark")} {i.label}</Badge>}{i.reclean > 0 && <Badge className="bg-amber-500">{t("station.common.reclean")} {i.reclean}</Badge>}{i.notQc > 0 && <Badge variant="outline">{t("driver.qcMissing")} {i.notQc}</Badge>}</div> : <div className="mt-2"><Badge className="bg-emerald-600">{t("driver.readyForDelivery")}</Badge></div>; })()}
               </div>
               <Badge variant={d.status === "out_for_delivery" ? "default" : "secondary"}>
-                {d.status === "ready" ? "جاهز للتسليم" : "خرج للتسليم"}
+                {d.status === "ready" ? t("stage.ready") : t("driver.outForDelivery")}
               </Badge>
             </div>
 
@@ -548,7 +555,7 @@ function DeliveriesList({
                 <span>{d.delivery_address}</span>
               </div>
             )}
-            <div className="text-xs text-muted-foreground">المسافة التقريبية: {formatDistance(distanceKm(myLoc, d.delivery_lat && d.delivery_lng ? { lat: Number(d.delivery_lat), lng: Number(d.delivery_lng) } : null))}</div>
+            <div className="text-xs text-muted-foreground">{t("driver.approxDistance")} {formatDistance(distanceKm(myLoc, d.delivery_lat && d.delivery_lng ? { lat: Number(d.delivery_lat), lng: Number(d.delivery_lng) } : null))}</div>
 
             {d.customers?.phone && (
               <a
@@ -572,7 +579,7 @@ function DeliveriesList({
                     <Loader2 className="w-3 h-3 animate-spin" />
                   ) : (
                     <>
-                      <ArrowLeft className="w-4 h-4 ms-1" /> خرجت للتسليم
+                      <ArrowLeft className="w-4 h-4 ms-1" /> {t("driver.outForDelivery")}
                     </>
                   )}
                 </Button>
@@ -581,7 +588,7 @@ function DeliveriesList({
               {d.status === "out_for_delivery" && (
                 <div className="flex gap-2 w-full">
                   <Input
-                    placeholder="آخر 4 أرقام هاتف العميل"
+                    placeholder={t("driver.confirmCodePlaceholder")}
                     value={confirmCode[d.id] ?? ""}
                     onChange={(e) =>
                       setConfirmCode((prev) => ({ ...prev, [d.id]: e.target.value }))
@@ -598,7 +605,7 @@ function DeliveriesList({
                       <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
                       <>
-                        <CheckCircle2 className="w-4 h-4 ms-1" /> تسليم
+                        <CheckCircle2 className="w-4 h-4 ms-1" /> {t("stage.ready")}
                       </>
                     )}
                   </Button>
@@ -608,7 +615,7 @@ function DeliveriesList({
 
             {d.status === "out_for_delivery" && (
               <p className="text-xs text-muted-foreground text-center">
-                أدخل آخر 4 أرقام من هاتف العميل لتأكيد التسليم
+                {t("driver.confirmCodeHelp")}
               </p>
             )}
           </CardContent>
