@@ -8,3 +8,10 @@ build/
 Thumbs.db
 .env.production
 *.tsbuildinfo
+
+# Generated demo video intermediates
+playwright-report/
+test-results/
+demo-video/real-system/
+demo-video/system-slides/screens/
+*.beatbox.wav
