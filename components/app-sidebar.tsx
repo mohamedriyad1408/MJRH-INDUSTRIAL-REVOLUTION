@@ -189,7 +189,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <div className="px-2 pb-2 text-xs opacity-70">
-          {roles.length ? `${dir === "rtl" ? "الدور" : "Role"}: ${roles.map((r) => t(`role.${r}`, roleAr(r))).join(dir === "rtl" ? "، " : ", ")}` : (dir === "rtl" ? "بدون دور" : "No role")}
+          {roles.length ? `${t("common.role")}: ${roles.map((r) => t(`role.${r}`, roleAr(r))).join(dir === "rtl" ? "، " : ", ")}` : t("common.noRole")}
         </div>
         <SidebarMenu>
           <SidebarMenuItem>

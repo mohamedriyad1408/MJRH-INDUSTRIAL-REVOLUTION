@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { internalTranslations } from "./i18n-internal";
 
 export type LanguageCode = "ar" | "en" | "fr" | "it" | "es" | "de" | "zh" | "ja" | "pt";
 
@@ -223,6 +224,18 @@ const publicTranslations: Record<LanguageCode, Record<string, string>> = {
 const publicFallbackFromEnglish = ["fr", "it", "es", "de", "zh", "ja", "pt"] as LanguageCode[];
 for (const lang of publicFallbackFromEnglish) publicTranslations[lang] = { ...publicTranslations.en, ...publicTranslations[lang] };
 for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) Object.assign(dict[lang], publicTranslations[lang]);
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) Object.assign(dict[lang], internalTranslations[lang]);
+
+export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
+  const local = dict[language]?.[key];
+  if (local !== undefined) return local;
+  if (language === "ar") return fallback ?? dict.en?.[key] ?? key;
+  return dict.en?.[key] ?? fallback ?? key;
+}
+
+export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {
+  return template.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? ""));
+}
 
 const STORAGE_KEY = "mjrh.language";
 
@@ -259,7 +272,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     language,
     setLanguage: setLanguageState,
     dir: meta.dir,
-    t: (key, fallback) => dict[language]?.[key] ?? dict.en?.[key] ?? fallback ?? key,
+    t: (key, fallback) => translateForLanguage(language, key, fallback),
   }), [language, meta.dir]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

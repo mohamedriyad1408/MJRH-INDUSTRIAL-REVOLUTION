@@ -10,6 +10,7 @@ import { Loader2, ShieldCheck, Wrench } from "lucide-react";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { whatsappLink } from "@/lib/rules/whatsapp";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/system-health")({
   head: () => ({ meta: [{ title: "فحص النظام" }] }),
@@ -35,6 +36,7 @@ function severityFor(count: number, okWhenZero = false): "ok" | "warn" | "danger
 
 function SystemHealthPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir, language } = useI18n();
   const canUse = hasRole("owner", "ops_manager") || hasRole("super_admin");
   const [loading, setLoading] = useState(true);
   const [repairing, setRepairing] = useState(false);
@@ -172,34 +174,34 @@ function SystemHealthPage() {
       setDiagnostics([...new Set(errors)].slice(0, 6));
 
       const next: Check[] = [
-        { key: "tenantReady", title: "جاهزية النشاط للتشغيل", count: tenantHealth.data?.is_ready ? 0 : 1, okWhenZero: true, severity: tenantHealth.data?.is_ready ? "ok" : "danger", href: "/admin/tenants", fix: tenantHealth.data?.is_ready ? "النشاط جاهز: إعدادات، فرع، خزنة، حسابات، موظف وكتالوج حسب النوع" : "يوجد إعداد أساسي ناقص يجب إصلاحه قبل التشغيل الفعلي", details: tenantHealth.data ? ["has_settings", "has_branch", "has_cash_account", "has_chart_accounts", "has_employee", "has_catalog"].filter((k) => !tenantHealth.data[k]).map((k) => ({ label: readinessAr(k), sub: "ناقص" })) : [] },
-        { key: "settings", title: "إعدادات المغسلة", count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: "يتم إنشاؤها تلقائيًا عند فتح مغسلة جديدة" },
-        { key: "cash", title: "الخزن والحسابات النقدية", count: cashRows.length || cash.count || 0, severity: cashHealth.error ? "danger" : severityFor(cashRows.length || cash.count || 0), href: "/accounting", fix: cashHealth.error ? "فشل قراءة صحة الخزنة؛ اضغط إصلاح الأساسيات ثم حدّث" : "لا يكفي وجود الخزنة؛ يظهر هنا رصيدها وحركاتها للتأكد أنها تعمل", details: cashHealthDetails, error: cashHealth.error?.message },
-        { key: "chart", title: "شجرة الحسابات موجودة", count: chart.count ?? 0, severity: chart.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: chart.error ? "فشل قراءة شجرة الحسابات؛ اضغط إصلاح الأساسيات" : "اضغط إصلاح الأساسيات لإنشاء الحسابات", error: chart.error?.message },
-        { key: "cashBalanceIntegrity", title: "اتزان أرصدة الخزن", count: cashMismatchRows.length, okWhenZero: true, severity: cashHealth.error ? "danger" : severityFor(cashMismatchRows.length, true), href: "/accounting", fix: cashMismatchRows.length ? "الرصيد الظاهر لا يساوي مجموع الحركات؛ اضغط إصلاح سريع لإعادة الحساب" : "أرصدة الخزن مطابقة للحركات المسجلة", details: cashMismatchDetails, error: cashHealth.error?.message },
-        { key: "journal", title: "القيود المحاسبية تعمل", count: journalEntries.count ?? 0, severity: journalEntries.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "warn", href: "/ledger", fix: journalEntries.error ? "فشل قراءة القيود" : "أي دخل/خرج أو دفع أو مصروف يجب أن يظهر هنا كقيد", error: journalEntries.error?.message },
-        { key: "manualNoJournal", title: "حركات خزنة بلا قيد", count: manualWithoutJournal.length, okWhenZero: true, severity: manualCashTx.error || manualCashJournals.error ? "danger" : severityFor(manualWithoutJournal.length, true), href: "/ledger", fix: manualWithoutJournal.length ? "اضغط إصلاح سريع لإنشاء قيود للحركات اليدوية القديمة" : "كل حركة خزنة يدوية لها قيد محاسبي", details: manualWithoutJournalDetails, error: manualCashTx.error?.message || manualCashJournals.error?.message },
-        { key: "employees", title: "موظفون نشطون", count: employees.count ?? 0, severity: severityFor(employees.count ?? 0), href: "/staff", fix: "أضف موظفين وحدد المحطة والراتب" },
-        { key: "services", title: "خدمات مفعلة", count: services.count ?? 0, severity: severityFor(services.count ?? 0), href: "/services", fix: "أضف كتالوج الخدمات قبل إنشاء الطلبات" },
-        { key: "customers", title: "عملاء مسجلون", count: customers.count ?? 0, severity: (customers.count ?? 0) > 0 ? "ok" : "warn", href: "/customers", fix: "أضف عميل أو استخدم بوابة العميل" },
-        { key: "noPieces", title: "طلبات بلا قطع", count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: "افتح الطلب وسجل القطع", details: noPieceDetails },
-        { key: "pickups", title: "استلامات مفتوحة", count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: "وزعها على مندوبين من الخريطة", details: pickupDetails },
-        { key: "readyNoDriver", title: "طلبات جاهزة بلا مندوب", count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: "عين مندوب قبل خروج الطلب للتسليم", details: readyNoDriverDetails },
-        { key: "deliveryReadiness", title: "طلبات جاهزة لا تصلح للتسليم", count: deliveryRows.length, okWhenZero: true, severity: deliveryReadiness.error ? "warn" : severityFor(deliveryRows.length, true), href: "/driver", fix: deliveryRows.length ? "هذه الطلبات جاهزة اسميًا لكنها بها مشكلة مارك/QC/مرتجع/مندوب/دفع" : "كل الطلبات الجاهزة صالحة للتسليم", details: deliveryRows.slice(0, 5).map((r: any) => ({ label: `طلب #${r.order_number}`, sub: deliveryIssuesAr(r.issue_codes), href: `/orders/${r.order_id}` })), error: deliveryReadiness.error?.message },
-        { key: "reclean", title: "مرتجعات غسيل مفتوحة", count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: "أنه المرتجع من محطة الغسيل", details: recleanDetails },
-        { key: "labelIssues", title: "قطع بمشكلة مارك/ليبل", count: labelIssues.data?.length ?? 0, okWhenZero: true, severity: (labelIssues.data?.length ?? 0) ? "danger" : "ok", href: "/stations/drying-assembly", fix: "لا تدخل هذه القطع الكي أو التسليم قبل حل المارك/الليبل", details: (labelIssues.data ?? []).slice(0,5).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status}`, href: "/stations/drying-assembly" })), error: labelIssues.error?.message },
-        { key: "qc", title: "مشاكل جودة مفتوحة", count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: "راجع قرار الجودة وتواصل مع العميل عند الحاجة", details: qcDetails },
-        { key: "unpaid", title: "جاهز أو خارج وغير مدفوع", count: unpaidReady.count ?? 0, okWhenZero: true, severity: severityFor(unpaidReady.count ?? 0, true), href: "/receivables", fix: "حصّل أو راجع ذمم العملاء", details: unpaidDetails },
-        { key: "invoice", title: "فواتير تحتاج اعتماد", count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: "راجع الطلب واضغط تأكيد وإشعار", details: invoiceDetails },
-        { key: "proof", title: "إيصالات دفع تحتاج مراجعة", count: paymentReview.count ?? 0, okWhenZero: true, severity: severityFor(paymentReview.count ?? 0, true), href: "/orders", fix: "راجع صورة الإيصال والمبلغ", details: proofDetails },
-        { key: "driverLocation", title: "مندوبون بلا موقع", count: driversNoLocation.count ?? 0, okWhenZero: true, severity: (driversNoLocation.count ?? 0) ? "warn" : "ok", href: "/driver", fix: "اطلب من المندوب الضغط على زر موقعي", details: driverNoLocDetails },
-        { key: "ordersNoLocation", title: "طلبات توصيل بلا موقع", count: ordersNoLocation.data?.length ?? 0, okWhenZero: true, severity: (ordersNoLocation.data?.length ?? 0) ? "warn" : "ok", href: "/live-map", fix: "افتح الطلب وسجل موقع التسليم أو عنوان واضح", details: orderNoLocationDetails },
-        { key: "customersNoAddress", title: "عملاء بلا عنوان", count: customersNoAddress.data?.length ?? 0, okWhenZero: true, severity: (customersNoAddress.data?.length ?? 0) ? "warn" : "ok", href: "/customers", fix: "أكمل عنوان العميل حتى تظهر الطلبات على الخريطة", details: customersNoAddressDetails },
-        { key: "cashClosing", title: "إقفال كل خزن اليوم", count: closingToday.count ?? 0, severity: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? "ok" : "warn", href: "/cash-closing", fix: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? `تم إقفال كل الخزن اليوم (${closingToday.count}/${activeCashForClosing.count})` : `المقفول ${closingToday.count ?? 0} من ${activeCashForClosing.count ?? 0}. افتح إقفال الخزن واقفل الكل في حركة واحدة` },
-        { key: "oldPayables", title: "مصروفات آجلة قديمة", count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: "راجع المصروفات الآجلة القديمة وادفعها أو ألغيها بسبب", details: oldPayablesDetails },
-        { key: "stuckOrders", title: "طلبات واقفة أكثر من يوم", count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: "افتح الطلب لمعرفة سبب التوقف والخطوة التالية", details: stuckOrderDetails },
-        { key: "financialAudit", title: "المراجعة المالية النهائية", count: financialRows.length, okWhenZero: true, severity: financialAudit.error ? "warn" : (financialRows.some((r: any) => r.severity === "danger") ? "danger" : severityFor(financialRows.length, true)), href: "/accounting", fix: financialAudit.error ? "طبّق migration المراجعة المالية" : (financialRows.length ? "اضغط إصلاح سريع. لو بقيت بنود، افتح مكان الإصلاح من كل بند" : "المسارات المالية الأساسية مكتملة"), details: financialRows.slice(0, 5).map((r: any) => ({ label: r.title, sub: r.detail, href: safeFixHref(r.href) })), error: financialAudit.error?.message },
-        { key: "apdo", title: "اكتمال APDO للعمليات", count: apdoIncomplete.length, okWhenZero: true, severity: apdoMatrix.error ? "warn" : severityFor(apdoIncomplete.length, true), href: "/system-health", fix: apdoMatrix.error ? "طبّق migration الخاص بـ APDO حتى تظهر مصفوفة الإجابات" : (apdoIncomplete.length ? "فيه عمليات لا تجيب على الفرع/الخزنة/القيد/التقرير/الإشعار بالكامل" : "كل العمليات المسجلة تجيب على الأسئلة الخمسة"), details: apdoIncomplete.slice(0, 5).map((r: any) => ({ label: r.process_name, sub: `${r.branch_answer} · ${r.cash_answer} · ${r.journal_answer} · ${r.report_answer} · ${r.notification_answer}` })), error: apdoMatrix.error?.message },
+        { key: "tenantReady", title: t("system.check.tenantReady.title"), count: tenantHealth.data?.is_ready ? 0 : 1, okWhenZero: true, severity: tenantHealth.data?.is_ready ? "ok" : "danger", href: "/admin/tenants", fix: tenantHealth.data?.is_ready ? t("system.check.tenantReady.ready") : t("system.check.tenantReady.missing"), details: tenantHealth.data ? ["has_settings", "has_branch", "has_cash_account", "has_chart_accounts", "has_employee", "has_catalog"].filter((k) => !tenantHealth.data[k]).map((k) => ({ label: readinessAr(k), sub: "ناقص" })) : [] },
+        { key: "settings", title: t("system.check.settings.title"), count: settings.count ?? 0, severity: severityFor(settings.count ?? 0), href: "/settings", fix: t("system.check.settings.fix") },
+        { key: "cash", title: t("system.check.cash.title"), count: cashRows.length || cash.count || 0, severity: cashHealth.error ? "danger" : severityFor(cashRows.length || cash.count || 0), href: "/accounting", fix: cashHealth.error ? t("system.check.cash.fixError") : t("system.check.cash.fixOk"), details: cashHealthDetails, error: cashHealth.error?.message },
+        { key: "chart", title: t("system.check.chart.title"), count: chart.count ?? 0, severity: chart.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "danger", href: "/ledger", fix: chart.error ? t("system.check.chart.error") : t("system.check.chart.fix"), error: chart.error?.message },
+        { key: "cashBalanceIntegrity", title: t("system.check.cashBalance.title"), count: cashMismatchRows.length, okWhenZero: true, severity: cashHealth.error ? "danger" : severityFor(cashMismatchRows.length, true), href: "/accounting", fix: cashMismatchRows.length ? t("system.check.cashBalance.fix") : t("system.check.cashBalance.ok"), details: cashMismatchDetails, error: cashHealth.error?.message },
+        { key: "journal", title: t("system.check.journal.title"), count: journalEntries.count ?? 0, severity: journalEntries.error ? "danger" : (chart.count ?? 0) >= 8 ? "ok" : "warn", href: "/ledger", fix: journalEntries.error ? t("system.check.journal.error") : t("system.check.journal.fix"), error: journalEntries.error?.message },
+        { key: "manualNoJournal", title: t("system.check.manualNoJournal.title"), count: manualWithoutJournal.length, okWhenZero: true, severity: manualCashTx.error || manualCashJournals.error ? "danger" : severityFor(manualWithoutJournal.length, true), href: "/ledger", fix: manualWithoutJournal.length ? t("system.check.manualNoJournal.fix") : t("system.check.manualNoJournal.ok"), details: manualWithoutJournalDetails, error: manualCashTx.error?.message || manualCashJournals.error?.message },
+        { key: "employees", title: t("system.check.employees.title"), count: employees.count ?? 0, severity: severityFor(employees.count ?? 0), href: "/staff", fix: t("system.check.employees.fix") },
+        { key: "services", title: t("system.check.services.title"), count: services.count ?? 0, severity: severityFor(services.count ?? 0), href: "/services", fix: t("system.check.services.fix") },
+        { key: "customers", title: t("system.check.customers.title"), count: customers.count ?? 0, severity: (customers.count ?? 0) > 0 ? "ok" : "warn", href: "/customers", fix: t("system.check.customers.fix") },
+        { key: "noPieces", title: t("system.check.noPieces.title"), count: noPieces, okWhenZero: true, severity: severityFor(noPieces, true), href: "/orders", fix: t("system.check.noPieces.fix"), details: noPieceDetails },
+        { key: "pickups", title: t("system.check.pickups.title"), count: pickups.count ?? 0, okWhenZero: true, severity: (pickups.count ?? 0) ? "warn" : "ok", href: "/live-map", fix: t("system.check.pickups.fix"), details: pickupDetails },
+        { key: "readyNoDriver", title: t("system.check.readyNoDriver.title"), count: readyNoDriver.count ?? 0, okWhenZero: true, severity: severityFor(readyNoDriver.count ?? 0, true), href: "/live-map", fix: t("system.check.readyNoDriver.fix"), details: readyNoDriverDetails },
+        { key: "deliveryReadiness", title: t("system.check.deliveryReadiness.title"), count: deliveryRows.length, okWhenZero: true, severity: deliveryReadiness.error ? "warn" : severityFor(deliveryRows.length, true), href: "/driver", fix: deliveryRows.length ? t("system.check.deliveryReadiness.fix") : t("system.check.deliveryReadiness.ok"), details: deliveryRows.slice(0, 5).map((r: any) => ({ label: `طلب #${r.order_number}`, sub: deliveryIssuesAr(r.issue_codes), href: `/orders/${r.order_id}` })), error: deliveryReadiness.error?.message },
+        { key: "reclean", title: t("system.check.reclean.title"), count: reclean.count ?? 0, okWhenZero: true, severity: severityFor(reclean.count ?? 0, true), href: "/stations/cleaning", fix: t("system.check.reclean.fix"), details: recleanDetails },
+        { key: "labelIssues", title: t("system.check.labelIssues.title"), count: labelIssues.data?.length ?? 0, okWhenZero: true, severity: (labelIssues.data?.length ?? 0) ? "danger" : "ok", href: "/stations/drying-assembly", fix: t("system.check.labelIssues.fix"), details: (labelIssues.data ?? []).slice(0,5).map((u: any) => ({ label: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status}`, href: "/stations/drying-assembly" })), error: labelIssues.error?.message },
+        { key: "qc", title: t("system.check.qc.title"), count: qcFailed.count ?? 0, okWhenZero: true, severity: severityFor(qcFailed.count ?? 0, true), href: "/stations/qc", fix: t("system.check.qc.fix"), details: qcDetails },
+        { key: "unpaid", title: t("system.check.unpaid.title"), count: unpaidReady.count ?? 0, okWhenZero: true, severity: severityFor(unpaidReady.count ?? 0, true), href: "/receivables", fix: t("system.check.unpaid.fix"), details: unpaidDetails },
+        { key: "invoice", title: t("system.check.invoice.title"), count: invoiceReview.count ?? 0, okWhenZero: true, severity: (invoiceReview.count ?? 0) ? "warn" : "ok", href: "/orders", fix: t("system.check.invoice.fix"), details: invoiceDetails },
+        { key: "proof", title: t("system.check.proof.title"), count: paymentReview.count ?? 0, okWhenZero: true, severity: severityFor(paymentReview.count ?? 0, true), href: "/orders", fix: t("system.check.proof.fix"), details: proofDetails },
+        { key: "driverLocation", title: t("system.check.driverLocation.title"), count: driversNoLocation.count ?? 0, okWhenZero: true, severity: (driversNoLocation.count ?? 0) ? "warn" : "ok", href: "/driver", fix: t("system.check.driverLocation.fix"), details: driverNoLocDetails },
+        { key: "ordersNoLocation", title: t("system.check.ordersNoLocation.title"), count: ordersNoLocation.data?.length ?? 0, okWhenZero: true, severity: (ordersNoLocation.data?.length ?? 0) ? "warn" : "ok", href: "/live-map", fix: t("system.check.ordersNoLocation.fix"), details: orderNoLocationDetails },
+        { key: "customersNoAddress", title: t("system.check.customersNoAddress.title"), count: customersNoAddress.data?.length ?? 0, okWhenZero: true, severity: (customersNoAddress.data?.length ?? 0) ? "warn" : "ok", href: "/customers", fix: t("system.check.customersNoAddress.fix"), details: customersNoAddressDetails },
+        { key: "cashClosing", title: t("system.check.cashClosing.title"), count: closingToday.count ?? 0, severity: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? "ok" : "warn", href: "/cash-closing", fix: (activeCashForClosing.count ?? 0) > 0 && (closingToday.count ?? 0) >= (activeCashForClosing.count ?? 0) ? `${t("system.check.cashClosing.ok")} (${closingToday.count}/${activeCashForClosing.count})` : `${closingToday.count ?? 0}/${activeCashForClosing.count ?? 0}. ${t("system.check.cashClosing.fix")}` },
+        { key: "oldPayables", title: t("system.check.oldPayables.title"), count: oldPayables.data?.length ?? 0, okWhenZero: true, severity: (oldPayables.data?.length ?? 0) ? "warn" : "ok", href: "/accounting", fix: t("system.check.oldPayables.fix"), details: oldPayablesDetails },
+        { key: "stuckOrders", title: t("system.check.stuckOrders.title"), count: stuckOrders.data?.length ?? 0, okWhenZero: true, severity: (stuckOrders.data?.length ?? 0) ? "warn" : "ok", href: "/orders", fix: t("system.check.stuckOrders.fix"), details: stuckOrderDetails },
+        { key: "financialAudit", title: t("system.check.financialAudit.title"), count: financialRows.length, okWhenZero: true, severity: financialAudit.error ? "warn" : (financialRows.some((r: any) => r.severity === "danger") ? "danger" : severityFor(financialRows.length, true)), href: "/accounting", fix: financialAudit.error ? t("system.check.financialAudit.migration") : (financialRows.length ? t("system.check.financialAudit.fix") : t("system.check.financialAudit.ok")), details: financialRows.slice(0, 5).map((r: any) => ({ label: r.title, sub: r.detail, href: safeFixHref(r.href) })), error: financialAudit.error?.message },
+        { key: "apdo", title: t("system.check.apdo.title"), count: apdoIncomplete.length, okWhenZero: true, severity: apdoMatrix.error ? "warn" : severityFor(apdoIncomplete.length, true), href: "/system-health", fix: apdoMatrix.error ? t("system.check.apdo.migration") : (apdoIncomplete.length ? t("system.check.apdo.fix") : t("system.check.apdo.ok")), details: apdoIncomplete.slice(0, 5).map((r: any) => ({ label: r.process_name, sub: `${r.branch_answer} · ${r.cash_answer} · ${r.journal_answer} · ${r.report_answer} · ${r.notification_answer}` })), error: apdoMatrix.error?.message },
       ];
       setChecks(next);
     } finally {
@@ -218,7 +220,7 @@ function SystemHealthPage() {
     const r5 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r5.error) errs.push(r5.error.message);
     try { await autoAssignDrivers(); } catch (e: any) { /* no drivers or no tasks: ignore */ }
     setRepairing(false);
-    if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم إصلاح الأساسيات: خزنة، حسابات، أرصدة، قيود يدوية، ورواتب الشهر");
+    if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("system.toast.basicsDone"));
     load();
   }
 
@@ -265,9 +267,9 @@ function SystemHealthPage() {
 
       await load();
       if (errs.length) {
-        toast.error(`تم تنفيذ بعض الإصلاحات لكن بقيت أخطاء: ${errs.slice(0, 3).join(" | ")}`);
+        toast.error(`${t("system.toast.someErrors")} ${errs.slice(0, 3).join(" | ")}`);
       } else {
-        toast.success(`تم إصلاح المشاكل القابلة للإصلاح. ${notes.slice(0, 3).join(" · ")}`);
+        toast.success(`${t("system.toast.actionableDone")} ${notes.slice(0, 3).join(" · ")}`);
       }
     } finally {
       setRepairing(false);
@@ -283,23 +285,23 @@ function SystemHealthPage() {
       }
       if (key === "financialAudit") {
         const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
-        if (error) toast.error(error.message); else toast.success(`تمت محاولة إصلاح ${data?.fixed ?? 0} بند. المتبقي: ${data?.remaining ?? 0}`);
+        if (error) toast.error(error.message); else toast.success(interpolate(t("notif.financeRepairDone"), { fixed: data?.fixed ?? 0, remaining: data?.remaining ?? 0 }));
         await load();
         return;
       }
       if (["pickups", "readyNoDriver"].includes(key)) {
         const r = await autoAssignDrivers();
-        toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة على المناديب` : "لا توجد مهام قابلة للتوزيع الآن");
+        toast.success(r.assigned ? interpolate(t("notif.assignDriversDone"), { assigned: r.assigned, drivers: "" }) : t("notif.noAssignableTasks"));
       } else if (key === "driverLocation") {
-        toast.info("الإصلاح هنا من جهاز المندوب: يفتح لوحة السائق ويضغط زر موقعي");
+        toast.info(t("system.toast.driverLocationManual"));
       } else if (key === "cashClosing") {
-        toast.info("افتح صفحة إقفال الخزنة واكتب النقدية الموجودة فعليًا");
+        toast.info(t("system.toast.cashClosingManual"));
       } else {
-        toast.info("هذا البند يحتاج مراجعة يدوية من الصفحة المرتبطة به");
+        toast.info(t("system.toast.manualReview"));
       }
       await load();
     } catch (e: any) {
-      toast.error(e?.message ?? "تعذر تنفيذ الإصلاح");
+      toast.error(e?.message ?? t("system.toast.fixFailed"));
     } finally {
       setFixingKey(null);
     }
@@ -311,10 +313,10 @@ function SystemHealthPage() {
       const { data, error } = await (supabase as any).rpc("repair_operation_event_apdo", { _event_id: id });
       if (error) throw error;
       const fixed = Array.isArray(data?.fixed) ? data.fixed.join("، ") : "";
-      toast.success(fixed ? `تم إصلاح: ${fixed}` : "تمت محاولة إصلاح العملية");
+      toast.success(fixed ? `${t("system.toast.apdoFixed")} ${fixed}` : t("system.toast.apdoAttempted"));
       await load();
     } catch (e: any) {
-      toast.error(e?.message ?? "تعذر إصلاح عملية APDO");
+      toast.error(e?.message ?? t("system.toast.apdoFailed"));
     } finally {
       setFixingKey(null);
     }
@@ -332,13 +334,13 @@ function SystemHealthPage() {
   async function markWhatsAppSent(row: any) {
     const { error } = await (supabase as any).from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", row.id);
     if (error) toast.error(error.message);
-    else { toast.success("تم تعليم الرسالة كمرسلة"); load(); }
+    else { toast.success(t("system.toast.msgSent")); load(); }
   }
 
   async function resolveClientError(row: any) {
     const { error } = await (supabase as any).rpc("resolve_client_error_log", { _id: row.id, _notes: "تمت المراجعة من فحص النظام" });
     if (error) toast.error(error.message);
-    else { toast.success("تم إغلاق الخطأ"); load(); }
+    else { toast.success(t("system.toast.clientErrorClosed")); load(); }
   }
 
   function openWhatsApp(row: any) {
@@ -351,10 +353,10 @@ function SystemHealthPage() {
     const warn = checks.filter((c) => c.severity === "warn");
     const ok = checks.filter((c) => c.severity === "ok");
     const lines = [
-      `تقرير فحص النظام اليومي`,
-      `مشاكل حرجة: ${danger.length}`,
-      `تنبيهات: ${warn.length}`,
-      `بنود سليمة: ${ok.length}`,
+      t("system.report.title"),
+      `${t("system.report.danger")}: ${danger.length}`,
+      `${t("system.report.warn")}: ${warn.length}`,
+      `${t("system.report.ok")}: ${ok.length}`,
       "",
       ...danger.map((c) => `❌ ${c.title}: ${c.count} — ${c.fix}`),
       ...warn.map((c) => `⚠️ ${c.title}: ${c.count} — ${c.fix}`),
@@ -362,44 +364,44 @@ function SystemHealthPage() {
     const body = lines.join("\n");
     const { error } = await (supabase as any).from("app_notifications").insert({
       audience: "owner",
-      title: "تقرير فحص النظام اليومي",
+      title: t("system.report.title"),
       body,
       href: "/system-health",
       tone: danger.length ? "danger" : warn.length ? "warning" : "success",
     });
     if (error) toast.error(error.message);
-    else toast.success("تم حفظ تقرير فحص النظام في جرس التنبيهات");
+    else toast.success(t("system.report.saved"));
   }
 
-  useEffect(() => { load(); }, [canUse]);
+  useEffect(() => { load(); }, [canUse, language]);
 
-  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">فحص النظام للمالك ومدير التشغيل فقط.</CardContent></Card>;
+  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("system.accessDenied")}</CardContent></Card>;
 
   const danger = checks.filter((c) => c.severity === "danger").length;
   const warn = checks.filter((c) => c.severity === "warn").length;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-teal-600" /> فحص النظام</h1>
-        <p className="text-sm text-muted-foreground">مراجعة سريعة لكل أساسيات المغسلة والرحلة التشغيلية. لو فيه مشكلة، اضغط عليها لتذهب لمكان الإصلاح.</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-teal-600" /> {t("system.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("system.description")}</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={createDailySystemReport}>حفظ تقرير اليوم</Button><Button variant="outline" onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح الأساسيات</Button><Button onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح المشاكل القابلة للإصلاح</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={createDailySystemReport}>{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={repairBasics} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("system.repairBasics")}</Button><Button onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("system.repairActionable")}</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
-      <Kpi title="مشاكل حرجة" value={danger} tone={danger ? "danger" : "ok"} />
-      <Kpi title="تنبيهات" value={warn} tone={warn ? "warn" : "ok"} />
-      <Kpi title="بنود الفحص" value={checks.length} tone="ok" />
+      <Kpi title={t("system.kpi.danger")} value={danger} tone={danger ? "danger" : "ok"} />
+      <Kpi title={t("system.kpi.warn")} value={warn} tone={warn ? "warn" : "ok"} />
+      <Kpi title={t("system.kpi.items")} value={checks.length} tone="ok" />
     </div>
 
     {!loading && <Card className={danger === 0 ? "border-emerald-300 bg-emerald-50" : "border-red-300 bg-red-50"}>
       <CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className={`text-xl font-black ${danger === 0 ? "text-emerald-800" : "text-red-800"}`}>{danger === 0 ? "جاهز للتشغيل الفعلي ✅" : "غير جاهز للتشغيل الرسمي بعد"}</div>
-          <div className="text-sm text-muted-foreground mt-1">يعتمد القرار على الجاهزية، الخزن، القيود، APDO، والمراجعة المالية. عالج المشاكل الحرجة قبل تشغيل كل الفروع.</div>
+          <div className={`text-xl font-black ${danger === 0 ? "text-emerald-800" : "text-red-800"}`}>{danger === 0 ? t("system.ready.ok") : t("system.ready.notYet")}</div>
+          <div className="text-sm text-muted-foreground mt-1">{t("system.ready.note")}</div>
         </div>
-        <Button variant={danger === 0 ? "default" : "outline"} onClick={createDailySystemReport}>حفظ حالة الجاهزية</Button>
+        <Button variant={danger === 0 ? "default" : "outline"} onClick={createDailySystemReport}>{t("system.saveReadiness")}</Button>
       </CardContent>
     </Card>}
 
@@ -408,12 +410,12 @@ function SystemHealthPage() {
 
 
     {!loading && <Card className={financialAuditRows.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
-      <CardHeader><CardTitle className="text-base">المراجعة المالية النهائية قبل التشغيل</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("system.financialAuditTitle")}</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
-        {financialAuditRows.length === 0 ? <div className="font-bold text-emerald-800">لا توجد مشاكل مالية حرجة في المسارات الأساسية ✅</div> : <>
+        {financialAuditRows.length === 0 ? <div className="font-bold text-emerald-800">{t("system.financialAuditOk")}</div> : <>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="font-bold text-red-900">بنود تحتاج مراجعة قبل التشغيل الرسمي:</div>
-            <Button size="sm" onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح المالي الآن</Button>
+            <div className="font-bold text-red-900">{t("system.financialAuditNeeds")}</div>
+            <Button size="sm" onClick={repairActionableIssues} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("system.repairFinanceNow")}</Button>
           </div>
           <div className="grid md:grid-cols-2 gap-2">{financialAuditRows.map((r) => <Link key={`${r.issue_key}-${r.source_id}`} to={safeFixHref(r.href) as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{r.title}</div><div className="text-muted-foreground mt-1">{r.detail}</div><Badge className="mt-2" variant={r.severity === "danger" ? "destructive" : "secondary"}>{r.domain}</Badge></div></Link>)}</div>
         </>}
@@ -423,11 +425,11 @@ function SystemHealthPage() {
 
 
     {!loading && <Card className={deliveryBlockedRows.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
-      <CardHeader><CardTitle className="text-base">جاهزية التسليم الفعلية</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("system.deliveryReadinessTitle")}</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm">
-        {deliveryBlockedRows.length === 0 ? <div className="font-bold text-emerald-800">كل الطلبات الجاهزة تصلح للتسليم فعليًا ✅</div> : <>
-          <div className="font-bold text-red-900">طلبات جاهزة اسميًا لكنها ممنوعة من الخروج:</div>
-          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">طلب #{r.order_number}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">قطع {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">مرتجع {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">غير مدفوع</Badge>}</div></div></Link>)}</div>
+        {deliveryBlockedRows.length === 0 ? <div className="font-bold text-emerald-800">{t("system.deliveryReadinessOk")}</div> : <>
+          <div className="font-bold text-red-900">{t("system.deliveryBlocked")}</div>
+          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{t("order.orderNo", "طلب #{order}").replace("{order}", String(r.order_number))}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">{t("order.piecesCount")} {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">{t("order.reclean")} {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">{t("system.check.unpaid.title")}</Badge>}</div></div></Link>)}</div>
         </>}
       </CardContent>
     </Card>}
@@ -435,21 +437,21 @@ function SystemHealthPage() {
     {!loading && <Card className={apdoRows.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
       <CardHeader><CardTitle className="text-base">Actor → Process → Data → Output</CardTitle></CardHeader>
       <CardContent className="space-y-3 text-sm">
-        {apdoError ? <div className="text-amber-800">لم يتم تفعيل مصفوفة APDO بعد أو لم تُطبق الـ migration: {apdoError}</div> : apdoRows.length === 0 ? <div className="font-bold text-emerald-800">كل العمليات المسجلة مكتملة الإجابات الخمسة ✅</div> : <>
-          <div className="font-bold text-amber-900">عمليات تحتاج استكمال ربط:</div>
+        {apdoError ? <div className="text-amber-800">{t("system.apdoMigrationMissing")} {apdoError}</div> : apdoRows.length === 0 ? <div className="font-bold text-emerald-800">{t("system.apdoOk")}</div> : <>
+          <div className="font-bold text-amber-900">{t("system.apdoNeeds")}</div>
           <div className="grid md:grid-cols-2 gap-2">{apdoRows.map((r) => <div key={r.id} className="rounded-xl border bg-white/70 p-3 text-xs">
             <div className="font-black">{r.process_name}</div>
             <div className="text-muted-foreground mt-1">{new Date(r.created_at).toLocaleString("ar-EG")} · {r.branch_name ?? "بلا فرع"}</div>
             <div className="flex flex-wrap gap-1 mt-2">
-              <Badge variant={r.branch_answer === "answered" ? "secondary" : "destructive"}>فرع: {answerAr(r.branch_answer)}</Badge>
-              <Badge variant={["answered", "not_applicable"].includes(r.cash_answer) ? "secondary" : "destructive"}>خزنة: {answerAr(r.cash_answer)}</Badge>
-              <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>قيد: {answerAr(r.journal_answer)}</Badge>
-              <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>تقرير: {answerAr(r.report_answer)}</Badge>
-              <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>إشعار: {answerAr(r.notification_answer)}</Badge>
+              <Badge variant={r.branch_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.branch")}: {answerAr(r.branch_answer)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.cash_answer) ? "secondary" : "destructive"}>{t("system.apdo.cash")}: {answerAr(r.cash_answer)}</Badge>
+              <Badge variant={["answered", "not_applicable"].includes(r.journal_answer) ? "secondary" : "destructive"}>{t("system.apdo.journal")}: {answerAr(r.journal_answer)}</Badge>
+              <Badge variant={r.report_answer === "answered" ? "secondary" : "destructive"}>{t("system.apdo.report")}: {answerAr(r.report_answer)}</Badge>
+              <Badge variant={["answered", "not_required"].includes(r.notification_answer) ? "secondary" : "destructive"}>{t("system.apdo.notification")}: {answerAr(r.notification_answer)}</Badge>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
-              <Button size="sm" className="h-7 text-[11px]" onClick={() => repairApdoEvent(r.id)} disabled={fixingKey === r.id}>{fixingKey === r.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <Wrench className="w-3 h-3 ms-1" />}إصلاح العملية</Button>
-              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={apdoHref(r) as any}>فتح المصدر</Link></Button>
+              <Button size="sm" className="h-7 text-[11px]" onClick={() => repairApdoEvent(r.id)} disabled={fixingKey === r.id}>{fixingKey === r.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <Wrench className="w-3 h-3 ms-1" />}{t("system.repairOperation")}</Button>
+              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={apdoHref(r) as any}>{t("common.openSource")}</Link></Button>
             </div>
           </div>)}</div>
         </>}
@@ -459,7 +461,7 @@ function SystemHealthPage() {
 
 
     {!loading && tenantReady && <Card className={tenantReady.is_ready ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}>
-      <CardHeader><CardTitle className="text-base">جاهزية النشاط للتشغيل الفعلي</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("system.tenantReadinessTitle")}</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
         {[["has_settings", "إعدادات"], ["has_branch", "فرع"], ["has_cash_account", "خزنة"], ["has_chart_accounts", "حسابات"], ["has_employee", "موظف"], ["has_catalog", "كتالوج"]].map(([k,label]: any) => <div key={k} className={`rounded-xl border p-2 text-center font-bold ${tenantReady[k] ? "bg-white text-emerald-700" : "bg-white text-red-700"}`}>{label}<div>{tenantReady[k] ? "✅" : "ناقص"}</div></div>)}
       </CardContent>
@@ -467,26 +469,26 @@ function SystemHealthPage() {
 
     {!loading && <div className="grid lg:grid-cols-2 gap-4">
       <Card className={clientErrors.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
-        <CardHeader><CardTitle className="text-base">أخطاء الواجهة غير المحلولة</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("system.clientErrorsTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
-          {!clientErrors.length ? <div className="font-bold text-emerald-800">لا توجد أخطاء واجهة غير محلولة ✅</div> : clientErrors.map((e) => <div key={e.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
+          {!clientErrors.length ? <div className="font-bold text-emerald-800">{t("system.clientErrorsOk")}</div> : clientErrors.map((e) => <div key={e.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
             <div className="font-black text-red-800">{e.message}</div>
             <div className="text-muted-foreground break-words">{e.path} · {new Date(e.created_at).toLocaleString("ar-EG")}</div>
-            {e.stack && <details><summary className="cursor-pointer text-red-700">stack</summary><pre className="mt-2 whitespace-pre-wrap text-[10px] max-h-40 overflow-auto">{e.stack}</pre></details>}
-            <Button size="sm" variant="outline" onClick={() => resolveClientError(e)}>تم الحل</Button>
+            {e.stack && <details><summary className="cursor-pointer text-red-700">{t("common.stack")}</summary><pre className="mt-2 whitespace-pre-wrap text-[10px] max-h-40 overflow-auto">{e.stack}</pre></details>}
+            <Button size="sm" variant="outline" onClick={() => resolveClientError(e)}>{t("system.markResolved")}</Button>
           </div>)}
         </CardContent>
       </Card>
 
       <Card className={queuedMessages.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
-        <CardHeader><CardTitle className="text-base">رسائل WhatsApp المعلقة</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("system.whatsappQueuedTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
-          {!queuedMessages.length ? <div className="font-bold text-emerald-800">لا توجد رسائل واتساب معلقة ✅</div> : queuedMessages.map((m) => <div key={m.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
+          {!queuedMessages.length ? <div className="font-bold text-emerald-800">{t("system.whatsappQueuedOk")}</div> : queuedMessages.map((m) => <div key={m.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
             <div className="font-black">{m.customers?.full_name ?? m.phone} {m.orders?.order_number ? `— طلب #${m.orders.order_number}` : ""}</div>
             <div className="text-muted-foreground break-words">{m.message}</div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => openWhatsApp(m)}>فتح WhatsApp</Button>
-              <Button size="sm" variant="outline" onClick={() => markWhatsAppSent(m)}>تم الإرسال</Button>
+              <Button size="sm" onClick={() => openWhatsApp(m)}>{t("system.openWhatsApp")}</Button>
+              <Button size="sm" variant="outline" onClick={() => markWhatsAppSent(m)}>{t("system.markSent")}</Button>
             </div>
           </div>)}
         </CardContent>
@@ -494,16 +496,16 @@ function SystemHealthPage() {
     </div>}
 
     {diagnostics.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
-      <div className="font-black">فيه استعلامات فشلت أثناء الفحص، لذلك أي رقم ظاهر ممكن يكون غير دقيق:</div>
+      <div className="font-black">{t("system.diagnosticsTitle")}</div>
       {diagnostics.map((d, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{d}</div>)}
-      <div className="text-xs">اضغط <b>إصلاح الأساسيات</b> ثم <b>تحديث</b>. لو استمر الخطأ فالمشكلة في قاعدة البيانات أو الصلاحيات وليست في الواجهة.</div>
+      <div className="text-xs">{t("system.diagnosticsHint")}</div>
     </CardContent></Card>}
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="space-y-5">
       {healthGroups.map((g) => {
         const rows = checks.filter((c) => groupForCheck(c.key) === g.key);
         if (!rows.length) return null;
-        return <div key={g.key} className="space-y-2"><h2 className="font-black text-lg">{g.title}</h2><div className="grid md:grid-cols-2 gap-3">{rows.map((c) => <HealthCard key={c.key} c={c} fixingKey={fixingKey} repairing={repairing} fixCheck={fixCheck} />)}</div></div>;
+        return <div key={g.key} className="space-y-2"><h2 className="font-black text-lg">{t(g.titleKey)}</h2><div className="grid md:grid-cols-2 gap-3">{rows.map((c) => <HealthCard key={c.key} c={c} fixingKey={fixingKey} repairing={repairing} fixCheck={fixCheck} />)}</div></div>;
       })}
     </div>}
   </div>;
@@ -515,12 +517,12 @@ function deliveryIssuesAr(codes: string[] = []) {
 }
 
 const healthGroups = [
-  { key: "readiness", title: "١) جاهزية التشغيل" },
-  { key: "finance", title: "٢) الماليات والخزن" },
-  { key: "operations", title: "٣) الطلبات والتشغيل" },
-  { key: "delivery", title: "٤) المندوبين والخريطة" },
-  { key: "quality", title: "٥) الجودة والتحصيل" },
-  { key: "apdo", title: "٦) اكتمال APDO والرقابة" },
+  { key: "readiness", titleKey: "system.group.readiness" },
+  { key: "finance", titleKey: "system.group.finance" },
+  { key: "operations", titleKey: "system.group.operations" },
+  { key: "delivery", titleKey: "system.group.delivery" },
+  { key: "quality", titleKey: "system.group.quality" },
+  { key: "apdo", titleKey: "system.group.apdo" },
 ];
 function groupForCheck(key: string) {
   if (["tenantReady", "settings", "employees", "services", "customers"].includes(key)) return "readiness";
@@ -539,14 +541,15 @@ function safeFixHref(href?: string | null) {
 }
 
 function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fixingKey: string | null; repairing: boolean; fixCheck: (key: string) => void }) {
+  const { t } = useI18n();
   const cls = c.severity === "danger" ? "border-red-200 bg-red-50" : c.severity === "warn" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50";
   const canAutoFix = ["cash", "chart", "settings", "employees", "cashBalanceIntegrity", "manualNoJournal", "journal", "pickups", "readyNoDriver", "driverLocation", "cashClosing", "financialAudit"].includes(c.key);
   return <Card className={cls}><CardContent className="p-4 space-y-3">
     <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
     <div className="text-xs text-muted-foreground">{c.fix}</div>
-    {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">خطأ القراءة: {c.error}</div>}
+    {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">{t("system.readingError")} {c.error}</div>}
     {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => { const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>; return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>; })}</div> : null}
-    <div className="flex gap-2 pt-1">{c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>فتح مكان الإصلاح</Link></Button>}{canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}إصلاح سريع</Button>}</div>
+    <div className="flex gap-2 pt-1">{c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>{t("common.openFixLocation")}</Link></Button>}{canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("common.quickFix")}</Button>}</div>
   </CardContent></Card>;
 }
 

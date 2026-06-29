@@ -14,6 +14,7 @@ import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/orders/$id")({
   head: () => ({ meta: [{ title: "تفاصيل الطلب - MJRH" }] }),
@@ -67,6 +68,7 @@ type ServiceUnit = {
 function OrderDetailPage() {
   const { id } = Route.useParams();
   const { user, hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const [order, setOrder] = useState<any>(null);
   const [units, setUnits] = useState<ServiceUnit[]>([]);
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -382,7 +384,7 @@ function OrderDetailPage() {
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-5 h-5 animate-spin" /></div>;
-  if (!order) return <div className="p-8 text-center text-muted-foreground">الطلب غير موجود</div>;
+  if (!order) return <div className="p-8 text-center text-muted-foreground">{t("order.notFound")}</div>;
 
   const canEdit = hasRole("cs_manager", "ops_manager", "owner");
   const canOperate = hasRole("ops_manager", "owner", "employee");
@@ -393,72 +395,72 @@ function OrderDetailPage() {
   const issueList = buildOrderIssues(order, units, pickupRows, qcRows);
 
   return (
-    <div className="space-y-5 max-w-4xl" dir="rtl">
+    <div className="space-y-5 max-w-4xl" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
           <div>
-            <h1 className="text-2xl font-bold">طلب #{order.order_number}</h1>
+            <h1 className="text-2xl font-bold">{t("order.orderNo", "طلب #{order}").replace("{order}", String(order.order_number))}</h1>
             <p className="text-sm text-muted-foreground">{order.customers?.full_name} · {order.customers?.phone}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <PrintInvoiceButton order={{ ...order, customers: order.customers, order_items: order.order_items ?? [] }} />
           <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
-            {order.payment_status === "paid" ? "مدفوع" : "تسجيل الدفع"}
+            {order.payment_status === "paid" ? t("order.paid") : t("order.recordPayment")}
           </Button>
           {(order.payment_method === "instapay" || order.payment_method === "cod_instapay") && canEdit && (
             <label className="inline-flex">
               <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPaymentProof(e.target.files[0])} />
               <Button type="button" variant={order.payment_proof_url ? "default" : "outline"} disabled={proofUploading} asChild>
-                <span>{proofUploading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} إثبات InstaPay</span>
+                <span>{proofUploading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} {t("order.instapayProof")}</span>
               </Button>
             </label>
           )}
-          {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> عرض الإيصال</a></Button>}
-          {hasRole("owner") && order.status !== "cancelled" && <Button variant="destructive" onClick={cancelOrder}>إلغاء الطلب بسبب</Button>}
-          {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>إغلاق بتجاوز</Button>}
-          <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> طباعة ليبل القطع</Button>
-          {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? "توزيع..." : "توزيع الكي"}</Button>}
-          <StatusBadge level={statusLevel(order.status)} label={order.status} />
+          {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> {t("order.viewReceipt")}</a></Button>}
+          {hasRole("owner") && order.status !== "cancelled" && <Button variant="destructive" onClick={cancelOrder}>{t("order.cancelWithReason")}</Button>}
+          {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>{t("order.overrideClose")}</Button>}
+          <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> {t("order.printLabels")}</Button>
+          {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? t("order.assigning") : t("order.assignIroning")}</Button>}
+          <StatusBadge level={statusLevel(order.status)} label={t(`track.step.${order.status}`, order.status)} />
         </div>
       </div>
 
       <OrderIssuePanel issues={issueList} />
 
       <div className="grid md:grid-cols-4 gap-3">
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">عدد القطع</div><div className="text-xl font-black">{pieceCount}</div></CardContent></Card>
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">قمصان/بلوزات</div><div className="text-xl font-black">{shirtCount}</div></CardContent></Card>
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">قيمة القطع</div><div className="text-xl font-black">{invoiceValue.toLocaleString()} ج</div></CardContent></Card>
-        <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">مرتجعات تنظيف</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.piecesCount")}</div><div className="text-xl font-black">{pieceCount}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.shirtsCount")}</div><div className="text-xl font-black">{shirtCount}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.piecesValue")}</div><div className="text-xl font-black">{invoiceValue.toLocaleString()} {t("common.egp")}</div></CardContent></Card>
+        <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.recleanCount")}</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
       </div>
 
       <OrderTimeline order={order} units={units} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} operationRows={operationRows} attachmentRows={attachmentRows} cashRows={cashRows} journalRows={journalRows} messageRows={messageRows} employeeLedgerRows={employeeLedgerRows} customerReturnRows={customerReturnRows} />
 
       {customerReturnRows.length > 0 && <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> مرتجعات العميل بعد التسليم</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> {t("order.customerReturnsTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {customerReturnRows.map((r) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type)} · {returnStatusAr(r.status)}</div>
-              {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>إغلاق المرتجع</Button>}
+              {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>{t("order.closeReturn")}</Button>}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">السبب: {r.reason}</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("order.reason")}: {r.reason}</div>
           </div>)}
         </CardContent>
       </Card>}
 
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> تعديل الفاتورة النهائية</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> {t("order.invoiceEditTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {canEdit && <div className="flex gap-2">
             <Select onValueChange={addInvoiceService}>
-              <SelectTrigger><SelectValue placeholder="إضافة صنف للفاتورة" /></SelectTrigger>
-              <SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {Number(s.unit_price).toLocaleString()} ج</SelectItem>)}</SelectContent>
+              <SelectTrigger><SelectValue placeholder={t("order.addInvoiceItem")} /></SelectTrigger>
+              <SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {Number(s.unit_price).toLocaleString()} {t("common.egp")}</SelectItem>)}</SelectContent>
             </Select>
-            <Button onClick={saveInvoiceChanges} disabled={invoiceSaving}>{invoiceSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> تأكيد وإشعار</Button>
+            <Button onClick={saveInvoiceChanges} disabled={invoiceSaving}>{invoiceSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("common.save")}</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> {t("order.finalizeNotify")}</Button>
           </div>}
           <div className="space-y-2">
             {invoiceItems.map((it, idx) => (
@@ -466,20 +468,20 @@ function OrderDetailPage() {
                 <Input value={it.name} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { name: e.target.value })} />
                 <Input type="number" min={1} value={it.qty} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { qty: Math.max(1, Number(e.target.value)) })} />
                 <Input type="number" value={it.unit_price} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { unit_price: Number(e.target.value) })} />
-                <div className="font-black text-end">{(it.qty * it.unit_price).toLocaleString()} ج</div>
+                <div className="font-black text-end">{(it.qty * it.unit_price).toLocaleString()} {t("common.egp")}</div>
                 {canEdit && <Button size="icon" variant="ghost" onClick={() => deleteInvoiceRow(idx)}><Trash2 className="w-4 h-4 text-red-600" /></Button>}
               </div>
             ))}
           </div>
-          <div className="rounded-xl bg-muted p-3 flex justify-between font-black"><span>الإجمالي النهائي</span><span>{invoiceTotals().total.toLocaleString()} ج</span></div>
-          {order.invoice_finalized_at && <Badge className="bg-emerald-600">تم تأكيد الفاتورة</Badge>}
+          <div className="rounded-xl bg-muted p-3 flex justify-between font-black"><span>{t("order.finalTotal")}</span><span>{invoiceTotals().total.toLocaleString()} {t("common.egp")}</span></div>
+          {order.invoice_finalized_at && <Badge className="bg-emerald-600">{t("order.invoiceConfirmed")}</Badge>}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> القطع المسجلة ({units.length})</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> {t("order.unitsTitle")} ({units.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">لا توجد قطع بعد — أضف القطع من هنا أو من بنود الطلب.</p>}
+          {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t("order.noUnits")}</p>}
           {units.map((u) => (
             <div key={u.id} className="grid md:grid-cols-[88px_1fr_auto] gap-3 p-3 border rounded-xl bg-card">
               <div className="flex flex-col items-center gap-2">
@@ -487,7 +489,7 @@ function OrderDetailPage() {
                   {u.photo_url ? <img src={u.photo_url} className="w-full h-full object-cover" /> : <Camera className="w-7 h-7 text-muted-foreground" />}
                 </div>
                 {canEdit && <label className="text-xs text-teal-700 cursor-pointer underline">
-                  {uploading === u.id ? "رفع..." : "صورة"}
+                  {uploading === u.id ? t("order.uploading") : t("order.photo")}
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(u, e.target.files[0])} />
                 </label>}
               </div>
@@ -495,51 +497,51 @@ function OrderDetailPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-black text-lg">{u.label_code}</span>
                   <Badge variant="outline">{u.name}</Badge>
-                  {u.is_shirt_like && <Badge className="bg-blue-600">قميص/بلوزة</Badge>}
-                  {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> مرتجع تنظيف</Badge>}
+                  {u.is_shirt_like && <Badge className="bg-blue-600">{t("order.shirtLike")}</Badge>}
+                  {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("order.recleanBadge")}</Badge>}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {u.attributes?.color ? `اللون: ${u.attributes.color} · ` : ""}
-                  قيمة تقديرية: {Number(u.line_value ?? 0).toLocaleString()} ج · جهد ×{u.complexity_factor}
+                  {u.attributes?.color ? `${t("order.color")}: ${u.attributes.color} · ` : ""}
+                  {t("order.estimatedValue")}: {Number(u.line_value ?? 0).toLocaleString()} {t("common.egp")} · {t("order.effort")} ×{u.complexity_factor}
                 </div>
                 {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">كي</SelectItem><SelectItem value="both">تنظيف + كي</SelectItem><SelectItem value="cleaning">تصليح</SelectItem></SelectContent></Select></div>}
                 <div className="text-xs text-muted-foreground">
-                  فني الكي: <b>{u.employees?.full_name ?? "لم يوزع بعد"}</b>
+                  {t("order.ironingTech")}: <b>{u.employees?.full_name ?? t("order.notAssignedYet")}</b>
                 </div>
                 {u.customer_notes && <div className="text-xs text-amber-700">📝 {u.customer_notes}</div>}
-                {u.needs_reclean && <div className="text-xs text-amber-700">سبب المرتجع: {u.reclean_reason} · سيرجع لنفس فني الكي بعد تنظيفه</div>}
+                {u.needs_reclean && <div className="text-xs text-amber-700">{t("order.recleanReason")}: {u.reclean_reason} · {t("order.returnToSameTech")}</div>}
               </div>
               {canOperate && <div className="flex md:flex-col gap-2 justify-end">
-                {order.status === "delivered" ? <Button size="sm" variant="outline" onClick={() => registerCustomerReturn(u)}><RotateCcw className="w-3 h-3 ms-1" /> مرتجع عميل</Button> : <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> مرتجع تنظيف</Button>}
-                {u.needs_reclean && <Button size="sm" onClick={() => resolveReclean(u)}><CheckCircle2 className="w-3 h-3 ms-1" /> تم تنظيفه</Button>}
+                {order.status === "delivered" ? <Button size="sm" variant="outline" onClick={() => registerCustomerReturn(u)}><RotateCcw className="w-3 h-3 ms-1" /> {t("order.customerReturn")}</Button> : <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> {t("order.reclean")}</Button>}
+                {u.needs_reclean && <Button size="sm" onClick={() => resolveReclean(u)}><CheckCircle2 className="w-3 h-3 ms-1" /> {t("order.cleaned")}</Button>}
               </div>}
             </div>
           ))}
 
           {canEdit && (
             <div className="border-t pt-4 space-y-3">
-              <p className="text-sm font-bold">إضافة قطعة يدوية</p>
+              <p className="text-sm font-bold">{t("order.manualPiece")}</p>
               <div className="grid md:grid-cols-3 gap-2">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">نوع القطعة</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.pieceType")}</label>
                   <Select value={form.garment_type} onValueChange={(v) => setForm((f) => ({ ...f, garment_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{GARMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">اللون</label>
-                  <Input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} placeholder="أبيض، أزرق..." />
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.color")}</label>
+                  <Input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} placeholder={t("order.colorPlaceholder")} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">ملاحظات</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.notes")}</label>
                   <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={1} />
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">ستظهر على الليبل باسم القطعة ورقمها داخل الطلب.</span>
+                <span className="text-xs text-muted-foreground">{t("order.manualPieceHint")}</span>
                 <Button onClick={addUnit} disabled={addingUnit} size="sm">
-                  {addingUnit ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 ms-1" /> إضافة قطعة</>}
+                  {addingUnit ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 ms-1" /> {t("order.addPiece")}</>}
                 </Button>
               </div>
             </div>
@@ -578,10 +580,11 @@ function buildOrderIssues(order: any, units: ServiceUnit[], pickups: any[], qcs:
 }
 
 function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
-  if (!issues.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">لا توجد مشاكل واضحة في الطلب الآن ✅</CardContent></Card>;
+  const { t } = useI18n();
+  if (!issues.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("order.issuesOk")}</CardContent></Card>;
   const cls = (tone: string) => tone === "red" ? "border-red-200 bg-red-50 text-red-800" : tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-800" : "border-blue-200 bg-blue-50 text-blue-800";
   return <Card>
-    <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> ما الذي يحتاج انتباهك في هذا الطلب؟</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> {t("order.issuesTitle")}</CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-2 gap-2">
       {issues.map((x, i) => {
         const body = <div className={`rounded-xl border p-3 text-sm ${cls(x.tone)}`}>
@@ -594,7 +597,7 @@ function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
             </div>)}
             {x.units.length > 4 && <span className="text-[11px] opacity-70">+{x.units.length - 4}</span>}
           </div> : null}
-          <div className="text-xs font-bold mt-2">الخطوة التالية: {x.action}</div>
+          <div className="text-xs font-bold mt-2">{t("order.nextStep")}: {x.action}</div>
         </div>;
         return x.href ? <Link key={i} to={x.href as any}>{body}</Link> : <div key={i}>{body}</div>;
       })}
@@ -633,8 +636,9 @@ function OrderTimeline({
   employeeLedgerRows: any[];
   customerReturnRows: any[];
 }) {
+  const { t, language } = useI18n();
   const events: { at: string; title: string; detail: string; tone?: string; icon: React.ReactNode; href?: string; meta?: React.ReactNode }[] = [];
-  const money = (v: any) => `${Number(v ?? 0).toLocaleString("en-US")} ج`;
+  const money = (v: any) => `${Number(v ?? 0).toLocaleString("en-US")} ${t("common.egp")}`;
 
   events.push({ at: order.created_at, title: "إنشاء الطلب", detail: `تم إنشاء الطلب #${order.order_number} للعميل ${order.customers?.full_name ?? ""}`, icon: <History className="w-4 h-4" /> });
 
@@ -644,7 +648,7 @@ function OrderTimeline({
     if (p.picked_up_at) events.push({ at: p.picked_up_at, title: "المندوب استلم الطلب", detail: "دخل الطلب إلى رحلة التشغيل", icon: <CheckCircle2 className="w-4 h-4" />, tone: "ok" });
   });
 
-  historyRows.forEach((h) => events.push({ at: h.created_at, title: STATUS_AR[h.to_status] ?? h.to_status, detail: h.notes ?? "تغيير حالة الطلب", icon: <ArrowRight className="w-4 h-4" />, tone: h.to_status === "cancelled" ? "bad" : undefined }));
+  historyRows.forEach((h) => events.push({ at: h.created_at, title: t(`track.step.${h.to_status}`, STATUS_AR[h.to_status] ?? h.to_status), detail: h.notes ?? "تغيير حالة الطلب", icon: <ArrowRight className="w-4 h-4" />, tone: h.to_status === "cancelled" ? "bad" : undefined }));
 
   units.forEach((u) => {
     if (u.assigned_ironing_employee_id) events.push({ at: u.ironing_completed_at ?? order.updated_at ?? order.created_at, title: `توزيع كي ${u.label_code}`, detail: `${u.name} → ${u.employees?.full_name ?? "فني كي"}${u.ironing_completed_at ? " — تم الكي" : ""}`, icon: <Shirt className="w-4 h-4" />, tone: u.ironing_completed_at ? "ok" : "blue" });
@@ -702,12 +706,12 @@ function OrderTimeline({
   const cls = (tone?: string) => tone === "bad" ? "border-red-200 bg-red-50" : tone === "ok" ? "border-emerald-200 bg-emerald-50" : tone === "blue" ? "border-blue-200 bg-blue-50" : tone === "amber" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white";
 
   return <Card>
-    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> رحلة الطلب الكاملة — تشغيل، دفع، مستندات، قيود، رسائل</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> {t("order.timelineTitle")}</CardTitle></CardHeader>
     <CardContent className="space-y-2">
       {events.map((e, i) => <div key={i} className={`rounded-xl border p-3 flex items-start gap-3 ${cls(e.tone)}`}>
         <div className="mt-0.5 text-teal-700">{e.icon}</div>
         <div className="flex-1 min-w-0"><div className="font-black text-sm">{e.title}</div><div className="text-xs text-muted-foreground mt-0.5 break-words">{e.detail}</div>{e.meta}</div>
-        <div className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(e.at).toLocaleString("ar-EG")}</div>
+        <div className="text-[11px] text-muted-foreground whitespace-nowrap">{new Date(e.at).toLocaleString(language === "ar" ? "ar-EG" : "en-US")}</div>
       </div>)}
     </CardContent>
   </Card>;
