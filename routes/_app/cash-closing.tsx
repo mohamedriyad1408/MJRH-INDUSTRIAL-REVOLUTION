@@ -264,13 +264,13 @@ function CashClosingPage() {
 
     <div className="grid md:grid-cols-[200px_200px_auto] gap-3 items-end">
       <div>
-        <Label>الفرع</Label>
+        <Label>{t("common.branch")}</Label>
         <Select value={branchId} onValueChange={setBranchId}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الفروع</SelectItem>
+            <SelectItem value="all">{t("cashClosing.allBranches")}</SelectItem>
             {branches.map((b) => (
               <SelectItem key={b.id} value={b.id}>
                 {b.name}
@@ -279,8 +279,8 @@ function CashClosingPage() {
           </SelectContent>
         </Select>
       </div>
-      <div><Label>اليوم</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-      <div className="flex flex-wrap gap-2"><Button onClick={fillExpected} variant="outline">ملء المتوقع كفعلي</Button><Button onClick={closeAllSafes} disabled={saving || !rows.length}>{saving ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Calculator className="w-4 h-4 ms-1" />}إقفال كل الخزن</Button></div>
+      <div><Label>{t("cashClosing.date")}</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+      <div className="flex flex-wrap gap-2"><Button onClick={fillExpected} variant="outline">{t("cashClosing.fillExpected")}</Button><Button onClick={closeAllSafes} disabled={saving || !rows.length}>{saving ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Calculator className="w-4 h-4 ms-1" />}{t("cashClosing.closeAll")}</Button></div>
     </div>
 
     {loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
@@ -293,29 +293,30 @@ function CashClosingPage() {
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <>
       <div className="grid md:grid-cols-4 gap-3">
-        <Kpi label="دخل تشغيل اليوم" value={fmtMoney(totals.operatingIn)} />
-        <Kpi label="خرج تشغيل اليوم" value={fmtMoney(totals.operatingOut)} warn={totals.operatingOut > 0} />
-        <Kpi label="الرصيد المتوقع" value={fmtMoney(totals.expected)} />
-        <Kpi label="إجمالي الفرق" value={fmtMoney(totals.diff)} warn={Math.abs(totals.diff) >= 0.01} />
+        <Kpi label={t("cashClosing.operatingIn")} value={fmtMoney(totals.operatingIn, t("common.egp"))} />
+        <Kpi label={t("cashClosing.operatingOut")} value={fmtMoney(totals.operatingOut, t("common.egp"))} warn={totals.operatingOut > 0} />
+        <Kpi label={t("cashClosing.expected")} value={fmtMoney(totals.expected, t("common.egp"))} />
+        <Kpi label={t("cashClosing.difference")} value={fmtMoney(totals.diff, t("common.egp"))} warn={Math.abs(totals.diff) >= 0.01} />
       </div>
 
-      {(totals.transferIn || totals.transferOut) ? <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4 text-sm text-blue-900"><b>تحويلات داخلية اليوم:</b> داخل {fmtMoney(totals.transferIn)} / خارج {fmtMoney(totals.transferOut)} — لا تعتبر دخل أو مصروف، فقط نقل بين الخزن.</CardContent></Card> : null}
+      {(totals.transferIn || totals.transferOut) ? <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4 text-sm text-blue-900"><b>تحويلات داخلية اليوم:</b> داخل {fmtMoney(totals.transferIn, t("common.egp"))} / خارج {fmtMoney(totals.transferOut, t("common.egp"))} — لا تعتبر دخل أو مصروف، فقط نقل بين الخزن.</CardContent></Card> : null}
 
-      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Banknote className="w-4 h-4" />النقدية الفعلية لكل خزنة</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+      <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Banknote className="w-4 h-4" />{t("cashClosing.actualSafes")}</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
         {rows.map((r) => <div key={r.account.id} className={`rounded-2xl border p-4 space-y-3 ${Math.abs(r.diff) >= 0.01 ? "border-amber-300 bg-amber-50" : ""}`}>
-          <div className="flex items-start justify-between gap-2"><div><div className="font-black text-lg">{r.account.name}</div><div className="text-xs text-muted-foreground">بداية: {fmtMoney(r.opening)}</div></div><Badge variant={r.diff ? "destructive" : "secondary"}>فرق {fmtMoney(r.diff)}</Badge></div>
-          <div className="grid grid-cols-2 gap-2 text-xs"><Mini label="دخل تشغيل" value={fmtMoney(r.operatingIn)} /><Mini label="خرج تشغيل" value={fmtMoney(r.operatingOut)} /><Mini label="تحويل داخل" value={fmtMoney(r.transferIn)} /><Mini label="تحويل خارج" value={fmtMoney(r.transferOut)} /><Mini label="المتوقع" value={fmtMoney(r.expected)} /></div>
-          <div><Label>النقدية الموجودة فعليًا</Label><Input type="number" value={countedMap[r.account.id] ?? String(r.expected)} onChange={(e) => setCountedMap({ ...countedMap, [r.account.id]: e.target.value })} /></div>
+          <div className="flex items-start justify-between gap-2"><div><div className="font-black text-lg">{r.account.name}</div><div className="text-xs text-muted-foreground">{t("cashClosing.start")}: {fmtMoney(r.opening, t("common.egp"))}</div></div><Badge variant={r.diff ? "destructive" : "secondary"}>{t("cashClosing.diff")} {fmtMoney(r.diff, t("common.egp"))}</Badge></div>
+          <div className="grid grid-cols-2 gap-2 text-xs"><Mini label={t("cashClosing.operatingInLabel")} value={fmtMoney(r.operatingIn, t("common.egp"))} /><Mini label={t("cashClosing.operatingOutLabel")} value={fmtMoney(r.operatingOut, t("common.egp"))} /><Mini label={t("cashClosing.transferIn")} value={fmtMoney(r.transferIn, t("common.egp"))} /><Mini label={t("cashClosing.transferOut")} value={fmtMoney(r.transferOut, t("common.egp"))} /><Mini label={t("cashClosing.expectedLabel")} value={fmtMoney(r.expected, t("common.egp"))} /></div>
+          <div><Label>{t("cashClosing.actualLabel")}</Label><Input type="number" value={countedMap[r.account.id] ?? String(r.expected)} onChange={(e) => setCountedMap({ ...countedMap, [r.account.id]: e.target.value })} /></div>
         </div>)}
       </CardContent></Card>
 
-      <Card><CardHeader><CardTitle className="text-base">سبب الفرق إن وجد</CardTitle></CardHeader><CardContent className="space-y-3"><Textarea placeholder="مثال: عجز/زيادة عند الجرد، تحويل لم يسجل، مصروف لم يدخل..." value={notes} onChange={(e) => setNotes(e.target.value)} /><Button onClick={closeAllSafes} disabled={saving || !rows.length} className="w-full">إقفال كل الخزن اليوم</Button></CardContent></Card>
+      <Card><CardHeader><CardTitle className="text-base">{t("cashClosing.notesTitle")}</CardTitle></CardHeader><CardContent className="space-y-3"><Textarea placeholder={t("cashClosing.notesPlaceholder")} value={notes} onChange={(e) => setNotes(e.target.value)} /><Button onClick={closeAllSafes} disabled={saving || !rows.length} className="w-full">{t("cashClosing.closeTodayBtn")}</Button></CardContent></Card>
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">آخر حركات اليوم</CardTitle></CardHeader><CardContent className="space-y-2">{dayTx.slice(0, 20).map((t) => <div key={t.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{t.description}</b><div className="text-xs text-muted-foreground">{t.cash_accounts?.name} · {fmtDate(t.happened_at)}</div></div><Badge variant={t.direction === "out" ? "destructive" : "secondary"}>{t.direction === "in" ? "+" : "-"} {fmtMoney(t.amount)}</Badge></div>)}{!dayTx.length && <Empty text="لا توجد حركات اليوم" />}</CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">آخر الإقفالات</CardTitle></CardHeader><CardContent className="space-y-2">{closings.slice(0, 12).map((c) => <div key={c.id} className="rounded-xl border p-3 text-xs"><div className="font-bold">{c.cash_accounts?.name} — {c.closing_date}</div><div>متوقع: {fmtMoney(c.expected_balance)} · فعلي: {fmtMoney(c.counted_balance)} · فرق: <b>{fmtMoney(c.difference)}</b></div></div>)}{!closings.length && <Empty text="لا توجد إقفالات سابقة" />}</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">{t("cashClosing.latestTx")}</CardTitle></CardHeader><CardContent className="space-y-2">{dayTx.slice(0, 20).map((t_row) => <div key={t_row.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{t_row.description}</b><div className="text-xs text-muted-foreground">{t_row.cash_accounts?.name} · {fmtDate(t_row.happened_at)}</div></div><Badge variant={t_row.direction === "out" ? "destructive" : "secondary"}>{t_row.direction === "in" ? "+" : "-"} {fmtMoney(t_row.amount, t("common.egp"))}</Badge></div>)}{!dayTx.length && <Empty text={t("cashClosing.noTx")} />}</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">{t("cashClosing.latestClosings")}</CardTitle></CardHeader><CardContent className="space-y-2">{closings.slice(0, 12).map((c) => <div key={c.id} className="rounded-xl border p-3 text-xs"><div className="font-bold">{c.cash_accounts?.name} — {c.closing_date}</div><div>متوقع: {fmtMoney(c.expected_balance, t("common.egp"))} · فعلي: {fmtMoney(c.counted_balance, t("common.egp"))} · فرق: <b>{fmtMoney(c.difference, t("common.egp"))}</b></div></div>)}{!closings.length && <Empty text={t("cashClosing.noClosings")} />}</CardContent></Card>
       </div>
     </>}
+  </div>;
   </div>;
 }
 function Kpi({ label, value, warn = false }: { label: string; value: any; warn?: boolean }) { return <Card className={warn ? "border-amber-200 bg-amber-50" : ""}><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-2xl font-black mt-1">{value}</div></CardContent></Card>; }
