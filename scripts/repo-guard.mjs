@@ -28,7 +28,8 @@ for (const file of walk(".")) {
 if (fs.existsSync(".env.production")) {
   const env = fs.readFileSync(".env.production", "utf8");
   if (/SERVICE_ROLE|DATABASE_URL|SUPABASE_ACCESS_TOKEN|ghp_|sbp_/i.test(env)) errors.push(".env.production contains sensitive secret-like key");
-  else warnings.push(".env.production is tracked for current Vercel compatibility; move values to Vercel env vars when safe.");
+  const trackedFiles = fs.existsSync(".git") ? new Set((await import("node:child_process")).execSync("git ls-files", { encoding: "utf8" }).split(/\n/).filter(Boolean)) : new Set();
+  if (trackedFiles.has(".env.production")) warnings.push(".env.production is tracked for current Vercel compatibility; move values to Vercel env vars when safe.");
 }
 
 for (const w of warnings) console.warn(`WARN: ${w}`);
