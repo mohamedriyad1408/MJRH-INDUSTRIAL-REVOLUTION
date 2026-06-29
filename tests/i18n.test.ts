@@ -28,7 +28,17 @@ describe("i18n language support", () => {
     expect(translateForLanguage("pt", "nav./orders")).toBe("Todos os pedidos");
   });
 
-  it("uses Arabic component fallback before English only in Arabic mode", () => {
+  it("does not silently fall back to English for non-English commercial languages", () => {
+    const nonEnglish = ["fr", "it", "es", "de", "zh", "ja", "pt"] as const;
+    for (const lang of nonEnglish) {
+      expect(translateForLanguage(lang, "landing.heroTitle")).not.toBe(translateForLanguage("en", "landing.heroTitle"));
+      expect(translateForLanguage(lang, "system.title")).not.toBe(translateForLanguage("en", "system.title"));
+      expect(translateForLanguage(lang, "station.qc.title")).not.toBe(translateForLanguage("en", "station.qc.title"));
+      expect(translateForLanguage(lang, "map.title")).not.toBe(translateForLanguage("en", "map.title"));
+    }
+  });
+
+  it("uses Arabic component fallback before English in Arabic mode", () => {
     expect(translateForLanguage("ar", "missing.key", "نص عربي")).toBe("نص عربي");
     expect(translateForLanguage("en", "missing.key", "نص عربي")).toBe("نص عربي");
   });

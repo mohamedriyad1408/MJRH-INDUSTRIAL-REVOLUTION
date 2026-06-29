@@ -943,11 +943,11 @@ Object.assign(en, stationEn);
 export const internalTranslations: Record<LanguageCode, Record<string, string>> = {
   ar,
   en,
-  fr: { ...en, ...navFr },
-  it: { ...en, ...navIt },
-  es: { ...en, ...navEs },
-  de: { ...en, ...navDe },
-  zh: { ...en, ...navZh },
-  ja: { ...en, ...navJa },
-  pt: { ...en, ...navPt },
+  fr: { ...navFr },
+  it: { ...navIt },
+  es: { ...navEs },
+  de: { ...navDe },
+  zh: { ...navZh },
+  ja: { ...navJa },
+  pt: { ...navPt },
 };

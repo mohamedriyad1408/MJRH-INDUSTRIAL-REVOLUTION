@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { internalTranslations } from "./i18n-internal";
+import { publicLanguagePacks } from "./i18n-public-packs";
 
 export type LanguageCode = "ar" | "en" | "fr" | "it" | "es" | "de" | "zh" | "ja" | "pt";
 
@@ -221,23 +222,24 @@ const publicTranslations: Record<LanguageCode, Record<string, string>> = {
   fr: {}, it: {}, es: {}, de: {}, zh: {}, ja: {}, pt: {}
 };
 
-const publicFallbackFromEnglish = ["fr", "it", "es", "de", "zh", "ja", "pt"] as LanguageCode[];
-for (const lang of publicFallbackFromEnglish) publicTranslations[lang] = { ...publicTranslations.en, ...publicTranslations[lang] };
 for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) Object.assign(dict[lang], publicTranslations[lang]);
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
 for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) Object.assign(dict[lang], internalTranslations[lang]);
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
   const local = dict[language]?.[key];
   if (local !== undefined) return local;
-  if (language === "ar") return fallback ?? dict.en?.[key] ?? key;
-  return dict.en?.[key] ?? fallback ?? key;
+  if (language === "en") return dict.en?.[key] ?? fallback ?? key;
+  if (language === "ar") return fallback ?? dict.ar?.[key] ?? dict.en?.[key] ?? key;
+  return dict.ar?.[key] ?? fallback ?? dict.en?.[key] ?? key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {
   return template.replace(/\{(\w+)\}/g, (_, name) => String(values[name] ?? ""));
 }
 
-const STORAGE_KEY = "mjrh.language";
+const STORAGE_KEY = "mjrh.language.v2";
+const LEGACY_STORAGE_KEY = "mjrh.language";
 
 type I18nContextValue = {
   language: LanguageCode;
@@ -252,8 +254,9 @@ function detectLanguage(): LanguageCode {
   if (typeof window === "undefined") return "ar";
   const saved = window.localStorage.getItem(STORAGE_KEY) as LanguageCode | null;
   if (saved && SUPPORTED_LANGUAGES.some((x) => x.code === saved)) return saved;
-  const browser = navigator.language.slice(0, 2).toLowerCase() as LanguageCode;
-  return SUPPORTED_LANGUAGES.some((x) => x.code === browser) ? browser : "ar";
+  const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY) as LanguageCode | null;
+  if (legacy === "ar") return "ar";
+  return "ar";
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
