@@ -18,7 +18,8 @@
     "e2e:ui": "playwright test --ui",
     "e2e:auth": "playwright test e2e/authenticated-smoke.spec.ts",
     "verify:new-tenant": "node scripts/verify-new-tenant-readiness.mjs",
-    "ci:full": "npm run audit:ci && npm run typecheck && npm run test:run && npm run e2e && npm run verify:new-tenant && npm run build"
+    "ci:full": "npm run repo:guard && npm run audit:ci && npm run typecheck && npm run test:run && npm run e2e && npm run verify:new-tenant && npm run build",
+    "repo:guard": "node scripts/repo-guard.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

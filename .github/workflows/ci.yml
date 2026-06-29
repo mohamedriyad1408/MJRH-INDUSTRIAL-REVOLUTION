@@ -22,6 +22,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Repository guard
+        run: npm run repo:guard
+
       - name: Security audit
         run: npm run audit:ci
 
