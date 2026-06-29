@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, ShieldCheck, Wrench } from "lucide-react";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { fmtMoney, fmtDate } from "@/lib/format";
+import { whatsappLink } from "@/lib/rules/whatsapp";
 
 export const Route = createFileRoute("/_app/system-health")({
   head: () => ({ meta: [{ title: "فحص النظام" }] }),
@@ -45,6 +46,8 @@ function SystemHealthPage() {
   const [tenantReady, setTenantReady] = useState<any | null>(null);
   const [financialAuditRows, setFinancialAuditRows] = useState<any[]>([]);
   const [deliveryBlockedRows, setDeliveryBlockedRows] = useState<any[]>([]);
+  const [clientErrors, setClientErrors] = useState<any[]>([]);
+  const [queuedMessages, setQueuedMessages] = useState<any[]>([]);
 
   async function load() {
     if (!canUse) return;
@@ -156,6 +159,13 @@ function SystemHealthPage() {
       setFinancialAuditRows(financialRows.slice(0, 12));
       const deliveryRows = deliveryReadiness.data ?? [];
       setDeliveryBlockedRows(deliveryRows.slice(0, 12));
+
+      const [errLogs, queuedMsgs] = await Promise.all([
+        (supabase as any).from("client_error_logs").select("*").is("resolved_at", null).order("created_at", { ascending: false }).limit(12).then((r: any) => r).catch(() => ({ data: [] })),
+        (supabase as any).from("customer_messages").select("*,customers(full_name),orders(order_number)").eq("channel", "whatsapp").eq("status", "queued").order("created_at", { ascending: false }).limit(20).then((r: any) => r).catch(() => ({ data: [] })),
+      ]);
+      setClientErrors(errLogs.data ?? []);
+      setQueuedMessages(queuedMsgs.data ?? []);
 
       const responses = [cash, chart, settings, employees, services, customers, orders, units, pickups, readyNoDriver, reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation, ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, deliveryReadiness, tenantHealth];
       const errors = responses.map((r: any) => r?.error?.message).filter(Boolean);
@@ -319,6 +329,23 @@ function SystemHealthPage() {
     return "/system-health";
   }
 
+  async function markWhatsAppSent(row: any) {
+    const { error } = await (supabase as any).from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", row.id);
+    if (error) toast.error(error.message);
+    else { toast.success("تم تعليم الرسالة كمرسلة"); load(); }
+  }
+
+  async function resolveClientError(row: any) {
+    const { error } = await (supabase as any).rpc("resolve_client_error_log", { _id: row.id, _notes: "تمت المراجعة من فحص النظام" });
+    if (error) toast.error(error.message);
+    else { toast.success("تم إغلاق الخطأ"); load(); }
+  }
+
+  function openWhatsApp(row: any) {
+    const url = whatsappLink(row.phone ?? "", row.message ?? "");
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   async function createDailySystemReport() {
     const danger = checks.filter((c) => c.severity === "danger");
     const warn = checks.filter((c) => c.severity === "warn");
@@ -437,6 +464,34 @@ function SystemHealthPage() {
         {[["has_settings", "إعدادات"], ["has_branch", "فرع"], ["has_cash_account", "خزنة"], ["has_chart_accounts", "حسابات"], ["has_employee", "موظف"], ["has_catalog", "كتالوج"]].map(([k,label]: any) => <div key={k} className={`rounded-xl border p-2 text-center font-bold ${tenantReady[k] ? "bg-white text-emerald-700" : "bg-white text-red-700"}`}>{label}<div>{tenantReady[k] ? "✅" : "ناقص"}</div></div>)}
       </CardContent>
     </Card>}
+
+    {!loading && <div className="grid lg:grid-cols-2 gap-4">
+      <Card className={clientErrors.length ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}>
+        <CardHeader><CardTitle className="text-base">أخطاء الواجهة غير المحلولة</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          {!clientErrors.length ? <div className="font-bold text-emerald-800">لا توجد أخطاء واجهة غير محلولة ✅</div> : clientErrors.map((e) => <div key={e.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
+            <div className="font-black text-red-800">{e.message}</div>
+            <div className="text-muted-foreground break-words">{e.path} · {new Date(e.created_at).toLocaleString("ar-EG")}</div>
+            {e.stack && <details><summary className="cursor-pointer text-red-700">stack</summary><pre className="mt-2 whitespace-pre-wrap text-[10px] max-h-40 overflow-auto">{e.stack}</pre></details>}
+            <Button size="sm" variant="outline" onClick={() => resolveClientError(e)}>تم الحل</Button>
+          </div>)}
+        </CardContent>
+      </Card>
+
+      <Card className={queuedMessages.length ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
+        <CardHeader><CardTitle className="text-base">رسائل WhatsApp المعلقة</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          {!queuedMessages.length ? <div className="font-bold text-emerald-800">لا توجد رسائل واتساب معلقة ✅</div> : queuedMessages.map((m) => <div key={m.id} className="rounded-xl border bg-white/80 p-3 text-xs space-y-2">
+            <div className="font-black">{m.customers?.full_name ?? m.phone} {m.orders?.order_number ? `— طلب #${m.orders.order_number}` : ""}</div>
+            <div className="text-muted-foreground break-words">{m.message}</div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => openWhatsApp(m)}>فتح WhatsApp</Button>
+              <Button size="sm" variant="outline" onClick={() => markWhatsAppSent(m)}>تم الإرسال</Button>
+            </div>
+          </div>)}
+        </CardContent>
+      </Card>
+    </div>}
 
     {diagnostics.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
       <div className="font-black">فيه استعلامات فشلت أثناء الفحص، لذلك أي رقم ظاهر ممكن يكون غير دقيق:</div>
