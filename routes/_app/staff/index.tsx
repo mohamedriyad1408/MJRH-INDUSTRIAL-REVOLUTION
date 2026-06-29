@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Search, UserCog } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/")({
   component: StaffListPage,
@@ -30,15 +31,11 @@ type Employee = {
   branches?: { name: string } | null;
 };
 
-const ROLE_AR: Record<string, string> = {
-  owner: "مالك",
-  cs_manager: "مدير خدمة عملاء",
-  ops_manager: "مدير تشغيل",
-  courier: "مندوب",
-};
+const ROLE_AR: Record<string, string> = {};
 
 function StaffListPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const isOwner = hasRole("owner");
   const [list, setList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,15 +81,15 @@ function StaffListPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">الموظفين</h1>
-          <p className="text-sm text-muted-foreground">إدارة الفريق والأدوار والوظائف</p>
+          <h1 className="text-2xl font-bold">{t("nav./staff")}</h1>
+          <p className="text-sm text-muted-foreground">{t("staff.subtitle")}</p>
         </div>
         {isOwner && (
           <Button asChild>
-            <Link to="/staff/new"><Plus className="w-4 h-4 ms-1" /> موظف جديد</Link>
+            <Link to="/staff/new"><Plus className="w-4 h-4 ms-1" /> {t("nav./staff/new")}</Link>
           </Button>
         )}
       </div>
@@ -100,32 +97,32 @@ function StaffListPage() {
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="ابحث بالاسم أو الوظيفة..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
+          <Input placeholder={t("staff.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
         <Select value={branchId} onValueChange={setBranchId}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="الفرع" /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الفروع</SelectItem>
+            <SelectItem value="all">{t("common.allBranches")}</SelectItem>
             {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterRole} onValueChange={setFilterRole}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">كل الأدوار</SelectItem>
-            <SelectItem value="owner">مالك</SelectItem>
-            <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
-            <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
-            <SelectItem value="courier">مندوب</SelectItem>
-            <SelectItem value="none">بدون دور نظام</SelectItem>
+            <SelectItem value="all">{t("staff.allRoles")}</SelectItem>
+            <SelectItem value="owner">{t("role.owner")}</SelectItem>
+            <SelectItem value="cs_manager">{t("role.cs_manager")}</SelectItem>
+            <SelectItem value="ops_manager">{t("role.ops_manager")}</SelectItem>
+            <SelectItem value="courier">{t("role.courier")}</SelectItem>
+            <SelectItem value="none">{t("staff.noSystemRole")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">نشطين</SelectItem>
-            <SelectItem value="inactive">غير نشطين</SelectItem>
-            <SelectItem value="all">الكل</SelectItem>
+            <SelectItem value="active">{t("staff.active")}</SelectItem>
+            <SelectItem value="inactive">{t("staff.inactive")}</SelectItem>
+            <SelectItem value="all">{t("notif.filter.all")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -138,29 +135,29 @@ function StaffListPage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-start p-3">الاسم</th>
-                  <th className="text-start p-3">الفرع</th>
-                  <th className="text-start p-3">الوظيفة</th>
-                  <th className="text-start p-3">الدور</th>
-                  <th className="text-start p-3">المحطة</th>
-                  <th className="text-start p-3">تاريخ التعيين</th>
-                  <th className="text-start p-3">الحالة</th>
+                  <th className="text-start p-3">{t("login.fullName")}</th>
+                  <th className="text-start p-3">{t("common.branch")}</th>
+                  <th className="text-start p-3">{t("common.role")}</th>
+                  <th className="text-start p-3">{t("common.role")}</th>
+                  <th className="text-start p-3">{t("stage.received")}</th>
+                  <th className="text-start p-3">{t("staff.hireDate")}</th>
+                  <th className="text-start p-3">{t("common.status")}</th>
                   <th className="p-3 w-20"></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">{t("common.noRows")}</td></tr>
                 )}
                 {filtered.map((e) => (
                   <tr key={e.id} className="border-t hover:bg-muted/30">
                     <td className="p-3 font-medium">{e.full_name}</td>
                     <td className="p-3 text-xs font-bold text-teal-600">{e.branches?.name ?? "—"}</td>
                     <td className="p-3">{e.job_title}</td>
-                    <td className="p-3">{e.role ? <Badge variant="secondary">{ROLE_AR[e.role]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</td>
-                    <td className="p-3 text-muted-foreground text-xs">{e.station ? stationAr(e.station) : "—"}</td>
+                    <td className="p-3">{e.role ? <Badge variant="secondary">{t("role." + e.role)}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</td>
+                    <td className="p-3 text-muted-foreground text-xs">{e.station ? t("stage." + e.station) : "—"}</td>
                     <td className="p-3 text-xs">{fmtDate(e.hire_date)}</td>
-                    <td className="p-3">{e.is_active ? <Badge className="bg-emerald-600">نشط</Badge> : <Badge variant="outline">موقوف</Badge>}</td>
+                    <td className="p-3">{e.is_active ? <Badge className="bg-emerald-600">{t("staff.active")}</Badge> : <Badge variant="outline">{t("staff.inactive")}</Badge>}</td>
                     <td className="p-3">
                       <Button asChild size="sm" variant="ghost">
                         <Link to="/staff/$id" params={{ id: e.id }}><UserCog className="w-4 h-4" /></Link>
@@ -175,9 +172,4 @@ function StaffListPage() {
       )}
     </div>
   );
-}
-
-function stationAr(s: string) {
-  const map: Record<string, string> = { reception: "الاستلام", cleaning: "التنظيف", ironing: "الكي", packing: "التغليف", delivery: "التسليم" };
-  return map[s] ?? "—";
 }

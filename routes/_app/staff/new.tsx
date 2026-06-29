@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, ArrowRight } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/new")({
   component: NewStaffPage,
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_app/staff/new")({
 
 function NewStaffPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const nav = useNavigate();
   const isOwner = hasRole("owner");
 
@@ -54,7 +56,7 @@ function NewStaffPage() {
   }, [tenantId]);
 
   if (!isOwner) {
-    return <Card className="p-8 text-center text-muted-foreground">هذه الصفحة متاحة للمالك فقط.</Card>;
+    return <Card className="p-8 text-center text-muted-foreground">{t("common.noRole")}</Card>;
   }
 
   async function submit() {
@@ -84,58 +86,58 @@ function NewStaffPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-3xl">
+    <div className="space-y-4 max-w-3xl" dir={dir}>
       <div className="flex items-center gap-2">
         <Button asChild variant="ghost" size="sm"><Link to="/staff"><ArrowRight className="w-4 h-4" /></Link></Button>
-        <h1 className="text-2xl font-bold">موظف جديد</h1>
+        <h1 className="text-2xl font-bold">{t("nav./staff/new")}</h1>
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">المعلومات الأساسية</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.basicInfo")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <Field label="الاسم الكامل *"><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
-          <Field label="الفرع *">
+          <Field label={t("login.fullName")}><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
+          <Field label={t("common.branch")}>
             <Select value={form.branch_id} onValueChange={(v) => setForm({ ...form, branch_id: v })}>
-              <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
               <SelectContent>
                 {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>
-          <Field label="الوظيفة *" hint="مثال: كوّاء، مندوب، محاسب">
+          <Field label={t("common.role")} hint="e.g. Ironer, Courier, Accountant">
             <Input value={form.job_title} onChange={(e) => setForm({ ...form, job_title: e.target.value })} />
           </Field>
-          <Field label="رقم الهاتف"><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-          <Field label="الإيميل"><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
-          <Field label="تاريخ التعيين"><Input type="date" value={form.hire_date} onChange={(e) => setForm({ ...form, hire_date: e.target.value })} /></Field>
+          <Field label={t("common.phone", "Phone")}><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+          <Field label={t("login.email")}><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
+          <Field label={t("staff.hireDate")}><Input type="date" value={form.hire_date} onChange={(e) => setForm({ ...form, hire_date: e.target.value })} /></Field>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">الدور والمحطة</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.roleAndStation")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <Field label="دور النظام" hint="فقط للموظفين الذين سيدخلون النظام">
+          <Field label={t("common.role")}>
             <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">بدون (موظف عادي)</SelectItem>
-                <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
-                <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
-                <SelectItem value="courier">مندوب</SelectItem>
-                <SelectItem value="owner">مالك</SelectItem>
+                <SelectItem value="none">{t("common.noRole")}</SelectItem>
+                <SelectItem value="cs_manager">{t("role.cs_manager")}</SelectItem>
+                <SelectItem value="ops_manager">{t("role.ops_manager")}</SelectItem>
+                <SelectItem value="courier">{t("role.courier")}</SelectItem>
+                <SelectItem value="owner">{t("role.owner")}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
-          <Field label="المحطة" hint="للفنيين فقط">
+          <Field label={t("stage.received")}>
             <Select value={form.station} onValueChange={(v) => setForm({ ...form, station: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">—</SelectItem>
-                <SelectItem value="reception">الاستلام</SelectItem>
-                <SelectItem value="cleaning">التنظيف</SelectItem>
-                <SelectItem value="ironing">الكي</SelectItem>
-                <SelectItem value="packing">التغليف</SelectItem>
-                <SelectItem value="delivery">التسليم</SelectItem>
+                <SelectItem value="reception">{t("stage.received")}ist</SelectItem>
+                <SelectItem value="cleaning">{t("stage.cleaning")}</SelectItem>
+                <SelectItem value="ironing">{t("stage.ironing")}</SelectItem>
+                <SelectItem value="packing">{t("stage.packing")}</SelectItem>
+                <SelectItem value="delivery">{t("stage.ready")}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
@@ -143,23 +145,23 @@ function NewStaffPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">الراتب والعمولة</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.salaryAndCommission")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <Field label="الراتب الشهري"><Input type="number" value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} /></Field>
-          <Field label="العمولة %"><Input type="number" value={form.commission_percent} onChange={(e) => setForm({ ...form, commission_percent: e.target.value })} /></Field>
+          <Field label={t("staff.monthlySalary")}><Input type="number" value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} /></Field>
+          <Field label={t("staff.commission")}><Input type="number" value={form.commission_percent} onChange={(e) => setForm({ ...form, commission_percent: e.target.value })} /></Field>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="pt-6">
-          <Field label="ملاحظات"><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
+          <Field label={t("order.notes")}><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" asChild><Link to="/staff">إلغاء</Link></Button>
+        <Button variant="outline" asChild><Link to="/staff">{t("common.cancel")}</Link></Button>
         <Button onClick={submit} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ الموظف"}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("staff.saveStaff")}
         </Button>
       </div>
 
