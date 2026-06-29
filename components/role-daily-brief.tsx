@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ClipboardCopy, Sparkles } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 type Role = "owner" | "ops" | "cs";
 
@@ -34,6 +35,7 @@ function line(title: string, value: string | number, warn = false) {
 
 export function RoleDailyBrief({ role }: { role: Role }) {
   const [data, setData] = useState<Brief | null>(null);
+  const { t, dir } = useI18n();
 
   async function load() {
     const start = new Date(); start.setHours(0, 0, 0, 0);
@@ -79,32 +81,32 @@ export function RoleDailyBrief({ role }: { role: Role }) {
   const rows = useMemo(() => {
     if (!data) return [];
     if (role === "owner") return [
-      line("إيراد اليوم", fmtMoney(data.revenueToday)),
-      line("مصروفات اليوم", fmtMoney(data.expensesToday), data.expensesToday > data.revenueToday),
-      line("صافي مبدئي", fmtMoney(data.revenueToday - data.expensesToday), data.revenueToday - data.expensesToday < 0),
-      line("داخل الخزنة", fmtMoney(data.cashIn)),
-      line("خارج الخزنة", fmtMoney(data.cashOut)),
-      line("طلبات تحتاج متابعة", data.active, data.active > 0),
+      line(t("brief.revenueToday"), fmtMoney(data.revenueToday, t("common.egp"))),
+      line(t("brief.expensesToday"), fmtMoney(data.expensesToday, t("common.egp")), data.expensesToday > data.revenueToday),
+      line(t("brief.netProfit"), fmtMoney(data.revenueToday - data.expensesToday, t("common.egp")), data.revenueToday - data.expensesToday < 0),
+      line(t("brief.cashIn"), fmtMoney(data.cashIn, t("common.egp"))),
+      line(t("brief.cashOut"), fmtMoney(data.cashOut, t("common.egp"))),
+      line(t("brief.activeOrders"), data.active, data.active > 0),
     ];
     if (role === "ops") return [
-      line("طلبات اليوم", data.ordersToday),
-      line("طلبات متأخرة", data.late, data.late > 0),
-      line("طلبات جاهزة", data.ready),
-      line("استلامات مفتوحة", data.pickupsOpen, data.pickupsOpen > 0),
-      line("مرتجعات غسيل", data.reclean, data.reclean > 0),
-      line("مشاكل جودة", data.qcIssues, data.qcIssues > 0),
+      line(t("brief.ordersToday"), data.ordersToday),
+      line(t("brief.lateOrders"), data.late, data.late > 0),
+      line(t("brief.readyOrders"), data.ready),
+      line(t("brief.pickupsOpen"), data.pickupsOpen, data.pickupsOpen > 0),
+      line(t("brief.reclean"), data.reclean, data.reclean > 0),
+      line(t("brief.qcIssues"), data.qcIssues, data.qcIssues > 0),
     ];
     return [
-      line("طلبات اليوم", data.ordersToday),
-      line("جاهز غير مدفوع", data.unpaidReady, data.unpaidReady > 0),
-      line("فواتير تحتاج اعتماد", data.invoicesNeedReview, data.invoicesNeedReview > 0),
-      line("إيصالات تحتاج مراجعة", data.proofsNeedReview, data.proofsNeedReview > 0),
-      line("رسائل جاهزة", data.queuedMessages, data.queuedMessages > 0),
-      line("طلبات متأخرة", data.late, data.late > 0),
+      line(t("brief.ordersToday"), data.ordersToday),
+      line(t("brief.unpaidReady"), data.unpaidReady, data.unpaidReady > 0),
+      line(t("brief.invoicesNeedReview"), data.invoicesNeedReview, data.invoicesNeedReview > 0),
+      line(t("brief.proofsNeedReview"), data.proofsNeedReview, data.proofsNeedReview > 0),
+      line(t("brief.queuedMessages"), data.queuedMessages, data.queuedMessages > 0),
+      line(t("brief.lateOrders"), data.late, data.late > 0),
     ];
-  }, [data, role]);
+  }, [data, role, t]);
 
-  const title = role === "owner" ? "تقرير المالك اليومي" : role === "ops" ? "تقرير التشغيل اليومي" : "تقرير خدمة العملاء اليومي";
+  const title = role === "owner" ? t("brief.ownerTitle") : role === "ops" ? t("brief.opsTitle") : t("brief.csTitle");
   const notificationAudience = role === "owner" ? "owner" : role === "ops" ? "ops" : "cs";
   const link = role === "owner" ? "/dashboard" : role === "ops" ? "/ops" : "/cs";
 
@@ -132,11 +134,11 @@ export function RoleDailyBrief({ role }: { role: Role }) {
   }
 
   if (!data) return null;
-  return <Card className="border-teal-200 bg-gradient-to-br from-white to-teal-50">
-    <CardHeader><CardTitle className="text-base flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-600" />{title}</span><span className="flex gap-2"><Button size="sm" variant="outline" onClick={copySummary}><ClipboardCopy className="w-3 h-3 ms-1" />نسخ</Button><Button size="sm" onClick={saveToNotifications}>حفظ كتنبيه</Button></span></CardTitle></CardHeader>
+  return <Card className="border-teal-200 bg-gradient-to-br from-white to-teal-50" dir={dir}>
+    <CardHeader><CardTitle className="text-base flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-600" />{title}</span><span className="flex gap-2"><Button size="sm" variant="outline" onClick={copySummary}><ClipboardCopy className="w-3 h-3 ms-1" />{t("brief.copy")}</Button><Button size="sm" onClick={saveToNotifications}>{t("brief.saveAlert")}</Button></span></CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-3 gap-2">
-      {rows.map((r) => <div key={r.title} className={`rounded-xl border p-3 bg-white ${r.warn ? "border-amber-200" : ""}`}><div className="text-xs text-muted-foreground">{r.title}</div><div className="font-black mt-1">{r.value}</div>{r.warn && <Badge variant="destructive" className="mt-2">راجع</Badge>}</div>)}
-      <Link to={link as any} className="md:col-span-3 text-xs text-teal-700 underline font-bold">افتح لوحة الدور</Link>
+      {rows.map((r) => <div key={r.title} className={`rounded-xl border p-3 bg-white ${r.warn ? "border-amber-200" : ""}`}><div className="text-xs text-muted-foreground">{r.title}</div><div className="font-black mt-1">{r.value}</div>{r.warn && <Badge variant="destructive" className="mt-2">{t("brief.review")}</Badge>}</div>)}
+      <Link to={link as any} className="md:col-span-3 text-xs text-teal-700 underline font-bold">{t("brief.openDashboard")}</Link>
     </CardContent>
   </Card>;
 }
