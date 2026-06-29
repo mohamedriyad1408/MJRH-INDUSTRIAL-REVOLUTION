@@ -4,163 +4,128 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtMoney } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Save, Banknote, CheckCircle2 } from "lucide-react";
+import { Loader2, Banknote, CheckCircle2, Save } from "lucide-react";
+import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/ironing-payroll")({
   head: () => ({ meta: [{ title: "رواتب فنيي الكي" }] }),
-  component: IroningPayroll,
+  component: IroningPayrollPage,
 });
 
-type Row = {
-  employee_id: string; full_name: string;
-  total_ironing: number; orders_count: number;
-  percentage: number; rate_id: string | null;
-};
-
-function IroningPayroll() {
-  const { hasRole } = useAuth();
-  const canEdit = hasRole("owner");
-  const [rows, setRows] = useState<Row[]>([]);
+function IroningPayrollPage() {
+  const { t, dir } = useI18n();
+  const { hasRole, tenantId } = useAuth();
+  const canEdit = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [from, setFrom] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+  const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
   const [cashAccountId, setCashAccountId] = useState("");
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
-  const [from, setFrom] = useState(() => {
-    const d = new Date(); d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
-  });
-  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
 
   async function load() {
     setLoading(true);
-    // Get all ironing-station employees
-    const { data: emps } = await supabase.from("employees")
-      .select("id, full_name").eq("is_active", true).eq("station", "ironing");
-    // Low-cost piece-level ironing payroll: count/value comes from numbered pieces assigned to each ironing tech.
-    const { data: units } = await (supabase as any).from("service_units")
-      .select("assigned_ironing_employee_id,order_id,line_value,unit_price,ironing_completed_at")
-      .not("assigned_ironing_employee_id", "is", null)
-      .gte("ironing_completed_at", from + "T00:00:00")
-      .lte("ironing_completed_at", to + "T23:59:59");
-    const [{ data: rates }, { data: cash }, { data: paidRows }] = await Promise.all([
-      supabase.from("ironing_rates").select("*"),
-      (supabase as any).rpc("ensure_default_cash_account").then(async () => (supabase as any).from("cash_accounts").select("id,name,current_balance").eq("is_active", true).order("created_at")),
-      (supabase as any).from("ironing_daily_payouts").select("*,employees(full_name)").gte("payout_date", from).lte("payout_date", to).order("payout_date", { ascending: false }),
+    const [cRes, pRes, rRes] = await Promise.all([
+      (supabase as any).from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
+      (supabase as any).from("daily_ironing_payouts").select("*,employees(full_name)").eq("tenant_id", tenantId).gte("payout_date", from).lte("payout_date", to).order("payout_date", { ascending: false }),
+      (supabase as any).from("v_ironing_technician_performance").select("*").eq("tenant_id", tenantId),
     ]);
-    setCashAccounts(cash ?? []);
-    setCashAccountId((x) => x || cash?.[0]?.id || "");
-    setPayouts(paidRows ?? []);
-
-    const result: Row[] = (emps ?? []).map((e: any) => {
-      const myUnits = ((units ?? []) as any[]).filter((u) => u.assigned_ironing_employee_id === e.id);
-      const myOrderIds = new Set(myUnits.map((u) => u.order_id));
-      const total = myUnits.reduce((s, u) => s + Number(u.line_value ?? u.unit_price ?? 0), 0);
-      const rate = (rates ?? []).find((r: any) => r.employee_id === e.id);
-      return {
-        employee_id: e.id, full_name: e.full_name,
-        total_ironing: total, orders_count: myOrderIds.size,
-        percentage: rate ? Number(rate.percentage) : 0,
-        rate_id: rate?.id ?? null,
-      };
-    });
-    setRows(result);
+    if (cRes.error) toast.error(cRes.error.message);
+    setCashAccounts(cRes.data ?? []);
+    setPayouts(pRes.data ?? []);
+    setRows(rRes.data ?? []);
+    if (cRes.data?.length && !cashAccountId) setCashAccountId(cRes.data[0].id);
     setLoading(false);
   }
-  useEffect(() => { load(); }, [from, to]);
+  useEffect(() => { load(); }, [tenantId, from, to]);
 
   async function payToday() {
-    if (!cashAccountId) return toast.error("اختار الخزنة التي سيتم الصرف منها");
+    if (!cashAccountId) return toast.error(t("ironingPayroll.errCash", "اختار الخزنة التي سيتم الصرف منها"));
     setPaying(true);
-    const { data, error } = await (supabase as any).rpc("pay_daily_ironing_workers", { _work_date: to, _cash_account_id: cashAccountId });
+    const { data, error } = await (supabase as any).rpc("submit_daily_ironing_payout", {
+      _tenant_id: tenantId, _payout_date: to, _cash_account_id: cashAccountId,
+    });
     setPaying(false);
-    if (error) return toast.error(error.message);
-    toast.success(`تم صرف ${Number(data?.total_amount ?? 0).toLocaleString("en-US")} جنيه لعدد ${data?.workers_count ?? 0} فني`);
-    load();
+    if (error) toast.error(error.message); else {
+      toast.success(interpolate(t("ironingPayroll.toastPaid", "تم صرف {amount} لعدد {count} فني"), { amount: fmtMoney(data?.total_amount ?? 0, t("common.egp")), count: data?.workers_count ?? 0 }));
+      load();
+    }
   }
 
-  async function saveRate(r: Row, pct: number) {
-    const payload = { employee_id: r.employee_id, percentage: pct, effective_from: new Date().toISOString().slice(0, 10) };
-    const { error } = r.rate_id
-      ? await supabase.from("ironing_rates").update({ percentage: pct }).eq("id", r.rate_id)
-      : await supabase.from("ironing_rates").insert(payload);
-    if (error) toast.error(error.message); else { toast.success("تم الحفظ"); load(); }
+  async function savePercentage(id: string, percentage: number) {
+    const { error } = await (supabase as any).from("employees").update({ commission_percent: percentage }).eq("id", id);
+    if (error) toast.error(error.message); else { toast.success(t("ironingPayroll.toastSaved", "تم الحفظ")); load(); }
   }
 
-  return (
-    <div className="space-y-4">
+  const curr = t("common.egp");
+
+  return <div className="space-y-5" dir={dir}>
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold">رواتب فنيي الكي</h1>
-        <p className="text-sm text-muted-foreground">حساب فترة حسب القطع المسندة لكل فني كي بعد التوزيع العادل</p>
+        <h1 className="text-2xl font-bold">{t("ironingPayroll.title", "رواتب فنيي الكي")}</h1>
+        <p className="text-sm text-muted-foreground">{t("ironingPayroll.subtitle", "حساب فترة حسب القطع المسندة لكل فني كي بعد التوزيع العادل")}</p>
       </div>
-      <Card><CardContent className="p-4 flex flex-wrap gap-3 items-end">
-        <div><Label className="text-xs">من</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
-        <div><Label className="text-xs">إلى</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div className="min-w-56"><Label className="text-xs">الخزنة</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={cashAccountId} onChange={(e) => setCashAccountId(e.target.value)}>{cashAccounts.map((c) => <option key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance)}</option>)}</select></div>
-        {canEdit && <Button onClick={payToday} disabled={paying} className="bg-emerald-600 hover:bg-emerald-700">{paying ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Banknote className="w-4 h-4 ms-1" />} صرف يومية تاريخ {to}</Button>}
-      </CardContent></Card>
+      <div className="flex flex-wrap items-end gap-3 bg-card p-3 rounded-2xl border shadow-sm">
+        <div><Label className="text-xs">{t("ironingPayroll.from", "من")}</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
+        <div><Label className="text-xs">{t("ironingPayroll.to", "إلى")}</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
+        <div className="min-w-56"><Label className="text-xs">{t("ironingPayroll.cashLabel", "الخزنة")}</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={cashAccountId} onChange={(e) => setCashAccountId(e.target.value)}>{cashAccounts.map((c) => <option key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance, curr)}</option>)}</select></div>
+        {canEdit && <Button onClick={payToday} disabled={paying} className="bg-emerald-600 hover:bg-emerald-700">{paying ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Banknote className="w-4 h-4 ms-1" />} {t("ironingPayroll.payTodayBtn", "صرف يومية تاريخ")} {to}</Button>}
+      </div>
+    </div>
 
-      {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
-        <Card><CardContent className="p-0">
+    {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid lg:grid-cols-[1fr_400px] gap-4">
+      <Card>
+        <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr>
-                <th className="text-start p-3">الفني</th>
-                <th className="text-end p-3">عدد الطلبات</th>
-                <th className="text-end p-3">إجمالي قيمة القطع المسندة</th>
-                <th className="text-end p-3">نسبة التشغيل %</th>
-                <th className="text-end p-3">الراتب المستحق</th>
-                {canEdit && <th className="p-3 w-24"></th>}
+                <th className="text-start p-3">{t("ironingPayroll.colStaff", "الفني")}</th>
+                <th className="text-end p-3">{t("ironingPayroll.colOrders", "عدد الطلبات")}</th>
+                <th className="text-end p-3">{t("ironingPayroll.colValue", "إجمالي قيمة القطع المسندة")}</th>
+                <th className="text-end p-3">{t("ironingPayroll.colPercent", "نسبة التشغيل %")}</th>
+                <th className="text-end p-3">{t("ironingPayroll.colNet", "الراتب المستحق")}</th>
+                {canEdit && <th className="p-3"></th>}
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && <tr><td colSpan={canEdit ? 6 : 5} className="p-8 text-center text-muted-foreground">لا يوجد فنيو كي</td></tr>}
-              {rows.map((r) => {
-                const salary = r.total_ironing * (r.percentage / 100);
-                return (
-                  <RateRow key={r.employee_id} r={r} salary={salary} canEdit={canEdit} onSave={saveRate} />
-                );
-              })}
+              {rows.length === 0 && <tr><td colSpan={canEdit ? 6 : 5} className="p-8 text-center text-muted-foreground">{t("ironingPayroll.empty", "لا يوجد فنيو كي")}</td></tr>}
+              {rows.map((r) => <TrRow key={r.employee_id} r={r} canEdit={canEdit} onSave={savePercentage} curr={curr} t={t} />)}
             </tbody>
           </table>
-        </CardContent></Card>
-      )}
-
-      <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-600" />سجل صرف اليوميات</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          {payouts.map((p) => <div key={p.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{p.employees?.full_name}</b><div className="text-xs text-muted-foreground">{p.payout_date} · {p.pieces_count} قطعة · نسبة {p.percentage}%</div></div><div className="font-black text-emerald-700">{fmtMoney(p.amount)}</div></div>)}
-          {!payouts.length && <div className="p-6 text-center text-muted-foreground">لا توجد يوميات مصروفة في الفترة المختارة</div>}
         </CardContent>
       </Card>
-    </div>
-  );
+
+      <Card className="h-fit">
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-600" />{t("ironingPayroll.payoutsTitle", "سجل صرف اليوميات")}</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {payouts.map((p) => <div key={p.id} className="flex items-center justify-between rounded-xl border p-3 text-sm"><div><b>{p.employees?.full_name}</b><div className="text-xs text-muted-foreground">{p.payout_date} · {interpolate(t("ironingPayroll.payoutDetail", "{pieces} قطعة · نسبة {percent}%"), { pieces: p.pieces_count, percent: p.percentage })}</div></div><div className="font-black text-emerald-700">{fmtMoney(p.amount, curr)}</div></div>)}
+          {!payouts.length && <div className="p-6 text-center text-muted-foreground">{t("ironingPayroll.payoutsEmpty", "لا توجد يوميات مصروفة في الفترة المختارة")}</div>}
+        </CardContent>
+      </Card>
+    </div>}
+  </div>;
 }
 
-function RateRow({ r, salary, canEdit, onSave }: { r: Row; salary: number; canEdit: boolean; onSave: (r: Row, pct: number) => void }) {
-  const [pct, setPct] = useState(String(r.percentage));
-  return (
-    <tr className="border-t">
-      <td className="p-3 font-medium">{r.full_name}</td>
-      <td className="p-3 text-end">{r.orders_count}</td>
-      <td className="p-3 text-end">{fmtMoney(r.total_ironing)}</td>
-      <td className="p-3 text-end">
-        {canEdit
-          ? <Input type="number" value={pct} onChange={(e) => setPct(e.target.value)} className="w-20 h-8 inline-block" />
-          : `${r.percentage}%`}
-      </td>
-      <td className="p-3 text-end font-bold text-emerald-600">{fmtMoney(salary)}</td>
-      {canEdit && (
-        <td className="p-3">
-          <Button size="sm" variant="outline" onClick={() => onSave(r, Number(pct))}>
-            <Save className="w-3 h-3 ms-1" /> حفظ
-          </Button>
-        </td>
-      )}
-    </tr>
-  );
+function TrRow({ r, canEdit, onSave, curr, t }: { r: any; canEdit: boolean; onSave: (id: string, p: number) => void; curr: string; t: any }) {
+  const [val, setVal] = useState(String(r.commission_percent ?? 50));
+  return <tr className="border-t">
+    <td className="p-3 font-bold">{r.full_name}</td>
+    <td className="p-3 text-end">{r.orders_count}</td>
+    <td className="p-3 text-end font-bold">{fmtMoney(r.total_assigned_value, curr)}</td>
+    <td className="p-3 text-end">
+      {canEdit ? <Input type="number" value={val} onChange={(e) => setVal(e.target.value)} className="w-20 ms-auto text-end h-9" /> : `${r.commission_percent}%`}
+    </td>
+    <td className="p-3 text-end font-black text-emerald-700">{fmtMoney((Number(r.total_assigned_value) * Number(val)) / 100, curr)}</td>
+    {canEdit && <td className="p-3 text-end">
+      <Button size="sm" variant="outline" onClick={() => onSave(r.employee_id, Number(val))}>
+        <Save className="w-3 h-3 ms-1" /> {t("ironingPayroll.save", "حفظ")}
+      </Button>
+    </td>}
+  </tr>;
 }

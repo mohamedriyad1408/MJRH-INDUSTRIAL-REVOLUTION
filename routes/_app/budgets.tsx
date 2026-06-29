@@ -9,323 +9,182 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Plus, TrendingUp, TrendingDown, Target, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Target, Plus, Loader2, TrendingUp, TrendingDown, Save } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/budgets")({
   head: () => ({ meta: [{ title: "الميزانيات - MJRH" }] }),
   component: BudgetsPage,
 });
 
-type Budget = {
-  id: string; period_label: string; period_type: "monthly" | "weekly";
-  year: number; month?: number; week?: number;
-  expected_revenue: number; expected_expenses: number;
-  actual_revenue?: number; actual_expenses?: number;
-  created_at: string;
-};
-
-type BudgetItem = { id: string; budget_id: string; category: string; expected: number; actual?: number; notes?: string };
-
-const EXPENSE_CATS = [
-  { value: "salaries", label: "الرواتب" },
-  { value: "rent", label: "الإيجار" },
-  { value: "electricity", label: "الكهرباء" },
-  { value: "water", label: "المياه" },
-  { value: "supplies", label: "الخامات والمستلزمات" },
-  { value: "maintenance", label: "الصيانة" },
-  { value: "marketing", label: "التسويق" },
-  { value: "other", label: "أخرى" },
-];
+type B = { id: string; period_type: string; period_label: string; expected_revenue: number; expected_expenses: number; actual_revenue: number; actual_expenses: number; expense_details: Record<string, number> };
 
 function BudgetsPage() {
+  const { t, dir } = useI18n();
   const { hasRole, tenantId } = useAuth();
   const isOwner = hasRole("owner");
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [selected, setSelected] = useState<Budget | null>(null);
-  const [items, setItems] = useState<BudgetItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newOpen, setNewOpen] = useState(false);
+  const [budgets, setBudgets] = useState<B[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
-  // Load actual revenue/expenses for selected budget
-  async function enrichBudget(b: Budget): Promise<Budget> {
-    const [y, m] = [b.year, b.month ?? 1];
-    const from = new Date(y, (m ?? 1) - 1, 1).toISOString();
-    const to = new Date(y, (m ?? 1), 0, 23, 59, 59).toISOString();
-
-    const [{ data: orders }, { data: exps }] = await Promise.all([
-      supabase.from("orders").select("total").neq("status", "cancelled").gte("created_at", from).lte("created_at", to),
-      supabase.from("expenses").select("amount").gte("spent_at", from).lte("spent_at", to),
-    ]);
-    return {
-      ...b,
-      actual_revenue: (orders ?? []).reduce((s, o: any) => s + Number(o.total), 0),
-      actual_expenses: (exps ?? []).reduce((s, e: any) => s + Number(e.amount), 0),
-    };
-  }
+  const [label, setLabel] = useState("");
+  const [periodType, setPeriodType] = useState("monthly");
+  const [revenue, setRevenue] = useState("");
+  const [cats, setCats] = useState<Record<string, string>>({ salaries: "", rent: "", electricity: "", water: "", supplies: "", maintenance: "", marketing: "", other: "" });
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
-    try {
-      const { data, error } = await  (supabase as any).from("budgets").select("*").order("created_at", { ascending: false });
-      if (error) { toast.error(error.message); setBudgets([]); return; }
-      const raw = (data ?? []) as Budget[];
-      const enriched = await Promise.all(raw.map((b) => enrichBudget(b).catch(() => b)));
-      setBudgets(enriched);
-      if (enriched.length && !selected) setSelected(enriched[0]);
-    } finally {
-      setLoading(false);
-    }
+    const { data, error } = await (supabase as any).from("v_operating_budgets").select("*").eq("tenant_id", tenantId).order("period_label", { ascending: false });
+    if (error) toast.error(error.message);
+    setBudgets(data ?? []);
+    if (data?.length && !selectedId) setSelectedId(data[0].id);
+    setLoading(false);
   }
 
-  async function loadItems(budgetId: string) {
-    const { data } = await  (supabase as any).from("budget_items").select("*").eq("budget_id", budgetId);
-    setItems((data ?? []) as BudgetItem[]);
+  useEffect(() => { if (isOwner) load(); }, [isOwner, tenantId]);
+
+  async function save() {
+    if (!label || !revenue) { toast.error(t("budgets.errData", "أدخل الاسم والإيراد المستهدف")); return; }
+    setSaving(true);
+    let totalExp = 0;
+    const details: Record<string, number> = {};
+    Object.entries(cats).forEach(([k, v]) => { const n = Number(v || 0); details[k] = n; totalExp += n; });
+
+    const { error } = await (supabase as any).from("operating_budgets").insert({
+      tenant_id: tenantId, period_type: periodType, period_label: label, expected_revenue: Number(revenue), expected_expenses: totalExp, expense_details: details,
+    });
+    setSaving(false);
+    if (error) toast.error(error.message); else { toast.success(t("budgets.toastSaved", "تم حفظ الهدف")); setOpen(false); load(); }
   }
 
-  useEffect(() => { load(); }, []);
-  useEffect(() => { if (selected) loadItems(selected.id); }, [selected]);
+  if (!isOwner) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("budgets.ownerOnly", "للمالك فقط")}</CardContent></Card>;
 
-  const variance = (expected: number, actual: number) => actual - expected;
-  const varPct = (expected: number, actual: number) => expected === 0 ? 0 : ((actual - expected) / expected) * 100;
+  const selected = budgets.find((b) => b.id === selectedId) || budgets[0];
+  const curr = t("common.egp");
 
-  function VarBadge({ exp, act, invert = false }: { exp: number; act: number; invert?: boolean }) {
-    const v = variance(exp, act);
-    const good = invert ? v < 0 : v >= 0;
-    return (
-      <Badge className={`text-xs ${good ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-        {good ? <CheckCircle2 className="w-3 h-3 ms-0.5" /> : <AlertTriangle className="w-3 h-3 ms-0.5" />}
-        {v >= 0 ? "+" : ""}{fmtMoney(v)} ({varPct(exp, act).toFixed(1)}%)
-      </Badge>
-    );
-  }
-
-  function ProgressBar({ value, max, color }: { value: number; max: number; color: "green" | "red" }) {
-    const pct = max === 0 ? 0 : Math.min(100, (value / max) * 100);
-    const over = pct >= 100;
-    return (
-      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all ${over ? "bg-red-500" : color === "green" ? "bg-emerald-500" : "bg-amber-500"}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    );
-  }
-
-  if (!isOwner) return <Card><CardContent className="p-10 text-center text-muted-foreground">للمالك فقط</CardContent></Card>;
+  const CATS = [
+    { value: "salaries", label: t("budgets.cat.salaries", "الرواتب") },
+    { value: "rent", label: t("budgets.cat.rent", "الإيجار") },
+    { value: "electricity", label: t("budgets.cat.electricity", "الكهرباء") },
+    { value: "water", label: t("budgets.cat.water", "المياه") },
+    { value: "supplies", label: t("budgets.cat.supplies", "الخامات والمستلزمات") },
+    { value: "maintenance", label: t("budgets.cat.maintenance", "الصيانة") },
+    { value: "marketing", label: t("budgets.cat.marketing", "التسويق") },
+    { value: "other", label: t("budgets.cat.other", "أخرى") },
+  ];
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5" dir={dir}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Target className="w-6 h-6 text-teal-600" />الهدف الشهري</h1>
-          <p className="text-sm text-muted-foreground">اكتب المتوقع تكسب كام وتصرف كام، والسيستم يقارن بالفعلي تلقائيًا.</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Target className="w-6 h-6 text-teal-600" />{t("budgets.title", "الهدف الشهري")}</h1>
+          <p className="text-sm text-muted-foreground">{t("budgets.subtitle", "اكتب المتوقع تكسب كام وتصرف كام، والسيستم يقارن بالفعلي تلقائيًا.")}</p>
         </div>
-        <NewBudgetDialog open={newOpen} setOpen={setNewOpen} onCreated={load} tenantId={tenantId} />
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" /> {t("budgets.title", "الهدف الشهري")}</Button></DialogTrigger>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{t("budgets.title", "الهدف الشهري")}</DialogTitle></DialogHeader>
+            <div className="space-y-3 py-2">
+              <div><Label>{t("budgets.title", "الاسم")}</Label><Input placeholder="2026-06" value={label} onChange={(e) => setLabel(e.target.value)} /></div>
+              <div><Label>{t("budgets.periodsHeader", "الفترة")}</Label><Select value={periodType} onValueChange={setPeriodType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">{t("budgets.periodMonthly", "شهري")}</SelectItem><SelectItem value="weekly">{t("budgets.periodWeekly", "أسبوعي")}</SelectItem></SelectContent></Select></div>
+              <div><Label>{t("budgets.revLabel", "الإيرادات المستهدفة")}</Label><Input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} /></div>
+              <div className="text-xs font-bold pt-2">{t("budgets.expLabel", "المصروفات المخططة")}</div>
+              {CATS.map((c) => <div key={c.value} className="grid grid-cols-2 gap-2 items-center"><Label className="text-xs">{c.label}</Label><Input type="number" placeholder="0" value={cats[c.value]} onChange={(e) => setCats({ ...cats, [c.value]: e.target.value })} /></div>)}
+            </div>
+            <DialogFooter><Button onClick={save} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> {t("common.save", "حفظ")}</>}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>
-      ) : budgets.length === 0 ? (
-        <Card><CardContent className="p-10 text-center">
-          <Target className="w-12 h-12 text-teal-300 mx-auto mb-3" />
-          <p className="font-bold text-lg">لا يوجد هدف شهري بعد</p>
-          <p className="text-sm text-muted-foreground mt-1">اضغط هدف شهري جديد واكتب المتوقع ببساطة</p>
-        </CardContent></Card>
+      {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : !budgets.length ? (
+        <Card><CardContent className="p-12 text-center text-muted-foreground"><p className="font-bold text-lg">{t("budgets.emptyTitle", "لا يوجد هدف شهري بعد")}</p><p className="text-sm text-muted-foreground mt-1">{t("budgets.emptySubtitle", "اضغط هدف شهري جديد واكتب المتوقع ببساطة")}</p></CardContent></Card>
       ) : (
-        <div className="grid lg:grid-cols-3 gap-4">
-          {/* Budget list */}
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">الفترات</p>
-            {budgets.map((b) => (
-              <div key={b.id} onClick={() => setSelected(b)}
-                className={`border rounded-xl p-3 cursor-pointer transition-all ${selected?.id === b.id ? "border-teal-500 bg-teal-50 shadow-sm" : "bg-white hover:shadow-sm"}`}>
-                <div className="font-bold text-sm">{b.period_label}</div>
-                <div className="text-xs text-muted-foreground">{b.period_type === "monthly" ? "شهري" : "أسبوعي"}</div>
-                {b.actual_revenue !== undefined && (
-                  <div className="mt-2">
-                    <ProgressBar value={b.actual_revenue} max={b.expected_revenue} color="green" />
-                    <div className="text-xs text-muted-foreground mt-1">{Math.round((b.actual_revenue / (b.expected_revenue || 1)) * 100)}% من الإيراد المستهدف</div>
+        <div className="grid lg:grid-cols-[280px_1fr] gap-5">
+          <Card className="h-fit">
+            <CardHeader className="py-3 px-4 border-b bg-muted/30">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t("budgets.periodsHeader", "الفترات")}</p>
+            </CardHeader>
+            <CardContent className="p-2 space-y-1">
+              {budgets.map((b) => (
+                <button key={b.id} onClick={() => setSelectedId(b.id)} className={`w-full text-start p-3 rounded-xl border transition-colors ${selected.id === b.id ? "bg-teal-50 border-teal-200 font-bold text-teal-950" : "bg-card hover:bg-muted/40"}`}>
+                  <div className="flex justify-between items-center"><span>{b.period_label}</span><span className="text-xs text-muted-foreground">{b.period_type === "monthly" ? t("budgets.periodMonthly", "شهري") : t("budgets.periodWeekly", "أسبوعي")}</span></div>
+                  <div className="text-xs text-muted-foreground mt-1">{Math.round((b.actual_revenue / (b.expected_revenue || 1)) * 100)}% {t("budgets.targetRevPercent", "من الإيراد المستهدف")}</div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-3 gap-3">
+              <Card>
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground font-bold">
+                    <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> {t("budgets.revLabel", "الإيرادات")}</span>
+                    <span>{Math.round((selected.actual_revenue / (selected.expected_revenue || 1)) * 100)}%</span>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Budget detail */}
-          {selected && (
-            <div className="lg:col-span-2 space-y-4">
-              <h2 className="font-bold text-lg">{selected.period_label}</h2>
-
-              {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3">
-                <Card className="border-emerald-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> الإيرادات
-                    </div>
-                    <div className="text-xl font-black text-emerald-700">{fmtMoney(selected.actual_revenue ?? 0)}</div>
-                    <div className="text-xs text-muted-foreground">مستهدف: {fmtMoney(selected.expected_revenue)}</div>
-                    <div className="mt-2"><ProgressBar value={selected.actual_revenue ?? 0} max={selected.expected_revenue} color="green" /></div>
-                    <div className="mt-1"><VarBadge exp={selected.expected_revenue} act={selected.actual_revenue ?? 0} /></div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-amber-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                      <TrendingDown className="w-3.5 h-3.5 text-amber-600" /> المصروفات
-                    </div>
-                    <div className="text-xl font-black text-amber-700">{fmtMoney(selected.actual_expenses ?? 0)}</div>
-                    <div className="text-xs text-muted-foreground">مخطط: {fmtMoney(selected.expected_expenses)}</div>
-                    <div className="mt-2"><ProgressBar value={selected.actual_expenses ?? 0} max={selected.expected_expenses} color="red" /></div>
-                    <div className="mt-1"><VarBadge exp={selected.expected_expenses} act={selected.actual_expenses ?? 0} invert /></div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Net profit */}
-              <Card className={`border-2 ${(selected.actual_revenue ?? 0) - (selected.actual_expenses ?? 0) >= 0 ? "border-emerald-300 bg-emerald-50" : "border-red-300 bg-red-50"}`}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-bold text-muted-foreground mb-1">صافي الربح الفعلي</div>
-                    <div className={`text-2xl font-black ${(selected.actual_revenue ?? 0) - (selected.actual_expenses ?? 0) >= 0 ? "text-emerald-700" : "text-red-700"}`}>
-                      {fmtMoney((selected.actual_revenue ?? 0) - (selected.actual_expenses ?? 0))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-muted-foreground">صافي مخطط</div>
-                    <div className="font-bold">{fmtMoney(selected.expected_revenue - selected.expected_expenses)}</div>
-                  </div>
+                  <div className="text-2xl font-bold text-emerald-700">{fmtMoney(selected.actual_revenue, curr)}</div>
+                  <div className="text-xs text-muted-foreground">{t("budgets.targetRev", "مستهدف:")} {fmtMoney(selected.expected_revenue, curr)}</div>
                 </CardContent>
               </Card>
 
-              {/* Budget items breakdown */}
-              {items.length > 0 && (
-                <Card>
-                  <CardHeader><CardTitle className="text-sm">تفصيل بنود الميزانية</CardTitle></CardHeader>
-                  <CardContent className="p-0">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/50 text-xs">
-                        <tr>
-                          <th className="text-start p-3">البند</th>
-                          <th className="text-end p-3">المخطط</th>
-                          <th className="text-end p-3">الفعلي</th>
-                          <th className="text-end p-3">الفرق</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item) => {
-                          const v = (item.actual ?? 0) - item.expected;
-                          const good = v <= 0;
-                          return (
-                            <tr key={item.id} className="border-t">
-                              <td className="p-3 font-medium">{EXPENSE_CATS.find((c) => c.value === item.category)?.label ?? item.category}</td>
-                              <td className="p-3 text-end">{fmtMoney(item.expected)}</td>
-                              <td className="p-3 text-end">{fmtMoney(item.actual ?? 0)}</td>
-                              <td className={`p-3 text-end font-bold text-xs ${good ? "text-emerald-600" : "text-red-600"}`}>
-                                {v >= 0 ? "+" : ""}{fmtMoney(v)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </CardContent>
-                </Card>
-              )}
+              <Card>
+                <CardContent className="p-4 space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground font-bold">
+                    <span className="flex items-center gap-1"><TrendingDown className="w-3.5 h-3.5 text-amber-600" /> {t("budgets.expLabel", "المصروفات")}</span>
+                    <span>{Math.round((selected.actual_expenses / (selected.expected_expenses || 1)) * 100)}%</span>
+                  </div>
+                  <div className="text-2xl font-bold text-amber-700">{fmtMoney(selected.actual_expenses, curr)}</div>
+                  <div className="text-xs text-muted-foreground">{t("budgets.targetExp", "مخطط:")} {fmtMoney(selected.expected_expenses, curr)}</div>
+                </CardContent>
+              </Card>
+
+              <Card className={selected.actual_revenue - selected.actual_expenses < 0 ? "border-red-200 bg-red-50/50" : "border-emerald-200 bg-emerald-50/50"}>
+                <CardContent className="p-4">
+                  <div className="text-xs font-bold text-muted-foreground mb-1">{t("budgets.actualProfit", "صافي الربح الفعلي")}</div>
+                  <div className={`text-2xl font-bold ${selected.actual_revenue - selected.actual_expenses < 0 ? "text-red-700" : "text-emerald-700"}`}>
+                    {fmtMoney(selected.actual_revenue - selected.actual_expenses, curr)}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{t("budgets.targetProfit", "صافي مخطط")}: {fmtMoney(selected.expected_revenue - selected.expected_expenses, curr)}</div>
+                </CardContent>
+              </Card>
             </div>
-          )}
+
+            <Card>
+              <CardHeader><CardTitle className="text-sm">{t("budgets.detailTitle", "تفصيل بنود الميزانية")}</CardTitle></CardHeader>
+              <CardContent className="p-0 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50 text-xs text-muted-foreground uppercase">
+                    <tr>
+                      <th className="text-start p-3">{t("budgets.colItem", "البند")}</th>
+                      <th className="text-end p-3">{t("budgets.colPlan", "المخطط")}</th>
+                      <th className="text-end p-3">{t("budgets.colActual", "الفعلي")}</th>
+                      <th className="text-end p-3">{t("budgets.colDiff", "الفرق")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {CATS.map((c) => {
+                      const exp = Number((selected.expense_details as any)?.[c.value] ?? 0);
+                      const act = Number((selected as any)[`actual_${c.value}`] ?? 0);
+                      const diff = exp - act;
+                      return (
+                        <tr key={c.value} className="border-t">
+                          <td className="p-3 font-bold">{c.label}</td>
+                          <td className="p-3 text-end">{fmtMoney(exp, curr)}</td>
+                          <td className="p-3 text-end">{fmtMoney(act, curr)}</td>
+                          <td className={`p-3 text-end font-bold ${diff < 0 ? "text-red-600" : "text-emerald-600"}`}>{fmtMoney(diff, curr)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>
-  );
-}
-
-function NewBudgetDialog({ open, setOpen, onCreated, tenantId }: { open: boolean; setOpen: (v: boolean) => void; onCreated: () => void; tenantId: string | null }) {
-  const [label, setLabel] = useState("");
-  const [type, setType] = useState<"monthly" | "weekly">("monthly");
-  const [year, setYear] = useState(new Date().getFullYear());
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [revenue, setRevenue] = useState("");
-  const [items, setItems] = useState<{ category: string; expected: string }[]>([
-    { category: "salaries", expected: "" },
-    { category: "rent", expected: "" },
-  ]);
-  const [saving, setSaving] = useState(false);
-
-  async function submit() {
-    if (!label || !revenue) { toast.error("أدخل الاسم والإيراد المستهدف"); return; }
-    setSaving(true);
-    const totalExp = items.reduce((s, i) => s + Number(i.expected || 0), 0);
-    const { data: b, error } = await  (supabase as any).from("budgets").insert({
-      period_label: label, period_type: type, year, month: type === "monthly" ? month : null,
-      expected_revenue: Number(revenue), expected_expenses: totalExp, tenant_id: tenantId,
-    }).select("id").single();
-    if (error) { setSaving(false); return toast.error(error.message); }
-    const validItems = items.filter((i) => Number(i.expected) > 0);
-    if (validItems.length) {
-      await  (supabase as any).from("budget_items").insert(validItems.map((i) => ({ budget_id: b.id, category: i.category, expected: Number(i.expected), tenant_id: tenantId })));
-    }
-    setSaving(false);
-    toast.success("تم حفظ الهدف");
-    setOpen(false);
-    onCreated();
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-teal-600 hover:bg-teal-700"><Plus className="w-4 h-4 ms-1" />هدف شهري جديد</Button>
-      </DialogTrigger>
-      <DialogContent dir="rtl" className="max-w-lg">
-        <DialogHeader><DialogTitle>إنشاء هدف شهري جديد</DialogTitle></DialogHeader>
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>اسم الفترة</Label>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="مثال: يناير 2026" />
-            </div>
-            <div>
-              <Label>النوع</Label>
-              <Select value={type} onValueChange={(v) => setType(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">شهري</SelectItem>
-                  <SelectItem value="weekly">أسبوعي</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>السنة</Label><Input type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} /></div>
-            {type === "monthly" && <div><Label>الشهر</Label><Input type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value))} /></div>}
-          </div>
-          <div><Label>عايز تكسب كام هذا الشهر</Label><Input type="number" value={revenue} onChange={(e) => setRevenue(e.target.value)} /></div>
-          <div>
-            <Label>متوقع تصرف على إيه</Label>
-            {items.map((item, i) => (
-              <div key={i} className="flex gap-2 mt-2">
-                <Select value={item.category} onValueChange={(v) => setItems((p) => p.map((x, j) => j === i ? { ...x, category: v } : x))}>
-                  <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>{EXPENSE_CATS.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input className="w-28" type="number" placeholder="المبلغ" value={item.expected} onChange={(e) => setItems((p) => p.map((x, j) => j === i ? { ...x, expected: e.target.value } : x))} />
-              </div>
-            ))}
-            <Button variant="ghost" size="sm" className="mt-2" onClick={() => setItems((p) => [...p, { category: "other", expected: "" }])}>
-              <Plus className="w-3 h-3 ms-1" /> بند جديد
-            </Button>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button onClick={submit} disabled={saving} className="bg-teal-600 hover:bg-teal-700">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ الهدف"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

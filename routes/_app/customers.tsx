@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
-import { parseLatLng } from "@/lib/geo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,114 +10,108 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Search, Pencil, Upload, LocateFixed, MapPin } from "lucide-react";
+import { parseLatLng } from "@/lib/geo";
+import { Loader2, Plus, Users, MapPin, Search } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/customers")({
   head: () => ({ meta: [{ title: "العملاء" }] }),
   component: CustomersPage,
 });
 
-type Customer = { id: string; full_name: string; phone: string; email: string | null; address: string | null; notes: string | null; created_at: string; lat?: number | null; lng?: number | null; location_url?: string | null; area?: string | null };
+type C = { id?: string; full_name: string; phone: string; email?: string | null; address?: string | null; location_url?: string | null; lat?: number | null; lng?: number | null; notes?: string | null; created_at?: string };
 
 function CustomersPage() {
-  const { hasRole, user } = useAuth();
-  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
-  const canEdit = hasRole("owner", "cs_manager") || employeeStation === "reception";
-  const [list, setList] = useState<Customer[]>([]);
+  const { t, dir } = useI18n();
+  const { tenantId } = useAuth();
+  const [list, setList] = useState<C[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<Partial<Customer> | null>(null);
+  const [editing, setEditing] = useState<C | null>(null);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    (supabase as any).from("employees").select("station,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployeeStation(data?.station ?? null));
-  }, [user]);
+  const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("customers").select("*").order("created_at", { ascending: false }).limit(500);
-    setList((data ?? []) as Customer[]);
+    const { data, error } = await (supabase as any).from("customers").select("*").eq("tenant_id", tenantId).order("full_name");
+    if (error) toast.error(error.message);
+    setList((data ?? []) as C[]);
     setLoading(false);
   }
-  useEffect(() => { load(); }, []);
-
-  const filtered = list.filter((c) => !search || c.full_name.includes(search) || c.phone.includes(search));
+  useEffect(() => { load(); }, [tenantId]);
 
   function extractLocation() {
-    if (!editing) return;
-    const parsed = parseLatLng(editing.location_url || editing.address || "");
-    if (parsed) setEditing({ ...editing, lat: parsed.lat, lng: parsed.lng, location_url: editing.location_url || `https://www.google.com/maps?q=${parsed.lat},${parsed.lng}` });
-    else toast.error("لم أستطع استخراج الإحداثيات — الصق رابط Google Maps أو lat,lng");
+    if (!editing?.location_url) return;
+    const parsed = parseLatLng(editing.location_url);
+    if (parsed) setEditing({ ...editing, lat: parsed.lat, lng: parsed.lng });
+    else toast.error(t("customers.errGps", "لم أستطع استخراج الإحداثيات — الصق رابط Google Maps أو lat,lng"));
   }
 
-  function useGps() {
-    if (!editing) return;
-    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم GPS");
-    navigator.geolocation.getCurrentPosition((p) => {
-      const lat = Number(p.coords.latitude.toFixed(7));
-      const lng = Number(p.coords.longitude.toFixed(7));
-      setEditing({ ...editing, lat, lng, location_url: `https://www.google.com/maps?q=${lat},${lng}` });
-      toast.success("تم تحديد موقع العميل");
-    }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
+  function detectGps() {
+    if (!navigator.geolocation) return toast.error(t("customers.errGps", "المتصفح لا يدعم GPS"));
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setEditing((old: any) => ({ ...old, lat, lng, location_url: `https://maps.google.com/?q=${lat},${lng}` }));
+      toast.success(t("customers.toastGpsOk", "تم تحديد موقع العميل"));
+    }, () => toast.error(t("customers.toastGpsErr", "تعذر تحديد الموقع")), { enableHighAccuracy: true, timeout: 15000 });
   }
 
   async function save() {
-    if (!editing?.full_name || !editing.phone) { toast.error("الاسم والتليفون مطلوبان"); return; }
-    if ((editing.phone || "").replace(/\D/g, "").length < 11) { toast.error("رقم الهاتف يجب أن يكون 11 رقم على الأقل"); return; }
-    const payload = { full_name: editing.full_name, phone: editing.phone, email: editing.email || null, address: editing.address || null, notes: editing.notes || null, lat: editing.lat ?? null, lng: editing.lng ?? null, location_url: editing.location_url || null, area: editing.area || null };
-    const { error } = editing.id
-      ? await (supabase as any).from("customers").update(payload).eq("id", editing.id)
-      : await (supabase as any).from("customers").insert(payload);
-    if (error) { toast.error(error.message); return; }
-    toast.success("تم الحفظ"); setOpen(false); load();
+    if (!editing?.full_name || !editing.phone) { toast.error(t("customers.errReq", "الاسم والتليفون مطلوبان")); return; }
+    if ((editing.phone || "").replace(/\D/g, "").length < 11) { toast.error(t("customers.errPhoneLen", "رقم الهاتف يجب أن يكون 11 رقم على الأقل")); return; }
+    setSaving(true);
+    const payload = { tenant_id: tenantId, full_name: editing.full_name, phone: editing.phone, email: editing.email || null, address: editing.address || null, location_url: editing.location_url || null, lat: editing.lat ?? null, lng: editing.lng ?? null, notes: editing.notes || null };
+    const { error } = editing.id ? await (supabase as any).from("customers").update(payload).eq("id", editing.id) : await (supabase as any).from("customers").insert(payload);
+    setSaving(false);
+    if (error) toast.error(error.message); else { toast.success(t("customers.toastSaved", "تم الحفظ")); setOpen(false); load(); }
   }
 
+  const filtered = useMemo(() => list.filter((c) => !search || `${c.full_name} ${c.phone}`.toLowerCase().includes(search.toLowerCase())), [list, search]);
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center flex-wrap gap-2">
+    <div className="space-y-4 max-w-6xl" dir={dir}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">العملاء</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} عميل</p>
+          <h1 className="text-2xl font-bold">{t("customers.pageTitle", "العملاء")}</h1>
+          <p className="text-sm text-muted-foreground">{filtered.length} {t("customers.subtitle", "عميل")}</p>
         </div>
-        {canEdit && (
-          <div className="flex gap-2">
-            <ImportExcelButton onDone={load} />
-            <Button onClick={() => { setEditing({ full_name: "", phone: "" }); setOpen(true); }}><Plus className="w-4 h-4 ms-1" /> عميل جديد</Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={load}>{t("common.refresh")}</Button>
+          <Button onClick={() => { setEditing({ full_name: "", phone: "" }); setOpen(true); }}><Plus className="w-4 h-4 ms-1" /> {t("customers.btnNew", "عميل جديد")}</Button>
+        </div>
       </div>
 
-      <div className="relative">
+      <div className="relative max-w-md">
         <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="ابحث بالاسم أو التليفون..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
+        <Input placeholder={t("customers.searchPlaceholder", "ابحث بالاسم أو التليفون...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
       </div>
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-start p-3">الاسم</th>
-                  <th className="text-start p-3">التليفون</th>
-                  <th className="text-start p-3">العنوان</th>
-                  <th className="text-start p-3">الموقع</th>
-                  <th className="text-start p-3">منذ</th>
+                  <th className="text-start p-3">{t("customers.colName", "الاسم")}</th>
+                  <th className="text-start p-3">{t("customers.colPhone", "التليفون")}</th>
+                  <th className="text-start p-3">{t("customers.colAddress", "العنوان")}</th>
+                  <th className="text-start p-3">{t("customers.colLocation", "الموقع")}</th>
+                  <th className="text-start p-3">{t("customers.colSince", "منذ")}</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">لا يوجد عملاء</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">{t("customers.empty", "لا يوجد عملاء")}</td></tr>}
                 {filtered.map((c) => (
                   <tr key={c.id} className="border-t">
-                    <td className="p-3 font-medium">{c.full_name}</td>
+                    <td className="p-3 font-bold">{c.full_name}</td>
                     <td className="p-3">{c.phone}</td>
-                    <td className="p-3 text-xs text-muted-foreground max-w-[200px] truncate">{c.address ?? "—"}</td>
-                    <td className="p-3 text-xs">{c.lat && c.lng ? <span className="text-emerald-600 font-bold flex items-center gap-1"><MapPin className="w-3 h-3" /> دقيق</span> : <span className="text-amber-600">غير محدد</span>}</td>
-                    <td className="p-3 text-xs">{fmtDate(c.created_at)}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{c.address ?? "—"}</td>
+                    <td className="p-3 text-xs">{c.lat && c.lng ? <span className="text-emerald-600 font-bold flex items-center gap-1"><MapPin className="w-3 h-3" /> {t("customers.locAccurate", "دقيق")}</span> : <span className="text-amber-600">{t("customers.locNone", "غير محدد")}</span>}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{fmtDate(c.created_at)}</td>
                     <td className="p-3 text-end">
-                      {canEdit && <Button size="sm" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>}
+                      <Button size="sm" variant="outline" onClick={() => { setEditing(c); setOpen(true); }}>{t("common.edit", "تعديل")}</Button>
                     </td>
                   </tr>
                 ))}
@@ -129,105 +122,28 @@ function CustomersPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editing?.id ? "تعديل عميل" : "عميل جديد"}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing?.id ? t("customers.titleEdit", "تعديل عميل") : t("customers.titleNew", "عميل جديد")}</DialogTitle></DialogHeader>
           {editing && (
-            <div className="space-y-3">
-              <div><Label>الاسم *</Label><Input value={editing.full_name ?? ""} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} /></div>
-              <div><Label>التليفون *</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
-              <div><Label>الإيميل</Label><Input type="email" value={editing.email ?? ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></div>
-              <div><Label>العنوان</Label><Input value={editing.address ?? ""} onChange={(e) => setEditing({ ...editing, address: e.target.value })} /></div>
-              <div className="space-y-2 rounded-xl border p-3">
-                <Label>الموقع الدقيق</Label>
-                <Input placeholder="رابط Google Maps أو lat,lng" value={editing.location_url ?? ""} onChange={(e) => setEditing({ ...editing, location_url: e.target.value })} />
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Latitude" value={editing.lat ?? ""} onChange={(e) => setEditing({ ...editing, lat: Number(e.target.value) || null })} />
-                  <Input placeholder="Longitude" value={editing.lng ?? ""} onChange={(e) => setEditing({ ...editing, lng: Number(e.target.value) || null })} />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={extractLocation}>استخراج من الرابط</Button>
-                  <Button type="button" variant="secondary" onClick={useGps}><LocateFixed className="w-4 h-4 ms-1" /> GPS</Button>
+            <div className="space-y-4 py-2">
+              <div><Label>{t("customers.labelName", "الاسم *")}</Label><Input value={editing.full_name ?? ""} onChange={(e) => setEditing({ ...editing, full_name: e.target.value })} /></div>
+              <div><Label>{t("customers.labelPhone", "التليفون *")}</Label><Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></div>
+              <div><Label>{t("customers.labelEmail", "الإيميل")}</Label><Input type="email" value={editing.email ?? ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></div>
+              <div><Label>{t("customers.labelAddress", "العنوان")}</Label><Input value={editing.address ?? ""} onChange={(e) => setEditing({ ...editing, address: e.target.value })} /></div>
+              <div className="space-y-2 border p-3 rounded-xl bg-muted/20">
+                <Label>{t("customers.labelLoc", "الموقع الدقيق")}</Label>
+                <Input placeholder={t("customers.locPlaceholder", "رابط Google Maps أو lat,lng")} value={editing.location_url ?? ""} onChange={(e) => setEditing({ ...editing, location_url: e.target.value })} />
+                <div className="flex gap-2 text-xs">
+                  {editing.lat && editing.lng && <div className="text-emerald-600 font-bold flex items-center gap-1"><MapPin className="w-3 h-3" /> {editing.lat.toFixed(4)},{editing.lng.toFixed(4)}</div>}
+                  <Button type="button" variant="outline" onClick={extractLocation}>{t("customers.btnExtract", "استخراج من الرابط")}</Button>
                 </div>
               </div>
-              <div><Label>ملاحظات</Label><Textarea rows={2} value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} /></div>
+              <div><Label>{t("customers.labelNotes", "ملاحظات")}</Label><Textarea rows={2} value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} /></div>
             </div>
           )}
-          <DialogFooter><Button onClick={save}>حفظ</Button></DialogFooter>
+          <DialogFooter><Button onClick={save} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("customers.btnSave", "حفظ")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function parseCsv(text: string) {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
-    if (ch === '"') {
-      if (quoted && next === '"') { cell += '"'; i++; }
-      else quoted = !quoted;
-    } else if (ch === "," && !quoted) {
-      row.push(cell.trim()); cell = "";
-    } else if ((ch === "\n" || ch === "\r") && !quoted) {
-      if (ch === "\r" && next === "\n") i++;
-      row.push(cell.trim());
-      if (row.some(Boolean)) rows.push(row);
-      row = []; cell = "";
-    } else {
-      cell += ch;
-    }
-  }
-  row.push(cell.trim());
-  if (row.some(Boolean)) rows.push(row);
-  return rows;
-}
-
-function ImportExcelButton({ onDone }: { onDone: () => void }) {
-  const ref = useRef<HTMLInputElement>(null);
-  const [loading, setLoading] = useState(false);
-  async function handle(file: File) {
-    setLoading(true);
-    try {
-      if (!/\.csv$/i.test(file.name)) {
-        toast.error("حاليًا الاستيراد الآمن يدعم CSV فقط. احفظ Excel بصيغة CSV ثم ارفعه.");
-        return;
-      }
-      if (file.size > 1024 * 1024) {
-        toast.error("ملف العملاء كبير جدًا. الحد الحالي 1MB لتقليل أخطاء الاستيراد.");
-        return;
-      }
-      const text = await file.text();
-      const rows = parseCsv(text.replace(/^﻿/, ""));
-      const records: { full_name: string; phone: string; address: string | null }[] = [];
-      for (let i = 0; i < rows.length; i++) {
-        const [a, b, c] = rows[i] ?? [];
-        if (!a || !b) continue;
-        if (i === 0 && (String(a).includes("اسم") || String(a).toLowerCase().includes("name") || String(b).includes("هات") || String(b).toLowerCase().includes("phone"))) continue;
-        const phone = String(b).trim();
-        if (phone.replace(/\D/g, "").length < 10) continue;
-        records.push({ full_name: String(a).trim(), phone, address: c ? String(c).trim() : null });
-      }
-      if (!records.length) { toast.error("الملف فارغ أو غير صالح. الأعمدة: الاسم, الهاتف, العنوان"); return; }
-      const { error } = await supabase.from("customers").insert(records);
-      if (error) toast.error(error.message);
-      else { toast.success(`تم استيراد ${records.length} عميل`); onDone(); }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "فشل قراءة CSV");
-    } finally {
-      setLoading(false);
-      if (ref.current) ref.current.value = "";
-    }
-  }
-  return (
-    <>
-      <input ref={ref} type="file" accept=".csv,text/csv" hidden onChange={(e) => e.target.files?.[0] && handle(e.target.files[0])} />
-      <Button variant="outline" onClick={() => ref.current?.click()} disabled={loading}>
-        {loading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} استيراد CSV
-      </Button>
-    </>
   );
 }
