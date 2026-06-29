@@ -1,6 +1,11 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "cs.subtitle": "متابعة الطلبات قيد التشغيل",
+  "cs.inProgress": "قيد التشغيل",
+  "cs.noOrdersInProgress": "لا توجد طلبات قيد التشغيل",
+  "common.hours": "س",
+  "common.mins": "د",
   "common.salaries": "رواتب وعمولات",
   "common.rent": "الإيجار",
   "common.water": "فاتورة المياه",
@@ -510,6 +515,11 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "cs.subtitle": "Monitor orders in progress",
+  "cs.inProgress": "In progress",
+  "cs.noOrdersInProgress": "No orders in progress",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Salaries & commissions",
   "common.rent": "Rent",
   "common.water": "Water bill",
@@ -1046,6 +1056,11 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "cs.subtitle": "Suivre les commandes en cours",
+  "cs.inProgress": "En cours",
+  "cs.noOrdersInProgress": "Aucune commande en cours",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Salaires & commissions",
   "common.rent": "Loyer",
   "common.water": "Facture d'eau",
@@ -1323,6 +1338,11 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "cs.subtitle": "Monitora gli ordini in corso",
+  "cs.inProgress": "In corso",
+  "cs.noOrdersInProgress": "Nessun ordine in corso",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Salari & provvigioni",
   "common.rent": "Affitto",
   "common.water": "Bolletta dell'acqua",
@@ -1600,6 +1620,11 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "cs.subtitle": "Monitorear pedidos en progreso",
+  "cs.inProgress": "En progreso",
+  "cs.noOrdersInProgress": "No hay pedidos en progreso",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Salarios y comisiones",
   "common.rent": "Alquiler",
   "common.water": "Factura de agua",
@@ -1877,6 +1902,11 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "cs.subtitle": "Aufträge im laufenden Betrieb überwachen",
+  "cs.inProgress": "In Bearbeitung",
+  "cs.noOrdersInProgress": "Keine Aufträge in Bearbeitung",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Gehälter & Provisionen",
   "common.rent": "Miete",
   "common.water": "Wasserrechnung",
@@ -2154,6 +2184,11 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "cs.subtitle": "监控进行中的订单",
+  "cs.inProgress": "进行中",
+  "cs.noOrdersInProgress": "暂无进行中的订单",
+  "common.hours": "小时",
+  "common.mins": "分",
   "common.salaries": "工资与提成",
   "common.rent": "租金",
   "common.water": "水费账单",
@@ -2431,6 +2466,11 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "cs.subtitle": "進行中の注文を監視",
+  "cs.inProgress": "進行中",
+  "cs.noOrdersInProgress": "進行中の注文はありません",
+  "common.hours": "時間",
+  "common.mins": "分",
   "common.salaries": "基本給とコミッション",
   "common.rent": "家賃",
   "common.water": "水道料金",
@@ -2708,6 +2748,11 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "cs.subtitle": "Monitorar pedidos em andamento",
+  "cs.inProgress": "Em andamento",
+  "cs.noOrdersInProgress": "Nenhum pedido em andamento",
+  "common.hours": "h",
+  "common.mins": "m",
   "common.salaries": "Salários & comissões",
   "common.rent": "Aluguel",
   "common.water": "Conta de água",

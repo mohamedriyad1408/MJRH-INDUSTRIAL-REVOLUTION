@@ -8,6 +8,7 @@ import { Loader2, Calendar, AlertTriangle, Zap, PlusCircle, Eye, Timer, CreditCa
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RoleDailyBrief } from "@/components/role-daily-brief";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/cs")({
   head: () => ({ meta: [{ title: "لوحة خدمة العملاء" }] }),
@@ -22,6 +23,7 @@ type ActiveOrder = {
 
 function CsDashboard() {
   const { hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const allowed = hasRole("cs_manager", "owner", "ops_manager");
   const [stats, setStats] = useState({ today: 0, late: 0, urgent: 0 });
   const [active, setActive] = useState<ActiveOrder[]>([]);
@@ -61,29 +63,29 @@ function CsDashboard() {
     })();
   }, [allowed]);
 
-  if (!allowed) return <Card className="p-8 text-center">صلاحية خدمة العملاء أو المالك فقط.</Card>;
+  if (!allowed) return <Card className="p-8 text-center">{t("common.noRole")}</Card>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="space-y-6" dir={dir}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">لوحة خدمة العملاء</h1>
-          <p className="text-sm text-muted-foreground">متابعة الطلبات قيد التشغيل</p>
+          <h1 className="text-2xl font-bold">{t("brief.csTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("cs.subtitle")}</p>
         </div>
-        <Button asChild><Link to="/orders/new"><PlusCircle className="w-4 h-4 ms-1" /> طلب جديد</Link></Button>
+        <Button asChild><Link to="/orders/new"><PlusCircle className="w-4 h-4 ms-1" /> {t("orders.newOrder")}</Link></Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard label="طلبات اليوم" value={stats.today} icon={Calendar} />
-        <StatCard label="طلبات متأخرة" value={stats.late} icon={AlertTriangle} tone="text-destructive" />
-        <StatCard label="طلبات مستعجلة" value={stats.urgent} icon={Zap} tone="text-amber-600" />
+        <StatCard label={t("today.kpi.ordersToday")} value={stats.today} icon={Calendar} />
+        <StatCard label={t("brief.lateOrders")} value={stats.late} icon={AlertTriangle} tone="text-destructive" />
+        <StatCard label={t("dashboard.kpi.urgent")} value={stats.urgent} icon={Zap} tone="text-amber-600" />
       </div>
 
       <Card>
         <CardContent className="p-4">
-          <div className="font-bold mb-3">قيد التشغيل ({active.length})</div>
+          <div className="font-bold mb-3">{t("cs.inProgress")} ({active.length})</div>
           {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto my-6" /> : active.length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground py-6">لا توجد طلبات قيد التشغيل</div>
+            <div className="text-center text-sm text-muted-foreground py-6">{t("cs.noOrdersInProgress")}</div>
           ) : (
             <div className="space-y-2">
               {active.map((o) => {
@@ -99,7 +101,7 @@ function CsDashboard() {
                       <div className="flex items-center gap-2 font-medium">
                         #{o.order_number}
                         {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3" /></Badge>}
-                        <Badge variant="secondary">{({received:"استلام",cleaning:"تنظيف",ironing:"كي",packing:"تغليف"} as any)[o.status]}</Badge>
+                        <Badge variant="secondary">{t("stage." + o.status, o.status)}</Badge>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {o.customers?.full_name ?? "—"}
@@ -107,7 +109,7 @@ function CsDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-sm font-mono tabular-nums">
-                      <Timer className="w-3 h-3" /> {h}س {String(m).padStart(2, "0")}د
+                      <Timer className="w-3 h-3" /> {h}{t("common.hours")} {m}{t("common.mins")}
                     </div>
                     <Button asChild size="sm" variant="ghost">
                       <Link to="/orders/$id" params={{ id: o.id }}><Eye className="w-4 h-4" /></Link>
