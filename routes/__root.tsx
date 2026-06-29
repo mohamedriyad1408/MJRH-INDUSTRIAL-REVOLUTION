@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { reportClientError } from "@/lib/client-error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -20,6 +22,7 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+  useEffect(() => { reportClientError(error, { source: "router.error", severity: "fatal" }); }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4" dir="rtl">
       <div className="max-w-md text-center">
