@@ -356,12 +356,12 @@ function AccountingPage() {
       </TabsList>
 
       <TabsContent value="payroll" className="space-y-4">
-        <div className="flex flex-wrap gap-2"><Button onClick={generatePayroll}><RefreshCw className="w-4 h-4 ms-1" />{t("accounting.btn.generatePayroll")}</Button><Button variant="outline" onClick={syncApprovedAdvances}>تسجيل السلف في الحسابات</Button></div>
+        <div className="flex flex-wrap gap-2"><Button onClick={generatePayroll}><RefreshCw className="w-4 h-4 ms-1" />{t("accounting.btn.generatePayroll")}</Button><Button variant="outline" onClick={syncApprovedAdvances}>{t("accounting.btn.syncAdvances")}</Button></div>
         <div className="grid md:grid-cols-2 gap-3">
-          {periods.map((p) => <Card key={p.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{p.period_start} → {p.period_end}</span><Status s={p.status} /></CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="grid grid-cols-3 gap-2"><Mini label="الإجمالي" value={fmtMoney(p.gross_total, t("common.egp"))} /><Mini label="السلف" value={fmtMoney(p.advances_total, t("common.egp"))} /><Mini label="الصافي" value={fmtMoney(p.net_total, t("common.egp"))} /></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => postPayroll(p.id)} disabled={p.status !== "draft"}>{t("accounting.btn.postPayroll")}</Button><Button size="sm" onClick={() => payPayroll(p.id)} disabled={p.status === "paid" || p.status === "draft"}><CheckCircle2 className="w-4 h-4 ms-1" />{t("accounting.btn.payPayroll")}</Button></div></CardContent></Card>)}
+          {periods.map((p) => <Card key={p.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{p.period_start} → {p.period_end}</span><Status s={p.status} t={t} /></CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="grid grid-cols-3 gap-2"><Mini label={t("accounting.payroll.salary")} value={fmtMoney(p.gross_total, t("common.egp"))} /><Mini label={t("accounting.payroll.advances")} value={fmtMoney(p.advances_total, t("common.egp"))} /><Mini label={t("accounting.payroll.net")} value={fmtMoney(p.net_total, t("common.egp"))} /></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => postPayroll(p.id)} disabled={p.status !== "draft"}>{t("accounting.btn.postPayroll")}</Button><Button size="sm" onClick={() => payPayroll(p.id)} disabled={p.status === "paid" || p.status === "draft"}><CheckCircle2 className="w-4 h-4 ms-1" />{t("accounting.btn.payPayroll")}</Button></div></CardContent></Card>)}
           {!periods.length && <Empty text="لم يتم توليد أي مسير رواتب بعد" />}
         </div>
-        <Card><CardHeader><CardTitle className="text-base">بنود آخر الرواتب</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><PayrollTable rows={lines} /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">{t("accounting.payroll.itemsTitle")}</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><PayrollTable rows={lines} t={t} /></CardContent></Card>
       </TabsContent>
 
       <TabsContent value="cash" className="grid lg:grid-cols-[360px_1fr] gap-4">
@@ -378,15 +378,23 @@ function AccountingPage() {
   </div>;
 }
 
-function PayrollTable({ rows }: { rows: any[] }) {
-  return <table className="w-full text-sm"><thead className="bg-muted/50"><tr><th className="text-start p-3">الموظف</th><th className="text-end p-3">راتب</th><th className="text-end p-3">يومي</th><th className="text-end p-3">عمولة</th><th className="text-end p-3">سلف</th><th className="text-end p-3">صافي</th><th className="p-3">حالة</th></tr></thead><tbody>{rows.map((r) => <tr key={r.id} className="border-t"><td className="p-3 font-bold">{r.employees?.full_name}</td><td className="p-3 text-end">{fmtMoney(r.base_salary)}</td><td className="p-3 text-end">{fmtMoney(r.daily_salary)}</td><td className="p-3 text-end">{fmtMoney(r.commission_amount)}</td><td className="p-3 text-end text-red-600">{fmtMoney(r.advances_deducted)}</td><td className="p-3 text-end font-black text-teal-700">{fmtMoney(r.net_pay)}</td><td className="p-3"><Status s={r.status} /></td></tr>)}</tbody></table>;
+function PayrollTable({ rows, t }: { rows: any[]; t: any }) {
+  return <table className="w-full text-sm"><thead className="bg-muted/50"><tr><th className="text-start p-3">{t("common.employee")}</th><th className="text-end p-3">{t("accounting.payroll.salary")}</th><th className="text-end p-3">{t("accounting.payroll.daily")}</th><th className="text-end p-3">{t("staff.commission")}</th><th className="text-end p-3">{t("finance.advancesTab")}</th><th className="text-end p-3">{t("accounting.payroll.net")}</th><th className="p-3">{t("common.status")}</th></tr></thead><tbody>{rows.map((r) => <tr key={r.id} className="border-t"><td className="p-3 font-bold">{r.employees?.full_name}</td><td className="p-3 text-end">{fmtMoney(r.base_salary, t("common.egp"))}</td><td className="p-3 text-end">{fmtMoney(r.daily_salary, t("common.egp"))}</td><td className="p-3 text-end">{fmtMoney(r.commission_amount, t("common.egp"))}</td><td className="p-3 text-end text-red-600">{fmtMoney(r.advances_deducted, t("common.egp"))}</td><td className="p-3 text-end font-black text-teal-700">{fmtMoney(r.net_pay, t("common.egp"))}</td><td className="p-3"><Status s={r.status} t={t} /></td></tr>)}</tbody></table>;
 }
 function Kpi({ label, value, icon, warn = false }: { label: string; value: string; icon: React.ReactNode; warn?: boolean }) { return <Card className={warn ? "border-amber-200 bg-amber-50" : ""}><CardContent className="p-4"><div className="flex items-center gap-2 text-xs text-muted-foreground">{icon}{label}</div><div className="text-2xl font-black mt-2">{value}</div></CardContent></Card>; }
 function Mini({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-muted/60 p-2"><div className="text-xs text-muted-foreground">{label}</div><div className="font-black">{value}</div></div>; }
 function Row({ a, b, c, danger, badge }: { a: string; b: string; c: string; danger?: boolean; badge?: string }) { return <div className="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm"><div className="min-w-24 text-xs text-muted-foreground">{a}</div><div className="flex-1 font-medium">{b}</div>{badge && <Badge variant={danger ? "destructive" : "secondary"}>{badge}</Badge>}<div className={`font-black ${danger ? "text-red-600" : "text-teal-700"}`}>{c}</div></div>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <div className="space-y-1"><Label>{label}</Label>{children}</div>; }
 function Empty({ text }: { text: string }) { return <Card><CardContent className="p-8 text-center text-muted-foreground">{text}</CardContent></Card>; }
-function Status({ s }: { s: string }) { return <Badge variant={s === "paid" ? "secondary" : s === "posted" ? "outline" : s === "void" ? "destructive" : "default"}>{({ draft: "مسودة", posted: "مُرحّل", paid: "مدفوع", void: "ملغي" } as any)[s] ?? s}</Badge>; }
+function Status({ s, t }: { s: string; t: any }) {
+  const map: Record<string, string> = {
+    draft: t("common.draft", "Draft"),
+    posted: t("common.posted", "Posted"),
+    paid: t("order.paid", "Paid"),
+    void: t("track.cancelled", "Void"),
+  };
+  return <Badge variant={s === "paid" ? "secondary" : s === "posted" ? "outline" : s === "void" ? "destructive" : "default"}>{map[s] ?? s}</Badge>;
+}
 function typeAr(s: string) { return ({ cash: "خزنة", bank: "بنك", wallet: "محفظة", instapay: "InstaPay" } as any)[s] ?? s; }
 function catAr(s: string) { return ({ salaries: "رواتب", rent: "إيجار", water: "مياه", electricity: "كهرباء", supplies: "خامات", maintenance: "صيانة", other: "أخرى" } as any)[s] ?? s; }
 function entryAr(s: string) { return ({ salary_accrual: "استحقاق راتب", commission_accrual: "استحقاق عمولة", advance: "سلفة", advance_deduction: "خصم سلفة", salary_payment: "صرف راتب", adjustment: "تسوية" } as any)[s] ?? s; }

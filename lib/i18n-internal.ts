@@ -1,6 +1,15 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "accounting.btn.syncAdvances": "تسجيل السلف في الحسابات",
+  "accounting.payroll.itemsTitle": "بنود آخر الرواتب",
+  "accounting.payroll.salary": "راتب",
+  "accounting.payroll.daily": "يومي",
+  "accounting.payroll.commission": "عمولة",
+  "accounting.payroll.advances": "سلف",
+  "accounting.payroll.net": "صافي",
+  "common.draft": "مسودة",
+  "common.posted": "مُرحّل",
   "system.missing": "ناقص",
   "common.discount": "خصم %",
   "common.tax": "الضريبة %",
@@ -580,6 +589,15 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Sync advances to accounts",
+  "accounting.payroll.itemsTitle": "Latest payroll items",
+  "accounting.payroll.salary": "Base salary",
+  "accounting.payroll.daily": "Daily pay",
+  "accounting.payroll.commission": "Commission",
+  "accounting.payroll.advances": "Advances",
+  "accounting.payroll.net": "Net pay",
+  "common.draft": "Draft",
+  "common.posted": "Posted",
   "system.missing": "Missing",
   "common.discount": "Discount %",
   "common.tax": "Tax %",
@@ -1186,6 +1204,15 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Sinc. avances sur comptes",
+  "accounting.payroll.itemsTitle": "Dernières fiches de paie",
+  "accounting.payroll.salary": "Salaire de base",
+  "accounting.payroll.daily": "Salaire journalier",
+  "accounting.payroll.commission": "Commission",
+  "accounting.payroll.advances": "Avances",
+  "accounting.payroll.net": "Net à payer",
+  "common.draft": "Brouillon",
+  "common.posted": "Reporté",
   "system.missing": "Manquant",
   "common.discount": "Remise %",
   "common.tax": "Taxe %",
@@ -1533,6 +1560,15 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Sinc. anticipi sui conti",
+  "accounting.payroll.itemsTitle": "Ultime voci paga",
+  "accounting.payroll.salary": "Salario base",
+  "accounting.payroll.daily": "Paga giornaliera",
+  "accounting.payroll.commission": "Provvigione",
+  "accounting.payroll.advances": "Anticipi",
+  "accounting.payroll.net": "Netto in busta",
+  "common.draft": "Bozza",
+  "common.posted": "Contabilizzato",
   "system.missing": "Mancante",
   "common.discount": "Sconto %",
   "common.tax": "Tassa %",
@@ -1880,6 +1916,15 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Sinc. anticipos en cuentas",
+  "accounting.payroll.itemsTitle": "Últimas partidas de nómina",
+  "accounting.payroll.salary": "Salario base",
+  "accounting.payroll.daily": "Pago diario",
+  "accounting.payroll.commission": "Comisión",
+  "accounting.payroll.advances": "Anticipos",
+  "accounting.payroll.net": "Neto a pagar",
+  "common.draft": "Borrador",
+  "common.posted": "Contabilizado",
   "system.missing": "Faltante",
   "common.discount": "Descuento %",
   "common.tax": "Impuesto %",
@@ -2227,6 +2272,15 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Vorschüsse synchronisieren",
+  "accounting.payroll.itemsTitle": "Letzte Gehaltsposten",
+  "accounting.payroll.salary": "Grundgehalt",
+  "accounting.payroll.daily": "Tageslohn",
+  "accounting.payroll.commission": "Provision",
+  "accounting.payroll.advances": "Vorschüsse",
+  "accounting.payroll.net": "Netto-Auszahlung",
+  "common.draft": "Entwurf",
+  "common.posted": "Gebucht",
   "system.missing": "Fehlt",
   "common.discount": "Rabatt %",
   "common.tax": "Steuer %",
@@ -2574,6 +2628,15 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "accounting.btn.syncAdvances": "同步借款预支账目",
+  "accounting.payroll.itemsTitle": "最近工资单明细",
+  "accounting.payroll.salary": "基本工资",
+  "accounting.payroll.daily": "日薪计酬",
+  "accounting.payroll.commission": "提成奖励",
+  "accounting.payroll.advances": "已扣预支",
+  "accounting.payroll.net": "实发工资",
+  "common.draft": "草稿",
+  "common.posted": "已过账",
   "system.missing": "缺失",
   "common.discount": "打折 %",
   "common.tax": "税率 %",
@@ -2922,6 +2985,15 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "accounting.btn.syncAdvances": "前払いを勘定に同期",
+  "accounting.payroll.itemsTitle": "最新の給与明細項目",
+  "accounting.payroll.salary": "基本給",
+  "accounting.payroll.daily": "日給",
+  "accounting.payroll.commission": "歩合",
+  "accounting.payroll.advances": "前払い控除",
+  "accounting.payroll.net": "支給総額",
+  "common.draft": "下書き",
+  "common.posted": "記帳済み",
   "system.missing": "不足",
   "common.discount": "割引 %",
   "common.tax": "税 %",
@@ -3269,6 +3341,15 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "accounting.btn.syncAdvances": "Sinc. adiantamentos nas contas",
+  "accounting.payroll.itemsTitle": "Últimos itens da folha",
+  "accounting.payroll.salary": "Salário base",
+  "accounting.payroll.daily": "Diária",
+  "accounting.payroll.commission": "Comissão",
+  "accounting.payroll.advances": "Adiantamentos",
+  "accounting.payroll.net": "Líquido",
+  "common.draft": "Rascunho",
+  "common.posted": "Lançado",
   "system.missing": "Faltando",
   "common.discount": "Desconto %",
   "common.tax": "Imposto %",
