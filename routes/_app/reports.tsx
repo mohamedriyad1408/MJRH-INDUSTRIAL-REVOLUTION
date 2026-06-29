@@ -273,20 +273,20 @@ function ReportsPage() {
       {loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
         <div className="space-y-6" dir={dir}>
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            <Kpi label="الإيرادات" value={fmtMoney(data.totalRevenue)} tone="teal" sub={data.revenueDelta === null ? "لا يوجد شهر سابق" : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
-            <Kpi label="صافي نقدي" value={fmtMoney(data.netProfit)} tone={data.netProfit >= 0 ? "green" : "red"} />
-            <Kpi label="مصروفات آجلة" value={fmtMoney(data.payableExpenses)} tone="amber" sub={`رواتب: ${fmtMoney(data.payrollAccrual)}`} />
-            <Kpi label="الطلبات" value={data.totalOrders} tone="blue" sub={`${data.delivered} مسلّم`} />
-            <Kpi label="متوسط الفاتورة" value={fmtMoney(data.avgOrder)} tone="slate" />
-            <Kpi label="الآجل" value={fmtMoney(data.unpaidValue)} tone="amber" />
-            <Kpi label="جودة QC" value={`${data.qcRate.toFixed(1)}%`} tone={data.qcRate > 8 ? "red" : "green"} sub="نسبة الفشل" />
+            <Kpi label={t("finance.revenueTab")} value={fmtMoney(data.totalRevenue, t("common.egp"))} tone="teal" sub={data.revenueDelta === null ? t("reports.noMonth") : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
+            <Kpi label={t("finance.netProfit")} value={fmtMoney(data.netProfit, t("common.egp"))} tone={data.netProfit >= 0 ? "green" : "red"} />
+            <Kpi label={t("accounting.tab.expenses")} value={fmtMoney(data.payableExpenses, t("common.egp"))} tone="amber" sub={`Salaries: ${fmtMoney(data.payrollAccrual, t("common.egp"))}`} />
+            <Kpi label={t("station.common.orders")} value={data.totalOrders} tone="blue" sub={`${data.delivered} ${t("reports.del")}`} />
+            <Kpi label={t("reports.avgInvoice")} value={fmtMoney(data.avgOrder, t("common.egp"))} tone="slate" />
+            <Kpi label={t("nav./receivables")} value={fmtMoney(data.unpaidValue, t("common.egp"))} tone="amber" />
+            <Kpi label={t("station.qc.title")} value={`${data.qcRate.toFixed(1)}%`} tone={data.qcRate > 8 ? "red" : "green"} sub={t("reports.failureRate")} />
           </div>
 
-          <BranchComparison rows={data.branchComparison ?? []} />
+          <BranchComparison rows={data.branchComparison ?? []} t={t} />
 
-          <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} />
+          <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} t={t} />
 
-          <DelayResponsibility data={data} />
+          <DelayResponsibility data={data} t={t} />
 
           <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Brain className="w-5 h-5 text-teal-700" />ماذا يقول النظام؟</CardTitle></CardHeader>
@@ -344,48 +344,48 @@ function ReportsPage() {
 
 
 
-function BranchComparison({ rows }: { rows: any[] }) {
-  if (!rows.length) return <Card><CardContent className="p-4 text-sm text-muted-foreground text-center">لا توجد فروع للمقارنة في الفترة المختارة</CardContent></Card>;
+function BranchComparison({ rows, t }: { rows: any[]; t: any }) {
+  if (!rows.length) return <Card><CardContent className="p-4 text-sm text-muted-foreground text-center">{t("common.noRows")}</CardContent></Card>;
   const best = rows[0];
-  return <Card className="border-teal-200 bg-teal-50/30"><CardHeader><CardTitle className="text-base">مقارنة الفروع</CardTitle></CardHeader><CardContent className="space-y-3">
-    <div className="rounded-xl bg-white/80 border p-3 text-sm"><b>أفضل فرع بالإيراد:</b> {best.name} — {fmtMoney(best.revenue)} · صافي نقدي {fmtMoney(best.netCash)}</div>
-    <div className="overflow-x-auto"><table className="w-full text-xs bg-white rounded-xl overflow-hidden"><thead className="bg-muted/60"><tr><th className="text-start p-2">الفرع</th><th className="text-end p-2">طلبات</th><th className="text-end p-2">إيراد</th><th className="text-end p-2">مصروف مدفوع</th><th className="text-end p-2">الرواتب</th><th className="text-end p-2">صافي نقدي</th><th className="text-end p-2">رصيد الخزن</th><th className="text-end p-2">آجل عملاء</th><th className="text-end p-2">قطع</th><th className="text-end p-2">جودة</th></tr></thead><tbody>
-      {rows.map((r) => <tr key={r.id} className="border-t"><td className="p-2 font-bold">{r.name}</td><td className="p-2 text-end">{r.orders}</td><td className="p-2 text-end font-black text-teal-700">{fmtMoney(r.revenue)}</td><td className="p-2 text-end">{fmtMoney(r.paidExpenses)}</td><td className="p-2 text-end text-rose-700">{fmtMoney(r.salaries)}</td><td className={`p-2 text-end font-black ${r.netCash >= 0 ? "text-emerald-700" : "text-red-700"}`}>{fmtMoney(r.netCash)}</td><td className="p-2 text-end text-blue-700 font-bold">{fmtMoney(r.cashSafeBalance)}</td><td className="p-2 text-end text-amber-700">{fmtMoney(r.unpaid)}</td><td className="p-2 text-end">{r.pieces}</td><td className="p-2 text-end">QC {r.qcFailed} / مرتجع {r.reclean}</td></tr>)}
+  return <Card className="border-teal-200 bg-teal-50/30"><CardHeader><CardTitle className="text-base">{t("reports.title")}</CardTitle></CardHeader><CardContent className="space-y-3">
+    <div className="rounded-xl bg-white/80 border p-3 text-sm"><b>{t("reports.bestBranch")}</b> {best.name} — {fmtMoney(best.revenue, t("common.egp"))} · {t("finance.netProfit")} {fmtMoney(best.netCash, t("common.egp"))}</div>
+    <div className="overflow-x-auto"><table className="w-full text-xs bg-white rounded-xl overflow-hidden"><thead className="bg-muted/60"><tr><th className="text-start p-2">{t("common.branch")}</th><th className="text-end p-2">{t("station.common.orders")}</th><th className="text-end p-2">{t("finance.revenueTab")}</th><th className="text-end p-2">{t("accounting.kpi.paidExpenses")}</th><th className="text-end p-2">{t("common.role")}</th><th className="text-end p-2">{t("finance.netProfit")}</th><th className="text-end p-2">{t("accounting.kpi.safes")}</th><th className="text-end p-2">{t("receivables.title")}</th><th className="text-end p-2">{t("station.common.pieces")}</th><th className="text-end p-2">{t("station.qc.qualityIssues")}</th></tr></thead><tbody>
+      {rows.map((r) => <tr key={r.id} className="border-t"><td className="p-2 font-bold">{r.name}</td><td className="p-2 text-end">{r.orders}</td><td className="p-2 text-end font-black text-teal-700">{fmtMoney(r.revenue, t("common.egp"))}</td><td className="p-2 text-end">{fmtMoney(r.paidExpenses, t("common.egp"))}</td><td className="p-2 text-end text-rose-700">{fmtMoney(r.salaries, t("common.egp"))}</td><td className={`p-2 text-end font-black ${r.netCash >= 0 ? "text-emerald-700" : "text-red-700"}`}>{fmtMoney(r.netCash, t("common.egp"))}</td><td className="p-2 text-end text-blue-700 font-bold">{fmtMoney(r.cashSafeBalance, t("common.egp"))}</td><td className="p-2 text-end text-amber-700">{fmtMoney(r.unpaid, t("common.egp"))}</td><td className="p-2 text-end">{r.pieces}</td><td className="p-2 text-end">QC {r.qcFailed} / {t("station.common.reclean")} {r.reclean}</td></tr>)}
     </tbody></table></div>
   </CardContent></Card>;
 }
 
-function DelayResponsibility({ data }: { data: any }) {
+function DelayResponsibility({ data, t }: { data: any; t: any }) {
   const stages = Object.entries(data.lateByStage ?? {}).sort((a: any, b: any) => b[1] - a[1]);
   const employees = data.lateEmployees ?? [];
-  if (!stages.length && !employees.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">لا توجد طلبات متأخرة تحتاج تحليل مسؤولية ✅</CardContent></Card>;
+  if (!stages.length && !employees.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("system.financialAuditOk")} ✅</CardContent></Card>;
   return <div className="grid md:grid-cols-2 gap-4">
-    <Card className="border-amber-200 bg-amber-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" />التأخير حسب المرحلة</CardTitle></CardHeader><CardContent className="space-y-2">
-      {stages.map(([stage, count]: any) => <Row key={stage} left={STAGE_AR[stage] ?? stage} mid="طلبات متأخرة" right={String(count)} />)}
+    <Card className="border-amber-200 bg-amber-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" />{t("reports.delayByStage")}</CardTitle></CardHeader><CardContent className="space-y-2">
+      {stages.map(([stage, count]: any) => <Row key={stage} left={t("stage." + stage, stage)} mid={t("brief.lateOrders")} right={String(count)} />)}
     </CardContent></Card>
-    <Card className="border-red-200 bg-red-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="w-4 h-4" />من يحتاج متابعة؟</CardTitle></CardHeader><CardContent className="space-y-2">
-      {employees.map((e: any) => <Row key={e.name} left={e.name} mid={Object.entries(e.stages).map(([s,c]: any) => `${STAGE_AR[s] ?? s}: ${c}`).join("، ")} right={String(e.count)} />)}
+    <Card className="border-red-200 bg-red-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="w-4 h-4" />{t("reports.whoNeedsFollowup")}</CardTitle></CardHeader><CardContent className="space-y-2">
+      {employees.map((e: any) => <Row key={e.name} left={e.name} mid={Object.entries(e.stages).map(([s,c]: any) => `${t("stage." + s, s)}: ${c}`).join(", ")} right={String(e.count)} />)}
     </CardContent></Card>
   </div>;
 }
 
-function RoleFocus({ isOwner, isOps, isCs, data }: { isOwner: boolean; isOps: boolean; isCs: boolean; data: any }) {
+function RoleFocus({ isOwner, isOps, isCs, data, t }: { isOwner: boolean; isOps: boolean; isCs: boolean; data: any; t: any }) {
   return <div className="grid lg:grid-cols-3 gap-4">
-    {isOwner && <Card className="border-emerald-200 bg-emerald-50/50"><CardHeader><CardTitle className="text-sm">ملخص المالك</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-      <FocusRow label="صافي نقدي للشهر" value={fmtMoney(data.netProfit)} warn={data.netProfit < 0} />
-      <FocusRow label="رواتب/مصروفات آجلة" value={fmtMoney(data.payableExpenses)} warn={data.payableExpenses > 0} />
-      <FocusRow label="آجل عند العملاء" value={fmtMoney(data.unpaidValue)} warn={data.unpaidValue > 0} />
-      <FocusRow label="مخزون تحت الحد" value={data.lowStock.length} warn={data.lowStock.length > 0} />
+    {isOwner && <Card className="border-emerald-200 bg-emerald-50/50"><CardHeader><CardTitle className="text-sm">{t("brief.ownerTitle")}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label={t("reports.netCashMonth")} value={fmtMoney(data.netProfit, t("common.egp"))} warn={data.netProfit < 0} />
+      <FocusRow label={t("reports.payableMonth")} value={fmtMoney(data.payableExpenses, t("common.egp"))} warn={data.payableExpenses > 0} />
+      <FocusRow label={t("reports.receivablesCustomer")} value={fmtMoney(data.unpaidValue, t("common.egp"))} warn={data.unpaidValue > 0} />
+      <FocusRow label={t("reports.lowStock")} value={data.lowStock.length} warn={data.lowStock.length > 0} />
     </CardContent></Card>}
-    {isOps && <Card className="border-blue-200 bg-blue-50/50"><CardHeader><CardTitle className="text-sm">ملخص مدير التشغيل</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-      <FocusRow label="عنق الزجاجة" value={`${STAGE_AR[data.bottleneck[0]] ?? data.bottleneck[0]} (${data.bottleneck[1]})`} warn={Number(data.bottleneck[1]) > 0} />
-      <FocusRow label="مرتجعات غسيل" value={data.recleanCount} warn={data.recleanCount > 0} />
-      <FocusRow label="طلبات استلام بلا مندوب" value={data.pendingPickups} warn={data.pendingPickups > 0} />
+    {isOps && <Card className="border-blue-200 bg-blue-50/50"><CardHeader><CardTitle className="text-sm">{t("brief.opsTitle")}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label={t("reports.bottleneck")} value={`${t("stage." + data.bottleneck[0], data.bottleneck[0])} (${data.bottleneck[1]})`} warn={Number(data.bottleneck[1]) > 0} />
+      <FocusRow label={t("brief.reclean")} value={data.recleanCount} warn={data.recleanCount > 0} />
+      <FocusRow label={t("reports.pendingPickups")} value={data.pendingPickups} warn={data.pendingPickups > 0} />
     </CardContent></Card>}
-    {isCs && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-sm">ملخص خدمة العملاء</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
-      <FocusRow label="فواتير تحتاج اعتماد" value={data.invoiceNeedsReview} warn={data.invoiceNeedsReview > 0} />
-      <FocusRow label="إيصالات تحتاج مراجعة" value={data.proofIssues} warn={data.proofIssues > 0} />
-      <FocusRow label="رسائل واتساب جاهزة" value={data.queuedMessages} warn={data.queuedMessages > 0} />
+    {isCs && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-sm">{t("brief.csTitle")}</CardTitle></CardHeader><CardContent className="space-y-2 text-sm">
+      <FocusRow label={t("brief.invoicesNeedReview")} value={data.invoiceNeedsReview} warn={data.invoiceNeedsReview > 0} />
+      <FocusRow label={t("brief.proofsNeedReview")} value={data.proofIssues} warn={data.proofIssues > 0} />
+      <FocusRow label={t("reports.readyWhatsapp")} value={data.queuedMessages} warn={data.queuedMessages > 0} />
     </CardContent></Card>}
   </div>;
 }
