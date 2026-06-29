@@ -8,11 +8,14 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "coverage": "vitest run --coverage",
-    "ci": "npm run typecheck && npm run test:run && npm run build",
-    "audit:ci": "npm audit --audit-level=moderate"
+    "test": "vitest tests",
+    "test:run": "vitest run tests",
+    "coverage": "vitest run tests --coverage",
+    "ci": "npm run typecheck && npm run test:run && npm run e2e && npm run build",
+    "audit:ci": "npm audit --audit-level=moderate",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -69,6 +72,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.1",

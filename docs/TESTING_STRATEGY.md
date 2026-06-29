@@ -20,9 +20,16 @@ Against a staging Supabase project:
 5. Register customer return after delivery and verify original order stays delivered.
 6. Upload InstaPay proof and verify payment document, journal, cash transaction, and courier tip.
 
-## E2E tests to add next
+## E2E tests
 
-Use Playwright:
+Implemented public smoke tests cover:
+
+- Login page renders on desktop and mobile.
+- Protected routes redirect anonymous users to login.
+- Customer portal loads on desktop and mobile.
+- Tenant public entry page loads.
+
+Authenticated E2E tests to add next against staging:
 
 - Owner creates tenant.
 - Reception creates order.

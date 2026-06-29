@@ -15,11 +15,12 @@ This document tracks the work needed to keep MJRH production-grade.
 - APDO operational event matrix and repair tools.
 - New tenant bootstrap readiness.
 - Unit tests for core workflow/payment/return/distribution rules.
-- GitHub Actions CI for audit, typecheck, tests, and production build.
+- Playwright browser smoke tests for public/mobile pages and auth redirects.
+- GitHub Actions CI for audit, typecheck, unit tests, E2E tests, and production build.
 
 ## Next hardening steps
 
-1. Add Playwright E2E tests against a staging Supabase project.
+1. Add authenticated Playwright E2E tests against a staging Supabase project.
 2. Add Sentry or equivalent runtime error monitoring.
 3. Move production env values from `.env.production` into Vercel Environment Variables, then remove the file from Git.
 4. Add user-facing documentation and training videos.
