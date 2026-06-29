@@ -41,6 +41,7 @@ E2E_AUTH_EMAIL="..." E2E_AUTH_PASSWORD="..." npm run e2e:auth:all
 ```bash
 PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run e2e:public
 E2E_AUTH_EMAIL="..." E2E_AUTH_PASSWORD="..." PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run e2e:auth:all
+E2E_AUTH_EMAIL="..." E2E_AUTH_PASSWORD="..." PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run prod:health
 ```
 
 ## 4) Language readiness gate
