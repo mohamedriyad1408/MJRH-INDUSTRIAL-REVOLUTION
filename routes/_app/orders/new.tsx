@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,7 @@ const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ c
 ];
 
 function NewOrderPage() {
+  const { t, dir } = useI18n();
   const { hasRole, user, tenantId } = useAuth();
   const [employeeStation, setEmployeeStation] = useState<string | null>(null);
   const [employeeBranchId, setEmployeeBranchId] = useState<string | null>(null);
@@ -275,7 +277,7 @@ function NewOrderPage() {
           <div className="flex items-center gap-2">
             <Button asChild variant="secondary" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">فاتورة تشغيل جديدة</h1>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("orders.orderNo", "Order")} جديدة</h1>
               <p className="text-xs md:text-sm text-teal-100/80">شاشة POS سريعة — اختار العميل، اضغط الخدمات، أنشئ الطلب</p>
             </div>
           </div>
@@ -322,14 +324,14 @@ function NewOrderPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2 text-sm">
-                  <Row label="المجموع الفرعي" value={fmtMoney(subtotal)} />
+                  <Row label="المجموع الفرعي" value={fmtMoney(subtotal, t("common.egp"))} />
                   {isUrgent && <Row label="رسوم استعجال" value={fmtMoney(urgentFee)} />}
                   {orderType === "delivery" && <Row label="توصيل" value={fmtMoney(delivery)} />}
-                  {disc > 0 && <Row label={`خصم ${discPct}%`} value={`- ${fmtMoney(disc)}`} />}
-                  {settings.tax_percent > 0 && <Row label={`ضريبة ${settings.tax_percent}%`} value={fmtMoney(tax)} />}
+                  {disc > 0 && <Row label={`خصم ${discPct}%`} value={`- ${fmtMoney(disc, t("common.egp"))}`} />}
+                  {settings.tax_percent > 0 && <Row label={`ضريبة ${settings.tax_percent}%`} value={fmtMoney(tax, t("common.egp"))} />}
                   <div className="border-t border-white/10 pt-3 mt-3 flex justify-between items-center">
                     <span className="text-xl font-black">الإجمالي</span>
-                    <span className="text-3xl font-black text-teal-200">{fmtMoney(total)}</span>
+                    <span className="text-3xl font-black text-teal-200">{fmtMoney(total, t("common.egp"))}</span>
                   </div>
                 </div>
 
@@ -375,35 +377,35 @@ function NewOrderPage() {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
-                          <Input placeholder="اسم عميل جديد" value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
-                          <Input placeholder="الهاتف" value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
-                          <Input className="col-span-2 bg-white" placeholder="العنوان" value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
+                          <Input placeholder={t("login.fullName")} value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
+                          <Input placeholder={t("common.phone")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
+                          <Input className="col-span-2 bg-white" placeholder={t("common.address")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
                         </div>
                       </>
                     )}
                   </div>
 
                   <div className="rounded-2xl bg-slate-100 p-3 space-y-3">
-                    <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> التشغيل والدفع</div>
+                    <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> {t("orders.payment")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       <Select value={branchId} onValueChange={setBranchId}>
-                        <SelectTrigger className="bg-white"><SelectValue placeholder="الفرع" /></SelectTrigger>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
                         <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="walk_in">داخلي</SelectItem><SelectItem value="delivery">توصيل</SelectItem></SelectContent>
+                        <SelectContent><SelectItem value="walk_in">{t("orders.walkin")}</SelectItem><SelectItem value="delivery">{t("stage.delivery")}</SelectItem></SelectContent>
                       </Select>
                       <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cash">نقدي</SelectItem><SelectItem value="instapay">InstaPay</SelectItem>
+                          <SelectItem value="cash">{t("orders.cash")}</SelectItem><SelectItem value="instapay">InstaPay</SelectItem>
                           <SelectItem value="cod_cash">دفع عند الاستلام - نقدي</SelectItem><SelectItem value="cod_instapay">دفع عند الاستلام - InstaPay</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> طلب مستعجل</label>
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent")}</label>
                       
                     </div>
                     <div className="grid grid-cols-3 gap-2">
@@ -416,24 +418,24 @@ function NewOrderPage() {
 
                 {orderType === "delivery" && (
                   <div className="rounded-2xl bg-teal-50 border border-teal-100 p-3 space-y-3">
-                    <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> بيانات التوصيل والموقع</div>
+                    <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> {t("orders.deliveryAddress")}</div>
                     <div className="grid md:grid-cols-2 gap-2">
                       <Select onValueChange={(v) => applyArea(v, "pickup") }>
-                        <SelectTrigger><SelectValue placeholder="منطقة/كمبوند الاستلام" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t("orders.pickupArea")} /></SelectTrigger>
                         <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select onValueChange={(v) => applyArea(v, "delivery") }>
-                        <SelectTrigger><SelectValue placeholder="منطقة/كمبوند التسليم" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder={t("orders.deliveryArea")} /></SelectTrigger>
                         <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="grid lg:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Input placeholder="عنوان/رابط موقع الاستلام" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
+                        <Input placeholder={t("orders.pickupAddress")} value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
                         <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                       <div className="space-y-2">
-                        <Input placeholder="عنوان/رابط موقع التسليم" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+                        <Input placeholder={t("orders.deliveryAddress")} value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
                         <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                     </div>
@@ -446,12 +448,12 @@ function NewOrderPage() {
               <CardContent className="p-4 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="font-black text-xl">الخدمات السريعة</div>
-                    <div className="text-xs text-slate-500">اضغط الخدمة لإضافتها فورًا للفاتورة</div>
+                    <div className="font-black text-xl">{t("orders.quickServices")}</div>
+                    <div className="text-xs text-slate-500">{t("orders.quickServicesDetail")}</div>
                   </div>
                   <div className="relative w-full md:w-72">
                     <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input className="pr-9" placeholder="ابحث عن خدمة" value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
+                    <Input className="pr-9" placeholder={t("orders.searchService")} value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
                   </div>
                 </div>
 
@@ -459,7 +461,8 @@ function NewOrderPage() {
                   {FILTERS.map((f) => {
                     const Icon = f.icon;
                     const active = filter === f.id;
-                    return <button key={f.id} onClick={() => setFilter(f.id)} className={`rounded-2xl p-3 border text-sm font-black transition ${active ? "bg-teal-600 text-white border-teal-600 shadow-lg" : "bg-slate-50 hover:bg-slate-100"}`}><Icon className="w-4 h-4 mx-auto mb-1" />{f.label}</button>;
+                    const label = f.id === "all" ? t("notif.filter.all") : f.id === "cleaning" ? t("common.repair") : f.id === "ironing" ? t("stage.ironing") : t("stage.cleaning") + " + " + t("stage.ironing");
+                    return <button key={f.id} onClick={() => setFilter(f.id)} className={`rounded-2xl p-3 border text-sm font-black transition ${active ? "bg-teal-600 text-white border-teal-600 shadow-lg" : "bg-slate-50 hover:bg-slate-100"}`}><Icon className="w-4 h-4 mx-auto mb-1" />{label}</button>;
                   })}
                 </div>
 
@@ -472,16 +475,16 @@ function NewOrderPage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between">
                         <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? "تنظيف + كي" : s.service_type === "ironing" ? "كي" : "تصليح"}</Badge>
-                        <div className="font-black text-teal-700">{fmtMoney(s.unit_price)}</div>
+                        <div className="font-black text-teal-700">{fmtMoney(s.unit_price, t("common.egp"))}</div>
                       </div>
                     </button>
                   ))}
-                  {!filteredServices.length && <div className="col-span-full text-center text-slate-500 p-10">لا توجد خدمات مطابقة</div>}
+                  {!filteredServices.length && <div className="col-span-full text-center text-slate-500 p-10">{t("orders.noServices")}</div>}
                 </div>
 
                 <div>
-                  <Label className="text-slate-700">ملاحظات الطلب</Label>
-                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات مهمة..." />
+                  <Label className="text-slate-700">{t("order.notes")}</Label>
+                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("order.notes")} />
                 </div>
               </CardContent>
             </Card>
