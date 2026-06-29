@@ -39,3 +39,8 @@ npm run build
 ```
 
 all pass.
+
+
+## Feature propagation
+
+Any new feature must satisfy `docs/FEATURE_PROPAGATION_CHECKLIST.md` so it works for newly created tenants, not only the current production tenant.

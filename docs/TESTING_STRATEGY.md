@@ -37,3 +37,8 @@ Authenticated E2E tests to add next against staging:
 - Worker station actions.
 - Customer portal payment proof upload.
 - System health/APDO repair check.
+
+
+## Feature propagation
+
+Any new feature must satisfy `docs/FEATURE_PROPAGATION_CHECKLIST.md` so it works for newly created tenants, not only the current production tenant.
