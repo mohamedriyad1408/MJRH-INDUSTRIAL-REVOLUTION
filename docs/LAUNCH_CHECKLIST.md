@@ -11,7 +11,7 @@ Configure these as GitHub Actions secrets so CI can run the full release gate:
 - `SUPABASE_ACCESS_TOKEN`
 - `SUPABASE_PROJECT_REF`
 
-Configure these as Vercel environment variables before removing `.env.production` from Git:
+Configure these as Vercel environment variables. `.env.production` is ignored and no longer tracked:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`

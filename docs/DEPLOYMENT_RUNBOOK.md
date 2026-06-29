@@ -52,7 +52,7 @@ Required environment variables:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY` or `VITE_SUPABASE_ANON_KEY`
 
-Current repository still contains `.env.production` to keep Vercel stable. The safer target state is to move these values to Vercel environment variables and remove `.env.production` from Git.
+`.env.production` is intentionally ignored and no longer tracked. Vercel and GitHub Actions must provide the Supabase frontend variables through environment variables/secrets.
 
 ## Production smoke test
 
