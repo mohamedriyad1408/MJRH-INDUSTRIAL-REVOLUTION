@@ -13,7 +13,7 @@ function vendorChunk(id: string) {
   if (id.includes("recharts") || id.includes("d3-") || id.includes("victory-vendor")) return "vendor-charts";
   if (id.includes("date-fns")) return "vendor-date";
   if (id.includes("qrcode")) return "vendor-qrcode";
-  return "vendor-misc";
+  return undefined;
 }
 
 export default defineConfig({
