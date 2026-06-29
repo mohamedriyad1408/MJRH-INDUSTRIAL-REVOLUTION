@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ClipboardList, Users, Sparkles, Shirt, Package, Wallet } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/manager")({
   component: ManagerHubPage,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_app/manager")({
 
 function ManagerHubPage() {
   const { hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const isOps = hasRole("ops_manager");
   const isCs = hasRole("cs_manager");
   const isOwner = hasRole("owner");
@@ -61,23 +63,23 @@ function ManagerHubPage() {
   if (loading || !stats) return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">لوحة المدير</h1>
+        <h1 className="text-2xl font-bold">{t("manager.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          {isOps ? "إدارة محطات التشغيل والفنيين" : isCs ? "إدارة الطلبات والمندوبين" : "نظرة عامة للإدارة"}
+          {isOps ? t("manager.opsSub") : isCs ? t("manager.csSub") : t("manager.generalSub")}
         </p>
       </div>
 
       {/* CS-focused row */}
       {(isCs || isOwner) && (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-2">خدمة العملاء — اليوم</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t("cs.todayHub")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Stat icon={<ClipboardList className="w-4 h-4" />} label="طلبات اليوم" value={String(stats.ordersTodayCount)} link="/orders" />
-            <Stat label="إيرادات اليوم" value={fmtMoney(stats.ordersTodayRevenue)} />
-            <Stat label="طلبات مستعجلة" value={String(stats.urgentToday)} tone={stats.urgentToday ? "warn" : undefined} />
-            <Stat label="طلبات لم تبدأ" value={String(stats.received)} link="/orders" />
+            <Stat icon={<ClipboardList className="w-4 h-4" />} label={t("today.kpi.ordersToday")} value={String(stats.ordersTodayCount)} link="/orders" />
+            <Stat label={t("dashboard.revToday")} value={fmtMoney(stats.ordersTodayRevenue, t("common.egp"))} />
+            <Stat label={t("dashboard.kpi.urgent")} value={String(stats.urgentToday)} tone={stats.urgentToday ? "warn" : undefined} />
+            <Stat label={t("ops.notStarted")} value={String(stats.received)} link="/orders" />
           </div>
         </div>
       )}
@@ -85,44 +87,44 @@ function ManagerHubPage() {
       {/* Ops-focused row */}
       {(isOps || isOwner) && (
         <div>
-          <h2 className="text-sm font-semibold text-muted-foreground mb-2">محطات التشغيل</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t("navGroup.محطات العمل")}</h2>
           <div className="grid grid-cols-3 gap-3">
-            <Stat icon={<Sparkles className="w-4 h-4" />} label="في التنظيف" value={String(stats.cleaning)} link="/stations/cleaning" />
-            <Stat icon={<Shirt className="w-4 h-4" />} label="في الكي" value={String(stats.ironing)} link="/stations/ironing" />
-            <Stat icon={<Package className="w-4 h-4" />} label="في التغليف" value={String(stats.packing)} link="/stations/packing" />
+            <Stat icon={<Sparkles className="w-4 h-4" />} label={t("stage.cleaning")} value={String(stats.cleaning)} link="/stations/cleaning" />
+            <Stat icon={<Shirt className="w-4 h-4" />} label={t("stage.ironing")} value={String(stats.ironing)} link="/stations/ironing" />
+            <Stat icon={<Package className="w-4 h-4" />} label={t("stage.packing")} value={String(stats.packing)} link="/stations/packing" />
           </div>
         </div>
       )}
 
       {/* Requests row */}
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground mb-2">طلبات بانتظار قرار</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-2">{t("manager.pendingRequests")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center justify-between">
-              <span>طلبات الإجازة</span>
+              <span>{t("manager.leaveRequests")}</span>
               {stats.pendingLeaves > 0 && <Badge variant="destructive">{stats.pendingLeaves}</Badge>}
             </CardTitle></CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground mb-3">
-                {stats.pendingLeaves === 0 ? "لا توجد طلبات معلقة" : `${stats.pendingLeaves} طلب بانتظار الموافقة`}
+                {stats.pendingLeaves === 0 ? t("manager.noPending") : `${stats.pendingLeaves} ${t("manager.leavesPendingText")}`}
               </div>
-              <Button asChild variant="outline" size="sm"><Link to="/staff/leaves">عرض الطلبات</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link to="/staff/leaves">{t("manager.viewRequests")}</Link></Button>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center justify-between">
-              <span>طلبات السلف</span>
+              <span>{t("finance.advancesTab")}</span>
               {stats.pendingAdvances > 0 && <Badge variant="destructive">{stats.pendingAdvances}</Badge>}
             </CardTitle></CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground mb-3">
                 {stats.pendingAdvances === 0
-                  ? "لا توجد طلبات معلقة"
-                  : `${stats.pendingAdvances} طلب بإجمالي ${fmtMoney(stats.pendingAdvancesTotal)}`}
+                  ? t("manager.noPending")
+                  : `${stats.pendingAdvances} ${t("manager.advancesPendingText")} ${fmtMoney(stats.pendingAdvancesTotal, t("common.egp"))}`}
               </div>
-              <Button asChild variant="outline" size="sm"><Link to="/finance">عرض الطلبات</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link to="/finance">{t("manager.viewRequests")}</Link></Button>
             </CardContent>
           </Card>
         </div>
@@ -131,22 +133,22 @@ function ManagerHubPage() {
       {/* Active team */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2">
-          <Users className="w-4 h-4" /> الفريق النشط ({stats.activeStaff.length})
+          <Users className="w-4 h-4" /> {t("ops.activeTeam")} ({stats.activeStaff.length})
         </CardTitle></CardHeader>
         <CardContent className="p-0">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
-              <tr><th className="text-start p-3">الاسم</th><th className="text-start p-3">الوظيفة</th><th className="text-start p-3">المحطة</th></tr>
+              <tr><th className="text-start p-3">{t("login.fullName")}</th><th className="text-start p-3">{t("common.role")}</th><th className="text-start p-3">{t("stage.received")}</th></tr>
             </thead>
             <tbody>
-              {stats.activeStaff.length === 0 && <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">لا يوجد موظفون نشطون</td></tr>}
+              {stats.activeStaff.length === 0 && <tr><td colSpan={3} className="p-6 text-center text-muted-foreground">{t("ops.noStaff")}</td></tr>}
               {stats.activeStaff.map((e: any) => (
                 <tr key={e.id} className="border-t">
                   <td className="p-3 font-medium">
                     <Link to="/staff/$id" params={{ id: e.id }} className="hover:underline">{e.full_name}</Link>
                   </td>
                   <td className="p-3 text-muted-foreground">{e.job_title}</td>
-                  <td className="p-3 text-xs">{e.station ? ({ reception: "الاستلام", cleaning: "التنظيف", ironing: "الكي", packing: "التغليف", delivery: "التسليم" } as Record<string,string>)[e.station] ?? "—" : "—"}</td>
+                  <td className="p-3 text-xs">{e.station ? t("stage." + e.station, e.station) : "—"}</td>
                 </tr>
               ))}
             </tbody>

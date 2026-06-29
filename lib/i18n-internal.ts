@@ -1,6 +1,17 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "manager.title": "لوحة المدير",
+  "manager.opsSub": "إدارة محطات التشغيل والفنيين",
+  "manager.csSub": "إدارة الطلبات والمندوبين",
+  "manager.generalSub": "نظرة عامة للإدارة",
+  "cs.todayHub": "خدمة العملاء — اليوم",
+  "manager.pendingRequests": "طلبات بانتظار قرار",
+  "manager.leaveRequests": "طلبات الإجازة",
+  "manager.noPending": "لا توجد طلبات معلقة",
+  "manager.leavesPendingText": "طلب بانتظار الموافقة",
+  "manager.viewRequests": "عرض الطلبات",
+  "manager.advancesPendingText": "طلب بإجمالي",
   "ops.subtitle": "نظرة سريعة على الطلبات والإيرادات",
   "ops.tomorrowOrders": "طلبات غدًا",
   "ops.notStarted": "لم تبدأ",
@@ -530,6 +541,17 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "manager.title": "Manager Hub",
+  "manager.opsSub": "Manage stations and technical staff",
+  "manager.csSub": "Manage orders and couriers",
+  "manager.generalSub": "Operational hub for management",
+  "cs.todayHub": "Customer Service — Today",
+  "manager.pendingRequests": "Requests Pending Decision",
+  "manager.leaveRequests": "Leave Requests",
+  "manager.noPending": "No pending requests",
+  "manager.leavesPendingText": "request(s) pending approval",
+  "manager.viewRequests": "View Requests",
+  "manager.advancesPendingText": "request(s) totaling",
   "ops.subtitle": "A quick overview of orders and revenues",
   "ops.tomorrowOrders": "Tomorrow's orders",
   "ops.notStarted": "Not started",
@@ -1086,6 +1108,17 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "manager.title": "Espace Manager",
+  "manager.opsSub": "Gérer les stations et le personnel technique",
+  "manager.csSub": "Gérer les commandes et les livreurs",
+  "manager.generalSub": "Aperçu de gestion",
+  "cs.todayHub": "Service Client — Aujourd'hui",
+  "manager.pendingRequests": "Demandes en attente de décision",
+  "manager.leaveRequests": "Demandes de congés",
+  "manager.noPending": "Aucune demande en attente",
+  "manager.leavesPendingText": "demande(s) en attente de validation",
+  "manager.viewRequests": "Voir les demandes",
+  "manager.advancesPendingText": "demande(s) pour un total de",
   "ops.subtitle": "Un aperçu rapide des commandes et des revenus",
   "ops.tomorrowOrders": "Commandes de demain",
   "ops.notStarted": "Pas commencé",
@@ -1383,6 +1416,17 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "manager.title": "Hub Manager",
+  "manager.opsSub": "Gestisci stazioni e personale tecnico",
+  "manager.csSub": "Gestisci ordini e corrieri",
+  "manager.generalSub": "Panoramica di gestione",
+  "cs.todayHub": "Servizio Clienti — Oggi",
+  "manager.pendingRequests": "Richieste in Attesa di Decisione",
+  "manager.leaveRequests": "Richieste di Congedo",
+  "manager.noPending": "Nessuna richiesta in attesa",
+  "manager.leavesPendingText": "richiesta/e in attesa di approvazione",
+  "manager.viewRequests": "Vedi Richieste",
+  "manager.advancesPendingText": "richiesta/e per un totale di",
   "ops.subtitle": "Una rapida panoramica di ordini ed entrate",
   "ops.tomorrowOrders": "Ordini di domani",
   "ops.notStarted": "Non iniziato",
@@ -1680,6 +1724,17 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "manager.title": "Panel de Gerente",
+  "manager.opsSub": "Gestionar estaciones y personal técnico",
+  "manager.csSub": "Gestionar pedidos y repartidores",
+  "manager.generalSub": "Visión general de gestión",
+  "cs.todayHub": "Atención al Cliente — Hoy",
+  "manager.pendingRequests": "Solicitudes Pendientes de Decisión",
+  "manager.leaveRequests": "Solicitudes de Permiso",
+  "manager.noPending": "No hay solicitudes pendientes",
+  "manager.leavesPendingText": "solicitud(es) pendiente(s) de aprobación",
+  "manager.viewRequests": "Ver Solicitudes",
+  "manager.advancesPendingText": "solicitud(es) por un total de",
   "ops.subtitle": "Un resumen rápido de pedidos e ingresos",
   "ops.tomorrowOrders": "Pedidos de mañana",
   "ops.notStarted": "No iniciado",
@@ -1977,6 +2032,17 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "manager.title": "Manager-Zentrale",
+  "manager.opsSub": "Stationen und technisches Personal verwalten",
+  "manager.csSub": "Aufträge und Kuriere verwalten",
+  "manager.generalSub": "Management-Übersicht",
+  "cs.todayHub": "Kundenservice — Heute",
+  "manager.pendingRequests": "Anträge ausstehend",
+  "manager.leaveRequests": "Urlaubsanträge",
+  "manager.noPending": "Keine ausstehenden Anträge",
+  "manager.leavesPendingText": "Antrag/Anträge warten auf Freigabe",
+  "manager.viewRequests": "Anträge anzeigen",
+  "manager.advancesPendingText": "Antrag/Anträge mit einer Gesamtsumme von",
   "ops.subtitle": "Eine schnelle Übersicht über Aufträge und Einnahmen",
   "ops.tomorrowOrders": "Aufträge für morgen",
   "ops.notStarted": "Nicht begonnen",
@@ -2274,6 +2340,17 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "manager.title": "经理工作台",
+  "manager.opsSub": "管理作业工位与工艺技术人员",
+  "manager.csSub": "管理客户订单与配送人员",
+  "manager.generalSub": "核心管理指标概览",
+  "cs.todayHub": "客服业务指标 — 今日",
+  "manager.pendingRequests": "待审批申请",
+  "manager.leaveRequests": "员工请假申请",
+  "manager.noPending": "暂无待审核申请",
+  "manager.leavesPendingText": "笔请假申请等待批准",
+  "manager.viewRequests": "审核申请",
+  "manager.advancesPendingText": "笔预支申请累计",
   "ops.subtitle": "订单与收入的简要概览",
   "ops.tomorrowOrders": "明日订单数",
   "ops.notStarted": "未开始",
@@ -2571,6 +2648,17 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "manager.title": "管理者ハブ",
+  "manager.opsSub": "ステーションと技術スタッフの管理",
+  "manager.csSub": "注文と配送員の管理",
+  "manager.generalSub": "管理運用サマリー",
+  "cs.todayHub": "カスタマーサービス — 本日",
+  "manager.pendingRequests": "意思決定待ちの申請",
+  "manager.leaveRequests": "休暇申請",
+  "manager.noPending": "保留中の申請はありません",
+  "manager.leavesPendingText": "件の休暇申請が承認待ちです",
+  "manager.viewRequests": "申請を確認",
+  "manager.advancesPendingText": "件の前払い申請（合計: ",
   "ops.subtitle": "注文と売上の簡単な概要",
   "ops.tomorrowOrders": "明日の注文",
   "ops.notStarted": "未着手",
@@ -2868,6 +2956,17 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "manager.title": "Central do Gerente",
+  "manager.opsSub": "Gerenciar estações e equipe técnica",
+  "manager.csSub": "Gerenciar pedidos e entregadores",
+  "manager.generalSub": "Visão geral de gerenciamento",
+  "cs.todayHub": "Atendimento ao Cliente — Hoje",
+  "manager.pendingRequests": "Solicitações Pendentes de Decisão",
+  "manager.leaveRequests": "Solicitações de Folga",
+  "manager.noPending": "Nenhuma solicitação pendente",
+  "manager.leavesPendingText": "solicitação(ões) pendente(s) de aprovação",
+  "manager.viewRequests": "Ver Solicitações",
+  "manager.advancesPendingText": "solicitação(ões) totalizando",
   "ops.subtitle": "Uma rápida visão geral de pedidos e receitas",
   "ops.tomorrowOrders": "Pedidos de amanhã",
   "ops.notStarted": "Não iniciado",
