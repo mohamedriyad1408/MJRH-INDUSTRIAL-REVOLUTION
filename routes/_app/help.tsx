@@ -20,7 +20,7 @@ type Guide = {
   links: { label: string; href: string }[];
 };
 
-const guides: Guide[] = [
+const guidesAr: Guide[] = [
   {
     title: "المالك / المدير",
     roles: ["owner", "ops_manager", "cs_manager"],
@@ -55,7 +55,7 @@ const guides: Guide[] = [
     links: [
       { label: "طلب جديد", href: "/orders/new" },
       { label: "الاستقبال", href: "/stations/reception" },
-      { label: "الطلبات", href: "/orders" },
+      { label: "الالطلبات", href: "/orders" },
       { label: "العملاء", href: "/customers" },
     ],
   },
@@ -141,10 +141,134 @@ const guides: Guide[] = [
   },
 ];
 
+const guidesEn: Guide[] = [
+  {
+    title: "Owner / Manager",
+    roles: ["owner", "ops_manager", "cs_manager"],
+    icon: <BookOpenCheck className="w-5 h-5" />,
+    goal: "Start the day, monitor operations, handle alerts, and close safes at the end of the day.",
+    steps: [
+      "Open Daily Operations and check work readiness.",
+      "Review System Health if there are critical red or amber warnings.",
+      "Monitor the live map to assign pickup and delivery requests.",
+      "Review financial reports before ending the day.",
+      "Close all safes only at the absolute end of the day.",
+    ],
+    links: [
+      { label: "Daily Operations", href: "/daily-operations" },
+      { label: "System Health", href: "/system-health" },
+      { label: "Live Map", href: "/live-map" },
+      { label: "Safe Closing", href: "/cash-closing" },
+    ],
+  },
+  {
+    title: "Reception & CS",
+    roles: ["owner", "ops_manager", "cs_manager", "employee"],
+    icon: <Users className="w-5 h-5" />,
+    goal: "Register orders and pieces, approve invoices, and help customers track and pay.",
+    steps: [
+      "Open new order and choose customer or create a new one.",
+      "Add services and garments, capturing photos where needed.",
+      "In reception, press start; ironing-only goes to ironing, others go to washing.",
+      "After operations finish, confirm the invoice and send WhatsApp tracking link.",
+      "If a customer returns pieces after delivery, open order and log customer return.",
+    ],
+    links: [
+      { label: "New Order", href: "/orders/new" },
+      { label: "Reception", href: "/stations/reception" },
+      { label: "All Orders", href: "/orders" },
+      { label: "Customers", href: "/customers" },
+    ],
+  },
+  {
+    title: "Washing & Cleaning",
+    roles: ["owner", "ops_manager", "employee"],
+    icon: <PackageCheck className="w-5 h-5" />,
+    goal: "Complete washing and handle returns without modifying existing delivered orders.",
+    steps: [
+      "Review pending cleaning pieces and open customer returns only.",
+      "Press Cleaned for each piece after completion.",
+      "If it is an internal reclean return, it goes back to the assigned ironing technician.",
+      "Delivered orders appear as separate customer returns, no need to reopen old invoices.",
+    ],
+    links: [{ label: "Cleaning Station", href: "/stations/cleaning" }],
+  },
+  {
+    title: "Drying & Assembly",
+    roles: ["owner", "ops_manager", "employee"],
+    icon: <PackageCheck className="w-5 h-5" />,
+    goal: "Assemble pieces and resolve mark/label issues before ironing and delivery.",
+    steps: [
+      "Start reviewing the garment after cleaning completes.",
+      "If label is missing or unclear, report issue and do not send to ironing.",
+      "Use camera photo search to match lost pieces if needed.",
+      "After solving label issues, mark as ready for ironing.",
+    ],
+    links: [{ label: "Drying & Assembly", href: "/stations/drying-assembly" }],
+  },
+  {
+    title: "Ironing Technician",
+    roles: ["owner", "ops_manager", "employee"],
+    icon: <Shirt className="w-5 h-5" />,
+    goal: "Ironing is assigned only to present technicians, and payouts are calculated from reference values.",
+    steps: [
+      "Press Check-In at the start of work, and Check-Out upon leaving.",
+      "Pieces are distributed automatically based on attendance and current load.",
+      "If a tech leaves, uncompleted tasks are redistributed to present ones.",
+      "If a garment needs reclean, register reclean return with a clear reason.",
+      "Payouts depend on the ironing reference value of the item, even if order is Clean+Iron.",
+    ],
+    links: [{ label: "Ironing", href: "/stations/ironing" }, { label: "Ironing Payroll", href: "/staff/ironing-payroll" }],
+  },
+  {
+    title: "Courier & Map",
+    roles: ["owner", "ops_manager", "courier"],
+    icon: <Truck className="w-5 h-5" />,
+    goal: "Update location, pickup orders, and deliver with clear route planning.",
+    steps: [
+      "Couriers open the driver dashboard and press My Location.",
+      "Managers assign tasks from the map. If it fails, reason is shown.",
+      "Select two or more points on the map or list, then press Draw Route.",
+      "You can open the planned route directly in Google Maps.",
+    ],
+    links: [{ label: "Courier Dashboard", href: "/driver" }, { label: "Live Map", href: "/live-map" }],
+  },
+  {
+    title: "Accounting & Safes",
+    roles: ["owner", "ops_manager"],
+    icon: <Calculator className="w-5 h-5" />,
+    goal: "Every transaction has an automatic cash movement and journal, closing is done daily.",
+    steps: [
+      "Paid expenses create cash movements and journal entries automatically.",
+      "Payable expenses create accrual journals, payment creates settlement journals.",
+      "InstaPay uploads are linked directly as payment proofs.",
+      "Overpayments are recorded as courier tips with associated accounting journals.",
+      "Do not close safes until the absolute end of the business day.",
+    ],
+    links: [{ label: "Accounting & Cash", href: "/accounting" }, { label: "Safe Closing", href: "/cash-closing" }, { label: "Accounting Ledger", href: "/ledger" }],
+  },
+  {
+    title: "WhatsApp Messages",
+    roles: ["owner", "ops_manager", "cs_manager"],
+    icon: <Wallet className="w-5 h-5" />,
+    goal: "The system prepares WhatsApp text, and staff sends it manually without paid API costs.",
+    steps: [
+      "Open System Health.",
+      "Review pending WhatsApp queue.",
+      "Click Open WhatsApp to send the pre-written template text.",
+      "After sending, click Mark Sent to record it in the database.",
+    ],
+    links: [{ label: "System Health", href: "/system-health" }],
+  },
+];
+
 function HelpPage() {
   const { roles, hasRole } = useAuth();
-  const { t, dir } = useI18n();
-  const visible = guides.filter((g) => g.roles.some((r) => hasRole(r as any)) || roles.includes("super_admin" as any));
+  const { t, dir, language } = useI18n();
+  
+  const isAr = language === "ar";
+  const list = isAr ? guidesAr : guidesEn;
+  const visible = list.filter((g) => g.roles.some((r) => hasRole(r as any)) || roles.includes("super_admin" as any));
 
   return (
     <div className="space-y-5" dir={dir}>
@@ -156,7 +280,7 @@ function HelpPage() {
       <div className="grid lg:grid-cols-2 gap-4">
         {visible.map((g) => <Card key={g.title} className="overflow-hidden">
           <CardHeader className="bg-muted/40">
-            <CardTitle className="flex items-center gap-2 text-base">{g.icon}{g.title}<Badge variant="secondary" className="me-auto">{g.roles.length} أدوار</Badge></CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">{g.icon}{g.title}<Badge variant="secondary" className="me-auto">{g.roles.length} {isAr ? "أدوار" : "roles"}</Badge></CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             <p className="text-sm text-muted-foreground font-medium">{g.goal}</p>
@@ -173,7 +297,13 @@ function HelpPage() {
       <Card className="border-emerald-200 bg-emerald-50">
         <CardContent className="p-4 text-sm text-emerald-900 flex items-start gap-2">
           <CheckCircle2 className="w-5 h-5 mt-0.5" />
-          <div><b>قاعدة ثابتة:</b> لو ظهرت مشكلة في فحص النظام أو رحلة الطلب، اضغط زر الإصلاح إن وجد. لو لا يوجد إصلاح تلقائي، ستجد رابط الصفحة المسؤولة عن الخطوة.</div>
+          <div>
+            {isAr ? (
+              <><b>قاعدة ثابتة:</b> لو ظهرت مشكلة في فحص النظام أو رحلة الطلب، اضغط زر الإصلاح إن وجد. لو لا يوجد إصلاح تلقائي، ستجد رابط الصفحة المسؤولة عن الخطوة.</>
+            ) : (
+              <><b>Golden Rule:</b> If a problem appears in system health or the order journey, click the repair button if available. If there is no auto-repair, you will find a link to the page responsible for that step.</>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
