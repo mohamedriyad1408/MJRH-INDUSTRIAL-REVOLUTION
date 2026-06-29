@@ -149,7 +149,7 @@ export function MotivationalPopups() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("station,job_role,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => {
+    supabase.from("employees").select("station,job_role,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => {
       setStation(data?.job_role === "driver" ? "driver" : data?.station ?? null);
     });
   }, [user]);

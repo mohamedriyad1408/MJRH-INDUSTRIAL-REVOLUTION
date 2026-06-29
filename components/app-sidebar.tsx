@@ -113,7 +113,7 @@ export function AppSidebar() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any)
+    supabase
       .from("employees")
       .select("id,station,job_role,profile_id,email")
       .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
@@ -122,7 +122,7 @@ export function AppSidebar() {
         setEmployeeStation(data?.station ?? null);
         setEmployeeJobRole(data?.job_role ?? null);
         if (data?.id && !data.profile_id) {
-          await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+          await supabase.from("employees").update({ profile_id: user.id }).eq("id", data.id);
         }
       });
   }, [user]);

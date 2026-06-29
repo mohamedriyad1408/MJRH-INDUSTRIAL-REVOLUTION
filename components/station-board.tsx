@@ -61,7 +61,7 @@ export function StationBoard({
       notes: `محطة: ${title}`,
     });
     const movedOrder = rows.find((r) => r.id === id);
-    await (supabase as any).rpc("record_operation_event", { _process_key: "station_move", _process_name: `تحريك طلب في ${title}`, _source_type: "order", _source_id: id, _branch_id: movedOrder?.branch_id ?? null, _cash_account_id: null, _report_bucket: "operations/stations", _requires_notification: false, _data: { from_status: from, to_status: to, station, order_number: movedOrder?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "station_move", _process_name: `تحريك طلب في ${title}`, _source_type: "order", _source_id: id, _branch_id: movedOrder?.branch_id ?? undefined, _cash_account_id: undefined, _report_bucket: "operations/stations", _requires_notification: false, _data: { from_status: from, to_status: to, station, order_number: movedOrder?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     if (to === "ironing") {
       try {
         const r = await autoAssignIroningPieces(id);

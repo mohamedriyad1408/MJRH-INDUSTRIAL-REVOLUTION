@@ -34,7 +34,7 @@ export function NotificationCenter() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("id,station,job_role,profile_id,email")
+    supabase.from("employees").select("id,station,job_role,profile_id,email")
       .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
       .maybeSingle()
       .then(({ data }: any) => {
@@ -59,7 +59,7 @@ export function NotificationCenter() {
   async function load() {
     setLoading(true);
     if (tenantId && (hasRole("owner") || hasRole("ops_manager"))) {
-      await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId }).then(() => null);
+      await supabase.rpc("generate_smart_operational_alerts", { _tenant_id: tenantId }).then(() => null);
     }
     const now = new Date().toISOString();
     const next: Alert[] = [];
@@ -68,12 +68,12 @@ export function NotificationCenter() {
     const [lateRes, unpaidRes, unassignedDeliveryRes, noLocationOrdersRes, recleanRes, pickupNoLocationRes, pickupPendingRes, appNotifsRes] = await Promise.all([
       supabase.from("orders").select("id,order_number,promised_delivery_at,status").not("status", "in", '("delivered","cancelled")').lt("promised_delivery_at", now).limit(5),
       supabase.from("orders").select("id,order_number,total,payment_status,status").eq("payment_status", "unpaid").not("status", "eq", "cancelled").limit(5),
-      (supabase as any).from("orders").select("id,order_number,status").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
-      (supabase as any).from("orders").select("id,order_number,order_type,delivery_address,delivery_lat,delivery_lng,status").eq("order_type", "delivery").in("status", ["received", "cleaning", "ironing", "packing", "ready"]).is("delivery_lat", null).limit(5),
-      (supabase as any).from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,reclean_reason,reclean_photo_url,orders!inner(order_number,status)").eq("needs_reclean", true).not("orders.status", "in", "(delivered,cancelled)").limit(5),
-      (supabase as any).from("pickup_requests").select("id,customer_name,status,scheduled_at,lat,lng").in("status", ["pending", "assigned"]).is("lat", null).limit(5),
-      (supabase as any).from("pickup_requests").select("id,customer_name,status").eq("status", "pending").limit(5),
-      (supabase as any).from("app_notifications").select("id,audience,title,body,href,tone,created_at").in("audience", myAudiences).is("read_at", null).order("created_at", { ascending: false }).limit(10).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("orders").select("id,order_number,status").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
+      supabase.from("orders").select("id,order_number,order_type,delivery_address,delivery_lat,delivery_lng,status").eq("order_type", "delivery").in("status", ["received", "cleaning", "ironing", "packing", "ready"]).is("delivery_lat", null).limit(5),
+      supabase.from("service_units").select("id,label_code,name,order_id,assigned_ironing_employee_id,service_type,reclean_reason,reclean_photo_url,orders!inner(order_number,status)").eq("needs_reclean", true).not("orders.status", "in", "(delivered,cancelled)").limit(5),
+      supabase.from("pickup_requests").select("id,customer_name,status,scheduled_at,lat,lng").in("status", ["pending", "assigned"]).is("lat", null).limit(5),
+      supabase.from("pickup_requests").select("id,customer_name,status").eq("status", "pending").limit(5),
+      (supabase.from("app_notifications").select("id,audience,title,body,href,tone,created_at").in("audience", myAudiences).is("read_at", null).order("created_at", { ascending: false }).limit(10) as unknown as Promise<any>).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     (lateRes.data ?? []).forEach((o: any) => {
@@ -132,12 +132,12 @@ export function NotificationCenter() {
 
     // Station-specific operational alerts
     if (myAudiences.includes("ironing")) {
-      const { data } = await (supabase as any).from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId).is("ironing_completed_at", null).limit(10);
+      const { data } = await supabase.from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId || "").is("ironing_completed_at", null).limit(10);
       (data ?? []).slice(0, 5).forEach((u: any) => next.push({ kind: "computed", category: "ops", id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: interpolate(t("notif.waitingIroning"), { label: u.label_code }), detail: `${t("order.orderNo", "طلب #{order}").replace("{order}", String(u.orders?.order_number ?? "?"))} — ${u.name} — ${u.reclean_reason ?? t("order.reclean")}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
     }
 
     if (myAudiences.includes("cleaning")) {
-      const { data } = await (supabase as any).from("orders").select("id,order_number,status").eq("status", "cleaning").limit(5);
+      const { data } = await supabase.from("orders").select("id,order_number,status").eq("status", "cleaning").limit(5);
       (data ?? []).forEach((o: any) => next.push({ kind: "computed", category: "ops", id: `clean-${o.id}`, audience: ["cleaning"], tone: "blue", title: interpolate(t("notif.cleaningOrder"), { order: o.order_number }), detail: t("notif.reviewPieces"), icon: <Sparkles className="w-4 h-4" />, href: "/stations/cleaning" }));
     }
 
@@ -149,7 +149,7 @@ export function NotificationCenter() {
 
   async function markRead(alert: Alert) {
     if (!alert.appNotificationId) return;
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_notifications")
       .update({ read_at: new Date().toISOString() })
       .eq("id", alert.appNotificationId);
@@ -159,7 +159,7 @@ export function NotificationCenter() {
   async function markAllSystemRead() {
     const ids = (filter === "all" ? alerts : visibleAlerts).map((a) => a.appNotificationId).filter(Boolean) as string[];
     if (!ids.length) return;
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("app_notifications")
       .update({ read_at: new Date().toISOString() })
       .in("id", ids);
@@ -180,9 +180,9 @@ export function NotificationCenter() {
     if (alert.quickAction === "repairFinance") {
       if (!tenantId) return toast.error(t("notif.noTenant"));
       try {
-        const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
+        const { data, error } = await supabase.rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
         if (error) throw error;
-        toast.success(interpolate(t("notif.financeRepairDone"), { fixed: data?.fixed ?? 0, remaining: data?.remaining ?? 0 }));
+        toast.success(interpolate(t("notif.financeRepairDone"), { fixed: (data as any)?.fixed ?? 0, remaining: (data as any)?.remaining ?? 0 }));
         load();
       } catch (e: any) {
         toast.error(e?.message ?? t("notif.financeRepairFailed"));

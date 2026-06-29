@@ -22,7 +22,7 @@ export function MobileWorkDock() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("id,full_name,station,job_role,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployee(data ?? null));
+    supabase.from("employees").select("id,full_name,station,job_role,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => setEmployee(data ?? null));
   }, [user]);
 
   async function loadCounts() {
@@ -30,15 +30,15 @@ export function MobileWorkDock() {
     const branchId = employee?.branch_id;
     const addBranch = (q: any) => branchId && !isManager ? q.eq("branch_id", branchId) : q;
     const [received, cleaning, drying, ironing, packing, ready, pickups, unpaid, late] = await Promise.all([
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "received")).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "cleaning")).then((r: any) => r).catch(() => ({ count: 0 })),
-      (supabase as any).from("drying_assembly_queue").select("id", { count: "exact", head: true }).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "ironing")).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "packing")).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null)).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"])).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).neq("payment_status", "paid")).then((r: any) => r).catch(() => ({ count: 0 })),
-      addBranch((supabase as any).from("orders").select("id", { count: "exact", head: true }).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString())).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "received")).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "cleaning")).then((r: any) => r).catch(() => ({ count: 0 })),
+      (supabase.from("drying_assembly_queue").select("id", { count: "exact", head: true }) as unknown as Promise<any>).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "ironing")).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "packing")).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null)).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"])).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).neq("payment_status", "paid")).then((r: any) => r).catch(() => ({ count: 0 })),
+      addBranch(supabase.from("orders").select("id", { count: "exact", head: true }).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString())).then((r: any) => r).catch(() => ({ count: 0 })),
     ]);
     setCounts({ received: received.count ?? 0, cleaning: cleaning.count ?? 0, drying: drying.count ?? 0, ironing: ironing.count ?? 0, packing: packing.count ?? 0, ready: ready.count ?? 0, pickups: pickups.count ?? 0, unpaid: unpaid.count ?? 0, late: late.count ?? 0 });
   }

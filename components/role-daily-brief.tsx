@@ -43,15 +43,15 @@ export function RoleDailyBrief({ role }: { role: Role }) {
     const now = new Date().toISOString();
 
     const [ordersRes, expensesRes, cashRes, recleanRes, qcRes, pickupsRes, msgsRes, invoiceRes, proofRes] = await Promise.all([
-      (supabase as any).from("orders").select("id,total,status,payment_status,promised_delivery_at,created_at").gte("created_at", startIso),
-      (supabase as any).from("expenses").select("amount,status,spent_at").gte("spent_at", startIso).neq("status", "void"),
-      (supabase as any).from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("service_units").select("id,orders!inner(status)", { count: "exact", head: true }).eq("needs_reclean", true).not("orders.status", "in", "(delivered,cancelled)"),
-      (supabase as any).from("service_units").select("id,orders!inner(status)", { count: "exact", head: true }).eq("current_stage", "qc_failed").not("orders.status", "in", "(delivered,cancelled)"),
-      (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
-      (supabase as any).from("customer_messages").select("id", { count: "exact", head: true }).eq("status", "queued").then((r: any) => r).catch(() => ({ count: 0 })),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
+      supabase.from("orders").select("id,total,status,payment_status,promised_delivery_at,created_at").gte("created_at", startIso),
+      supabase.from("expenses").select("amount,status,spent_at").gte("spent_at", startIso).neq("status", "void"),
+      (supabase.from("cash_transactions").select("amount,direction,happened_at").gte("happened_at", startIso).neq("status", "void") as unknown as Promise<any>).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("service_units").select("id,orders!inner(status)", { count: "exact", head: true }).eq("needs_reclean", true).not("orders.status", "in", "(delivered,cancelled)"),
+      supabase.from("service_units").select("id,orders!inner(status)", { count: "exact", head: true }).eq("current_stage", "qc_failed").not("orders.status", "in", "(delivered,cancelled)"),
+      supabase.from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
+      (supabase.from("customer_messages").select("id", { count: "exact", head: true }).eq("status", "queued") as unknown as Promise<any>).then((r: any) => r).catch(() => ({ count: 0 })),
+      supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+      supabase.from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
     ]);
 
     const orders = ordersRes.data ?? [];
@@ -122,7 +122,7 @@ export function RoleDailyBrief({ role }: { role: Role }) {
 
   async function saveToNotifications() {
     if (!data) return;
-    const { error } = await (supabase as any).from("app_notifications").insert({
+    const { error } = await supabase.from("app_notifications").insert({
       audience: notificationAudience,
       title,
       body: reportText(),

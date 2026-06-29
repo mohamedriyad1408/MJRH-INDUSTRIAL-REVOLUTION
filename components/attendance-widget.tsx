@@ -21,17 +21,17 @@ export function AttendanceWidget() {
 
   async function load() {
     if (!user || !shouldShow) return;
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("employees")
       .select("id,full_name,profile_id,email")
       .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
       .maybeSingle();
     if (data?.id && !data.profile_id) {
-      await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+      await supabase.from("employees").update({ profile_id: user.id }).eq("id", data.id);
     }
     setEmp(data ?? null);
     if (!data?.id) return;
-    const { data: open } = await (supabase as any)
+    const { data: open } = await supabase
       .from("employee_attendance")
       .select("id,check_in_at")
       .eq("employee_id", data.id)
@@ -57,7 +57,7 @@ export function AttendanceWidget() {
     if (!emp) return toast.error("حسابك غير مربوط بموظف");
     setBusy(true);
     const loc = await getLocation();
-    const { error } = await (supabase as any).from("employee_attendance").insert({
+    const { error } = await supabase.from("employee_attendance").insert({
       employee_id: emp.id,
       check_in_lat: loc.lat ?? null,
       check_in_lng: loc.lng ?? null,
@@ -72,7 +72,7 @@ export function AttendanceWidget() {
     if (!shift) return;
     setBusy(true);
     const loc = await getLocation();
-    const { error } = await (supabase as any).from("employee_attendance").update({
+    const { error } = await supabase.from("employee_attendance").update({
       check_out_at: new Date().toISOString(),
       check_out_lat: loc.lat ?? null,
       check_out_lng: loc.lng ?? null,

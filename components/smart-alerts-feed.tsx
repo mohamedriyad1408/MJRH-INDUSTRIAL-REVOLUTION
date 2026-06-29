@@ -46,7 +46,7 @@ export function SmartAlertsFeed({ compact = false }: { compact?: boolean }) {
 
     // 2. Stuck units (in same stage > 3 hours)
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
-    const { data: stuck } = await (supabase as any)
+    const { data: stuck } = await supabase
       .from("service_units")
       .select("id, current_stage, orders!inner(order_number,status)")
       .lt("updated_at", threeHoursAgo)
