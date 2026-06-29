@@ -77,6 +77,7 @@ describe("critical localization guardrails", () => {
         const value = translateForLanguage(lang, key);
         const en = translateForLanguage("en", key);
         expect(value, `${lang}:${key}`).not.toBe(key);
+        expect(/[\u0600-\u06FF]/.test(value), `${lang}:${key} should not be Arabic fallback`).toBe(false);
         if (value === en) sameAsEnglish++;
       }
       // Some terms are legitimate cognates or brand/technical labels (Administration, CRM, QC, APDO),
