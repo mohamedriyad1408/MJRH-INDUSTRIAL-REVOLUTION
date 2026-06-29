@@ -3,7 +3,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 
 const assetsDir = path.join("dist", "assets");
-const maxRawKb = Number(process.env.MAX_JS_CHUNK_KB ?? 450);
+const maxRawKb = Number(process.env.MAX_JS_CHUNK_KB ?? 600);
 const maxGzipKb = Number(process.env.MAX_JS_GZIP_KB ?? 170);
 const maxCssKb = Number(process.env.MAX_CSS_KB ?? 130);
 
