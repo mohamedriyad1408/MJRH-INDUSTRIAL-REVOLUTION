@@ -1,6 +1,17 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "settings.pageTitle": "إعدادات المغسلة",
+  "settings.infoTitle": "معلومات المغسلة",
+  "settings.bizName": "اسم المغسلة",
+  "settings.currencyLabel": "العملة",
+  "settings.feesTitle": "الرسوم",
+  "settings.urgentFee": "رسوم الاستعجال",
+  "settings.deliveryFee": "مصاريف التوصيل الافتراضية",
+  "settings.taxPercent": "ضريبة %",
+  "settings.save": "حفظ",
+  "settings.toastSaved": "تم الحفظ",
+  "settings.cannotLoad": "لا يمكن تحميل الإعدادات.",
   "requests.title": "الطلبات المالية والإجازات",
   "requests.subtitle": "كل طلبات الموظفين في مكان واحد",
   "requests.pendingAdv": "سلف معلقة",
@@ -816,6 +827,17 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "settings.pageTitle": "Laundry Settings",
+  "settings.infoTitle": "Laundry Information",
+  "settings.bizName": "Business Name",
+  "settings.currencyLabel": "Currency",
+  "settings.feesTitle": "Fees & Charges",
+  "settings.urgentFee": "Urgent Service Fee",
+  "settings.deliveryFee": "Default Delivery Fee",
+  "settings.taxPercent": "Tax %",
+  "settings.save": "Save Settings",
+  "settings.toastSaved": "Settings saved successfully",
+  "settings.cannotLoad": "Cannot load settings.",
   "requests.title": "Financial Requests & Leaves",
   "requests.subtitle": "All employee requests in one place",
   "requests.pendingAdv": "Pending Advances",
@@ -1658,6 +1680,17 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "settings.pageTitle": "Paramètres de la Blanchisserie",
+  "settings.infoTitle": "Informations de la Blanchisserie",
+  "settings.bizName": "Nom de l'entreprise",
+  "settings.currencyLabel": "Devise",
+  "settings.feesTitle": "Frais & Tarifs",
+  "settings.urgentFee": "Frais de service urgent",
+  "settings.deliveryFee": "Frais de livraison par défaut",
+  "settings.taxPercent": "Taxe %",
+  "settings.save": "Enregistrer les paramètres",
+  "settings.toastSaved": "Paramètres enregistrés avec succès",
+  "settings.cannotLoad": "Impossible de charger les paramètres.",
   "requests.title": "Demandes Financières & Congés",
   "requests.subtitle": "Toutes les demandes des employés au même endroit",
   "requests.pendingAdv": "Avances en attente",
@@ -2235,6 +2268,17 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "settings.pageTitle": "Impostazioni Lavanderia",
+  "settings.infoTitle": "Informazioni Lavanderia",
+  "settings.bizName": "Nome Attività",
+  "settings.currencyLabel": "Valuta",
+  "settings.feesTitle": "Tariffe e Commissioni",
+  "settings.urgentFee": "Tariffa Servizio Urgente",
+  "settings.deliveryFee": "Tariffa Consegna Predefinita",
+  "settings.taxPercent": "Tassa %",
+  "settings.save": "Salva Impostazioni",
+  "settings.toastSaved": "Impostazioni salvate con successo",
+  "settings.cannotLoad": "Impossibile caricare le impostazioni.",
   "requests.title": "Richieste Finanziarie e Permessi",
   "requests.subtitle": "Tutte le richieste dei dipendenti in un solo luogo",
   "requests.pendingAdv": "Anticipi in attesa",
@@ -2812,6 +2856,17 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "settings.pageTitle": "Configuración de la Lavandería",
+  "settings.infoTitle": "Información de la Lavandería",
+  "settings.bizName": "Nombre del Negocio",
+  "settings.currencyLabel": "Moneda",
+  "settings.feesTitle": "Tarifas y Cargos",
+  "settings.urgentFee": "Tarifa de Servicio Urgente",
+  "settings.deliveryFee": "Tarifa de Entrega por Defecto",
+  "settings.taxPercent": "Impuesto %",
+  "settings.save": "Guardar Configuración",
+  "settings.toastSaved": "Configuración guardada con éxito",
+  "settings.cannotLoad": "No se puede cargar la configuración.",
   "requests.title": "Solicitudes Financieras y Permisos",
   "requests.subtitle": "Todas las solicitudes de empleados en un solo lugar",
   "requests.pendingAdv": "Anticipos Pendientes",
@@ -3389,6 +3444,17 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "settings.pageTitle": "Wäscherei-Einstellungen",
+  "settings.infoTitle": "Wäscherei-Informationen",
+  "settings.bizName": "Betriebsname",
+  "settings.currencyLabel": "Währung",
+  "settings.feesTitle": "Gebühren & Abgaben",
+  "settings.urgentFee": "Dringlichkeitsgebühr",
+  "settings.deliveryFee": "Standard-Liefergebühr",
+  "settings.taxPercent": "Steuer %",
+  "settings.save": "Einstellungen speichern",
+  "settings.toastSaved": "Einstellungen erfolgreich gespeichert",
+  "settings.cannotLoad": "Einstellungen konnten nicht geladen werden.",
   "requests.title": "Finanzielle Anfragen & Urlaub",
   "requests.subtitle": "Alle Mitarbeiteranfragen an einem Ort",
   "requests.pendingAdv": "Ausstehende Vorschüsse",
@@ -3966,6 +4032,17 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "settings.pageTitle": "洗衣店综合配置",
+  "settings.infoTitle": "基础店招与信息",
+  "settings.bizName": "营业店铺名",
+  "settings.currencyLabel": "流通币种",
+  "settings.feesTitle": "附加规费与抽佣",
+  "settings.urgentFee": "加急特需工时费",
+  "settings.deliveryFee": "初始基本派件费",
+  "settings.taxPercent": "税金比例 %",
+  "settings.save": "提交流转配置",
+  "settings.toastSaved": "已生效全新店铺设置",
+  "settings.cannotLoad": "无法拉取当期参数配置。",
   "requests.title": "财务预支与请假申请",
   "requests.subtitle": "统一集中化管理所有员工申请",
   "requests.pendingAdv": "待批复预支借款",
@@ -4544,6 +4621,17 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "settings.pageTitle": "店舗基本設定",
+  "settings.infoTitle": "ランドリー情報",
+  "settings.bizName": "店舗名・屋号",
+  "settings.currencyLabel": "利用通貨",
+  "settings.feesTitle": "各種料金・手数料",
+  "settings.urgentFee": "お急ぎ特急追加料金",
+  "settings.deliveryFee": "基本配送料金",
+  "settings.taxPercent": "消費税率 %",
+  "settings.save": "設定内容を保存",
+  "settings.toastSaved": "店舗設定を正常に保存しました",
+  "settings.cannotLoad": "設定情報を取得できませんでした。",
   "requests.title": "給与前借りと休暇申請",
   "requests.subtitle": "全スタッフの申請状況を一元管理",
   "requests.pendingAdv": "未承認の前借り申請",
@@ -5121,6 +5209,17 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "settings.pageTitle": "Configurações da Lavanderia",
+  "settings.infoTitle": "Informações da Lavanderia",
+  "settings.bizName": "Nome do Estabelecimento",
+  "settings.currencyLabel": "Moeda",
+  "settings.feesTitle": "Taxas e Encargos",
+  "settings.urgentFee": "Taxa de Serviço Urgente",
+  "settings.deliveryFee": "Taxa de Entrega Padrão",
+  "settings.taxPercent": "Imposto %",
+  "settings.save": "Salvar Configurações",
+  "settings.toastSaved": "Configurações salvas com sucesso",
+  "settings.cannotLoad": "Não foi possível carregar as configurações.",
   "requests.title": "Solicitações Financeiras e Licenças",
   "requests.subtitle": "Todas as solicitações de funcionários em um só lugar",
   "requests.pendingAdv": "Vales Pendentes",
