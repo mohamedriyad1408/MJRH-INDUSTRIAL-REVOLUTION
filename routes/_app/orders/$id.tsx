@@ -504,7 +504,7 @@ function OrderDetailPage() {
                   {u.attributes?.color ? `${t("order.color")}: ${u.attributes.color} · ` : ""}
                   {t("order.estimatedValue")}: {Number(u.line_value ?? 0).toLocaleString()} {t("common.egp")} · {t("order.effort")} ×{u.complexity_factor}
                 </div>
-                {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">كي</SelectItem><SelectItem value="both">تنظيف + كي</SelectItem><SelectItem value="cleaning">تصليح</SelectItem></SelectContent></Select></div>}
+                {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">{t("stage.ironing")}</SelectItem><SelectItem value="both">{t("common.cleanIron")}</SelectItem><SelectItem value="cleaning">{t("common.repair")}</SelectItem></SelectContent></Select></div>}
                 <div className="text-xs text-muted-foreground">
                   {t("order.ironingTech")}: <b>{u.employees?.full_name ?? t("order.notAssignedYet")}</b>
                 </div>
@@ -526,7 +526,10 @@ function OrderDetailPage() {
                   <label className="text-xs text-muted-foreground mb-1 block">{t("order.pieceType")}</label>
                   <Select value={form.garment_type} onValueChange={(v) => setForm((f) => ({ ...f, garment_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{GARMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                    <SelectContent>{GARMENT_TYPES.map((item) => {
+                      const label = item === "قميص" ? t("station.ironing.shirtLike") : item === "بلوزة" ? t("station.ironing.myShirts") : item === "بنطلون" ? "Pants" : item === "جاكيت" ? "Jacket" : item === "بدلة" ? "Suit" : item === "عباية" ? "Abaya" : item === "فستان" ? "Dress" : item === "تيشيرت" ? "T-shirt" : item === "جيبة" ? "Skirt" : item === "معطف" ? "Coat" : t("common.other");
+                      return <SelectItem key={item} value={item}>{label}</SelectItem>;
+                    })}</SelectContent>
                   </Select>
                 </div>
                 <div>
