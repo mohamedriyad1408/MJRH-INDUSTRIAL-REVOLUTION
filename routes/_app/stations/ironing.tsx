@@ -180,7 +180,7 @@ function IroningManagerPage() {
         </>
       )}
 
-      <StationBoard title="تحريك الطلبات إلى التغليف" station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />
+      <StationBoard title={t("station.ironing.boardTitle", "تحريك الطلبات إلى التغليف")} station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />
     </div>
   );
 }

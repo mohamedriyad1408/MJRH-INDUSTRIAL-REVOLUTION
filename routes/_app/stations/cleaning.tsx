@@ -38,7 +38,7 @@ function CleaningStation() {
     return (
       <div className="space-y-5" dir={dir}>
         <CleaningWorkerView manager />
-        <StationBoard title="تحريك الطلبات من الغسيل إلى التجفيف والتجميع" station="cleaning" incoming="received" current="cleaning" nextStatus="ironing" nextLabel={t("station.assembly.title")} />
+        <StationBoard title={t("station.cleaning.boardTitle", "تحريك الطلبات من الغسيل إلى التجفيف والتجميع")} station="cleaning" incoming="received" current="cleaning" nextStatus="ironing" nextLabel={t("station.assembly.title")} />
       </div>
     );
   }
