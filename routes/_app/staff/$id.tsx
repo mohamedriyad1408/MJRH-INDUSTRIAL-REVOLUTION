@@ -26,12 +26,13 @@ type Schedule = { id?: string; day_of_week: number; start_time: string | null; e
 
 function StaffDetailPage() {
   const { id } = Route.useParams();
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const nav = useNavigate();
   const isOwner = hasRole("owner");
   const canEditSchedule = isOwner || hasRole("ops_manager") || hasRole("cs_manager");
 
   const [emp, setEmp] = useState<Employee | null>(null);
+  const [branches, setBranches] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [leaves, setLeaves] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
@@ -54,12 +55,25 @@ function StaffDetailPage() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
+  useEffect(() => {
+    if (tenantId) {
+      (supabase as any)
+        .from("branches")
+        .select("id,name")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .order("created_at")
+        .then(({ data }: any) => setBranches(data ?? []));
+    }
+  }, [tenantId]);
+
   async function saveBasic() {
     if (!emp) return;
     setSaving(true);
-    const { error } = await supabase.from("employees").update({
+    const { error } = await (supabase as any).from("employees").update({
       full_name: emp.full_name, job_title: emp.job_title, phone: emp.phone, email: emp.email,
       role: emp.role || null, station: emp.station || null,
+      branch_id: emp.branch_id || null,
       monthly_salary: Number(emp.monthly_salary) || 0,
       commission_percent: Number(emp.commission_percent) || 0,
       is_active: emp.is_active, notes: emp.notes,
@@ -123,6 +137,15 @@ function StaffDetailPage() {
             <CardContent className="grid md:grid-cols-2 gap-4">
               <Fld label="الاسم"><Input value={emp.full_name} onChange={(v) => setEmp({ ...emp, full_name: v.target.value })} disabled={!isOwner} /></Fld>
               <Fld label="الوظيفة"><Input value={emp.job_title} onChange={(v) => setEmp({ ...emp, job_title: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label="الفرع">
+                <Select value={emp.branch_id ?? "none"} onValueChange={(v) => setEmp({ ...emp, branch_id: v === "none" ? null : v })} disabled={!isOwner}>
+                  <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">بدون فرع</SelectItem>
+                    {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Fld>
               <Fld label="الهاتف"><Input value={emp.phone ?? ""} onChange={(v) => setEmp({ ...emp, phone: v.target.value })} disabled={!isOwner} /></Fld>
               <Fld label="الإيميل"><Input value={emp.email ?? ""} onChange={(v) => setEmp({ ...emp, email: v.target.value })} disabled={!isOwner} /></Fld>
               <Fld label="تاريخ التعيين"><Input value={fmtDate(emp.hire_date)} disabled /></Fld>

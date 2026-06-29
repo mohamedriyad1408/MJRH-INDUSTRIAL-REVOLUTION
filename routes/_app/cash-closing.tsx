@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { LockKeyhole, Loader2, Calculator, RefreshCw, Plus, Banknote } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -45,6 +46,8 @@ function CashClosingPage() {
   const [saving, setSaving] = useState(false);
   const [repairing, setRepairing] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [dayTx, setDayTx] = useState<any[]>([]);
   const [afterTx, setAfterTx] = useState<any[]>([]);
@@ -71,6 +74,18 @@ function CashClosingPage() {
     }
   }
 
+  useEffect(() => {
+    if (tenantId) {
+      (supabase as any)
+        .from("branches")
+        .select("id,name")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .order("created_at")
+        .then(({ data }: any) => setBranches(data ?? []));
+    }
+  }, [tenantId]);
+
   async function load() {
     if (!canUse) { setLoading(false); return; }
     if (!tenantId) {
@@ -87,11 +102,37 @@ function CashClosingPage() {
 
       const from = new Date(date + "T00:00:00").toISOString();
       const to = new Date(date + "T23:59:59").toISOString();
+
+      let accQuery = (supabase as any).from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true);
+      if (branchId !== "all") {
+        accQuery = accQuery.eq("branch_id", branchId);
+      }
+      accQuery = accQuery.order("created_at");
+
+      const branchCashSelect = branchId === "all" ? "*,cash_accounts(name)" : "*,cash_accounts!inner(name,branch_id)";
+      let txQuery = (supabase as any).from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId).eq("status", "posted").gte("happened_at", from).lte("happened_at", to);
+      if (branchId !== "all") {
+        txQuery = txQuery.eq("cash_accounts.branch_id", branchId);
+      }
+      txQuery = txQuery.order("happened_at", { ascending: false });
+
+      const futureSelect = branchId === "all" ? "id,cash_account_id,direction,amount,status,happened_at" : "id,cash_account_id,direction,amount,status,happened_at,cash_accounts!inner(branch_id)";
+      let futureQuery = (supabase as any).from("cash_transactions").select(futureSelect).eq("tenant_id", tenantId).eq("status", "posted").gt("happened_at", to);
+      if (branchId !== "all") {
+        futureQuery = futureQuery.eq("cash_accounts.branch_id", branchId);
+      }
+
+      let closeQuery = (supabase as any).from("daily_cash_closings").select("*,cash_accounts(name)").eq("tenant_id", tenantId);
+      if (branchId !== "all") {
+        closeQuery = closeQuery.eq("branch_id", branchId);
+      }
+      closeQuery = closeQuery.order("closing_date", { ascending: false }).limit(40);
+
       const [acc, tx, future, close] = await Promise.all([
-        (supabase as any).from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("created_at"),
-        (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).eq("status", "posted").gte("happened_at", from).lte("happened_at", to).order("happened_at", { ascending: false }),
-        (supabase as any).from("cash_transactions").select("id,cash_account_id,direction,amount,status,happened_at").eq("tenant_id", tenantId).eq("status", "posted").gt("happened_at", to),
-        (supabase as any).from("daily_cash_closings").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("closing_date", { ascending: false }).limit(40),
+        accQuery,
+        txQuery,
+        futureQuery,
+        closeQuery,
       ]);
       [acc, tx, future, close].forEach((r: any) => r.error && errs.push(r.error.message));
       setAccounts(acc.data ?? []);
@@ -103,7 +144,7 @@ function CashClosingPage() {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, [canUse, tenantId, date]);
+  useEffect(() => { load(); }, [canUse, tenantId, date, branchId]);
 
   const rows: CashRow[] = useMemo(() => {
     return accounts.map((account) => {
@@ -162,6 +203,7 @@ function CashClosingPage() {
         const { error } = await (supabase as any).from("daily_cash_closings").upsert({
           tenant_id: tenantId,
           cash_account_id: r.account.id,
+          branch_id: r.account.branch_id || null,
           closing_date: date,
           opening_balance: r.opening,
           cash_in: r.cashIn,
@@ -220,7 +262,23 @@ function CashClosingPage() {
       <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح</Button></div>
     </div>
 
-    <div className="grid md:grid-cols-[240px_auto] gap-3 items-end">
+    <div className="grid md:grid-cols-[200px_200px_auto] gap-3 items-end">
+      <div>
+        <Label>الفرع</Label>
+        <Select value={branchId} onValueChange={setBranchId}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الفروع</SelectItem>
+            {branches.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div><Label>اليوم</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
       <div className="flex flex-wrap gap-2"><Button onClick={fillExpected} variant="outline">ملء المتوقع كفعلي</Button><Button onClick={closeAllSafes} disabled={saving || !rows.length}>{saving ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Calculator className="w-4 h-4 ms-1" />}إقفال كل الخزن</Button></div>
     </div>

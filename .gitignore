@@ -15,3 +15,9 @@ test-results/
 demo-video/real-system/
 demo-video/system-slides/screens/
 *.beatbox.wav
+
+# Temp and local caches
+.npm/
+.supabase/
+supabase/.temp/
+.temp/

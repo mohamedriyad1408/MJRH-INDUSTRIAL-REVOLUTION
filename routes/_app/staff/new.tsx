@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +16,14 @@ export const Route = createFileRoute("/_app/staff/new")({
 });
 
 function NewStaffPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const nav = useNavigate();
   const isOwner = hasRole("owner");
 
   const [form, setForm] = useState({
     full_name: "",
     job_title: "",
+    branch_id: "",
     role: "none",
     station: "none",
     phone: "",
@@ -32,7 +33,25 @@ function NewStaffPage() {
     commission_percent: "0",
     notes: "",
   });
+  const [branches, setBranches] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (tenantId) {
+      (supabase as any)
+        .from("branches")
+        .select("id,name")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .order("created_at")
+        .then(({ data }: any) => {
+          setBranches(data ?? []);
+          if (data && data.length > 0) {
+            setForm((old) => ({ ...old, branch_id: data[0].id }));
+          }
+        });
+    }
+  }, [tenantId]);
 
   if (!isOwner) {
     return <Card className="p-8 text-center text-muted-foreground">هذه الصفحة متاحة للمالك فقط.</Card>;
@@ -47,6 +66,7 @@ function NewStaffPage() {
     const payload: any = {
       full_name: form.full_name.trim(),
       job_title: form.job_title.trim(),
+      branch_id: form.branch_id || null,
       role: form.role === "none" ? null : form.role,
       station: form.station === "none" ? null : form.station,
       phone: form.phone || null,
@@ -74,6 +94,14 @@ function NewStaffPage() {
         <CardHeader><CardTitle className="text-base">المعلومات الأساسية</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
           <Field label="الاسم الكامل *"><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
+          <Field label="الفرع *">
+            <Select value={form.branch_id} onValueChange={(v) => setForm({ ...form, branch_id: v })}>
+              <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+              <SelectContent>
+                {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
           <Field label="الوظيفة *" hint="مثال: كوّاء، مندوب، محاسب">
             <Input value={form.job_title} onChange={(e) => setForm({ ...form, job_title: e.target.value })} />
           </Field>

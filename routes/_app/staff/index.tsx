@@ -26,6 +26,8 @@ type Employee = {
   commission_percent: number;
   hire_date: string;
   is_active: boolean;
+  branch_id?: string | null;
+  branches?: { name: string } | null;
 };
 
 const ROLE_AR: Record<string, string> = {
@@ -36,21 +38,39 @@ const ROLE_AR: Record<string, string> = {
 };
 
 function StaffListPage() {
-  const { hasRole } = useAuth();
+  const { hasRole, tenantId } = useAuth();
   const isOwner = hasRole("owner");
   const [list, setList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("active");
+  const [branches, setBranches] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState("all");
+
+  useEffect(() => {
+    if (tenantId) {
+      (supabase as any)
+        .from("branches")
+        .select("id,name")
+        .eq("tenant_id", tenantId)
+        .eq("is_active", true)
+        .order("created_at")
+        .then(({ data }: any) => setBranches(data ?? []));
+    }
+  }, [tenantId]);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase.from("employees").select("*").order("created_at", { ascending: false });
-    setList((data ?? []) as Employee[]);
+    let query = (supabase as any).from("employees").select("*,branches(name)");
+    if (branchId !== "all") {
+      query = query.eq("branch_id", branchId);
+    }
+    const { data } = await query.order("created_at", { ascending: false });
+    setList((data ?? []) as any[]);
     setLoading(false);
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [branchId]);
 
   const filtered = list.filter((e) => {
     if (filterStatus === "active" && !e.is_active) return false;
@@ -82,6 +102,13 @@ function StaffListPage() {
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="ابحث بالاسم أو الوظيفة..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
+        <Select value={branchId} onValueChange={setBranchId}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="الفرع" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل الفروع</SelectItem>
+            {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Select value={filterRole} onValueChange={setFilterRole}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -112,6 +139,7 @@ function StaffListPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-start p-3">الاسم</th>
+                  <th className="text-start p-3">الفرع</th>
                   <th className="text-start p-3">الوظيفة</th>
                   <th className="text-start p-3">الدور</th>
                   <th className="text-start p-3">المحطة</th>
@@ -122,11 +150,12 @@ function StaffListPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">لا توجد نتائج</td></tr>
                 )}
                 {filtered.map((e) => (
                   <tr key={e.id} className="border-t hover:bg-muted/30">
                     <td className="p-3 font-medium">{e.full_name}</td>
+                    <td className="p-3 text-xs font-bold text-teal-600">{e.branches?.name ?? "—"}</td>
                     <td className="p-3">{e.job_title}</td>
                     <td className="p-3">{e.role ? <Badge variant="secondary">{ROLE_AR[e.role]}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</td>
                     <td className="p-3 text-muted-foreground text-xs">{e.station ? stationAr(e.station) : "—"}</td>
