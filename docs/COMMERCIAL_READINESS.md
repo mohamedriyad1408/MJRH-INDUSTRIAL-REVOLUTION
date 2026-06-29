@@ -17,15 +17,12 @@ This document tracks the work needed to keep MJRH production-grade.
 - Unit tests for core workflow/payment/return/distribution rules.
 - Playwright browser smoke tests for public/mobile pages and auth redirects.
 - GitHub Actions CI for audit, typecheck, unit tests, E2E tests, and production build.
-
-## Next hardening steps
-
-1. Add authenticated Playwright E2E tests against a staging Supabase project.
-2. Add Sentry or equivalent runtime error monitoring.
-3. Move production env values from `.env.production` into Vercel Environment Variables, then remove the file from Git.
-4. Add user-facing documentation and training videos.
-5. Add WhatsApp Business API integration for real outgoing messages.
-6. Add printer profile support for 80mm thermal receipts.
+- Authenticated Playwright E2E tests against a staging Supabase project.
+- Runtime client error monitoring and Supabase error logs.
+- Production environment variables moved to Vercel Environment Variables and `.env.production` removed from Git.
+- User-facing documentation and training videos (`docs/USER_GUIDE_AR.md`, `docs/DEMO_VIDEO_SCRIPT_AR.md`).
+- WhatsApp Business API integration via Supabase Edge Functions (`whatsapp-send`).
+- Printer profile support for 80mm thermal receipts alongside standard A4 web invoices.
 
 ## Release gate
 
@@ -39,7 +36,6 @@ npm run build
 ```
 
 all pass.
-
 
 ## Feature propagation
 

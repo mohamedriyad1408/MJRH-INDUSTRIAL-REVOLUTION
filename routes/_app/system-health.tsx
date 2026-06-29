@@ -337,6 +337,18 @@ function SystemHealthPage() {
     else { toast.success(t("system.toast.msgSent")); load(); }
   }
 
+  async function sendWhatsAppApi(row: any) {
+    const { data, error } = await supabase.functions.invoke("whatsapp-send", {
+      body: { id: row.id, phone: row.phone, message: row.message },
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(t("system.toast.whatsappApiSent", "تم إرسال الرسالة عبر WhatsApp API بنجاح"));
+      load();
+    }
+  }
+
   async function resolveClientError(row: any) {
     const { error } = await (supabase as any).rpc("resolve_client_error_log", { _id: row.id, _notes: "تمت المراجعة من فحص النظام" });
     if (error) toast.error(error.message);
@@ -488,6 +500,7 @@ function SystemHealthPage() {
             <div className="text-muted-foreground break-words">{m.message}</div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={() => openWhatsApp(m)}>{t("system.openWhatsApp")}</Button>
+              <Button size="sm" variant="secondary" onClick={() => sendWhatsAppApi(m)}>{t("system.sendWhatsAppApi", "إرسال عبر WhatsApp API")}</Button>
               <Button size="sm" variant="outline" onClick={() => markWhatsAppSent(m)}>{t("system.markSent")}</Button>
             </div>
           </div>)}

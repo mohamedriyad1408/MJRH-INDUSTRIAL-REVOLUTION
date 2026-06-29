@@ -21,3 +21,5 @@ demo-video/system-slides/screens/
 .supabase/
 supabase/.temp/
 .temp/
+.vercel
+.env*

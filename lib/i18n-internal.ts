@@ -1,6 +1,12 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "order.printA4": "طباعة فاتورة A4",
+  "order.printThermal": "إيصال حراري 80mm",
+  "order.invoiceTitle": "فاتورة #",
+  "order.invoiceFooter": "شكراً لثقتكم — MJRH | نظام إدارة المغاسل",
+  "system.sendWhatsAppApi": "إرسال عبر WhatsApp API",
+  "system.toast.whatsappApiSent": "تم إرسال الرسالة عبر WhatsApp API بنجاح",
   "accounting.guide.title": "طريقة الاستخدام المختصرة",
   "accounting.guide.step1": "١) افتح رواتب الشهر واضغط جهّز رواتب الشهر لو الرواتب غير ظاهرة.",
   "accounting.guide.step2": "٢) اضغط اعتماد كمصروف آجل ليظهر الراتب كمصروف حتى قبل الدفع.",
@@ -595,6 +601,12 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "order.printA4": "Print A4 Invoice",
+  "order.printThermal": "80mm Thermal Receipt",
+  "order.invoiceTitle": "Invoice #",
+  "order.invoiceFooter": "Thank you for your trust — MJRH | Laundry Management System",
+  "system.sendWhatsAppApi": "Send via WhatsApp API",
+  "system.toast.whatsappApiSent": "Message sent successfully via WhatsApp API",
   "accounting.guide.title": "Quick Guide",
   "accounting.guide.step1": "1) Open monthly payroll and press Generate payroll if not shown.",
   "accounting.guide.step2": "2) Press Post as payable to record salary as an expense before payout.",
@@ -1216,6 +1228,12 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "order.printA4": "Imprimer facture A4",
+  "order.printThermal": "Reçu thermique 80mm",
+  "order.invoiceTitle": "Facture #",
+  "order.invoiceFooter": "Merci de votre confiance — MJRH | Système de gestion de blanchisserie",
+  "system.sendWhatsAppApi": "Envoyer via WhatsApp API",
+  "system.toast.whatsappApiSent": "Message envoyé avec succès via WhatsApp API",
   "accounting.guide.title": "Guide rapide",
   "accounting.guide.step1": "1) Ouvrez la paie mensuelle et cliquez sur Générer la paie si elle ne s'affiche pas.",
   "accounting.guide.step2": "2) Cliquez sur Valider comme dû pour enregistrer le salaire comme dépense avant paiement.",
@@ -1578,6 +1596,12 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "order.printA4": "Stampa fattura A4",
+  "order.printThermal": "Scontrino termico 80mm",
+  "order.invoiceTitle": "Fattura #",
+  "order.invoiceFooter": "Grazie per la fiducia — MJRH | Sistema di gestione lavanderia",
+  "system.sendWhatsAppApi": "Invia tramite WhatsApp API",
+  "system.toast.whatsappApiSent": "Messaggio inviato con successo tramite WhatsApp API",
   "accounting.guide.title": "Guida rapida",
   "accounting.guide.step1": "1) Apri paghe mensili e premi Genera paghe se non visualizzate.",
   "accounting.guide.step2": "2) Premi Approva come spesa per registrare il salario come spesa prima del pagamento.",
@@ -1940,6 +1964,12 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "order.printA4": "Imprimir factura A4",
+  "order.printThermal": "Recibo térmico 80mm",
+  "order.invoiceTitle": "Factura #",
+  "order.invoiceFooter": "Gracias por su confianza — MJRH | Sistema de gestión de lavandería",
+  "system.sendWhatsAppApi": "Enviar por WhatsApp API",
+  "system.toast.whatsappApiSent": "Mensaje enviado con éxito por WhatsApp API",
   "accounting.guide.title": "Guía rápida",
   "accounting.guide.step1": "1) Abra la nómina mensual y presione Generar nómina si no se muestra.",
   "accounting.guide.step2": "2) Presione Aprobar como gasto para registrar el salario como gasto antes del pago.",
@@ -2302,6 +2332,12 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "order.printA4": "A4-Rechnung drucken",
+  "order.printThermal": "80mm Thermo-Bon",
+  "order.invoiceTitle": "Rechnung #",
+  "order.invoiceFooter": "Vielen Dank für Ihr Vertrauen — MJRH | Wäscherei-Managementsystem",
+  "system.sendWhatsAppApi": "Per WhatsApp API senden",
+  "system.toast.whatsappApiSent": "Nachricht erfolgreich per WhatsApp API gesendet",
   "accounting.guide.title": "Kurzanleitung",
   "accounting.guide.step1": "1) Öffnen Sie die monatliche Gehaltsabrechnung und klicken Sie auf Gehaltsabrechnung erstellen, falls nicht angezeigt.",
   "accounting.guide.step2": "2) Klicken Sie auf Als Verbindlichkeit erfassen, um Gehälter vor der Auszahlung zu buchen.",
@@ -2664,6 +2700,12 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "order.printA4": "打印 A4 账单",
+  "order.printThermal": "80mm 热敏小票",
+  "order.invoiceTitle": "账单 #",
+  "order.invoiceFooter": "感谢您的信任 — MJRH | 洗衣管理系统",
+  "system.sendWhatsAppApi": "通过 WhatsApp API 发送",
+  "system.toast.whatsappApiSent": "通过 WhatsApp API 消息发送成功",
   "accounting.guide.title": "快捷使用指南",
   "accounting.guide.step1": "1) 打开本月工资单，点击“生成月度工资”生成初始账目。",
   "accounting.guide.step2": "2) 点击“记入应付费用”，在实际发放前将工资计入应付账款。",
@@ -3027,6 +3069,12 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "order.printA4": "A4請求書を印刷",
+  "order.printThermal": "80mm感熱レシート",
+  "order.invoiceTitle": "請求書 #",
+  "order.invoiceFooter": "信頼に感謝します — MJRH | ランドリー管理システム",
+  "system.sendWhatsAppApi": "WhatsApp APIで送信",
+  "system.toast.whatsappApiSent": "WhatsApp APIでメッセージを正常に送信しました",
   "accounting.guide.title": "クイックガイド",
   "accounting.guide.step1": "1) 月次給与を開き、表示されない場合は「給与を生成」を押します。",
   "accounting.guide.step2": "2) 「未払経費として計上」を押し、支払前に給与を経費として記録します。",
@@ -3389,6 +3437,12 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "order.printA4": "Imprimir fatura A4",
+  "order.printThermal": "Recibo térmico 80mm",
+  "order.invoiceTitle": "Fatura #",
+  "order.invoiceFooter": "Obrigado pela sua confiança — MJRH | Sistema de Gestão de Lavanderia",
+  "system.sendWhatsAppApi": "Enviar por WhatsApp API",
+  "system.toast.whatsappApiSent": "Mensagem enviada com sucesso por WhatsApp API",
   "accounting.guide.title": "Guia rápido",
   "accounting.guide.step1": "1) Abra a folha mensal e pressione Gerar folha se não aparecer.",
   "accounting.guide.step2": "2) Pressione Lançar como despesa para registrar o salário antes do pagamento.",
