@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/platform-fees")({
   head: () => ({ meta: [{ title: "رسوم تشغيل المنصة" }] }),
@@ -22,6 +23,7 @@ type Fee = {
 };
 
 function PlatformFeesPage() {
+  const { t, dir } = useI18n();
   const { isSuperAdmin } = useAuth();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [fees, setFees] = useState<Fee[]>([]);
@@ -29,29 +31,29 @@ function PlatformFeesPage() {
 
   async function load() {
     setLoading(true);
-    const [t, f] = await Promise.all([
+    const [tRes, fRes] = await Promise.all([
       supabase.from("tenants").select("id, name").order("name"),
       supabase.from("platform_fees").select("*"),
     ]);
-    setTenants((t.data ?? []) as any);
-    setFees((f.data ?? []) as any);
+    setTenants((tRes.data ?? []) as any);
+    setFees((fRes.data ?? []) as any);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
-  if (!isSuperAdmin) return <Card className="p-8 text-center">مدير المنصة فقط.</Card>;
+  if (!isSuperAdmin) return <Card className="p-8 text-center">{t("platformFees.adminOnly", "مدير المنصة فقط.")}</Card>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">رسوم تشغيل المنصة</h1>
-        <p className="text-sm text-muted-foreground">إدارة اشتراك كل مغسلة</p>
+        <h1 className="text-2xl font-bold">{t("platformFees.title", "رسوم تشغيل المنصة")}</h1>
+        <p className="text-sm text-muted-foreground">{t("platformFees.subtitle", "إدارة اشتراك كل مغسلة")}</p>
       </div>
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-3">
-          {tenants.map((t) => {
-            const fee = fees.find((x) => x.tenant_id === t.id);
-            return <FeeCard key={t.id} tenant={t} fee={fee} onChange={load} />;
+          {tenants.map((ten) => {
+            const fee = fees.find((x) => x.tenant_id === ten.id);
+            return <FeeCard key={ten.id} tenant={ten} fee={fee} onChange={load} t={t} />;
           })}
         </div>
       )}
@@ -59,7 +61,7 @@ function PlatformFeesPage() {
   );
 }
 
-function FeeCard({ tenant, fee, onChange }: { tenant: Tenant; fee?: Fee; onChange: () => void }) {
+function FeeCard({ tenant, fee, onChange, t }: { tenant: Tenant; fee?: Fee; onChange: () => void; t: any }) {
   const [f, setF] = useState({
     plan_name: fee?.plan_name ?? "standard",
     monthly_fee: String(fee?.monthly_fee ?? 0),
@@ -80,18 +82,20 @@ function FeeCard({ tenant, fee, onChange }: { tenant: Tenant; fee?: Fee; onChang
       ? await supabase.from("platform_fees").update(payload).eq("id", fee.id)
       : await supabase.from("platform_fees").insert(payload);
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم الحفظ"); onChange(); }
+    if (error) toast.error(error.message); else { toast.success(t("platformFees.toastSaved", "تم الحفظ")); onChange(); }
   }
+
+  const curr = t("common.egp");
 
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex justify-between items-center">
           <div className="font-bold">{tenant.name}</div>
-          {fee && <div className="text-xs text-emerald-600">مفعّل: {fmtMoney(fee.monthly_fee)} / شهر</div>}
+          {fee && <div className="text-xs text-emerald-600">{t("platformFees.activeFee", "مفعّل")}: {fmtMoney(fee.monthly_fee, curr)} / {t("common.month", "شهر")}</div>}
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <div><label className="text-xs">الباقة</label>
+          <div><label className="text-xs">{t("platformFees.planLabel", "الباقة")}</label>
             <Select value={f.plan_name} onValueChange={(v) => setF({ ...f, plan_name: v })}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -101,22 +105,22 @@ function FeeCard({ tenant, fee, onChange }: { tenant: Tenant; fee?: Fee; onChang
               </SelectContent>
             </Select>
           </div>
-          <div><label className="text-xs">الحالة</label>
+          <div><label className="text-xs">{t("platformFees.statusLabel", "الحالة")}</label>
             <Select value={f.status} onValueChange={(v) => setF({ ...f, status: v })}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">نشط</SelectItem>
-                <SelectItem value="suspended">موقوف</SelectItem>
-                <SelectItem value="trial">تجريبي</SelectItem>
+                <SelectItem value="active">{t("platformFees.status.active", "نشط")}</SelectItem>
+                <SelectItem value="suspended">{t("platformFees.status.suspended", "موقوف")}</SelectItem>
+                <SelectItem value="trial">{t("platformFees.status.trial", "تجريبي")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div><label className="text-xs">رسوم شهرية</label><Input type="number" value={f.monthly_fee} onChange={(e) => setF({ ...f, monthly_fee: e.target.value })} /></div>
-          <div><label className="text-xs">عمولة/طلب</label><Input type="number" value={f.per_order_fee} onChange={(e) => setF({ ...f, per_order_fee: e.target.value })} /></div>
-          <div><label className="text-xs">يوم الفاتورة</label><Input type="number" min={1} max={28} value={f.billing_day} onChange={(e) => setF({ ...f, billing_day: e.target.value })} /></div>
+          <div><label className="text-xs">{t("platformFees.monthlyFeeLabel", "رسوم شهرية")}</label><Input type="number" value={f.monthly_fee} onChange={(e) => setF({ ...f, monthly_fee: e.target.value })} /></div>
+          <div><label className="text-xs">{t("platformFees.perOrderFeeLabel", "عمولة/طلب")}</label><Input type="number" value={f.per_order_fee} onChange={(e) => setF({ ...f, per_order_fee: e.target.value })} /></div>
+          <div><label className="text-xs">{t("platformFees.billingDayLabel", "يوم الفاتورة")}</label><Input type="number" min={1} max={28} value={f.billing_day} onChange={(e) => setF({ ...f, billing_day: e.target.value })} /></div>
         </div>
         <Button onClick={save} disabled={saving} size="sm" className="w-full">
-          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 ms-1" /> حفظ</>}
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 ms-1" /> {t("platformFees.save", "حفظ")}</>}
         </Button>
       </CardContent>
     </Card>

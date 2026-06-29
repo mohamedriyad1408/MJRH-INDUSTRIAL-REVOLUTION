@@ -30,12 +30,14 @@ function BillingPage() {
   }
   useEffect(() => { if (canView) load(); }, [canView]);
 
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">الفواتير متاحة للمالك فقط.</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("billing.ownerOnly", "الفواتير متاحة للمالك فقط.")}</CardContent></Card>;
+  const curr = t("common.egp");
+
   return <div className="space-y-5" dir={dir}>
-    <div className="flex items-center justify-between gap-3"><div><h1 className="text-2xl font-black flex items-center gap-2"><ReceiptText className="w-7 h-7 text-teal-600" />اشتراك المنصة</h1><p className="text-sm text-muted-foreground">فواتير SaaS الخاصة بالمغسلة وحالة السداد.</p></div><Button variant="outline" onClick={load}>تحديث</Button></div>
+    <div className="flex items-center justify-between gap-3"><div><h1 className="text-2xl font-black flex items-center gap-2"><ReceiptText className="w-7 h-7 text-teal-600" />{t("billing.title", "اشتراك المنصة")}</h1><p className="text-sm text-muted-foreground">{t("billing.subtitle", "فواتير SaaS الخاصة بالمغسلة وحالة السداد.")}</p></div><Button variant="outline" onClick={load}>{t("common.refresh")}</Button></div>
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-      {rows.map((r) => <Card key={r.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{r.period_start} → {r.period_end}</span><Badge variant={r.status === "paid" ? "secondary" : r.status === "overdue" ? "destructive" : "outline"}>{statusAr(r.status, t)}</Badge></CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="text-2xl font-black text-teal-700">{fmtMoney(r.amount)}</div><div className="text-muted-foreground">تاريخ الاستحقاق: {r.due_date ?? "—"}</div>{r.paid_at && <div className="text-emerald-700">مدفوعة في: {new Date(r.paid_at).toLocaleDateString("ar-EG")}</div>}{r.notes && <div className="rounded-xl bg-muted p-2">{r.notes}</div>}</CardContent></Card>)}
-      {!rows.length && <Card className="col-span-full"><CardContent className="p-10 text-center text-muted-foreground">لا توجد فواتير اشتراك بعد.</CardContent></Card>}
+      {rows.map((r) => <Card key={r.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{r.period_start} → {r.period_end}</span><Badge variant={r.status === "paid" ? "secondary" : r.status === "overdue" ? "destructive" : "outline"}>{statusAr(r.status, t)}</Badge></CardTitle></CardHeader><CardContent className="space-y-2 text-sm"><div className="text-2xl font-black text-teal-700">{fmtMoney(r.amount, curr)}</div><div className="text-muted-foreground">{t("billing.dueDate", "تاريخ الاستحقاق")}: {r.due_date ?? "—"}</div>{r.paid_at && <div className="text-emerald-700">{t("billing.paidAt", "مدفوعة في")}: {new Date(r.paid_at).toLocaleDateString("ar-EG")}</div>}{r.notes && <div className="rounded-xl bg-muted p-2">{r.notes}</div>}</CardContent></Card>)}
+      {!rows.length && <Card className="col-span-full"><CardContent className="p-10 text-center text-muted-foreground">{t("billing.empty", "لا توجد فواتير اشتراك بعد.")}</CardContent></Card>}
     </div>}
   </div>;
 }
