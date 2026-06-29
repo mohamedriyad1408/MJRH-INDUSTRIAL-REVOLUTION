@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Loader2, Plus, Camera, CheckCircle2, Clock, Truck, Package, Shirt, Sparkles, Inbox, Trash2, Send, Download, Upload, CreditCard } from "lucide-react";
 
@@ -30,6 +32,7 @@ type CustomerInfo = { id: string; full_name: string; address?: string | null; la
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
 
 function CustomerPortal() {
+  const { t, dir } = useI18n();
   const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
   const [phone, setPhone] = useState("");
   const [verified, setVerified] = useState(false);
@@ -93,7 +96,7 @@ function CustomerPortal() {
     const rows = (order.order_items ?? []).map((it) => `
       <tr><td>${it.name}</td><td>${it.qty}</td><td>${Number(it.unit_price).toFixed(2)}</td><td>${Number(it.line_total ?? it.qty * it.unit_price).toFixed(2)}</td></tr>
     `).join("");
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>فاتورة #${order.order_number}</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px;text-align:right}.total{font-size:22px;font-weight:900;color:#0f766e}.box{border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:16px}</style></head><body><div class="box"><h1>فاتورة طلب #${order.order_number}</h1><p>العميل: ${customerName}</p><p>الهاتف: ${phone}</p><p>تاريخ الطلب: ${new Date(order.created_at).toLocaleString("ar-EG")}</p><p>تمت المراجعة: ${new Date(order.invoice_finalized_at).toLocaleString("ar-EG")}</p></div><table><thead><tr><th>الخدمة</th><th>العدد</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${rows}</tbody></table><p class="total">المطلوب: ${order.total} ج.م</p><script>window.print()</script></body></html>`;
+    const html = `<!doctype html><html dir={dir} lang="ar"><head><meta charset="utf-8"><title>فاتورة #${order.order_number}</title><style>body{font-family:Arial;padding:24px}table{width:100%;border-collapse:collapse}td,th{border:1px solid #ddd;padding:8px;text-align:right}.total{font-size:22px;font-weight:900;color:#0f766e}.box{border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:16px}</style></head><body><div class="box"><h1>فاتورة طلب #${order.order_number}</h1><p>العميل: ${customerName}</p><p>الهاتف: ${phone}</p><p>تاريخ الطلب: ${new Date(order.created_at).toLocaleString("ar-EG")}</p><p>تمت المراجعة: ${new Date(order.invoice_finalized_at).toLocaleString("ar-EG")}</p></div><table><thead><tr><th>الخدمة</th><th>العدد</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${rows}</tbody></table><p class="total">المطلوب: ${order.total} ج.م</p><script>window.print()</script></body></html>`;
     const w = window.open("", "_blank");
     if (!w) return toast.error("المتصفح منع فتح الفاتورة");
     w.document.write(html); w.document.close();
@@ -109,7 +112,7 @@ function CustomerPortal() {
     const typedAmount = Number(paymentAmounts[order.id] || 0);
     const detected = detectAmountFromFilename(file);
     const amount = detected || typedAmount;
-    if (!amount) return toast.error("اكتب المبلغ المدفوع أو ارفع صورة باسم يحتوي على المبلغ مثل instapay-250.jpg");
+    if (!amount) return toast.error(`${t("customer.amountPaid")} مطلوب أو ارفع صورة باسم يحتوي على المبلغ مثل instapay-250.jpg`);
     setPayingOrderId(order.id);
     const ext = file.name.split(".").pop() || "jpg";
     const path = `customer-payments/${order.id}-${Date.now()}.${ext}`;
@@ -155,16 +158,16 @@ function CustomerPortal() {
         <Card className="w-full max-w-sm shadow-2xl border-0 overflow-hidden">
           <div className="bg-gradient-to-br from-teal-700 to-slate-900 text-white p-8 text-center">
             <div className="text-6xl mb-3">👕</div>
-            <h1 className="text-3xl font-black">بوابة العميل</h1>
-            <p className="text-sm text-teal-100 mt-1">اطلب من بيتك وتابع طلبك</p>
+            <h1 className="text-3xl font-black">{t("customer.title")}</h1>
+            <p className="text-sm text-teal-100 mt-1">{t("customer.tagline")}</p><div className="mt-4 flex justify-center"><LanguageSwitcher compact /></div>
           </div>
           <CardContent className="p-6 space-y-5">
             <div>
-              <label className="text-sm font-bold text-slate-700 block mb-2">رقم هاتفك المسجل</label>
+              <label className="text-sm font-bold text-slate-700 block mb-2">{t("customer.phoneLabel")}</label>
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="01xxxxxxxxx" className="text-center text-lg font-mono h-12" onKeyDown={(e) => e.key === "Enter" && verify()} />
             </div>
             <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-lg font-black" onClick={verify} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "دخول"}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("customer.login")}
             </Button>
           </CardContent>
         </Card>
@@ -182,33 +185,33 @@ function CustomerPortal() {
         <div className="rounded-3xl bg-gradient-to-br from-teal-700 to-slate-950 text-white p-5 shadow-xl">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-black">أهلاً، {customerName} 👋</h1>
+              <h1 className="text-xl font-black">{t("customer.welcome")}, {customerName} 👋</h1>
               <p className="text-xs text-teal-100">{phone}</p>
               {customerInfo?.address && <p className="text-xs text-teal-100/80 mt-1 truncate">📍 {customerInfo.address}</p>}
             </div>
-            <Button size="sm" variant="secondary" onClick={() => { setVerified(false); setPhone(""); }}>خروج</Button>
+            <Button size="sm" variant="secondary" onClick={() => { setVerified(false); setPhone(""); }}>{t("customer.logout")}</Button>
           </div>
         </div>
 
         <div className="flex gap-2 bg-white rounded-2xl p-1 shadow-sm sticky top-2 z-10">
-          {[["orders", `طلباتي (${activeOrders.length})`], ["new", "طلب جديد +"]] .map(([k, l]) => (
+          {[["orders", `${t("customer.myOrders")} (${activeOrders.length})`], ["new", `${t("customer.newOrder")} +`]] .map(([k, l]) => (
             <button key={k} onClick={() => setTab(k as any)} className={`flex-1 py-3 px-3 rounded-xl text-sm font-black transition-all ${tab === k ? "bg-teal-600 text-white shadow" : "text-slate-500"}`}>{l}</button>
           ))}
         </div>
 
         {tab === "orders" ? (
           <div className="space-y-3">
-            {activeOrders.length === 0 && doneOrders.length === 0 && <Card><CardContent className="p-8 text-center text-slate-400">لا توجد طلبات بعد</CardContent></Card>}
+            {activeOrders.length === 0 && doneOrders.length === 0 && <Card><CardContent className="p-8 text-center text-slate-400">{t("customer.noOrders")}</CardContent></Card>}
             {activeOrders.map((o) => <OrderCard key={o.id} order={o} onDownloadInvoice={downloadInvoice} onUploadProof={uploadPaymentProof} paymentAmount={paymentAmounts[o.id] ?? ""} setPaymentAmount={(v) => setPaymentAmounts((m) => ({ ...m, [o.id]: v }))} paying={payingOrderId === o.id} />)}
-            {doneOrders.length > 0 && <><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">الطلبات السابقة</p>{doneOrders.slice(0, 5).map((o) => <OrderCard key={o.id} order={o} onDownloadInvoice={downloadInvoice} onUploadProof={uploadPaymentProof} paymentAmount={paymentAmounts[o.id] ?? ""} setPaymentAmount={(v) => setPaymentAmounts((m) => ({ ...m, [o.id]: v }))} paying={payingOrderId === o.id} />)}</>}
+            {doneOrders.length > 0 && <><p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t("customer.previousOrders")}</p>{doneOrders.slice(0, 5).map((o) => <OrderCard key={o.id} order={o} onDownloadInvoice={downloadInvoice} onUploadProof={uploadPaymentProof} paymentAmount={paymentAmounts[o.id] ?? ""} setPaymentAmount={(v) => setPaymentAmounts((m) => ({ ...m, [o.id]: v }))} paying={payingOrderId === o.id} />)}</>}
           </div>
         ) : (
           <div className="space-y-4">
             <Card className="shadow-sm border-0">
               <CardContent className="p-4 space-y-3">
                 <div>
-                  <h3 className="font-black text-lg text-slate-900">اختار القطع</h3>
-                  <p className="text-xs text-slate-500">اضغط + لإضافة قطعة، ثم صورها من الكاميرا بجانبها.</p>
+                  <h3 className="font-black text-lg text-slate-900">{t("customer.choosePieces")}</h3>
+                  <p className="text-xs text-slate-500">{t("customer.choosePiecesHelp")}</p>
                 </div>
                 <div className="space-y-2">
                   {services.map((svc) => (
@@ -243,12 +246,12 @@ function CustomerPortal() {
                   </div>
                 ))}
                 <div>
-                  <label className="text-sm font-bold block mb-1">ملاحظات (اختياري)</label>
-                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="أي ملاحظات على الطلب..." />
+                  <label className="text-sm font-bold block mb-1">{t("customer.notes")}</label>
+                  <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder={t("customer.notesPlaceholder")} />
                 </div>
-                <div className="rounded-2xl bg-teal-50 p-3 text-sm flex justify-between font-black text-teal-900"><span>الإجمالي المتوقع</span><span>{total} ج.م</span></div>
+                <div className="rounded-2xl bg-teal-50 p-3 text-sm flex justify-between font-black text-teal-900"><span>{t("customer.expectedTotal")}</span><span>{total} ج.م</span></div>
                 <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 font-black text-lg" onClick={placeOrder} disabled={placing}>
-                  {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 ms-1" /> إرسال الطلب</>}
+                  {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4 ms-1" /> {t("customer.sendOrder")}</>}
                 </Button>
               </CardContent>
             </Card>
@@ -260,6 +263,7 @@ function CustomerPortal() {
 }
 
 function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, setPaymentAmount, paying }: { order: Order; onDownloadInvoice: (o: Order) => void; onUploadProof: (o: Order, f: File) => void; paymentAmount: string; setPaymentAmount: (v: string) => void; paying: boolean }) {
+  const { t } = useI18n();
   const idx = ORDER_STEPS.findIndex((s) => s.key === order.status);
   const step = ORDER_STEPS[idx] ?? ORDER_STEPS[0];
   return (
@@ -277,13 +281,13 @@ function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, set
         {order.order_items?.length ? <div className="text-xs text-slate-500 space-y-0.5">{order.order_items.slice(0, 3).map((it, i) => <div key={i}>{it.qty}× {it.name}</div>)}</div> : null}
         <div className="flex justify-between items-center pt-1 border-t"><span className="text-sm text-slate-500">الإجمالي</span><span className="font-black text-teal-700">{order.total} ج.م</span></div>
         {order.invoice_finalized_at ? <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2"><Badge className="bg-emerald-600">الفاتورة تمت مراجعتها</Badge><Button size="sm" variant="outline" onClick={() => onDownloadInvoice(order)}><Download className="w-4 h-4 ms-1" />تحميل الفاتورة</Button></div>
-          {order.payment_status === "paid" ? <div className="text-sm font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />تم تسجيل الدفع{Number(order.overpayment_amount ?? 0) > 0 ? ` — الزائد ${order.overpayment_amount} ج.م بقشيش للمندوب` : ""}</div> : <div className="space-y-2">
-            <div className="text-xs text-slate-500">ادفع InstaPay ثم ارفع صورة الإيصال. لو دفعت زيادة، الزائد يتسجل بقشيش للمندوب.</div>
-            <div className="grid grid-cols-[1fr_auto] gap-2"><Input type="number" placeholder="المبلغ المدفوع" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /><Button asChild disabled={paying}><label className="cursor-pointer">{paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 ms-1" />رفع الإيصال</>}<input hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUploadProof(order, e.target.files[0])} /></label></Button></div>
+          <div className="flex items-center justify-between gap-2"><Badge className="bg-emerald-600">{t("customer.invoiceReviewed")}</Badge><Button size="sm" variant="outline" onClick={() => onDownloadInvoice(order)}><Download className="w-4 h-4 ms-1" />{t("customer.downloadInvoice")}</Button></div>
+          {order.payment_status === "paid" ? <div className="text-sm font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />{t("track.paid")}{Number(order.overpayment_amount ?? 0) > 0 ? ` — الزائد ${order.overpayment_amount} ج.م بقشيش للمندوب` : ""}</div> : <div className="space-y-2">
+            <div className="text-xs text-slate-500">Pay with InstaPay, then upload the receipt image. Any extra payment is recorded as a courier tip.</div>
+            <div className="grid grid-cols-[1fr_auto] gap-2"><Input type="number" placeholder={t("customer.amountPaid")} value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /><Button asChild disabled={paying}><label className="cursor-pointer">{paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 ms-1" />{t("customer.uploadProof")}</>}<input hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUploadProof(order, e.target.files[0])} /></label></Button></div>
             {order.payment_proof_url && <div className="text-xs text-amber-700">تم رفع إيصال سابق — الحالة: {statusAr(order.payment_verification_status)}</div>}
           </div>}
-        </div> : order.status === "delivered" ? <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-2 text-xs text-emerald-700">تم تسليم الطلب. لو احتجت نسخة فاتورة تواصل مع المغسلة.</div> : <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">الفاتورة قيد المراجعة. الدفع يظهر بعد اعتماد الفاتورة.</div>}
+        </div> : order.status === "delivered" ? <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-2 text-xs text-emerald-700">{t("customer.deliveredNoInvoice")}</div> : <div className="rounded-xl bg-amber-50 border border-amber-100 p-2 text-xs text-amber-700">{t("customer.waitInvoice")}</div>}
         {order.promised_delivery_at && <div className="text-xs text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3" /> متوقع: {new Date(order.promised_delivery_at).toLocaleString("ar-EG")}</div>}
       </CardContent>
     </Card>
