@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarCheck, CheckCircle2, ClipboardCheck, Loader2, LockKeyhole, Map, PackageCheck, PlayCircle, RefreshCw, Sparkles, Wallet } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/daily-operations")({
   head: () => ({ meta: [{ title: "تشغيل اليوم" }] }),
@@ -38,6 +39,7 @@ function todayKey() { return new Date().toISOString().slice(0, 10); }
 
 function DailyOperationsPage() {
   const { hasRole, tenantId, user } = useAuth();
+  const { t, dir } = useI18n();
   const canUse = hasRole("owner", "ops_manager", "cs_manager");
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
@@ -147,27 +149,27 @@ function DailyOperationsPage() {
   }
 
   const startSteps: Step[] = useMemo(() => data ? [
-    { key: "ready", title: "تأكد أن النشاط جاهز", detail: data.tenantReady?.is_ready ? "كل الأساسيات موجودة" : "افتح فحص النظام لمعرفة الناقص", href: "/system-health", ok: !!data.tenantReady?.is_ready, danger: !data.tenantReady?.is_ready },
-    { key: "finance", title: "راجع المراجعة المالية", detail: data.financialDanger ? `${data.financialDanger} مشكلة حرجة` : "لا توجد مشاكل مالية حرجة", href: "/system-health", ok: data.financialDanger === 0, danger: data.financialDanger > 0, action: () => runAction("finance", repairFinance) },
-    { key: "alerts", title: "شغّل التنبيهات الذكية", detail: "ينبهك للمخزون، التأخير، الخزن وAPDO", ok: !!done.alerts, action: () => runAction("alerts", runSmartAlerts) },
-    { key: "map", title: "راجع مواقع المناديب والخريطة", detail: data.readyNoDriver || data.openPickups ? `استلامات ${data.openPickups} / جاهز بلا مندوب ${data.readyNoDriver}` : "الخريطة مستقرة", href: "/live-map", ok: data.readyNoDriver === 0 },
-    { key: "start-report", title: "احفظ تقرير بداية اليوم", detail: "يسجل حالة التشغيل قبل الزحمة", ok: !!done["start-report"], action: () => runAction("start-report", () => saveReport("start")) },
-  ] : [], [data, done]);
+    { key: "ready", title: t("dailyOps.step.ready.title"), detail: data.tenantReady?.is_ready ? t("dailyOps.step.ready.ok") : t("dailyOps.step.ready.fail"), href: "/system-health", ok: !!data.tenantReady?.is_ready, danger: !data.tenantReady?.is_ready },
+    { key: "finance", title: t("dailyOps.step.finance.title"), detail: data.financialDanger ? `${data.financialDanger} ${t("system.report.danger")}` : t("dailyOps.step.finance.ok"), href: "/system-health", ok: data.financialDanger === 0, danger: data.financialDanger > 0, action: () => runAction("finance", repairFinance) },
+    { key: "alerts", title: t("dailyOps.step.alerts.title"), detail: t("dailyOps.step.alerts.detail"), ok: !!done.alerts, action: () => runAction("alerts", runSmartAlerts) },
+    { key: "map", title: t("dailyOps.step.map.title"), detail: data.readyNoDriver || data.openPickups ? `Pickups ${data.openPickups} / Ready ${data.readyNoDriver}` : t("dailyOps.step.map.ok"), href: "/live-map", ok: data.readyNoDriver === 0 },
+    { key: "start-report", title: t("dailyOps.step.startReport.title"), detail: t("dailyOps.step.startReport.detail"), ok: !!done["start-report"], action: () => runAction("start-report", () => saveReport("start")) },
+  ] : [], [data, done, t]);
 
   const monitorSteps: Step[] = useMemo(() => data ? [
-    { key: "orders", title: "تابع طلبات اليوم", detail: `${data.ordersToday} طلب · ${fmtMoney(data.revenueToday)}`, href: "/today", ok: true },
-    { key: "late", title: "عالج الطلبات المتأخرة", detail: data.lateOrders ? `${data.lateOrders} طلب متأخر` : "لا توجد طلبات متأخرة", href: "/today", ok: data.lateOrders === 0, danger: data.lateOrders > 0 },
-    { key: "invoice", title: "اعتمد الفواتير قبل التسليم", detail: data.invoiceReview ? `${data.invoiceReview} فاتورة تحتاج اعتماد` : "الفواتير مستقرة", href: "/orders", ok: data.invoiceReview === 0 },
-    { key: "receivables", title: "راجع الجاهز غير المدفوع", detail: data.unpaidReady ? `${data.unpaidReady} طلب يحتاج تحصيل` : "لا يوجد جاهز غير مدفوع", href: "/receivables", ok: data.unpaidReady === 0 },
-    { key: "stock", title: "راجع المخزون تحت الحد", detail: data.lowStock ? `${data.lowStock} صنف تحت الحد` : "المخزون مستقر", href: "/inventory", ok: data.lowStock === 0 },
-  ] : [], [data]);
+    { key: "orders", title: t("dailyOps.step.orders.title"), detail: `${data.ordersToday} ${t("station.common.orders")} · ${fmtMoney(data.revenueToday, t("common.egp"))}`, href: "/today", ok: true },
+    { key: "late", title: t("dailyOps.step.late.title"), detail: data.lateOrders ? `${data.lateOrders} ${t("notif.orderLate")}` : t("dailyOps.step.late.ok"), href: "/today", ok: data.lateOrders === 0, danger: data.lateOrders > 0 },
+    { key: "invoice", title: t("dailyOps.step.invoice.title"), detail: data.invoiceReview ? `${data.invoiceReview} ${t("system.check.invoice.fix")}` : t("dailyOps.step.invoice.ok"), href: "/orders", ok: data.invoiceReview === 0 },
+    { key: "receivables", title: t("dailyOps.step.receivables.title"), detail: data.unpaidReady ? `${data.unpaidReady} ${t("system.check.unpaid.fix")}` : t("dailyOps.step.receivables.ok"), href: "/receivables", ok: data.unpaidReady === 0 },
+    { key: "stock", title: t("dailyOps.step.stock.title"), detail: data.lowStock ? `${data.lowStock} ${t("system.check.stock.fix")}` : t("dailyOps.step.stock.ok"), href: "/inventory", ok: data.lowStock === 0 },
+  ] : [], [data, t]);
 
   const endSteps: Step[] = useMemo(() => data ? [
-    { key: "cash-close", title: "أقفل كل الخزن", detail: `${data.closedCash}/${data.activeCash} خزنة مقفولة`, href: "/cash-closing", ok: data.activeCash > 0 && data.closedCash >= data.activeCash, danger: !(data.activeCash > 0 && data.closedCash >= data.activeCash) },
-    { key: "apdo", title: "راجع اكتمال APDO", detail: data.apdoMissing ? `${data.apdoMissing} عملية ناقصة` : "APDO مكتمل", href: "/system-health", ok: data.apdoMissing === 0 },
-    { key: "reports", title: "راجع تقرير اليوم والفروع", detail: "إيرادات، مصروفات، جودة، مقارنة فروع", href: "/reports", ok: true },
-    { key: "end-report", title: "احفظ تقرير نهاية اليوم", detail: "يسجل ملخص اليوم لصاحب العمل", ok: !!done["end-report"], action: () => runAction("end-report", () => saveReport("end")) },
-  ] : [], [data, done]);
+    { key: "cash-close", title: t("dailyOps.step.cash.title"), detail: `${data.closedCash}/${data.activeCash} ${t("cashClosing.allBranches")}`, href: "/cash-closing", ok: data.activeCash > 0 && data.closedCash >= data.activeCash, danger: !(data.activeCash > 0 && data.closedCash >= data.activeCash) },
+    { key: "apdo", title: t("dailyOps.step.apdo.title"), detail: data.apdoMissing ? `${data.apdoMissing} ${t("system.check.apdo.fix")}` : t("dailyOps.step.apdo.ok"), href: "/system-health", ok: data.apdoMissing === 0 },
+    { key: "reports", title: t("dailyOps.step.reports.title"), detail: t("dailyOps.step.reports.detail"), href: "/reports", ok: true },
+    { key: "end-report", title: t("dailyOps.step.endReport.title"), detail: t("dailyOps.step.endReport.detail"), ok: !!done["end-report"], action: () => runAction("end-report", () => saveReport("end")) },
+  ] : [], [data, done, t]);
 
   // جاهزية العمل أثناء اليوم لا يجب أن تنقص بسبب مهام نهاية اليوم مثل إقفال الخزنة.
   // إقفال الخزن وتقرير نهاية اليوم يظهران كمهام منفصلة في قسم "أنه اليوم".
@@ -178,27 +180,27 @@ function DailyOperationsPage() {
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">تشغيل اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-800 text-white p-5 shadow-xl overflow-hidden relative">
       <div className="absolute -top-20 -left-16 w-48 h-48 rounded-full bg-teal-300/20 blur-3xl" />
       <div className="absolute -bottom-24 -right-20 w-56 h-56 rounded-full bg-amber-300/20 blur-3xl" />
       <div className="relative flex flex-wrap items-center justify-between gap-4">
-        <div><h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-200" />تشغيل اليوم</h1><p className="text-sm text-white/75 mt-1">امشي على الخطوات: ابدأ اليوم وراقب التشغيل. مهام نهاية اليوم مثل إقفال الخزنة لها نسبة منفصلة حتى لا تقلل جاهزية العمل أثناء اليوم.</p></div>
-        <div className="text-center rounded-3xl bg-white/10 border border-white/15 p-4 min-w-32"><div className="text-xs text-white/70">جاهزية العمل الآن</div><div className="text-4xl font-black text-teal-200">{score}%</div><div className="text-[11px] text-white/60 mt-1">نهاية اليوم {endOfDayScore}%</div></div>
+        <div><h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-200" />{t("dailyOps.title")}</h1><p className="text-sm text-white/75 mt-1">{t("dailyOps.subtitle")}</p></div>
+        <div className="text-center rounded-3xl bg-white/10 border border-white/15 p-4 min-w-32"><div className="text-xs text-white/70">{t("dailyOps.score")}</div><div className="text-4xl font-black text-teal-200">{score}%</div><div className="text-[11px] text-white/60 mt-1">{t("dailyOps.scoreEnd")} {endOfDayScore}%</div></div>
       </div>
     </div>
 
     <div className="grid md:grid-cols-5 gap-3">
-      <Kpi label="طلبات اليوم" value={data.ordersToday} />
-      <Kpi label="إيراد اليوم" value={fmtMoney(data.revenueToday)} />
-      <Kpi label="داخل الخزنة" value={fmtMoney(data.cashIn)} />
-      <Kpi label="مشاكل مالية" value={data.financialDanger} warn={data.financialDanger > 0} />
-      <Kpi label="إقفال الخزن" value={`${data.closedCash}/${data.activeCash}`} warn={!(data.activeCash > 0 && data.closedCash >= data.activeCash)} />
+      <Kpi label={t("today.kpi.ordersToday")} value={data.ordersToday} />
+      <Kpi label={t("today.kpi.revenueToday")} value={fmtMoney(data.revenueToday, t("common.egp"))} />
+      <Kpi label={t("dailyOps.kpi.cashIn")} value={fmtMoney(data.cashIn, t("common.egp"))} />
+      <Kpi label={t("dailyOps.kpi.finance")} value={data.financialDanger} warn={data.financialDanger > 0} />
+      <Kpi label={t("dailyOps.kpi.safes")} value={`${data.closedCash}/${data.activeCash}`} warn={!(data.activeCash > 0 && data.closedCash >= data.activeCash)} />
     </div>
 
-    <Section title="١) ابدأ اليوم" icon={<PlayCircle />} steps={startSteps} running={running} mark={mark} />
-    <Section title="٢) راقب اليوم" icon={<Sparkles />} steps={monitorSteps} running={running} mark={mark} />
-    <Section title="٣) أنهِ اليوم" icon={<LockKeyhole />} steps={endSteps} running={running} mark={mark} />
+    <Section title={t("dailyOps.sec.start")} icon={<PlayCircle />} steps={startSteps} running={running} mark={mark} t={t} />
+    <Section title={t("dailyOps.sec.monitor")} icon={<Sparkles />} steps={monitorSteps} running={running} mark={mark} t={t} />
+    <Section title={t("dailyOps.sec.end")} icon={<LockKeyhole />} steps={endSteps} running={running} mark={mark} t={t} />
   </div>;
 }
 
@@ -206,11 +208,11 @@ function Kpi({ label, value, warn }: { label: string; value: any; warn?: boolean
   return <Card className={warn ? "border-amber-200 bg-amber-50" : "bg-white/80"}><CardContent className="p-4"><div className="text-xs text-muted-foreground">{label}</div><div className="text-xl font-black mt-1">{value}</div></CardContent></Card>;
 }
 
-function Section({ title, icon, steps, running, mark }: { title: string; icon: React.ReactNode; steps: Step[]; running: string | null; mark: (key: string, val?: boolean) => void }) {
+function Section({ title, icon, steps, running, mark, t }: { title: string; icon: React.ReactNode; steps: Step[]; running: string | null; mark: (key: string, val?: boolean) => void; t: any }) {
   return <Card className="bg-white/80 backdrop-blur"><CardHeader><CardTitle className="text-base flex items-center gap-2 text-teal-900"><span className="text-teal-600 [&_svg]:w-5 [&_svg]:h-5">{icon}</span>{title}</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-3">
     {steps.map((s) => <div key={s.key} className={`rounded-2xl border p-3 ${s.danger ? "bg-red-50 border-red-200" : s.ok ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
-      <div className="flex items-start justify-between gap-2"><div><div className="font-black flex items-center gap-2">{s.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-amber-600" />}{s.title}</div><div className="text-xs text-muted-foreground mt-1">{s.detail}</div></div><Badge variant={s.ok ? "secondary" : s.danger ? "destructive" : "outline"}>{s.ok ? "تم" : "مطلوب"}</Badge></div>
-      <div className="flex flex-wrap gap-2 mt-3">{s.href && <Button asChild size="sm" variant="outline"><Link to={s.href as any}>فتح</Link></Button>}{s.action && <Button size="sm" onClick={s.action} disabled={running === s.key}>{running === s.key ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <RefreshCw className="w-3 h-3 ms-1" />}تنفيذ</Button>}<Button size="sm" variant="ghost" onClick={() => mark(s.key, !s.ok)}><ClipboardCheck className="w-3 h-3 ms-1" />{s.ok ? "إلغاء تم" : "اعتبرها تمت"}</Button></div>
+      <div className="flex items-start justify-between gap-2"><div><div className="font-black flex items-center gap-2">{s.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-amber-600" />}{s.title}</div><div className="text-xs text-muted-foreground mt-1">{s.detail}</div></div><Badge variant={s.ok ? "secondary" : s.danger ? "destructive" : "outline"}>{s.ok ? t("dailyOps.status.done") : t("dailyOps.status.todo")}</Badge></div>
+      <div className="flex flex-wrap gap-2 mt-3">{s.href && <Button asChild size="sm" variant="outline"><Link to={s.href as any}>{t("dailyOps.btn.open")}</Link></Button>}{s.action && <Button size="sm" onClick={s.action} disabled={running === s.key}>{running === s.key ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <RefreshCw className="w-3 h-3 ms-1" />}{t("dailyOps.btn.run")}</Button>}<Button size="sm" variant="ghost" onClick={() => mark(s.key, !s.ok)}><ClipboardCheck className="w-3 h-3 ms-1" />{s.ok ? t("dailyOps.btn.undone") : t("dailyOps.btn.done")}</Button></div>
     </div>)}
   </CardContent></Card>;
 }
