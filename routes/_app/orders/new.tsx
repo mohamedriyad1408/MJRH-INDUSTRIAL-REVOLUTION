@@ -1,3 +1,4 @@
+import { Row } from "@/components/new-order-components";
 import { useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -495,6 +496,3 @@ function NewOrderPage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between text-slate-300"><span>{label}</span><span className="text-white font-bold">{value}</span></div>;
-}
