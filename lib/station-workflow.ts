@@ -14,14 +14,14 @@ type Unit = {
 };
 
 export async function validateOrderMove(orderId: string, to: OrderStatus) {
-  const { data: order, error: oErr } = await (supabase as any)
+  const { data: order, error: oErr } = await supabase
     .from("orders")
     .select("id,order_number,status,payment_status,payment_method,assigned_driver_employee_id")
     .eq("id", orderId)
     .single();
   if (oErr) return { ok: false, message: oErr.message };
 
-  const { data: rawUnits, error: uErr } = await (supabase as any)
+  const { data: rawUnits, error: uErr } = await supabase
     .from("service_units")
     .select("id,service_type,current_stage,needs_reclean,ironing_completed_at,status,label_status,assembly_checked_at")
     .eq("order_id", orderId);

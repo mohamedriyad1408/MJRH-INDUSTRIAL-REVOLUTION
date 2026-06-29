@@ -42,7 +42,7 @@ export async function reportClientError(error: unknown, options: ReportOptions =
       }
     }
 
-    await (supabase as any).from("client_error_logs").insert({
+    await supabase.from("client_error_logs").insert({
       tenant_id: tenantId,
       user_id: user?.id ?? null,
       severity: options.severity ?? "error",
@@ -51,7 +51,7 @@ export async function reportClientError(error: unknown, options: ReportOptions =
       stack: sanitizeStack(error),
       path: typeof window !== "undefined" ? window.location.pathname + window.location.search : null,
       user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      metadata: options.metadata ?? {},
+      metadata: (options.metadata as Record<string, any>) ?? {},
     });
   } catch {
     // Error reporting must never break the app.

@@ -40,7 +40,7 @@ function assignmentScore(driver: DriverLoad, task: AssignableTask) {
 async function pieceCountsByOrder(orderIds: string[]) {
   const out = new Map<string, number>();
   if (!orderIds.length) return out;
-  const { data } = await (supabase as any).from("service_units").select("order_id,id").in("order_id", orderIds);
+  const { data } = await supabase.from("service_units").select("order_id,id").in("order_id", orderIds);
   (data ?? []).forEach((r: any) => out.set(r.order_id, (out.get(r.order_id) ?? 0) + 1));
   return out;
 }
@@ -52,10 +52,10 @@ export async function autoAssignDrivers() {
       .select("id,full_name,current_lat,current_lng")
       .eq("is_active", true)
       .eq("job_role", "driver"),
-    (supabase as any).from("pickup_requests").select("id,lat,lng,scheduled_at,status").eq("status", "pending"),
-    (supabase as any).from("orders").select("id,is_urgent,delivery_lat,delivery_lng,promised_delivery_at,status").eq("status", "ready").is("assigned_driver_employee_id", null),
-    (supabase as any).from("pickup_requests").select("id,driver_employee_id,lat,lng").eq("status", "assigned").not("driver_employee_id", "is", null),
-    (supabase as any).from("orders").select("id,assigned_driver_employee_id,delivery_lat,delivery_lng,is_urgent").in("status", ["ready", "out_for_delivery"]).not("assigned_driver_employee_id", "is", null),
+    supabase.from("pickup_requests").select("id,lat,lng,scheduled_at,status").eq("status", "pending"),
+    supabase.from("orders").select("id,is_urgent,delivery_lat,delivery_lng,promised_delivery_at,status").eq("status", "ready").is("assigned_driver_employee_id", null),
+    supabase.from("pickup_requests").select("id,driver_employee_id,lat,lng").eq("status", "assigned").not("driver_employee_id", "is", null),
+    supabase.from("orders").select("id,assigned_driver_employee_id,delivery_lat,delivery_lng,is_urgent").in("status", ["ready", "out_for_delivery"]).not("assigned_driver_employee_id", "is", null),
   ]);
   if (dErr) throw dErr;
 
@@ -109,10 +109,10 @@ export async function autoAssignDrivers() {
     const chosen = [...loads.values()].sort((a, b) => assignmentScore(a, t) - assignmentScore(b, t))[0];
     if (!chosen) continue;
     if (t.kind === "pickup") {
-      const { error } = await (supabase as any).from("pickup_requests").update({ driver_employee_id: chosen.id, status: "assigned" }).eq("id", t.id);
+      const { error } = await supabase.from("pickup_requests").update({ driver_employee_id: chosen.id, status: "assigned" }).eq("id", t.id);
       if (error) throw error;
     } else {
-      const { error } = await (supabase as any).from("orders").update({ assigned_driver_employee_id: chosen.id }).eq("id", t.id);
+      const { error } = await supabase.from("orders").update({ assigned_driver_employee_id: chosen.id }).eq("id", t.id);
       if (error) throw error;
     }
     chosen.tasks += 1;
