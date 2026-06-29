@@ -1,6 +1,14 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "common.salaries": "رواتب وعمولات",
+  "common.rent": "الإيجار",
+  "common.water": "فاتورة المياه",
+  "common.electricity": "فاتورة الكهرباء",
+  "common.supplies": "الخامات والمستلزمات",
+  "common.maintenance": "الصيانة",
+  "common.other": "أخرى",
+  "common.optional": "اختياري",
   "reports.avgInvoice": "متوسط الفاتورة",
   "reports.failureRate": "نسبة الفشل",
   "reports.del": "مسلّم",
@@ -502,6 +510,14 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "common.salaries": "Salaries & commissions",
+  "common.rent": "Rent",
+  "common.water": "Water bill",
+  "common.electricity": "Electricity bill",
+  "common.supplies": "Supplies & materials",
+  "common.maintenance": "Maintenance",
+  "common.other": "Other",
+  "common.optional": "optional",
   "reports.avgInvoice": "Avg. Invoice",
   "reports.failureRate": "Failure Rate",
   "reports.del": "delivered",
@@ -1030,6 +1046,14 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "common.salaries": "Salaires & commissions",
+  "common.rent": "Loyer",
+  "common.water": "Facture d'eau",
+  "common.electricity": "Facture d'électricité",
+  "common.supplies": "Fournitures & matériaux",
+  "common.maintenance": "Maintenance",
+  "common.other": "Autre",
+  "common.optional": "facultatif",
   "reports.avgInvoice": "Facture Moy.",
   "reports.failureRate": "Taux d'Échec",
   "reports.del": "livré",
@@ -1299,6 +1323,14 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "common.salaries": "Salari & provvigioni",
+  "common.rent": "Affitto",
+  "common.water": "Bolletta dell'acqua",
+  "common.electricity": "Bolletta dell'elettricità",
+  "common.supplies": "Forniture e materiali",
+  "common.maintenance": "Manutenzione",
+  "common.other": "Altro",
+  "common.optional": "facoltativo",
   "reports.avgInvoice": "Fattura Media",
   "reports.failureRate": "Tasso di Fallimento",
   "reports.del": "consegnato",
@@ -1568,6 +1600,14 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "common.salaries": "Salarios y comisiones",
+  "common.rent": "Alquiler",
+  "common.water": "Factura de agua",
+  "common.electricity": "Factura de electricidad",
+  "common.supplies": "Suministros y materiales",
+  "common.maintenance": "Mantenimiento",
+  "common.other": "Otro",
+  "common.optional": "opcional",
   "reports.avgInvoice": "Factura Prom.",
   "reports.failureRate": "Tasa de Fallo",
   "reports.del": "entregado",
@@ -1837,6 +1877,14 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "common.salaries": "Gehälter & Provisionen",
+  "common.rent": "Miete",
+  "common.water": "Wasserrechnung",
+  "common.electricity": "Stromrechnung",
+  "common.supplies": "Verbrauchsmaterialien & Werkstoffe",
+  "common.maintenance": "Instandhaltung",
+  "common.other": "Anderes",
+  "common.optional": "optional",
   "reports.avgInvoice": "Durchschn. Rechnung",
   "reports.failureRate": "Fehlerrate",
   "reports.del": "geliefert",
@@ -2106,6 +2154,14 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "common.salaries": "工资与提成",
+  "common.rent": "租金",
+  "common.water": "水费账单",
+  "common.electricity": "电费账单",
+  "common.supplies": "辅料耗材",
+  "common.maintenance": "日常维护",
+  "common.other": "其他",
+  "common.optional": "选填",
   "reports.avgInvoice": "平均订单金额",
   "reports.failureRate": "质检失败率",
   "reports.del": "已妥投",
@@ -2375,6 +2431,14 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "common.salaries": "基本給とコミッション",
+  "common.rent": "家賃",
+  "common.water": "水道料金",
+  "common.electricity": "電気料金",
+  "common.supplies": "消耗品・資材",
+  "common.maintenance": "メンテナンス",
+  "common.other": "その他",
+  "common.optional": "任意",
   "reports.avgInvoice": "平均客単価",
   "reports.failureRate": "不合格率",
   "reports.del": "配達済",
@@ -2644,6 +2708,14 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "common.salaries": "Salários & comissões",
+  "common.rent": "Aluguel",
+  "common.water": "Conta de água",
+  "common.electricity": "Conta de energia",
+  "common.supplies": "Suprimentos e materiais",
+  "common.maintenance": "Manutenção",
+  "common.other": "Outro",
+  "common.optional": "opcional",
   "reports.avgInvoice": "Fatura Média",
   "reports.failureRate": "Taxa de Falha",
   "reports.del": "entregue",

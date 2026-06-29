@@ -22,13 +22,13 @@ export const Route = createFileRoute("/_app/finance")({
 });
 
 const EXPENSE_CATEGORIES = [
-  { value: "salaries", label: "رواتب وعمولات" },
-  { value: "rent", label: "الإيجار" },
-  { value: "water", label: "فاتورة المياه" },
-  { value: "electricity", label: "فاتورة الكهرباء" },
-  { value: "supplies", label: "الخامات والمستلزمات" },
-  { value: "maintenance", label: "الصيانة" },
-  { value: "other", label: "أخرى" },
+  { value: "salaries", label: "Salaries" },
+  { value: "rent", label: "Rent" },
+  { value: "water", label: "Water" },
+  { value: "electricity", label: "Electricity" },
+  { value: "supplies", label: "Supplies" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "other", label: "Other" },
 ];
 
 type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string; status?: string; source_type?: string | null; employee_id?: string | null };
@@ -161,10 +161,10 @@ function FinancePage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label={t("finance.totalRevenue")} value={fmtMoney(revenue.total)} icon={<TrendingUp className="w-4 h-4" />} sub={`${revenue.count} طلب`} tone="success" />
-        <StatCard label={t("finance.collected")} value={fmtMoney(revenue.paid)} sub={`متبقي: ${fmtMoney(revenue.unpaid)}`} />
-        <StatCard label={t("finance.expenses")} value={fmtMoney(totalExpenses)} icon={<TrendingDown className="w-4 h-4" />} tone="warn" />
-        <StatCard label={t("finance.netProfit")} value={fmtMoney(netProfit)} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
+        <StatCard label={t("finance.totalRevenue")} value={fmtMoney(revenue.total, t("common.egp"))} icon={<TrendingUp className="w-4 h-4" />} sub={`${revenue.count} طلب`} tone="success" />
+        <StatCard label={t("finance.collected")} value={fmtMoney(revenue.paid, t("common.egp"))} sub={`${t("finance.remaining")}: ${fmtMoney(revenue.unpaid, t("common.egp"))}`} />
+        <StatCard label={t("finance.expenses")} value={fmtMoney(totalExpenses, t("common.egp"))} icon={<TrendingDown className="w-4 h-4" />} tone="warn" />
+        <StatCard label={t("finance.netProfit")} value={fmtMoney(netProfit, t("common.egp"))} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
       </div>
 
       <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
@@ -211,10 +211,10 @@ function FinancePage() {
             <Card><CardContent className="p-0">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50"><tr>
-                  <th className="text-start p-3">التاريخ</th>
-                  <th className="text-start p-3">الفئة</th>
-                  <th className="text-start p-3">الوصف</th>
-                  <th className="text-end p-3">المبلغ</th>
+                  <th className="text-start p-3">{t("common.date")}</th>
+                  <th className="text-start p-3">{t("common.category")}</th>
+                  <th className="text-start p-3">{t("common.description")}</th>
+                  <th className="text-end p-3">{t("common.amount")}</th>
                   {isOwner && <th className="p-3 w-12"></th>}
                 </tr></thead>
                 <tbody>
@@ -246,11 +246,11 @@ function FinancePage() {
             <Card><CardContent className="p-0">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50"><tr>
-                  <th className="text-start p-3">التاريخ</th>
-                  <th className="text-start p-3">الموظف</th>
-                  <th className="text-end p-3">المبلغ</th>
-                  <th className="text-start p-3">السبب</th>
-                  <th className="text-start p-3">الحالة</th>
+                  <th className="text-start p-3">{t("common.date")}</th>
+                  <th className="text-start p-3">{t("common.employee")}</th>
+                  <th className="text-end p-3">{t("common.amount")}</th>
+                  <th className="text-start p-3">{t("common.reason")}</th>
+                  <th className="text-start p-3">{t("common.status")}</th>
                   {isOwner && <th className="p-3">إجراء</th>}
                 </tr></thead>
                 <tbody>
@@ -281,8 +281,8 @@ function FinancePage() {
         <TabsContent value="revenue">
           <Card><CardHeader><CardTitle className="text-base">{t("finance.revenueSummary")}</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-3 gap-4">
-            <Stat title="إجمالي الإيرادات" value={fmtMoney(revenue.total)} />
-            <Stat title="المحصّل" value={fmtMoney(revenue.paid)} />
+            <Stat title="إجمالي الإيرادات" value={fmtMoney(revenue.total, t("common.egp"))} />
+            <Stat title="المحصّل" value={fmtMoney(revenue.paid, t("common.egp"))} />
             <Stat title="المتبقي على العملاء" value={fmtMoney(revenue.unpaid)} />
           </CardContent></Card>
         </TabsContent>
@@ -311,6 +311,7 @@ function AdvanceStatus({ s }: { s: string }) {
   return <Badge variant="destructive">مرفوض</Badge>;
 }
 function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts, defaultBranchId }: { onCreated: () => void; userId?: string; tenantId?: string; branches: any[]; cashAccounts: any[]; defaultBranchId?: string }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0].value);
   const [status, setStatus] = useState<"paid" | "payable">("paid");
@@ -358,15 +359,15 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" />مصروف جديد</Button></DialogTrigger>
-      <DialogContent dir="rtl"><DialogHeader><DialogTitle>إضافة مصروف</DialogTitle></DialogHeader>
+      <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" />{t("finance.newExpense")}</Button></DialogTrigger>
+      <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addExpense")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>الفرع</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>الفئة</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>الحالة</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">مدفوع الآن</SelectItem><SelectItem value="payable">آجل / مستحق</SelectItem></SelectContent></Select></div>
+          <div><Label>{t("common.branch")}</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.category")}</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{t("common." + c.value, c.label)}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.status")}</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">مدفوع الآن</SelectItem><SelectItem value="payable">آجل / مستحق</SelectItem></SelectContent></Select></div>
           {status === "paid" && <div><Label>الخزنة التي دفعت</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder="اختار الخزنة" /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
-          <div><Label>المبلغ</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-          <div><Label>الوصف (اختياري)</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
+          <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+          <div><Label>{t("common.description")} ({t("common.optional", "optional")})</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button></DialogFooter>
       </DialogContent>
@@ -374,6 +375,7 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
   );
 }
 function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employee[]; onCreated: () => void; userId?: string }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [empId, setEmpId] = useState(""); const [amount, setAmount] = useState(""); const [reason, setReason] = useState(""); const [saving, setSaving] = useState(false);
   async function submit() {
@@ -386,12 +388,12 @@ function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employe
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4 ms-1" />طلب سلفة</Button></DialogTrigger>
-      <DialogContent dir="rtl"><DialogHeader><DialogTitle>طلب سلفة لموظف</DialogTitle></DialogHeader>
+      <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4 ms-1" />{t("finance.advanceRequest")}</Button></DialogTrigger>
+      <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addAdvance")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>الموظف</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>المبلغ</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-          <div><Label>السبب (اختياري)</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} /></div>
+          <div><Label>{t("common.employee")}</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+          <div><Label>{t("common.reason")} ({t("common.optional", "optional")})</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} /></div>
         </div>
         <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إرسال للمالك"}</Button></DialogFooter>
       </DialogContent>
