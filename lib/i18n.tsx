@@ -231,7 +231,9 @@ export function translateForLanguage(language: LanguageCode, key: string, fallba
   if (local !== undefined) return local;
   if (language === "en") return dict.en?.[key] ?? fallback ?? key;
   if (language === "ar") return fallback ?? dict.ar?.[key] ?? dict.en?.[key] ?? key;
-  return dict.ar?.[key] ?? fallback ?? dict.en?.[key] ?? key;
+  // For other languages (fr, it, es, de, zh, ja, pt):
+  // We prioritize English as fallback, then Arabic, then standard key
+  return dict.en?.[key] ?? dict.ar?.[key] ?? fallback ?? key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {
