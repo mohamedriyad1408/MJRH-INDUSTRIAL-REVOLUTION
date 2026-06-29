@@ -119,7 +119,7 @@ function LoginPage() {
           أول حساب يتسجّل في النظام يأخذ صلاحية مدير المنصة تلقائياً. باقي الحسابات تُفعَّل من الإدارة.
         </p>
         <div className="mt-4 text-center">
-          <Link to="/" className="text-xs text-muted-foreground hover:underline">العودة للرئيسية</Link>
+          <Link to="/landing" className="text-xs text-muted-foreground hover:underline">العودة للرئيسية</Link>
         </div>
       </Card>
     </div>

@@ -9,8 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SlugRouteImport } from './routes/$slug'
@@ -69,14 +72,29 @@ import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/user
 import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
 import { Route as AppAdminTenantsIdRouteImport } from './routes/_app/admin/tenants/$id'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomerPortalRoute = CustomerPortalRouteImport.update({
@@ -369,8 +387,11 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/': typeof AppIndexRoute
   '/customer-portal': typeof CustomerPortalRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRouteWithChildren
@@ -428,8 +449,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/customer-portal': typeof CustomerPortalRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/accounting': typeof AppAccountingRoute
   '/billing': typeof AppBillingRoute
   '/branches': typeof AppBranchesRouteWithChildren
@@ -490,8 +514,11 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/_app': typeof AppRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
+  '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/terms': typeof TermsRoute
   '/_app/accounting': typeof AppAccountingRoute
   '/_app/billing': typeof AppBillingRoute
   '/_app/branches': typeof AppBranchesRouteWithChildren
@@ -553,8 +580,11 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/'
     | '/customer-portal'
+    | '/landing'
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
     | '/accounting'
     | '/billing'
     | '/branches'
@@ -612,8 +642,11 @@ export interface FileRouteTypes {
   to:
     | '/$slug'
     | '/customer-portal'
+    | '/landing'
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
     | '/accounting'
     | '/billing'
     | '/branches'
@@ -673,8 +706,11 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/_app'
     | '/customer-portal'
+    | '/landing'
     | '/login'
+    | '/privacy'
     | '/reset-password'
+    | '/terms'
     | '/_app/accounting'
     | '/_app/billing'
     | '/_app/branches'
@@ -735,14 +771,24 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AppRoute: typeof AppRouteWithChildren
   CustomerPortalRoute: typeof CustomerPortalRoute
+  LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TermsRoute: typeof TermsRoute
   JoinSlugRoute: typeof JoinSlugRoute
   TrackTokenRoute: typeof TrackTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -750,11 +796,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customer-portal': {
@@ -1285,8 +1345,11 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AppRoute: AppRouteWithChildren,
   CustomerPortalRoute: CustomerPortalRoute,
+  LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TermsRoute: TermsRoute,
   JoinSlugRoute: JoinSlugRoute,
   TrackTokenRoute: TrackTokenRoute,
 }
