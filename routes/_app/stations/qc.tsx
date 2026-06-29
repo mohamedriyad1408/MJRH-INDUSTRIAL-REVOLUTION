@@ -163,7 +163,7 @@ function QcStation() {
                 {g.units.map((u) => (
                   <div key={u.id} className={`rounded-2xl border p-3 space-y-3 ${u.label_status && u.label_status !== "labeled" ? "bg-amber-50 border-amber-200" : u.current_stage === "qc_passed" ? "bg-emerald-50 border-emerald-200" : "bg-card"}`}>
                     <div className="flex items-start justify-between gap-2">
-                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">{t("station.common.stage")}: {u.current_stage}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">{t("station.common.labelIssue")}: {u.label_status === "missing_label" ? t("station.assembly.noMark") : t("station.assembly.unclearMark")}</div>}</div>
+                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">{t("station.common.stage")}: {t("stage." + u.current_stage, u.current_stage)}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">{t("station.common.labelIssue")}: {u.label_status === "missing_label" ? t("station.assembly.noMark") : t("station.assembly.unclearMark")}</div>}</div>
                       {(u.needs_reclean || u.current_stage === "qc_failed" || (u.label_status && u.label_status !== "labeled")) && <Badge variant="destructive">{t("station.qc.issues")}</Badge>}
                     </div>
                     <Textarea rows={2} placeholder={t("station.qc.notePlaceholder")} value={notes[u.id] ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
