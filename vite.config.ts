@@ -4,6 +4,8 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import path from "path";
 
 function vendorChunk(id: string) {
+  if (id.includes("lib/i18n-internal")) return "i18n-internal";
+  if (id.includes("lib/i18n-public-packs")) return "i18n-public";
   if (!id.includes("node_modules")) return undefined;
   if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("scheduler")) return "vendor-react";
   if (id.includes("@tanstack")) return "vendor-tanstack";
@@ -27,7 +29,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
-    chunkSizeWarningLimit: 450,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: vendorChunk,
