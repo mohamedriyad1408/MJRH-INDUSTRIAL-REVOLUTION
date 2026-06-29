@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BookOpenCheck, FileBarChart, Scale, LockKeyhole, Plus, Loader2, RefreshCw } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/ledger")({
   head: () => ({ meta: [{ title: "القيود والتقارير المالية" }] }),
@@ -28,6 +29,7 @@ function boundsFromMonth(month: string) {
 
 function LedgerPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canUse = hasRole("owner");
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -190,10 +192,10 @@ function LedgerPage() {
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">القيود والتقارير المالية للمالك فقط.</CardContent></Card>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black flex items-center gap-2"><BookOpenCheck className="w-7 h-7 text-teal-600" />دفتر القيود للمحاسب</h1><p className="text-sm text-muted-foreground">هذه صفحة متقدمة للمراجعة المحاسبية. صاحب العمل العادي يكتفي بصفحة الحسابات والخزنة.</p></div>
-      <div className="flex gap-2"><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>تحديث</Button></div>
+      <div><h1 className="text-2xl font-black flex items-center gap-2"><BookOpenCheck className="w-7 h-7 text-teal-600" />{t("ledger.title")}</h1><p className="text-sm text-muted-foreground">{t("ledger.subtitle")}</p></div>
+      <div className="flex gap-2"><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>{t("common.refresh")}</Button></div>
     </div>
     <div className="grid md:grid-cols-4 gap-3">
       <Kpi label="الإيرادات" value={fmtMoney(pnl.revenue)} />

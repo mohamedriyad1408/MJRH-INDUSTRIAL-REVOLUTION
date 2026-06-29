@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { BookOpenCheck, Calculator, CheckCircle2, HelpCircle, Map, PackageCheck, Shirt, Truck, Users, Wallet } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/help")({
   head: () => ({ meta: [{ title: "دليل الاستخدام" }] }),
@@ -142,13 +143,14 @@ const guides: Guide[] = [
 
 function HelpPage() {
   const { roles, hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const visible = guides.filter((g) => g.roles.some((r) => hasRole(r as any)) || roles.includes("super_admin" as any));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-slate-950 via-violet-900 to-teal-800 text-white p-6 shadow-xl">
-        <h1 className="text-3xl font-black flex items-center gap-2"><HelpCircle className="w-7 h-7 text-teal-200" /> دليل الاستخدام السريع</h1>
-        <p className="text-sm text-white/75 mt-2">صفحة مرجعية لكل دور. الهدف أن تعرف الخطوة التالية بدون الرجوع للدعم.</p>
+        <h1 className="text-3xl font-black flex items-center gap-2"><HelpCircle className="w-7 h-7 text-teal-200" /> {t("help.title")}</h1>
+        <p className="text-sm text-white/75 mt-2">{t("help.subtitle")}</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4">

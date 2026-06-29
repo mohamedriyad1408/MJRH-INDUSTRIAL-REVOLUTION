@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2, RefreshCw, Users } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/finance")({
   head: () => ({ meta: [{ title: "الحسابات - MJRH" }] }),
@@ -37,6 +38,7 @@ type Employee = { id: string; full_name: string; monthly_salary?: number; commis
 
 function FinancePage() {
   const { hasRole, user, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const isOwner = hasRole("owner");
   const [loading, setLoading] = useState(true);
   const [revenue, setRevenue] = useState({ total: 0, paid: 0, unpaid: 0, count: 0 });
@@ -134,54 +136,54 @@ function FinancePage() {
   const netProfit = revenue.total - totalExpenses;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">الحسابات والمالية</h1>
-          <p className="text-sm text-muted-foreground">إيرادات، مصروفات، وطلبات السلف</p>
+          <h1 className="text-2xl font-bold">{t("finance.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Label className="text-sm">الفرع:</Label>
+          <Label className="text-sm">{t("common.branch")}:</Label>
           <Select value={branchId} onValueChange={setBranchId}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
-          <Label className="text-sm">الفترة:</Label>
+          <Label className="text-sm">{t("common.period")}:</Label>
           <Select value={range} onValueChange={(v) => setRange(v as any)}>
             <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">آخر 7 أيام</SelectItem>
-              <SelectItem value="30d">آخر 30 يوم</SelectItem>
-              <SelectItem value="all">كل الفترات</SelectItem>
+              <SelectItem value="7d">{t("common.range7")}</SelectItem>
+              <SelectItem value="30d">{t("common.range30")}</SelectItem>
+              <SelectItem value="all">{t("common.rangeAll")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="إجمالي الإيرادات" value={fmtMoney(revenue.total)} icon={<TrendingUp className="w-4 h-4" />} sub={`${revenue.count} طلب`} tone="success" />
-        <StatCard label="المحصّل" value={fmtMoney(revenue.paid)} sub={`متبقي: ${fmtMoney(revenue.unpaid)}`} />
-        <StatCard label="المصروفات" value={fmtMoney(totalExpenses)} icon={<TrendingDown className="w-4 h-4" />} tone="warn" />
-        <StatCard label="صافي الربح" value={fmtMoney(netProfit)} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
+        <StatCard label={t("finance.totalRevenue")} value={fmtMoney(revenue.total)} icon={<TrendingUp className="w-4 h-4" />} sub={`${revenue.count} طلب`} tone="success" />
+        <StatCard label={t("finance.collected")} value={fmtMoney(revenue.paid)} sub={`متبقي: ${fmtMoney(revenue.unpaid)}`} />
+        <StatCard label={t("finance.expenses")} value={fmtMoney(totalExpenses)} icon={<TrendingDown className="w-4 h-4" />} tone="warn" />
+        <StatCard label={t("finance.netProfit")} value={fmtMoney(netProfit)} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
       </div>
 
       <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
         <CardContent className="p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="font-black text-lg flex items-center gap-2"><Users className="w-5 h-5 text-teal-700" />رواتب الشهر ظاهرة تلقائيًا</div>
-              <p className="text-sm text-muted-foreground">النظام يجمع رواتب الموظفين وعمولاتهم وسلفهم ويضيفها كمصروفات آجلة لهذا الشهر. لا تحتاج تعمل خطوات محاسبية معقدة.</p>
+              <div className="font-black text-lg flex items-center gap-2"><Users className="w-5 h-5 text-teal-700" />{t("finance.monthPayrollAuto")}</div>
+              <p className="text-sm text-muted-foreground">{t("finance.payrollHelp")}</p>
             </div>
             <Button onClick={syncPayrollNow} disabled={syncingPayroll}>
               {syncingPayroll ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}
-              ظبط الرواتب الآن
+              {t("finance.syncPayroll")}
             </Button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Stat title="رواتب الشهر" value={fmtMoney(expectedMonthlySalaries)} />
-            <Stat title="صافي يصرف بعد السلف" value={fmtMoney(payrollNetFromSync)} />
-            <Stat title="رواتب آجلة" value={fmtMoney(payablePayroll)} />
-            <Stat title="سلف تخصم من الراتب" value={fmtMoney(approvedAdvancesTotal)} />
+            <Stat title={t("finance.monthSalaries")} value={fmtMoney(expectedMonthlySalaries)} />
+            <Stat title={t("finance.netAfterAdvances")} value={fmtMoney(payrollNetFromSync)} />
+            <Stat title={t("finance.payrollPayable")} value={fmtMoney(payablePayroll)} />
+            <Stat title={t("finance.advancesDeducted")} value={fmtMoney(approvedAdvancesTotal)} />
           </div>
           {payrollSync && <div className="text-xs text-teal-700 font-bold">آخر مزامنة: {payrollSync.employees_count ?? 0} موظف · إجمالي رواتب الشهر {fmtMoney(Number(payrollSync.gross_total ?? 0))} · صافي بعد السلف {fmtMoney(Number(payrollSync.net_total ?? 0))}</div>}
         </CardContent>
@@ -195,12 +197,12 @@ function FinancePage() {
 
       <Tabs defaultValue={pendingAdvances.length ? "advances" : "expenses"}>
         <TabsList>
-          <TabsTrigger value="expenses">المصروفات</TabsTrigger>
+          <TabsTrigger value="expenses">{t("finance.expensesTab")}</TabsTrigger>
           <TabsTrigger value="advances">
-            طلبات السلف
+            {t("finance.advancesTab")}
             {pendingAdvances.length > 0 && <Badge variant="destructive" className="me-2">{pendingAdvances.length}</Badge>}
           </TabsTrigger>
-          <TabsTrigger value="revenue">الإيرادات</TabsTrigger>
+          <TabsTrigger value="revenue">{t("finance.revenueTab")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="expenses" className="space-y-3">
@@ -216,7 +218,7 @@ function FinancePage() {
                   {isOwner && <th className="p-3 w-12"></th>}
                 </tr></thead>
                 <tbody>
-                  {visibleExpenses.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد مصروفات</td></tr>}
+                  {visibleExpenses.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{t("common.noExpenses")}</td></tr>}
                   {visibleExpenses.map((e) => (
                     <tr key={e.id} className="border-t">
                       <td className="p-3">{fmtDate(e.spent_at)}</td>
@@ -252,7 +254,7 @@ function FinancePage() {
                   {isOwner && <th className="p-3">إجراء</th>}
                 </tr></thead>
                 <tbody>
-                  {advances.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">لا توجد طلبات</td></tr>}
+                  {advances.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{t("common.noRequests")}</td></tr>}
                   {advances.map((a) => (
                     <tr key={a.id} className="border-t">
                       <td className="p-3">{fmtDate(a.created_at)}</td>
@@ -263,8 +265,8 @@ function FinancePage() {
                       {isOwner && <td className="p-3">
                         {a.status === "pending" ? (
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />موافقة</Button>
-                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />رفض</Button>
+                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />{t("finance.approve")}</Button>
+                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />{t("finance.reject")}</Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">{fmtDate(a.decided_at)}</span>}
                       </td>}
@@ -277,7 +279,7 @@ function FinancePage() {
         </TabsContent>
 
         <TabsContent value="revenue">
-          <Card><CardHeader><CardTitle className="text-base">ملخص الإيرادات</CardTitle></CardHeader>
+          <Card><CardHeader><CardTitle className="text-base">{t("finance.revenueSummary")}</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-3 gap-4">
             <Stat title="إجمالي الإيرادات" value={fmtMoney(revenue.total)} />
             <Stat title="المحصّل" value={fmtMoney(revenue.paid)} />

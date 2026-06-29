@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/reports")({
   head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
@@ -35,6 +36,7 @@ type Insight = { title: string; body: string; tone: "good" | "warn" | "bad" | "i
 
 function ReportsPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canView = hasRole("owner", "ops_manager", "cs_manager");
   const isOwner = hasRole("owner");
   const isOps = hasRole("ops_manager");
@@ -241,16 +243,16 @@ function ReportsPage() {
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">التقارير متاحة للمالك ومدير التشغيل ومدير خدمة العملاء فقط</CardContent></Card>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black flex items-center gap-2"><Brain className="w-7 h-7 text-teal-600" />التقارير والذكاء التشغيلي</h1>
-          <p className="text-sm text-muted-foreground">النظام لا يعرض أرقام فقط — يكتشف التكدس، تسريب الجودة، خطر المخزون، التحصيل، ومتابعات خدمة العملاء.</p>
+          <h1 className="text-2xl font-black flex items-center gap-2"><Brain className="w-7 h-7 text-teal-600" />{t("reports.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("reports.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={branchId} onValueChange={setBranchId}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
@@ -260,12 +262,12 @@ function ReportsPage() {
             <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
             <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={exportCSV} disabled={!data}><Download className="w-4 h-4 ms-1" />تصدير</Button>
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={!data}><Download className="w-4 h-4 ms-1" />{t("common.export")}</Button>
         </div>
       </div>
 
       {loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
-        <div className="space-y-6">
+        <div className="space-y-6" dir={dir}>
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
             <Kpi label="الإيرادات" value={fmtMoney(data.totalRevenue)} tone="teal" sub={data.revenueDelta === null ? "لا يوجد شهر سابق" : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
             <Kpi label="صافي نقدي" value={fmtMoney(data.netProfit)} tone={data.netProfit >= 0 ? "green" : "red"} />

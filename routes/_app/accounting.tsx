@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Calculator, Landmark, WalletCards, Receipt, Users, Loader2, Plus, CheckCircle2, RefreshCw } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/accounting")({
   head: () => ({ meta: [{ title: "المحاسبة والخزنة" }] }),
@@ -29,6 +30,7 @@ function monthBounds(date = new Date()) {
 
 function AccountingPage() {
   const { hasRole, user, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
@@ -314,10 +316,10 @@ function AccountingPage() {
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">المحاسبة متاحة للمالك ومدير التشغيل فقط.</CardContent></Card>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />الخزنة والرواتب</h1><p className="text-sm text-muted-foreground">صفحة تشغيل يومية بسيطة: رصيد الخزنة، الرواتب المستحقة، المصروفات، وصرف الرواتب. التفاصيل المحاسبية موجودة في صفحة القيود للمحاسب.</p></div>
-      <div className="flex gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>تحديث</Button></div>
+      <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />{t("accounting.title")}</h1><p className="text-sm text-muted-foreground">{t("accounting.subtitle")}</p></div>
+      <div className="flex gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>{t("common.refresh")}</Button></div>
     </div>
     <div className="grid md:grid-cols-4 gap-3">
       <Kpi label="رصيد الخزن" value={fmtMoney(kpis.cash)} icon={<Landmark />} />

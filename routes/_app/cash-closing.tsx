@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { LockKeyhole, Loader2, Calculator, RefreshCw, Plus, Banknote } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/cash-closing")({
   head: () => ({ meta: [{ title: "إقفال الخزائن" }] }),
@@ -38,6 +39,7 @@ function effectOf(t: any) {
 
 function CashClosingPage() {
   const { hasRole, user, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canUse = hasRole("owner", "ops_manager");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -209,13 +211,13 @@ function CashClosingPage() {
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">إقفال الخزن للمالك ومدير التشغيل فقط.</CardContent></Card>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-black flex items-center gap-2"><LockKeyhole className="w-7 h-7 text-teal-600" />إقفال الخزن اليومي</h1>
-        <p className="text-sm text-muted-foreground">اكتب النقدية الفعلية لكل خزنة، ثم اقفل كل الخزن بضغطة واحدة. التحويلات الداخلية تظهر منفصلة حتى لا تلخبط دخل/خرج التشغيل.</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><LockKeyhole className="w-7 h-7 text-teal-600" />{t("cashClosing.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("cashClosing.subtitle")}</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح</Button></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={repairCashClosing} disabled={repairing}>{repairing ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}إصلاح</Button></div>
     </div>
 
     <div className="grid md:grid-cols-[240px_auto] gap-3 items-end">
