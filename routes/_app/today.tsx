@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { CalendarCheck, ClipboardList, Map, Wallet, BarChart3, ShieldCheck, Bell, Loader2, Truck, AlertTriangle, RotateCcw, CreditCard } from "lucide-react";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/today")({
   head: () => ({ meta: [{ title: "مركز اليوم" }] }),
@@ -44,6 +45,7 @@ type Summary = {
 
 function TodayCenter() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canView = hasRole("owner", "ops_manager", "cs_manager");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Summary | null>(null);
@@ -276,13 +278,13 @@ function TodayCenter() {
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">مركز اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
-  return <div className="space-y-5">
+  return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />مركز اليوم</h1>
-        <p className="text-sm text-muted-foreground">افتح هذه الصفحة أول اليوم وآخر اليوم: تعرض أهم ما يحتاج متابعة الآن.</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("nav./today")}</h1>
+        <p className="text-sm text-muted-foreground">متابعة الأداء اليومي والعمليات والتقارير المالية والتشغيلية المفتوحة.</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>تحديث</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />حفظ تقرير اليوم</Button><Button variant="outline" onClick={copyEndOfDayReport}>نسخ نهاية اليوم</Button><Button onClick={saveEndOfDayReport}>تقرير نهاية اليوم</Button></div>
+      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>نسخ نهاية اليوم</Button><Button onClick={saveEndOfDayReport}>تقرير نهاية اليوم</Button></div>
     </div>
 
     <div className="grid md:grid-cols-6 gap-3">
