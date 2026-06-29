@@ -329,10 +329,10 @@ function AccountingPage() {
     </div>
 
     {!loading && <Card className="border-teal-200 bg-teal-50/60"><CardContent className="p-4 text-sm text-teal-900 space-y-1">
-      <div className="font-black">طريقة الاستخدام المختصرة</div>
-      <div>١) افتح رواتب الشهر واضغط <b>جهّز رواتب الشهر</b> لو الرواتب غير ظاهرة.</div>
-      <div>٢) اضغط <b>اعتماد كمصروف آجل</b> ليظهر الراتب كمصروف حتى قبل الدفع.</div>
-      <div>٣) عند الدفع اضغط <b>صرف الرواتب</b> فيخصم من الخزنة تلقائيًا.</div>
+      <div className="font-black">{t("accounting.guide.title")}</div>
+      <div>{t("accounting.guide.step1")}</div>
+      <div>{t("accounting.guide.step2")}</div>
+      <div>{t("accounting.guide.step3")}</div>
     </CardContent></Card>}
 
     {!loading && loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">

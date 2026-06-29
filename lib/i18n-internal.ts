@@ -1,6 +1,12 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "accounting.guide.title": "طريقة الاستخدام المختصرة",
+  "accounting.guide.step1": "١) افتح رواتب الشهر واضغط جهّز رواتب الشهر لو الرواتب غير ظاهرة.",
+  "accounting.guide.step2": "٢) اضغط اعتماد كمصروف آجل ليظهر الراتب كمصروف حتى قبل الدفع.",
+  "accounting.guide.step3": "٣) عند الدفع اضغط صرف الرواتب فيخصم من الخزنة تلقائيًا.",
+  "motivate.title": "رسالة تشجيع",
+  "motivate.button": "يلا نكمل شغل 💪",
   "accounting.btn.syncAdvances": "تسجيل السلف في الحسابات",
   "accounting.payroll.itemsTitle": "بنود آخر الرواتب",
   "accounting.payroll.salary": "راتب",
@@ -589,6 +595,12 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "accounting.guide.title": "Quick Guide",
+  "accounting.guide.step1": "1) Open monthly payroll and press Generate payroll if not shown.",
+  "accounting.guide.step2": "2) Press Post as payable to record salary as an expense before payout.",
+  "accounting.guide.step3": "3) Upon payment, press Payout salaries to deduct from cash safe automatically.",
+  "motivate.title": "Motivational Message",
+  "motivate.button": "Let's keep working 💪",
   "accounting.btn.syncAdvances": "Sync advances to accounts",
   "accounting.payroll.itemsTitle": "Latest payroll items",
   "accounting.payroll.salary": "Base salary",
@@ -1204,6 +1216,12 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "accounting.guide.title": "Guide rapide",
+  "accounting.guide.step1": "1) Ouvrez la paie mensuelle et cliquez sur Générer la paie si elle ne s'affiche pas.",
+  "accounting.guide.step2": "2) Cliquez sur Valider comme dû pour enregistrer le salaire comme dépense avant paiement.",
+  "accounting.guide.step3": "3) Lors du paiement, cliquez sur Payer les salaires pour déduire automatiquement du coffre.",
+  "motivate.title": "Message d'encouragement",
+  "motivate.button": "Au travail ! 💪",
   "accounting.btn.syncAdvances": "Sinc. avances sur comptes",
   "accounting.payroll.itemsTitle": "Dernières fiches de paie",
   "accounting.payroll.salary": "Salaire de base",
@@ -1560,6 +1578,12 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "accounting.guide.title": "Guida rapida",
+  "accounting.guide.step1": "1) Apri paghe mensili e premi Genera paghe se non visualizzate.",
+  "accounting.guide.step2": "2) Premi Approva come spesa per registrare il salario come spesa prima del pagamento.",
+  "accounting.guide.step3": "3) Al momento del pagamento, premi Paga stipendi per detrarre automaticamente dalla cassa.",
+  "motivate.title": "Messaggio motivazionale",
+  "motivate.button": "Continuiamo a lavorare 💪",
   "accounting.btn.syncAdvances": "Sinc. anticipi sui conti",
   "accounting.payroll.itemsTitle": "Ultime voci paga",
   "accounting.payroll.salary": "Salario base",
@@ -1916,6 +1940,12 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "accounting.guide.title": "Guía rápida",
+  "accounting.guide.step1": "1) Abra la nómina mensual y presione Generar nómina si no se muestra.",
+  "accounting.guide.step2": "2) Presione Aprobar como gasto para registrar el salario como gasto antes del pago.",
+  "accounting.guide.step3": "3) Al momento de pagar, presione Pagar salarios para deducir de la caja automáticamente.",
+  "motivate.title": "Mensaje motivacional",
+  "motivate.button": "¡Sigamos trabajando! 💪",
   "accounting.btn.syncAdvances": "Sinc. anticipos en cuentas",
   "accounting.payroll.itemsTitle": "Últimas partidas de nómina",
   "accounting.payroll.salary": "Salario base",
@@ -2272,6 +2302,12 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "accounting.guide.title": "Kurzanleitung",
+  "accounting.guide.step1": "1) Öffnen Sie die monatliche Gehaltsabrechnung und klicken Sie auf Gehaltsabrechnung erstellen, falls nicht angezeigt.",
+  "accounting.guide.step2": "2) Klicken Sie auf Als Verbindlichkeit erfassen, um Gehälter vor der Auszahlung zu buchen.",
+  "accounting.guide.step3": "3) Klicken Sie bei der Auszahlung auf Gehälter auszahlen, um den Kassenbestand automatisch zu mindern.",
+  "motivate.title": "Motivierende Botschaft",
+  "motivate.button": "Weiter geht's! 💪",
   "accounting.btn.syncAdvances": "Vorschüsse synchronisieren",
   "accounting.payroll.itemsTitle": "Letzte Gehaltsposten",
   "accounting.payroll.salary": "Grundgehalt",
@@ -2628,6 +2664,12 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "accounting.guide.title": "快捷使用指南",
+  "accounting.guide.step1": "1) 打开本月工资单，点击“生成月度工资”生成初始账目。",
+  "accounting.guide.step2": "2) 点击“记入应付费用”，在实际发放前将工资计入应付账款。",
+  "accounting.guide.step3": "3) 实际付款时，点击“发放工资”，系统将自动从对应现金账户中扣除。",
+  "motivate.title": "今日寄语",
+  "motivate.button": "继续奋斗 💪",
   "accounting.btn.syncAdvances": "同步借款预支账目",
   "accounting.payroll.itemsTitle": "最近工资单明细",
   "accounting.payroll.salary": "基本工资",
@@ -2985,6 +3027,12 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "accounting.guide.title": "クイックガイド",
+  "accounting.guide.step1": "1) 月次給与を開き、表示されない場合は「給与を生成」を押します。",
+  "accounting.guide.step2": "2) 「未払経費として計上」を押し、支払前に給与を経費として記録します。",
+  "accounting.guide.step3": "3) 支払い時に「給与を支払う」を押すと、金庫から自動的に差し引かれます。",
+  "motivate.title": "応援メッセージ",
+  "motivate.button": "仕事を続けましょう 💪",
   "accounting.btn.syncAdvances": "前払いを勘定に同期",
   "accounting.payroll.itemsTitle": "最新の給与明細項目",
   "accounting.payroll.salary": "基本給",
@@ -3341,6 +3389,12 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "accounting.guide.title": "Guia rápido",
+  "accounting.guide.step1": "1) Abra a folha mensal e pressione Gerar folha se não aparecer.",
+  "accounting.guide.step2": "2) Pressione Lançar como despesa para registrar o salário antes do pagamento.",
+  "accounting.guide.step3": "3) Ao pagar, pressione Pagar salários para deduzir do caixa automaticamente.",
+  "motivate.title": "Mensagem motivacional",
+  "motivate.button": "Vamos continuar trabalhando 💪",
   "accounting.btn.syncAdvances": "Sinc. adiantamentos nas contas",
   "accounting.payroll.itemsTitle": "Últimos itens da folha",
   "accounting.payroll.salary": "Salário base",
