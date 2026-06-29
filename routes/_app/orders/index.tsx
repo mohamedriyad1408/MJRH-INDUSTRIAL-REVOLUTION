@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { fmtMoney, fmtDate, ORDER_STATUS_AR, PAYMENT_STATUS_AR } from "@/lib/format";
+import { fmtMoney, fmtDate, orderStatusLabel, paymentStatusLabel, ORDER_STATUS_AR } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ type Row = {
 
 function OrdersPage() {
   const { hasRole, tenantId } = useAuth();
-  const { t, dir } = useI18n();
+  const { t, dir, language } = useI18n();
   const canCreate = hasRole("cs_manager", "owner");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +88,9 @@ function OrdersPage() {
     return true;
   });
 
+  const curr = t("common.egp");
+  const loc = language === "ar" ? "ar-EG" : "en-US";
+
   return (
     <div className="space-y-4" dir={dir}>
       <div className="flex flex-wrap justify-between gap-3">
@@ -101,7 +104,7 @@ function OrdersPage() {
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="رقم طلب / اسم / تليفون..." value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
+          <Input placeholder={t("orders.searchPlaceholder", "رقم طلب / اسم / تليفون...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
         <Select value={branchId} onValueChange={setBranchId}>
           <SelectTrigger className="w-48"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
@@ -111,21 +114,21 @@ function OrdersPage() {
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("orders.allStatuses")}</SelectItem>
-            {Object.entries(ORDER_STATUS_AR).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            {Object.keys(ORDER_STATUS_AR).map((k) => <SelectItem key={k} value={k}>{orderStatusLabel(k, t)}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {[
-          ["all", "الكل", AlertTriangle],
-          ["open_pickup", "استلامات مفتوحة", PackageOpen],
-          ["no_pieces", "بلا قطع", PackageOpen],
-          ["reclean", "مرتجعات", RotateCcw],
-          ["qc", "مشاكل جودة", ShieldCheck],
-          ["invoice_review", "فواتير تحتاج اعتماد", CreditCard],
-          ["payment_review", "إيصالات تحتاج مراجعة", CreditCard],
-          ["ready_unpaid", "جاهز غير مدفوع", CreditCard],
+          ["all", t("orders.filter.all", "الكل"), AlertTriangle],
+          ["open_pickup", t("orders.filter.openPickup", "استلامات مفتوحة"), PackageOpen],
+          ["no_pieces", t("orders.filter.noPieces", "بلا قطع"), PackageOpen],
+          ["reclean", t("orders.filter.reclean", "مرتجعات"), RotateCcw],
+          ["qc", t("orders.filter.qc", "مشاكل جودة"), ShieldCheck],
+          ["invoice_review", t("orders.filter.invoiceReview", "فواتير تحتاج اعتماد"), CreditCard],
+          ["payment_review", t("orders.filter.paymentReview", "إيصالات تحتاج مراجعة"), CreditCard],
+          ["ready_unpaid", t("orders.filter.readyUnpaid", "جاهز غير مدفوع"), CreditCard],
         ].map(([k, label, Icon]: any) => <Button key={k} size="sm" variant={quick === k ? "default" : "outline"} onClick={() => setQuick(k)}><Icon className="w-3 h-3 ms-1" />{label}</Button>)}
       </div>
 
@@ -157,15 +160,15 @@ function OrdersPage() {
                       <div className="font-medium">{r.customers?.full_name ?? "—"}</div>
                       <div className="text-xs text-muted-foreground">{r.customers?.phone ?? ""}</div>{r.branches?.name && <div className="text-xs text-teal-600">{r.branches.name}</div>}
                     </td>
-                    <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{ORDER_STATUS_AR[r.status] ?? r.status}</Badge>{r.open_pickup && <Badge className="bg-blue-600">استلام مفتوح</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">بلا قطع</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">مرتجع</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">جودة</Badge>}</div></td>
+                    <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{orderStatusLabel(r.status, t)}</Badge>{r.open_pickup && <Badge className="bg-blue-600">{t("orders.badge.openPickup", "استلام مفتوح")}</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">{t("orders.badge.noPieces", "بلا قطع")}</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">{t("orders.badge.reclean", "مرتجع")}</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">{t("orders.badge.qc", "جودة")}</Badge>}</div></td>
                     <td className="p-3">
                       <Badge variant={r.payment_status === "paid" ? "default" : "outline"}>
-                        {PAYMENT_STATUS_AR[r.payment_status] ?? r.payment_status}
+                        {paymentStatusLabel(r.payment_status, t)}
                       </Badge>
-                      {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">إيصال مراجعة</Badge>}
+                      {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">{t("orders.badge.paymentReview", "إيصال مراجعة")}</Badge>}
                     </td>
-                    <td className="p-3 font-medium">{fmtMoney(r.total, t("common.egp"))}</td>
-                    <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.created_at)}</td>
+                    <td className="p-3 font-medium">{fmtMoney(r.total, curr)}</td>
+                    <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.created_at, loc)}</td>
                     <td className="p-3">
                       <Button asChild size="sm" variant="ghost">
                         <Link to="/orders/$id" params={{ id: r.id }}><Eye className="w-4 h-4" /></Link>
