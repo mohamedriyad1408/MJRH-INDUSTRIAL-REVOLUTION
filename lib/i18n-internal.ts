@@ -1,6 +1,7 @@
 import type { LanguageCode } from "./i18n";
 
 const ar: Record<string, string> = {
+  "system.missing": "ناقص",
   "common.discount": "خصم %",
   "common.tax": "الضريبة %",
   "common.address": "العنوان",
@@ -579,6 +580,7 @@ const ar: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
+  "system.missing": "Missing",
   "common.discount": "Discount %",
   "common.tax": "Tax %",
   "common.address": "Address",
@@ -1184,6 +1186,7 @@ const en: Record<string, string> = {
 };
 
 const fr: Record<string, string> = {
+  "system.missing": "Manquant",
   "common.discount": "Remise %",
   "common.tax": "Taxe %",
   "common.address": "Adresse",
@@ -1530,6 +1533,7 @@ const fr: Record<string, string> = {
 };
 
 const it: Record<string, string> = {
+  "system.missing": "Mancante",
   "common.discount": "Sconto %",
   "common.tax": "Tassa %",
   "common.address": "Indirizzo",
@@ -1876,6 +1880,7 @@ const it: Record<string, string> = {
 };
 
 const es: Record<string, string> = {
+  "system.missing": "Faltante",
   "common.discount": "Descuento %",
   "common.tax": "Impuesto %",
   "common.address": "Dirección",
@@ -2222,6 +2227,7 @@ const es: Record<string, string> = {
 };
 
 const de: Record<string, string> = {
+  "system.missing": "Fehlt",
   "common.discount": "Rabatt %",
   "common.tax": "Steuer %",
   "common.address": "Adresse",
@@ -2568,6 +2574,7 @@ const de: Record<string, string> = {
 };
 
 const zh: Record<string, string> = {
+  "system.missing": "缺失",
   "common.discount": "打折 %",
   "common.tax": "税率 %",
   "common.address": "地址",
@@ -2915,6 +2922,7 @@ const zh: Record<string, string> = {
 };
 
 const ja: Record<string, string> = {
+  "system.missing": "不足",
   "common.discount": "割引 %",
   "common.tax": "税 %",
   "common.address": "住所",
@@ -3261,6 +3269,7 @@ const ja: Record<string, string> = {
 };
 
 const pt: Record<string, string> = {
+  "system.missing": "Faltando",
   "common.discount": "Desconto %",
   "common.tax": "Imposto %",
   "common.address": "Endereço",

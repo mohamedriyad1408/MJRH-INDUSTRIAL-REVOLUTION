@@ -463,7 +463,7 @@ function SystemHealthPage() {
     {!loading && tenantReady && <Card className={tenantReady.is_ready ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}>
       <CardHeader><CardTitle className="text-base">{t("system.tenantReadinessTitle")}</CardTitle></CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs">
-        {[["has_settings", "إعدادات"], ["has_branch", "فرع"], ["has_cash_account", "خزنة"], ["has_chart_accounts", "حسابات"], ["has_employee", "موظف"], ["has_catalog", "كتالوج"]].map(([k,label]: any) => <div key={k} className={`rounded-xl border p-2 text-center font-bold ${tenantReady[k] ? "bg-white text-emerald-700" : "bg-white text-red-700"}`}>{label}<div>{tenantReady[k] ? "✅" : "ناقص"}</div></div>)}
+        {[[ "has_settings", t("system.check.settings.title") ], [ "has_branch", t("common.branch") ], [ "has_cash_account", t("accounting.tab.cash") ], [ "has_chart_accounts", t("nav./ledger") ], [ "has_employee", t("common.employee") ], [ "has_catalog", t("nav./services") ]].map(([k,label]: any) => <div key={k} className={`rounded-xl border p-2 text-center font-bold ${tenantReady[k] ? "bg-white text-emerald-700" : "bg-white text-red-700"}`}>{label}<div>{tenantReady[k] ? "✅" : t("system.missing")}</div></div>)}
       </CardContent>
     </Card>}
 
