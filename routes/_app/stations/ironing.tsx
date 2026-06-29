@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Shirt, CheckCircle2, RotateCcw, Scale, User, Image as ImageIcon, PackageCheck } from "lucide-react";
 import { StationBoard } from "@/components/station-board";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/ironing")({
   head: () => ({ meta: [{ title: "الكي" }] }),
@@ -42,6 +43,7 @@ function IroningRoute() {
 }
 
 function IroningManagerPage() {
+  const { t, dir } = useI18n();
   const [units, setUnits] = useState<Unit[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,59 +122,59 @@ function IroningManagerPage() {
   const done = units.filter((u) => u.ironing_completed_at).length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> إدارة الكي</h1>
-            <p className="text-sm text-white/70">توزيع عادل للقطع على المكوجية ومتابعة إنجاز كل فني</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("station.ironing.managerTitle")}</h1>
+            <p className="text-sm text-white/70">{t("station.ironing.managerSubtitle")}</p>
           </div>
           <Button onClick={distributeAll} disabled={assigning} className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-black">
             {assigning ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Scale className="w-4 h-4 ms-1" />}
-            توزيع كل غير الموزع
+            {t("station.ironing.assignAll")}
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <MiniStat label="قطع الكي" value={units.length} />
-          <MiniStat label="غير موزع" value={unassigned} tone={unassigned ? "warn" : "ok"} />
-          <MiniStat label="تم الكي" value={`${done}/${units.length}`} tone="ok" />
+          <MiniStat label={t("station.ironing.pieces")} value={units.length} />
+          <MiniStat label={t("station.ironing.unassigned")} value={unassigned} tone={unassigned ? "warn" : "ok"} />
+          <MiniStat label={t("station.ironing.done")} value={`${done}/${units.length}`} tone="ok" />
         </div>
       </div>
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <>
           <Card>
-            <CardHeader><CardTitle className="text-base">حمل كل فني</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("station.ironing.workload")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-3">
               {stats.map((s) => (
                 <div key={s.id} className="rounded-2xl border p-3 bg-card">
                   <div className="flex items-center gap-2 font-black"><User className="w-4 h-4 text-violet-600" /> {s.full_name}</div>
                   <div className="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
-                    <div className="rounded-xl bg-slate-100 p-2"><div className="font-black text-lg">{s.pieces}</div><div>قطع</div></div>
-                    <div className="rounded-xl bg-blue-50 p-2"><div className="font-black text-lg">{s.shirts}</div><div>قمصان</div></div>
-                    <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>تم</div></div>
+                    <div className="rounded-xl bg-slate-100 p-2"><div className="font-black text-lg">{s.pieces}</div><div>{t("station.ironing.piecesShort")}</div></div>
+                    <div className="rounded-xl bg-blue-50 p-2"><div className="font-black text-lg">{s.shirts}</div><div>{t("station.ironing.shirts")}</div></div>
+                    <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>{t("station.common.done")}</div></div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-2">قيمة مسندة: {s.value.toLocaleString()} ج</div>
+                  <div className="text-xs text-muted-foreground mt-2">{t("station.ironing.assignedValue")}: {s.value.toLocaleString()} {t("common.egp")}</div>
                   {s.pieces > s.done && (
                     <div className="flex gap-2 mt-3">
                       <select className="flex-1 h-9 rounded-md border bg-background px-2 text-xs" value={transferTo[s.id] ?? ""} onChange={(e) => setTransferTo((m) => ({ ...m, [s.id]: e.target.value }))}>
-                        <option value="">نقل غير المنجز إلى...</option>
+                        <option value="">{t("station.ironing.transferPlaceholder")}</option>
                         {employees.filter((e) => e.id !== s.id).map((e) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
                       </select>
-                      <Button size="sm" variant="outline" onClick={() => transferTasks(s.id)}>نقل</Button>
+                      <Button size="sm" variant="outline" onClick={() => transferTasks(s.id)}>{t("station.ironing.transfer")}</Button>
                     </div>
                   )}
                 </div>
               ))}
-              {!stats.length && <div className="text-sm text-muted-foreground">لا يوجد فنيون مربوطون بمحطة الكي.</div>}
+              {!stats.length && <div className="text-sm text-muted-foreground">{t("station.ironing.noTechs")}</div>}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">قطع الكي الجارية</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("station.ironing.runningPieces")}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {units.map((u) => <UnitRow key={u.id} u={u} manager />)}
-              {!units.length && <div className="text-center text-sm text-muted-foreground p-8">لا توجد قطع كي حالياً</div>}
+              {!units.length && <div className="text-center text-sm text-muted-foreground p-8">{t("station.ironing.noPiecesNow")}</div>}
             </CardContent>
           </Card>
         </>
@@ -185,6 +187,7 @@ function IroningManagerPage() {
 
 function IroningWorkerPage() {
   const { user } = useAuth();
+  const { t, dir } = useI18n();
   const [empId, setEmpId] = useState<string | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -246,18 +249,18 @@ function IroningWorkerPage() {
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin" /></div>;
-  if (!empId) return <Card><CardContent className="p-8 text-center text-muted-foreground">حسابك غير مربوط بموظف كي. تواصل مع الإدارة.</CardContent></Card>;
+  if (!empId) return <Card><CardContent className="p-8 text-center text-muted-foreground">{t("station.ironing.workerUnlinked")}</CardContent></Card>;
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto">
+    <div className="space-y-5 max-w-3xl mx-auto" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 to-slate-950 text-white p-5 shadow-xl">
-        <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> شغل الكي الخاص بي</h1>
-        <p className="text-sm text-white/70 mt-1">القطع موزعة عليك تلقائياً حسب العدالة في العدد والقمصان وقيمة الفاتورة</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("station.ironing.myWork")}</h1>
+        <p className="text-sm text-white/70 mt-1">{t("station.ironing.myWorkSubtitle")}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          <MiniStat label="قطعك" value={units.length} />
-          <MiniStat label="قمصان/بلوز" value={units.filter((u) => u.is_shirt_like).length} />
-          <MiniStat label="يوميتك المنجزة" value={`${Math.round(todayDoneValue * ratePct / 100)} ج`} tone="ok" />
-          <MiniStat label="لو خلصت الكل" value={`${Math.round(todayValue * ratePct / 100)} ج`} />
+          <MiniStat label={t("station.ironing.myPieces")} value={units.length} />
+          <MiniStat label={t("station.ironing.myShirts")} value={units.filter((u) => u.is_shirt_like).length} />
+          <MiniStat label={t("station.ironing.todayDonePay")} value={`${Math.round(todayDoneValue * ratePct / 100)} ج`} tone="ok" />
+          <MiniStat label={t("station.ironing.ifFinishAll")} value={`${Math.round(todayValue * ratePct / 100)} ج`} />
         </div>
       </div>
 
@@ -265,7 +268,7 @@ function IroningWorkerPage() {
         {units.map((u) => <UnitRow key={u.id} u={u} onDone={markDone} onReclean={markReclean} />)}
         {!units.length && (
           <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-10 text-center text-emerald-700 font-bold">
-            <PackageCheck className="w-10 h-10 mx-auto mb-2" /> لا توجد قطع مسندة لك الآن
+            <PackageCheck className="w-10 h-10 mx-auto mb-2" /> {t("station.ironing.noAssigned")}
           </CardContent></Card>
         )}
       </div>
@@ -274,6 +277,7 @@ function IroningWorkerPage() {
 }
 
 function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean; onDone?: (u: Unit) => void; onReclean?: (u: Unit) => void }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border bg-card p-3 grid grid-cols-[72px_1fr] md:grid-cols-[72px_1fr_auto] gap-3 items-center">
       <div className="w-[72px] h-[72px] rounded-xl border bg-muted overflow-hidden flex items-center justify-center">
@@ -283,23 +287,23 @@ function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-black text-lg">{u.label_code}</span>
           <Badge variant="outline">{u.name}</Badge>
-          {u.is_shirt_like && <Badge className="bg-blue-600">قميص/بلوزة</Badge>}
-          {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> مرتجع تنظيف</Badge>}
-          {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> تم</Badge>}
+          {u.is_shirt_like && <Badge className="bg-blue-600">{t("station.ironing.shirtLike")}</Badge>}
+          {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("station.common.recleanCleaning")}</Badge>}
+          {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> {t("station.common.done")}</Badge>}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          طلب #{u.orders?.order_number} · {u.orders?.customers?.full_name ?? "—"} · قيمة كي {Number(u.ironing_base_value ?? u.line_value ?? 0).toLocaleString()} ج
+          {t("order.orderNo", "طلب #{order}").replace("{order}", String(u.orders?.order_number ?? "?"))} · {u.orders?.customers?.full_name ?? "—"} · {t("station.ironing.ironingValue")} {Number(u.ironing_base_value ?? u.line_value ?? 0).toLocaleString()} {t("common.egp")}
         </div>
-        {manager && <div className="text-xs text-muted-foreground mt-1">الفني: <b>{u.employees?.full_name ?? "غير موزع"}</b></div>}
-        {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">سبب المرتجع: {u.reclean_reason}</div>}
+        {manager && <div className="text-xs text-muted-foreground mt-1">{t("station.ironing.tech")}: <b>{u.employees?.full_name ?? t("station.ironing.unassignedTech")}</b></div>}
+        {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">{t("station.common.reason")}: {u.reclean_reason}</div>}
       </div>
       {!manager && (
         <div className="col-span-2 md:col-span-1 flex md:flex-col gap-2">
-          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onDone?.(u)}><CheckCircle2 className="w-4 h-4 ms-1" /> تم الكي</Button>
-          <Button className="flex-1" variant="outline" onClick={() => onReclean?.(u)}><RotateCcw className="w-4 h-4 ms-1" /> مرتجع تنظيف</Button>
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onDone?.(u)}><CheckCircle2 className="w-4 h-4 ms-1" /> {t("station.ironing.done")}</Button>
+          <Button className="flex-1" variant="outline" onClick={() => onReclean?.(u)}><RotateCcw className="w-4 h-4 ms-1" /> {t("station.common.recleanCleaning")}</Button>
         </div>
       )}
-      {manager && u.orders?.id && <Button asChild variant="outline" size="sm"><Link to="/orders/$id" params={{ id: u.orders.id }}>فتح الطلب</Link></Button>}
+      {manager && u.orders?.id && <Button asChild variant="outline" size="sm"><Link to="/orders/$id" params={{ id: u.orders.id }}>{t("station.common.openOrder")}</Link></Button>}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { dueInfo } from "@/lib/geo";
 import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, CheckSquare } from "lucide-react";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/live-map")({
   head: () => ({ meta: [{ title: "خريطة المراقبة الحية - MJRH" }] }),
@@ -110,6 +111,7 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
 
 function LiveMapPage() {
   const { hasRole, tenantId } = useAuth();
+  const { t, dir } = useI18n();
   const canView = hasRole("owner", "ops_manager");
   const [pins, setPins] = useState<MapPin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,30 +258,30 @@ function LiveMapPage() {
     setRouteMode(false);
   }
 
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">للمالك ومدير التشغيل فقط.</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("map.accessDenied")}</CardContent></Card>;
   const noLocationPins = pins.filter((p) => p.type !== "driver" && (!p.lat || !p.lng));
   const driversNoLocation = pins.filter((p) => p.type === "driver" && (!p.lat || !p.lng));
 
   return (
-    <div className="flex flex-col gap-3 min-h-[calc(100vh-7rem)]">
+    <div className="flex flex-col gap-3 min-h-[calc(100vh-7rem)]" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Navigation className="w-5 h-5 text-teal-600" />خريطة المراقبة الحية</h1>
-          <p className="text-xs text-muted-foreground">{geocoding ? "⏳ تحديد المواقع..." : "تحديث تلقائي كل 30 ث"}</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Navigation className="w-5 h-5 text-teal-600" />{t("map.title")}</h1>
+          <p className="text-xs text-muted-foreground">{geocoding ? t("map.geocoding") : t("map.autoRefresh")}</p>
         </div>
         <div className="flex items-center gap-3 text-xs">
-          {[["amber", `📦 استلام (${stats.pickups})`], ["green", `🏠 توصيل (${stats.deliveries})`], ["purple", `🚗 سائقين (${stats.drivers})`]].map(([c, l]) => (
+          {[["amber", `📦 ${t("map.pickup")} (${stats.pickups})`], ["green", `🏠 ${t("map.delivery")} (${stats.deliveries})`], ["purple", `🚗 ${t("map.drivers")} (${stats.drivers})`]].map(([c, l]) => (
             <span key={c} className="flex items-center gap-1"><span className={`w-2.5 h-2.5 rounded-full bg-${c}-500 inline-block`} />{l}</span>
           ))}
         </div>
         <div className="flex gap-2">
-          <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الفروع</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("map.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
           <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={drawRoute}>
-            <RouteIcon className="w-3.5 h-3.5 ms-1" /> رسم خط السير ({selectedPins.length})
+            <RouteIcon className="w-3.5 h-3.5 ms-1" /> {t("map.drawRoute")} ({selectedPins.length})
           </Button>
           <Button size="sm" variant="outline" onClick={openGoogleRoute}>Google Maps</Button>
           {selectedIds.size > 0 && <Button size="sm" variant="outline" onClick={clearRoute}><X className="w-3.5 h-3.5" /></Button>}
-          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={runAutoAssign}>توزيع المناديب</Button>
+          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={runAutoAssign}>{t("map.assignCouriers")}</Button>
           <Button size="sm" variant="outline" onClick={loadData}><RefreshCw className="w-3.5 h-3.5" /></Button>
         </div>
       </div>
@@ -287,20 +289,20 @@ function LiveMapPage() {
       {!routeMode && pins.length > 0 && (
         <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-xs text-teal-700 flex items-center gap-2">
           <CheckSquare className="w-3.5 h-3.5 shrink-0" />
-          اضغط على الكروت أو علامات الخريطة لتحديد النقاط بالترتيب، ثم اضغط "رسم خط السير" أو افتحه في Google Maps
+          {t("map.routeHint")}
         </div>
       )}
 
       {(noLocationPins.length > 0 || driversNoLocation.length > 0) && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-          {noLocationPins.length > 0 && <div>تنبيه: يوجد {noLocationPins.length} طلب بلا موقع واضح. راجع العنوان أو افتح الطلب لتسجيل الموقع.</div>}
-          {driversNoLocation.length > 0 && <div>تنبيه: يوجد {driversNoLocation.length} مندوب لم يحدث موقعه. اطلب منه فتح لوحة السائق والضغط على زر موقعي.</div>}
+          {noLocationPins.length > 0 && <div>{interpolate(t("map.noLocationWarning"), { count: noLocationPins.length })}</div>}
+          {driversNoLocation.length > 0 && <div>{interpolate(t("map.driverNoLocationWarning"), { count: driversNoLocation.length })}</div>}
         </div>
       )}
 
       {selectedPins.length > 0 && (
         <div className="rounded-2xl border bg-white/80 backdrop-blur px-3 py-2 text-xs text-slate-700 flex flex-wrap items-center gap-2">
-          <span className="font-black text-teal-700">النقاط المحددة:</span>
+          <span className="font-black text-teal-700">{t("map.selectedPoints")}</span>
           {selectedPins.map((p, i) => <Badge key={p.id} variant="secondary">{i + 1}. {p.label}</Badge>)}
         </div>
       )}
@@ -310,7 +312,7 @@ function LiveMapPage() {
           {loading ? (
             <div className="flex items-center justify-center h-full min-h-[48vh] flex-col gap-3">
               <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-muted-foreground">جاري تحميل الخريطة...</p>
+              <p className="text-sm text-muted-foreground">{t("map.loading")}</p>
             </div>
           ) : (
             <LeafletMap pins={pins} selectedIds={selectedIds} onSelect={toggle} routeMode={routeMode} />
@@ -321,7 +323,7 @@ function LiveMapPage() {
           {(["pickup", "delivery", "driver"] as PinType[]).map((type) => {
             const group = pins.filter((p) => p.type === type);
             if (!group.length) return null;
-            const meta = { pickup: { label: "استلام", color: "amber", icon: Package }, delivery: { label: "توصيل", color: "emerald", icon: MapPin }, driver: { label: "سائقين", icon: Truck, color: "purple" } }[type]!;
+            const meta = { pickup: { label: t("map.pickup"), color: "amber", icon: Package }, delivery: { label: t("map.delivery"), color: "emerald", icon: MapPin }, driver: { label: t("map.drivers"), icon: Truck, color: "purple" } }[type]!;
             return (
               <div key={type}>
                 <div className={`text-xs font-bold text-${meta.color}-600 uppercase tracking-wide mb-1 flex items-center gap-1`}>
@@ -334,15 +336,15 @@ function LiveMapPage() {
                     {pin.orderNumber && <div className="text-muted-foreground">#{pin.orderNumber}</div>}
                     <div className="text-muted-foreground truncate">{pin.address.slice(0, 30)}</div>
                     {pin.dueLabel && <div className={pin.late ? "text-red-600 font-bold" : "text-muted-foreground"}>⏱ {pin.dueLabel}</div>}
-                    {pin.pieces && <div className="text-muted-foreground">قطع: {pin.pieces}</div>}
-                    {!pin.lat && <div className="text-amber-500 mt-0.5">⚠ موقع غير محدد</div>}
-                    {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />محدد رقم {[...selectedIds].indexOf(pin.id) + 1}</div>}
+                    {pin.pieces && <div className="text-muted-foreground">{t("map.pieces")}: {pin.pieces}</div>}
+                    {!pin.lat && <div className="text-amber-500 mt-0.5">{t("map.unknownLocation")}</div>}
+                    {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />{t("map.selectedNumber")} {[...selectedIds].indexOf(pin.id) + 1}</div>}
                   </div>
                 ))}
               </div>
             );
           })}
-          {!loading && pins.length === 0 && <div className="text-center text-xs text-muted-foreground p-6">لا توجد حركة نشطة الآن</div>}
+          {!loading && pins.length === 0 && <div className="text-center text-xs text-muted-foreground p-6">{t("map.noActive")}</div>}
         </div>
       </div>
     </div>

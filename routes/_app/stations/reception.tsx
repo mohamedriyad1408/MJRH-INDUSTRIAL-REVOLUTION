@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/reception")({
   head: () => ({ meta: [{ title: "الاستقبال" }] }),
@@ -31,6 +32,7 @@ type Pickup = {
 
 function ReceptionPage() {
   const { user, hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const canMove = hasRole("ops_manager", "owner", "cs_manager");
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -116,27 +118,27 @@ function ReceptionPage() {
   const fromPickup = orders.filter((o) => o.order_type === "delivery");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">الاستقبال — تسجيل وتشغيل الطلبات</h1>
+        <h1 className="text-2xl font-bold">{t("station.reception.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          طلبات في الاستقبال: {walkIn.length} • قادمة من توصيل: {fromPickup.length} • طلبات استلام نشطة: {incomingPickups.length}
+          {interpolate(t("station.reception.summary"), { walkIn: walkIn.length, fromPickup: fromPickup.length, pickups: incomingPickups.length })}
         </p>
       </div>
 
       {loading ? (
         <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6" dir={dir}>
 
           {/* Active Pickup Requests — visible to reception */}
           {incomingPickups.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">طلبات الاستلام النشطة ({incomingPickups.length})</span>
-                <Badge variant="outline" className="text-xs">تنتظر السائق</Badge>
-                <Link to="/pickups" className="text-xs text-primary underline ms-auto">إدارة الكل</Link>
+                <span className="font-bold text-sm">{t("station.reception.activePickups")} ({incomingPickups.length})</span>
+                <Badge variant="outline" className="text-xs">{t("station.reception.waitingDriver")}</Badge>
+                <Link to="/pickups" className="text-xs text-primary underline ms-auto">{t("station.reception.manageAll")}</Link>
               </div>
               <div className="grid md:grid-cols-2 gap-3">
                 {incomingPickups.map((p) => (
@@ -145,7 +147,7 @@ function ReceptionPage() {
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-sm">{p.customer_name}</span>
                         <Badge variant="outline" className="text-xs">
-                          {p.status === "pending" ? "⏳ بانتظار سائق" : "🚗 سائق في الطريق"}
+                          {p.status === "pending" ? t("station.reception.pickupPending") : t("station.reception.driverOnWay")}
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground">{p.address}</div>
@@ -162,10 +164,10 @@ function ReceptionPage() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <PackageOpen className="w-4 h-4 text-primary" />
-              <span className="font-bold text-sm">طلبات الاستقبال ({walkIn.length})</span>
+              <span className="font-bold text-sm">{t("station.reception.walkInOrders")} ({walkIn.length})</span>
             </div>
             {walkIn.length === 0 ? (
-              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">لا توجد طلبات في الاستقبال</CardContent></Card>
+              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("station.reception.noOrders")}</CardContent></Card>
             ) : (
               <div className="space-y-2">
                 {walkIn.map((o) => (
@@ -184,7 +186,7 @@ function ReceptionPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">وصلت من الاستلام الخارجي ({fromPickup.length})</span>
+                <span className="font-bold text-sm">{t("station.reception.fromPickup")} ({fromPickup.length})</span>
               </div>
               <div className="space-y-2">
                 {fromPickup.map((o) => (
@@ -221,13 +223,14 @@ function OrderCard({
   onMove: (id: string) => void;
   onAssign: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Card>
       <CardContent className="p-3 flex items-center gap-3">
         <div className="flex-1">
           <div className="font-bold flex items-center gap-2">
             #{o.order_number}
-            {o.is_urgent && <Badge className="bg-amber-500 text-white text-xs"><Zap className="w-3 h-3" /> عاجل</Badge>}
+            {o.is_urgent && <Badge className="bg-amber-500 text-white text-xs"><Zap className="w-3 h-3" /> {t("station.common.urgent")}</Badge>}
           </div>
           <div className="text-sm text-muted-foreground">{o.customers?.full_name ?? "—"}</div>
           <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
@@ -235,11 +238,11 @@ function OrderCard({
         </div>
         {canMove && (
           <div className="flex gap-1 shrink-0">
-            <Button size="sm" variant="outline" onClick={onAssign}>تعيين</Button>
+            <Button size="sm" variant="outline" onClick={onAssign}>{t("station.reception.assign")}</Button>
             <Button size="sm" disabled={acting === o.id} onClick={() => onMove(o.id)}>
               {acting === o.id
                 ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <><ArrowLeft className="w-3 h-3 ms-1" />تشغيل</>}
+                : <><ArrowLeft className="w-3 h-3 ms-1" />{t("station.reception.startProcessing")}</>}
             </Button>
           </div>
         )}

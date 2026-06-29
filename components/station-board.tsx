@@ -11,6 +11,7 @@ import { Loader2, Zap, ArrowLeft, UserPlus, PlayCircle, CheckCircle2, Trophy } f
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
@@ -31,6 +32,7 @@ export function StationBoard({
   nextLabel?: string;         // human label when operational station differs from broad order status
 }) {
   const { user, hasRole } = useAuth();
+  const { t, dir } = useI18n();
   const canMove = hasRole("ops_manager", "owner");
   const [rows, setRows] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,41 +81,41 @@ export function StationBoard({
   const nextTask = active[0] ?? queue[0] ?? null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-800 text-white p-5 shadow-xl overflow-hidden relative">
         <div className="absolute -top-16 -left-14 h-36 w-36 rounded-full bg-teal-300/20 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-3">
-          <div><h1 className="text-2xl font-black flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" />{title}</h1><p className="text-sm text-white/70">قائمة الانتظار: {queue.length} • قيد التنفيذ: {active.length}</p></div>
-          <Badge className="bg-white/15 text-white border-white/20 text-sm px-3 py-1">خطوة بخطوة</Badge>
+          <div><h1 className="text-2xl font-black flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" />{title}</h1><p className="text-sm text-white/70">{t("station.common.queue")}: {queue.length} • {t("station.common.active")}: {active.length}</p></div>
+          <Badge className="bg-white/15 text-white border-white/20 text-sm px-3 py-1">{t("station.common.stepByStep")}</Badge>
         </div>
       </div>
 
       {!loading && nextTask && <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white shadow-md">
         <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs text-teal-700 font-bold mb-1">مهمتك التالية</div>
-            <div className="font-black text-lg">طلب #{nextTask.order_number} — {nextTask.customers?.full_name ?? "عميل"}</div>
-            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? "ابدأ المعالجة الآن" : nextLabel ? `جاهز للتحويل إلى ${nextLabel}` : `جاهز للتحويل إلى ${ORDER_STATUS_AR[nextStatus]}`}</div>
+            <div className="text-xs text-teal-700 font-bold mb-1">{t("station.common.nextTask")}</div>
+            <div className="font-black text-lg">{t("order.orderNo", "طلب #{order}").replace("{order}", String(nextTask.order_number))} — {nextTask.customers?.full_name ?? t("station.common.customer")}</div>
+            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? t("station.common.startNow") : interpolate(t("station.common.readyToMove"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })}</div>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>فتح الطلب</Link></Button>
-            {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />ابدأ</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />إنهاء وتحويل</Button>)}
+            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>{t("station.common.openOrder")}</Link></Button>
+            {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />{t("station.common.start")}</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.common.finishMove")}</Button>)}
           </div>
         </CardContent>
       </Card>}
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-4">
-          <Column title={`الواردة (${ORDER_STATUS_AR[incoming]})`} list={queue} action={(o) => canMove && (
-            <Button size="sm" onClick={() => move(o.id, current, incoming)}>بدء المعالجة</Button>
+          <Column title={`${t("station.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
+            <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("station.common.startProcessing")}</Button>
           )} />
-          <Column title={`قيد التنفيذ (${ORDER_STATUS_AR[current]})`} list={active} action={(o) => canMove && (
+          <Column title={`${t("station.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
             <div className="flex gap-1">
               <Button size="sm" variant="outline" onClick={() => setAssignFor(o.id)}>
-                <UserPlus className="w-3 h-3 ms-1" />تعيين
+                <UserPlus className="w-3 h-3 ms-1" />{t("station.common.assign")}
               </Button>
               <Button size="sm" variant="default" onClick={() => move(o.id, nextStatus, current)}>
-                تحويل إلى {nextLabel ?? ORDER_STATUS_AR[nextStatus]} <ArrowLeft className="w-3 h-3 ms-1" />
+                {interpolate(t("station.common.moveTo"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })} <ArrowLeft className="w-3 h-3 ms-1" />
               </Button>
             </div>
           )} />
@@ -134,17 +136,18 @@ export function StationBoard({
 }
 
 function Column({ title, list, action }: { title: string; list: Order[]; action: (o: Order) => React.ReactNode }) {
+  const { t } = useI18n();
   return (
     <Card className="bg-white/85 backdrop-blur">
       <CardContent className="p-4 space-y-2">
         <div className="font-bold text-sm mb-2">{title}</div>
-        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">لا توجد طلبات</div>}
+        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("station.common.noOrders")}</div>}
         {list.map((o) => (
           <div key={o.id} className="rounded-2xl border p-3 space-y-2 bg-white/90 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="font-bold">
                 #{o.order_number}{" "}
-                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />عاجل</Badge>}
+                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />{t("station.common.urgent")}</Badge>}
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
             </div>
