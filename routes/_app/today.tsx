@@ -282,37 +282,37 @@ function TodayCenter() {
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("nav./today")}</h1>
-        <p className="text-sm text-muted-foreground">متابعة الأداء اليومي والعمليات والتقارير المالية والتشغيلية المفتوحة.</p>
+        <p className="text-sm text-muted-foreground">{t("today.description")}</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>نسخ نهاية اليوم</Button><Button onClick={saveEndOfDayReport}>تقرير نهاية اليوم</Button></div>
+      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>{t("today.copyEndOfDay")}</Button><Button onClick={saveEndOfDayReport}>{t("today.endOfDayReport")}</Button></div>
     </div>
 
     <div className="grid md:grid-cols-6 gap-3">
-      <Kpi label="طلبات اليوم" value={data.ordersToday} />
-      <Kpi label="تم تسليمها" value={data.deliveredToday} />
-      <Kpi label="إيراد اليوم" value={fmtMoney(data.revenueToday)} />
-      <Kpi label="تحصيل مندوبين" value={fmtMoney(data.driverCollections)} />
-      <Kpi label="مشاكل تحتاج تدخل" value={critical} warn={critical > 0} />
-      <Kpi label="إقفال الخزن" value={`${data.cashClosings}/${data.cashSafes}`} warn={!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes)} />
+      <Kpi label={t("today.kpi.ordersToday")} value={data.ordersToday} />
+      <Kpi label={t("today.kpi.deliveredToday")} value={data.deliveredToday} />
+      <Kpi label={t("today.kpi.revenueToday")} value={fmtMoney(data.revenueToday, t("common.egp"))} />
+      <Kpi label={t("today.kpi.driverCollections")} value={fmtMoney(data.driverCollections, t("common.egp"))} />
+      <Kpi label={t("today.kpi.criticalIssues")} value={critical} warn={critical > 0} />
+      <Kpi label={t("today.kpi.cashClosing")} value={`${data.cashClosings}/${data.cashSafes}`} warn={!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes)} />
     </div>
 
-    {!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>إقفال الخزن لم يكتمل اليوم.</b><div className="text-xs mt-1">المقفول: {data.cashClosings} من {data.cashSafes}. افتح إقفال الخزن واقفل الكل في حركة واحدة.</div></div><Button asChild size="sm"><Link to="/cash-closing">إقفال الخزن</Link></Button></CardContent></Card>}
-    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>آخر إقفال خزنة فيه فرق:</b> {data.lastClosingAccount ?? "خزنة"} — {fmtMoney(data.lastClosingDiff)}. راجع سبب الفرق.</CardContent></Card>}
+    {!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>{t("today.warn.cashClosingNotCompleted")}</b><div className="text-xs mt-1">{t("today.warn.cashClosingDetail").replace("{closed}", String(data.cashClosings)).replace("{total}", String(data.cashSafes))}</div></div><Button asChild size="sm"><Link to="/cash-closing">{t("today.warn.cashClosingBtn")}</Link></Button></CardContent></Card>}
+    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>آخر إقفال خزنة فيه فرق:</b> {data.lastClosingAccount ?? "خزنة"} — {fmtMoney(data.lastClosingDiff, t("common.egp"))}. راجع سبب الفرق.</CardContent></Card>}
 
     {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">من أين يأتي التأخير؟</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage)}: {count}</Badge>)}</CardContent></Card>}
 
     <Card>
-      <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />تفاصيل تحتاج إجراء الآن</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />{t("today.needsAction")}</CardTitle></CardHeader>
       <CardContent className="space-y-2">
-        {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">لا توجد عناصر عاجلة الآن ✅</div>}
+        {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">{t("today.noCritical")}</div>}
         {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={d.href as any}>{row}</Link>; })}
       </CardContent>
     </Card>
 
     <Card>
-      <CardHeader><CardTitle className="text-base">آخر التقارير المحفوظة</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("today.latestReports")}</CardTitle></CardHeader>
       <CardContent className="space-y-2">
-        {latestReports.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">لا توجد تقارير محفوظة بعد</div>}
+        {latestReports.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">{t("today.noReports")}</div>}
         {latestReports.map((r) => <div key={r.id} className="rounded-xl border p-3 bg-white text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString("ar-EG")}</Badge></div>
           <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground font-sans max-h-32 overflow-auto">{r.body}</pre>
@@ -322,12 +322,12 @@ function TodayCenter() {
     </Card>
 
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-      <ActionCard title="فحص النظام" detail="راجع الأساسيات والمشاكل المفتوحة" to="/system-health" icon={<ShieldCheck />} count={critical} />
-      <ActionCard title="الطلبات" detail="طلبات بلا قطع، فواتير، إيصالات، مشاكل" to="/orders" icon={<ClipboardList />} count={data.activeOrders} />
-      <ActionCard title="الخريطة" detail="استلامات، تسليمات، مناديب ومواقع" to="/live-map" icon={<Map />} count={data.openPickups + data.readyNoDriver} />
-      <ActionCard title="الخزنة" detail="راجع الداخل والخارج واقفل اليوم" to="/cash-closing" icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
-      <ActionCard title="التقارير" detail="تحليل أعمق حسب الدور" to="/reports" icon={<BarChart3 />} />
-      <ActionCard title="ذمم العملاء" detail="جاهز غير مدفوع والتحصيل" to="/receivables" icon={<Wallet />} count={data.unpaidReady} />
+      <ActionCard title={t("today.card.systemHealth")} detail={t("today.card.systemHealthDetail")} to="/system-health" icon={<ShieldCheck />} count={critical} />
+      <ActionCard title={t("today.card.orders")} detail={t("today.card.ordersDetail")} to="/orders" icon={<ClipboardList />} count={data.activeOrders} />
+      <ActionCard title={t("today.card.map")} detail={t("today.card.mapDetail")} to="/live-map" icon={<Map />} count={data.openPickups + data.readyNoDriver} />
+      <ActionCard title={t("today.card.safe")} detail={t("today.card.safeDetail")} to="/cash-closing" icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
+      <ActionCard title={t("today.card.reports")} detail={t("today.card.reportsDetail")} to="/reports" icon={<BarChart3 />} />
+      <ActionCard title={t("today.card.receivables")} detail={t("today.card.receivablesDetail")} to="/receivables" icon={<Wallet />} count={data.unpaidReady} />
     </div>
   </div>;
 }
