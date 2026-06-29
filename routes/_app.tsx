@@ -31,7 +31,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (!tenantId) { setTenantBrand(null); return; }
-    (supabase as any).from("tenants").select("name,logo_url,public_url,business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => setTenantBrand(data ?? null));
+    supabase.from("tenants").select("name,logo_url,public_url,business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => setTenantBrand(data ?? null));
   }, [tenantId]);
 
   // Super admin: لو دخل على صفحة تشغيل وهو ليس عضو في tenant، حوّله لـ /admin/tenants
@@ -55,14 +55,14 @@ function AppLayout() {
     }
 
     if (hasRole("employee") && user) {
-      (supabase as any)
+      supabase
         .from("employees")
         .select("id,station,job_role,profile_id,email")
         .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
         .maybeSingle()
         .then(async ({ data }: any) => {
           if (data?.id && !data.profile_id) {
-            await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+            await supabase.from("employees").update({ profile_id: user.id }).eq("id", data.id);
           }
           if (data?.station === "reception") {
             const allowed = ["/orders", "/customers", "/stations/reception"];

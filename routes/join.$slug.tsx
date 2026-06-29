@@ -29,7 +29,7 @@ function JoinCustomerPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any).from("tenants").select("*").eq("slug", slug).eq("is_active", true).maybeSingle();
+    const { data, error } = await supabase.from("tenants").select("*").eq("slug", slug).eq("is_active", true).maybeSingle();
     if (error) toast.error(error.message);
     setTenant(data ?? null);
     setLoading(false);
@@ -67,12 +67,12 @@ function JoinCustomerPage() {
       if (uErr) throw uErr;
       const userId = uRes.user?.id;
 
-      await (supabase as any).from("user_roles").insert({ user_id: userId, role: "customer", tenant_id: tenant.id }).then(() => null);
-      await (supabase as any).from("customers").upsert({
+      await supabase.from("user_roles").insert({ user_id: userId, role: "customer", tenant_id: tenant.id }).then(() => null);
+      await supabase.from("customers").upsert({
         tenant_id: tenant.id, profile_id: userId, full_name: f.fullName, phone: f.phone, email: f.email, address: f.address || null, location_url: f.locationUrl || null, lat: f.lat, lng: f.lng, notes: f.notes || null,
       }, { onConflict: "tenant_id,phone" }).then(() => null);
 
-      await (supabase as any).rpc("record_operation_event", { _process_key: "customer_joined", _process_name: "تسجيل عميل جديد", _source_type: "customer", _source_id: null, _branch_id: null, _cash_account_id: null, _report_bucket: "operations/customers", _requires_notification: true, _data: { tenant_id: tenant.id, phone: f.phone, full_name: f.fullName }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+      await supabase.rpc("record_operation_event", { _process_key: "customer_joined", _process_name: "تسجيل عميل جديد", _source_type: "customer", _source_id: null, _branch_id: null, _cash_account_id: null, _report_bucket: "operations/customers", _requires_notification: true, _data: { tenant_id: tenant.id, phone: f.phone, full_name: f.fullName }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
 
       toast.success(t("join.toastSuccess", "تم تسجيل حسابك كعميل. يمكنك الدخول من بوابة العميل بعد تأكيد البريد إن طُلب."));
       setTimeout(() => { nav({ to: "/customer-portal", search: { tenant: tenant.slug } }); }, 1500);

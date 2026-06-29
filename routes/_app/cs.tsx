@@ -46,10 +46,10 @@ function CsDashboard() {
           .select("id, order_number, status, is_urgent, created_at, customers(full_name), task_assignments(employee_id, assigned_at, employees(full_name))")
           .in("status", ["received", "cleaning", "ironing", "packing"])
           .order("is_urgent", { ascending: false }).order("created_at"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
-        (supabase as any).from("customer_messages").select("id", { count: "exact", head: true }).eq("status", "queued"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
+        supabase.from("customer_messages").select("id", { count: "exact", head: true }).eq("status", "queued"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
       ]);
       setStats({ today: a.count ?? 0, late: b.count ?? 0, urgent: u.count ?? 0 });
       setActive((act.data ?? []) as any);

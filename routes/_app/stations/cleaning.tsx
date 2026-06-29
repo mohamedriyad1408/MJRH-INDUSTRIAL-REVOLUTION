@@ -53,7 +53,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
 
   async function load() {
     setLoading(true);
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("service_units")
       .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
       .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
@@ -66,12 +66,12 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
   useEffect(() => { load(); }, []);
 
   async function resolveReclean(unit: Unit) {
-    const { error } = await (supabase as any).rpc("resolve_reclean_return", { _unit_id: unit.id });
+    const { error } = await supabase.rpc("resolve_reclean_return", { _unit_id: unit.id });
     if (error) toast.error(error.message); else { toast.success("تم تنظيف المرتجع ورجوعه لنفس فني الكي"); load(); }
   }
 
   async function markCleaned(unit: Unit) {
-    const { error } = await (supabase as any).from("service_units").update({ current_stage: "cleaning_done" }).eq("id", unit.id);
+    const { error } = await supabase.from("service_units").update({ current_stage: "cleaning_done" }).eq("id", unit.id);
     if (error) toast.error(error.message); else { toast.success(`تم تنظيف ${unit.label_code}`); load(); }
   }
 

@@ -65,14 +65,14 @@ function ReceptionPage() {
 
   async function moveToProcessing(id: string) {
     setActing(id);
-    const { data: openPickup } = await (supabase as any).from("pickup_requests").select("id,status").eq("converted_order_id", id).in("status", ["pending", "assigned"]).maybeSingle();
+    const { data: openPickup } = await supabase.from("pickup_requests").select("id,status").eq("converted_order_id", id).in("status", ["pending", "assigned"]).maybeSingle();
     if (openPickup) {
       setActing(null);
       toast.error("لا يمكن تحويل الطلب للتشغيل قبل أن يستلمه المندوب من العميل");
       return;
     }
 
-    const { data: units, error: unitsErr } = await (supabase as any)
+    const { data: units, error: unitsErr } = await supabase
       .from("service_units")
       .select("id,service_type")
       .eq("order_id", id)
@@ -85,7 +85,7 @@ function ReceptionPage() {
     const nextStatus = hasCleaning ? "cleaning" : hasIroning ? "ironing" : "packing";
 
     if (nextStatus === "ironing") {
-      await (supabase as any).from("service_units").update({ current_stage: "ironing" }).eq("order_id", id).in("service_type", ["ironing", "cleaning", "both"]);
+      await supabase.from("service_units").update({ current_stage: "ironing" }).eq("order_id", id).in("service_type", ["ironing", "cleaning", "both"]);
     }
 
     const { error } = await supabase.from("orders").update({ status: nextStatus }).eq("id", id);

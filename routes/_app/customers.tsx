@@ -33,7 +33,7 @@ function CustomersPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any).from("customers").select("*").eq("tenant_id", tenantId).order("full_name");
+    const { data, error } = await supabase.from("customers").select("*").eq("tenant_id", tenantId).order("full_name");
     if (error) toast.error(error.message);
     setList((data ?? []) as C[]);
     setLoading(false);
@@ -62,7 +62,7 @@ function CustomersPage() {
     if ((editing.phone || "").replace(/\D/g, "").length < 11) { toast.error(t("customers.errPhoneLen", "رقم الهاتف يجب أن يكون 11 رقم على الأقل")); return; }
     setSaving(true);
     const payload = { tenant_id: tenantId, full_name: editing.full_name, phone: editing.phone, email: editing.email || null, address: editing.address || null, location_url: editing.location_url || null, lat: editing.lat ?? null, lng: editing.lng ?? null, notes: editing.notes || null };
-    const { error } = editing.id ? await (supabase as any).from("customers").update(payload).eq("id", editing.id) : await (supabase as any).from("customers").insert(payload);
+    const { error } = editing.id ? await supabase.from("customers").update(payload).eq("id", editing.id) : await supabase.from("customers").insert(payload);
     setSaving(false);
     if (error) toast.error(error.message); else { toast.success(t("customers.toastSaved", "تم الحفظ")); setOpen(false); load(); }
   }

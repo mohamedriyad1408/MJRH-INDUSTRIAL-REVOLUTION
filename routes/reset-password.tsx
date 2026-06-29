@@ -21,10 +21,10 @@ function ResetPasswordPage() {
 
   useEffect(() => {
     // Supabase recovery link sets a session via hash; onAuthStateChange will fire PASSWORD_RECOVERY
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event: any) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
-    supabase.auth.getSession().then(({ data }) => { if (data.session) setReady(true); });
+    supabase.auth.getSession().then(({ data }: any) => { if (data.session) setReady(true); });
     return () => sub.subscription.unsubscribe();
   }, []);
 

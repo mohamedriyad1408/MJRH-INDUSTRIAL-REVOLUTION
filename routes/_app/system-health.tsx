@@ -60,55 +60,55 @@ function SystemHealthPage() {
         reclean, qcFailed, unpaidReady, invoiceReview, paymentReview, driversNoLocation,
         pickupsDetail, readyNoDriverDetail, recleanDetail, qcDetail, unpaidDetail, invoiceDetail, proofDetail, driversNoLocDetail,
       ] = await Promise.all([
-        (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
-        (supabase as any).from("chart_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
-        (supabase as any).from("app_settings").select("tenant_id", { count: "exact", head: true }),
-        (supabase as any).from("employees").select("id", { count: "exact", head: true }).eq("is_active", true),
-        (supabase as any).from("service_items").select("id", { count: "exact", head: true }).eq("is_active", true),
-        (supabase as any).from("customers").select("id", { count: "exact", head: true }),
-        (supabase as any).from("orders").select("id,status", { count: "exact" }).not("status", "eq", "cancelled").limit(500),
-        (supabase as any).from("service_units").select("id,order_id,status,current_stage").limit(2000),
-        (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
-        (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("needs_reclean", true),
-        (supabase as any).from("service_units").select("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
-        (supabase as any).from("employees").select("id", { count: "exact", head: true }).eq("job_role", "driver").eq("is_active", true).is("current_lat", null),
-        (supabase as any).from("pickup_requests").select("id,customer_name,status,phone").in("status", ["pending", "assigned"]).limit(5),
-        (supabase as any).from("orders").select("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
-        (supabase as any).from("service_units").select("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(5),
-        (supabase as any).from("service_units").select("id,label_code,name,order_id,staff_notes,orders(order_number)").eq("current_stage", "qc_failed").limit(5),
-        (supabase as any).from("orders").select("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(5),
-        (supabase as any).from("orders").select("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(5),
-        (supabase as any).from("orders").select("id,order_number,payment_verification_status,total,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(5),
-        (supabase as any).from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true).is("current_lat", null).limit(5),
+        supabase.from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("chart_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("app_settings").select("tenant_id", { count: "exact", head: true }),
+        supabase.from("employees").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("service_items").select("id", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("customers").select("id", { count: "exact", head: true }),
+        supabase.from("orders").select("id,status", { count: "exact" }).not("status", "eq", "cancelled").limit(500),
+        supabase.from("service_units").select("id,order_id,status,current_stage").limit(2000),
+        supabase.from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
+        supabase.from("service_units").select("id", { count: "exact", head: true }).eq("needs_reclean", true),
+        supabase.from("service_units").select("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
+        supabase.from("employees").select("id", { count: "exact", head: true }).eq("job_role", "driver").eq("is_active", true).is("current_lat", null),
+        supabase.from("pickup_requests").select("id,customer_name,status,phone").in("status", ["pending", "assigned"]).limit(5),
+        supabase.from("orders").select("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(5),
+        supabase.from("service_units").select("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(5),
+        supabase.from("service_units").select("id,label_code,name,order_id,staff_notes,orders(order_number)").eq("current_stage", "qc_failed").limit(5),
+        supabase.from("orders").select("id,order_number,total,customers(full_name)").in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid").limit(5),
+        supabase.from("orders").select("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(5),
+        supabase.from("orders").select("id,order_number,payment_verification_status,total,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(5),
+        supabase.from("employees").select("id,full_name,phone").eq("job_role", "driver").eq("is_active", true).is("current_lat", null).limit(5),
       ]);
 
       const todayStr = new Date().toISOString().slice(0, 10);
       const yesterdayIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const [ordersNoLocation, customersNoAddress, closingToday, oldPayables, stuckOrders, activeCashForClosing, tenantHealth] = await Promise.all([
-        (supabase as any).from("orders").select("id,order_number,delivery_address,customers(full_name)").eq("order_type", "delivery").not("status", "in", "(delivered,cancelled)").is("delivery_lat", null).limit(5),
-        (supabase as any).from("customers").select("id,full_name,phone").is("address", null).limit(5),
-        (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
-        (supabase as any).from("expenses").select("id,amount,description,due_at,spent_at").eq("status", "payable").lt("spent_at", todayStr).limit(5),
-        (supabase as any).from("orders").select("id,order_number,status,updated_at,customers(full_name)").not("status", "in", "(delivered,cancelled)").lt("updated_at", yesterdayIso).limit(5),
-        (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
-        tenantId ? (supabase as any).from("tenant_bootstrap_health").select("*").eq("tenant_id", tenantId).maybeSingle().then((r: any) => r).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
+        supabase.from("orders").select("id,order_number,delivery_address,customers(full_name)").eq("order_type", "delivery").not("status", "in", "(delivered,cancelled)").is("delivery_lat", null).limit(5),
+        supabase.from("customers").select("id,full_name,phone").is("address", null).limit(5),
+        supabase.from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("closing_date", todayStr),
+        supabase.from("expenses").select("id,amount,description,due_at,spent_at").eq("status", "payable").lt("spent_at", todayStr).limit(5),
+        supabase.from("orders").select("id,order_number,status,updated_at,customers(full_name)").not("status", "in", "(delivered,cancelled)").lt("updated_at", yesterdayIso).limit(5),
+        supabase.from("cash_accounts").select("id", { count: "exact", head: true }).eq("is_active", true),
+        tenantId ? supabase.from("tenant_bootstrap_health").select("*").eq("tenant_id", tenantId).maybeSingle().then((r: any) => r).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
       ]);
 
       setTenantReady(tenantHealth.data ?? null);
 
       const [cashHealth, journalEntries, manualCashTx, manualCashJournals, apdoMatrix, financialAudit, labelIssues, deliveryReadiness] = await Promise.all([
-        (supabase as any).from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
-        (supabase as any).from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
-        (supabase as any).from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
-        (supabase as any).from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
-        (supabase as any).from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
-        (supabase as any).from("financial_operation_audit").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
-        (supabase as any).from("service_units").select("id,label_code,name,order_id,label_status,orders(order_number)").in("label_status", ["missing_label", "unclear_label"]).limit(20).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
-        (supabase as any).from("delivery_readiness_audit").select("*").eq("deliverable", false).order("updated_at", { ascending: false }).limit(40).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        supabase.from("v_cash_account_health").select("*").eq("is_active", true).order("updated_at", { ascending: false }),
+        supabase.from("journal_entries").select("id", { count: "exact", head: true }).neq("status", "void"),
+        supabase.from("cash_transactions").select("id,description,amount,direction,happened_at").is("source_type", null).eq("status", "posted").limit(200),
+        supabase.from("journal_entries").select("source_id").eq("source_type", "manual_cash_transaction").neq("status", "void").limit(500),
+        supabase.from("operation_answer_matrix").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        supabase.from("financial_operation_audit").select("*").order("created_at", { ascending: false }).limit(80).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        supabase.from("service_units").select("id,label_code,name,order_id,label_status,orders(order_number)").in("label_status", ["missing_label", "unclear_label"]).limit(20).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
+        supabase.from("delivery_readiness_audit").select("*").eq("deliverable", false).order("updated_at", { ascending: false }).limit(40).then((r: any) => r).catch((e: any) => ({ data: [], error: e })),
       ]);
 
       const activeOrders = orders.data ?? [];
@@ -163,8 +163,8 @@ function SystemHealthPage() {
       setDeliveryBlockedRows(deliveryRows.slice(0, 12));
 
       const [errLogs, queuedMsgs] = await Promise.all([
-        (supabase as any).from("client_error_logs").select("*").is("resolved_at", null).order("created_at", { ascending: false }).limit(12).then((r: any) => r).catch(() => ({ data: [] })),
-        (supabase as any).from("customer_messages").select("*,customers(full_name),orders(order_number)").eq("channel", "whatsapp").eq("status", "queued").order("created_at", { ascending: false }).limit(20).then((r: any) => r).catch(() => ({ data: [] })),
+        supabase.from("client_error_logs").select("*").is("resolved_at", null).order("created_at", { ascending: false }).limit(12).then((r: any) => r).catch(() => ({ data: [] })),
+        supabase.from("customer_messages").select("*,customers(full_name),orders(order_number)").eq("channel", "whatsapp").eq("status", "queued").order("created_at", { ascending: false }).limit(20).then((r: any) => r).catch(() => ({ data: [] })),
       ]);
       setClientErrors(errLogs.data ?? []);
       setQueuedMessages(queuedMsgs.data ?? []);
@@ -213,11 +213,11 @@ function SystemHealthPage() {
     setRepairing(true);
     const today = new Date().toISOString().slice(0, 10);
     const errs: string[] = [];
-    const r1 = await (supabase as any).rpc("ensure_default_cash_account"); if (r1.error) errs.push(r1.error.message);
-    const r2 = await (supabase as any).rpc("ensure_default_chart_accounts"); if (r2.error) errs.push(r2.error.message);
-    const r3 = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: today }); if (r3.error) errs.push(r3.error.message);
-    const r4 = await (supabase as any).rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
-    const r5 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r5.error) errs.push(r5.error.message);
+    const r1 = await supabase.rpc("ensure_default_cash_account"); if (r1.error) errs.push(r1.error.message);
+    const r2 = await supabase.rpc("ensure_default_chart_accounts"); if (r2.error) errs.push(r2.error.message);
+    const r3 = await supabase.rpc("sync_monthly_payroll_payables", { _month: today }); if (r3.error) errs.push(r3.error.message);
+    const r4 = await supabase.rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
+    const r5 = await supabase.rpc("sync_manual_cash_transactions_journals"); if (r5.error) errs.push(r5.error.message);
     try { await autoAssignDrivers(); } catch (e: any) { /* no drivers or no tasks: ignore */ }
     setRepairing(false);
     if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("system.toast.basicsDone"));
@@ -231,11 +231,11 @@ function SystemHealthPage() {
     try {
       const today = new Date().toISOString().slice(0, 10);
       const calls: Array<[string, Promise<any>]> = [
-        ["تجهيز الخزنة", (supabase as any).rpc("ensure_default_cash_account")],
-        ["تجهيز شجرة الحسابات", (supabase as any).rpc("ensure_default_chart_accounts")],
-        ["مزامنة رواتب الشهر", (supabase as any).rpc("sync_monthly_payroll_payables", { _month: today })],
-        ["إصلاح أرصدة الخزن", (supabase as any).rpc("repair_cash_account_balances")],
-        ["إصلاح قيود حركات الخزنة", (supabase as any).rpc("sync_manual_cash_transactions_journals")],
+        ["تجهيز الخزنة", supabase.rpc("ensure_default_cash_account")],
+        ["تجهيز شجرة الحسابات", supabase.rpc("ensure_default_chart_accounts")],
+        ["مزامنة رواتب الشهر", supabase.rpc("sync_monthly_payroll_payables", { _month: today })],
+        ["إصلاح أرصدة الخزن", supabase.rpc("repair_cash_account_balances")],
+        ["إصلاح قيود حركات الخزنة", supabase.rpc("sync_manual_cash_transactions_journals")],
       ];
       for (const [label, promise] of calls) {
         const r = await promise;
@@ -244,15 +244,15 @@ function SystemHealthPage() {
       }
 
       if (tenantId) {
-        const finance = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
+        const finance = await supabase.rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 200 });
         if (finance.error) errs.push(`المراجعة المالية: ${finance.error.message}`);
         else notes.push(`المراجعة المالية: أصلح ${finance.data?.fixed ?? 0} والمتبقي ${finance.data?.remaining ?? 0}`);
 
-        const apdo = await (supabase as any).rpc("repair_operation_events_apdo", { _tenant_id: tenantId, _max_items: 300 });
+        const apdo = await supabase.rpc("repair_operation_events_apdo", { _tenant_id: tenantId, _max_items: 300 });
         if (apdo.error) errs.push(`إصلاح APDO: ${apdo.error.message}`);
         else notes.push(`APDO: أصلح ${apdo.data?.fixed ?? 0}`);
 
-        const alerts = await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
+        const alerts = await supabase.rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
         if (alerts.error) errs.push(`التنبيهات الذكية: ${alerts.error.message}`);
         else notes.push(`التنبيهات الذكية: ${alerts.data ?? 0}`);
       }
@@ -284,7 +284,7 @@ function SystemHealthPage() {
         return;
       }
       if (key === "financialAudit") {
-        const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
+        const { data, error } = await supabase.rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
         if (error) toast.error(error.message); else toast.success(interpolate(t("notif.financeRepairDone"), { fixed: data?.fixed ?? 0, remaining: data?.remaining ?? 0 }));
         await load();
         return;
@@ -310,7 +310,7 @@ function SystemHealthPage() {
   async function repairApdoEvent(id: string) {
     setFixingKey(id);
     try {
-      const { data, error } = await (supabase as any).rpc("repair_operation_event_apdo", { _event_id: id });
+      const { data, error } = await supabase.rpc("repair_operation_event_apdo", { _event_id: id });
       if (error) throw error;
       const fixed = Array.isArray(data?.fixed) ? data.fixed.join("، ") : "";
       toast.success(fixed ? `${t("system.toast.apdoFixed")} ${fixed}` : t("system.toast.apdoAttempted"));
@@ -332,7 +332,7 @@ function SystemHealthPage() {
   }
 
   async function markWhatsAppSent(row: any) {
-    const { error } = await (supabase as any).from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", row.id);
+    const { error } = await supabase.from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", row.id);
     if (error) toast.error(error.message);
     else { toast.success(t("system.toast.msgSent")); load(); }
   }
@@ -350,7 +350,7 @@ function SystemHealthPage() {
   }
 
   async function resolveClientError(row: any) {
-    const { error } = await (supabase as any).rpc("resolve_client_error_log", { _id: row.id, _notes: "تمت المراجعة من فحص النظام" });
+    const { error } = await supabase.rpc("resolve_client_error_log", { _id: row.id, _notes: "تمت المراجعة من فحص النظام" });
     if (error) toast.error(error.message);
     else { toast.success(t("system.toast.clientErrorClosed")); load(); }
   }
@@ -374,7 +374,7 @@ function SystemHealthPage() {
       ...warn.map((c) => `⚠️ ${c.title}: ${c.count} — ${c.fix}`),
     ];
     const body = lines.join("\n");
-    const { error } = await (supabase as any).from("app_notifications").insert({
+    const { error } = await supabase.from("app_notifications").insert({
       audience: "owner",
       title: t("system.report.title"),
       body,

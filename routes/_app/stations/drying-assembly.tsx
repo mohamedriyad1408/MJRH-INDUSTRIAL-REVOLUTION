@@ -33,7 +33,7 @@ function DryingAssemblyStation() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("drying_assembly_queue")
       .select("*")
       .order("updated_at", { ascending: true })
@@ -60,7 +60,7 @@ function DryingAssemblyStation() {
   }), [rows, grouped.length]);
 
   async function recordEvent(row: Row, key: string, name: string, output: any = {}) {
-    await (supabase as any).rpc("record_operation_event", {
+    await supabase.rpc("record_operation_event", {
       _process_key: key,
       _process_name: name,
       _source_type: "service_unit",
@@ -84,11 +84,11 @@ function DryingAssemblyStation() {
         const up = await supabase.storage.from("unit-media").upload(path, file, { upsert: true, contentType: file.type });
         if (!up.error) {
           const { data } = supabase.storage.from("unit-media").getPublicUrl(path);
-          await (supabase as any).from("service_units").update({ photo_url: data.publicUrl, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id).then(() => null);
+          await supabase.from("service_units").update({ photo_url: data.publicUrl, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id).then(() => null);
         }
       }
       const since = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
-      const { data: all } = await (supabase as any)
+      const { data: all } = await supabase
         .from("service_units")
         .select("id,label_code,name,photo_url,current_stage,label_status,unit_number,order_id,orders!inner(id,order_number,created_at,branch_id,customers(full_name,phone))")
         .gte("orders.created_at", since)
@@ -114,7 +114,7 @@ function DryingAssemblyStation() {
 
   async function startAssembly(row: Row) {
     setBusy(row.id);
-    const { error } = await (supabase as any).from("service_units").update({ current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: notes[row.id] || null }).eq("id", row.id);
+    const { error } = await supabase.from("service_units").update({ current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: notes[row.id] || null }).eq("id", row.id);
     if (!error) await recordEvent(row, "drying_assembly_started", "بدء التجفيف والتجميع");
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success("تم بدء التجفيف والتجميع"); load(); }
@@ -124,10 +124,10 @@ function DryingAssemblyStation() {
     const note = (notes[row.id] ?? "").trim();
     if (note.length < 3) return toast.error("اكتب ملاحظة واضحة عن مشكلة المارك/الليبل");
     setBusy(row.id);
-    const { error } = await (supabase as any).from("service_units").update({ label_status: status, current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: note, staff_notes: note }).eq("id", row.id);
+    const { error } = await supabase.from("service_units").update({ label_status: status, current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: note, staff_notes: note }).eq("id", row.id);
     if (!error) {
       await recordEvent(row, "label_issue_reported", "تسجيل مشكلة مارك/ليبل", { needs_resolution: true });
-      await (supabase as any).from("app_notifications").insert({ tenant_id: row.tenant_id, branch_id: row.branch_id ?? null, audience: "ops", title: "مشكلة مارك/ليبل في التجميع", body: `طلب #${row.order_number} — ${row.name}: ${note}`, href: `/orders/${row.order_id}`, tone: "warning" }).then(() => null);
+      await supabase.from("app_notifications").insert({ tenant_id: row.tenant_id, branch_id: row.branch_id ?? null, audience: "ops", title: "مشكلة مارك/ليبل في التجميع", body: `طلب #${row.order_number} — ${row.name}: ${note}`, href: `/orders/${row.order_id}`, tone: "warning" }).then(() => null);
     }
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success("تم تسجيل مشكلة المارك وإشعار التشغيل"); load(); }
@@ -135,11 +135,11 @@ function DryingAssemblyStation() {
 
   async function completeAssembly(row: Row) {
     setBusy(row.id);
-    const { error } = await (supabase as any).from("service_units").update({ current_stage: "ironing", label_status: "labeled", assembly_checked_at: new Date().toISOString(), assembly_checked_by: user?.id, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id);
+    const { error } = await supabase.from("service_units").update({ current_stage: "ironing", label_status: "labeled", assembly_checked_at: new Date().toISOString(), assembly_checked_by: user?.id, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id);
     if (!error) {
       await recordEvent(row, "drying_assembly_completed", "إنهاء التجفيف والتجميع");
-      const { data: remaining } = await (supabase as any).from("service_units").select("id").eq("order_id", row.order_id).in("current_stage", ["cleaning", "cleaning_done", "drying_assembly"]).limit(1);
-      if (!remaining?.length) await (supabase as any).from("orders").update({ status: "ironing" }).eq("id", row.order_id).neq("status", "cancelled");
+      const { data: remaining } = await supabase.from("service_units").select("id").eq("order_id", row.order_id).in("current_stage", ["cleaning", "cleaning_done", "drying_assembly"]).limit(1);
+      if (!remaining?.length) await supabase.from("orders").update({ status: "ironing" }).eq("id", row.order_id).neq("status", "cancelled");
     }
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success("تم التجميع والقطعة جاهزة للكي"); load(); }

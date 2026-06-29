@@ -41,10 +41,10 @@ function OpsDashboard() {
         supabase.from("orders").select("total, payment_method").eq("payment_status", "paid").gte("created_at", start.toISOString()),
         supabase.from("leave_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("employees").select("id, full_name, job_role").eq("is_active", true).order("full_name").limit(20),
-        (supabase as any).from("service_units").select("id,order_id,needs_reclean,current_stage,status"),
-        (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
-        (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        (supabase as any).from("orders").select("id,status" ).not("status", "in", "(delivered,cancelled)"),
+        supabase.from("service_units").select("id,order_id,needs_reclean,current_stage,status"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
+        supabase.from("pickup_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("orders").select("id,status" ).not("status", "in", "(delivered,cancelled)"),
       ]);
 
       const cash = (paidQ.data ?? []).filter((o: any) => o.payment_method === "cash").reduce((s: number, o: any) => s + Number(o.total), 0);

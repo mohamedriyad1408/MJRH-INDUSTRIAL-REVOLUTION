@@ -67,19 +67,19 @@ function DailyOperationsPage() {
     const now = new Date().toISOString();
 
     const [tenantReady, activeCash, closedCash, fin, apdo, lowStock, late, pickups, readyNoDriver, unpaid, invoices, orders, cash] = await Promise.all([
-      (supabase as any).from("tenant_bootstrap_health").select("*").eq("tenant_id", tenantId).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
-      (supabase as any).from("cash_accounts").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("is_active", true),
-      (supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("closing_date", today).eq("status", "closed"),
-      (supabase as any).from("financial_operation_audit").select("source_id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("severity", "danger").then((r: any) => r).catch(() => ({ count: 0 })),
-      (supabase as any).from("operation_answer_matrix").select("id").eq("tenant_id", tenantId).gte("created_at", new Date(Date.now() - 7 * 864e5).toISOString()).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("inventory_items").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("is_active", true).lte("current_qty", 0).then((r: any) => r).catch(() => ({ count: 0 })),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", now),
-      (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["pending", "assigned"]),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "ready").is("assigned_driver_employee_id", null),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["ready", "out_for_delivery"]).neq("payment_status", "paid"),
-      (supabase as any).from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
-      (supabase as any).from("orders").select("id,total,status,created_at").eq("tenant_id", tenantId).gte("created_at", startIso),
-      (supabase as any).from("cash_transactions").select("amount,direction,source_type,happened_at,cash_accounts!inner(tenant_id)").eq("cash_accounts.tenant_id", tenantId).gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("tenant_bootstrap_health").select("*").eq("tenant_id", tenantId).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
+      supabase.from("cash_accounts").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("is_active", true),
+      supabase.from("daily_cash_closings").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("closing_date", today).eq("status", "closed"),
+      supabase.from("financial_operation_audit").select("source_id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("severity", "danger").then((r: any) => r).catch(() => ({ count: 0 })),
+      supabase.from("operation_answer_matrix").select("id").eq("tenant_id", tenantId).gte("created_at", new Date(Date.now() - 7 * 864e5).toISOString()).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("inventory_items").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("is_active", true).lte("current_qty", 0).then((r: any) => r).catch(() => ({ count: 0 })),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", now),
+      supabase.from("pickup_requests").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["pending", "assigned"]),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "ready").is("assigned_driver_employee_id", null),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["ready", "out_for_delivery"]).neq("payment_status", "paid"),
+      supabase.from("orders").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
+      supabase.from("orders").select("id,total,status,created_at").eq("tenant_id", tenantId).gte("created_at", startIso),
+      supabase.from("cash_transactions").select("amount,direction,source_type,happened_at,cash_accounts!inner(tenant_id)").eq("cash_accounts.tenant_id", tenantId).gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     const apdoRows = apdo.data ?? [];
@@ -116,13 +116,13 @@ function DailyOperationsPage() {
 
   async function runSmartAlerts() {
     if (!tenantId) return;
-    const { data, error } = await (supabase as any).rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
+    const { data, error } = await supabase.rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
     if (error) toast.error(error.message); else toast.success(`تم توليد ${data ?? 0} تنبيه ذكي`);
   }
 
   async function repairFinance() {
     if (!tenantId) return;
-    const { data, error } = await (supabase as any).rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
+    const { data, error } = await supabase.rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
     if (error) toast.error(error.message); else toast.success(`إصلاح مالي: ${data?.fixed ?? 0} بند، المتبقي ${data?.remaining ?? 0}`);
   }
 
@@ -144,7 +144,7 @@ function DailyOperationsPage() {
       `جاهز بلا مندوب: ${data.readyNoDriver}`,
       `جاهز غير مدفوع: ${data.unpaidReady}`,
     ].join("\n");
-    const { error } = await (supabase as any).from("app_notifications").insert({ tenant_id: tenantId, audience: "owner", title, body, href: "/daily-operations", tone: data.financialDanger || data.apdoMissing ? "warning" : "success" });
+    const { error } = await supabase.from("app_notifications").insert({ tenant_id: tenantId, audience: "owner", title, body, href: "/daily-operations", tone: data.financialDanger || data.apdoMissing ? "warning" : "success" });
     if (error) toast.error(error.message); else toast.success("تم حفظ التقرير في الإشعارات");
   }
 

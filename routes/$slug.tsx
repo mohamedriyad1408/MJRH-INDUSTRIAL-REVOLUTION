@@ -26,7 +26,7 @@ function TenantEntryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (supabase as any)
+    supabase
       .from("tenants")
       .select("id,name,slug,logo_url,brand_color,business_address,business_phone")
       .eq("slug", slug)

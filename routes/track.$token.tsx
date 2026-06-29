@@ -43,8 +43,8 @@ function TrackPage() {
   async function load() {
     setLoading(true);
     const [{ data: ord }, { data: its }] = await Promise.all([
-      (supabase as any).rpc("get_order_by_token", { _token: token }).maybeSingle(),
-      (supabase as any).rpc("get_order_items_by_token", { _token: token }),
+      supabase.rpc("get_order_by_token", { _token: token }).maybeSingle(),
+      supabase.rpc("get_order_items_by_token", { _token: token }),
     ]);
     setOrder(ord);
     setItems(its ?? []);

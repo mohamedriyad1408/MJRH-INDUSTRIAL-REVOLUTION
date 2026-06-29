@@ -24,7 +24,7 @@ function BillingPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any).from("tenant_billing_invoices").select("*").order("period_start", { ascending: false });
+    const { data, error } = await supabase.from("tenant_billing_invoices").select("*").order("period_start", { ascending: false });
     if (error) toast.error(error.message);
     setRows(data ?? []); setLoading(false);
   }

@@ -60,19 +60,19 @@ function ReportsPage() {
     const addBranch = (q: any, column = "branch_id") => branchId === "all" ? q : q.eq(column, branchId);
     const branchOrderSelect = branchId === "all" ? "" : ",orders!inner(branch_id)";
     const [ordRes, prevOrdRes, expRes, empRes, itemRes, unitRes, qcRes, invRes, msgRes, proofRes, invoiceRes, pickupRes, lateDetailsRes] = await Promise.all([
-      addBranch((supabase as any).from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)")).gte("created_at", from).lte("created_at", to),
-      addBranch((supabase as any).from("orders").select("id,total,status,created_at")).gte("created_at", prevFrom).lte("created_at", prevTo),
-      addBranch((supabase as any).from("expenses").select("amount,category,status,source_type,spent_at")).gte("spent_at", from).lte("spent_at", to).neq("status", "void"),
-      addBranch((supabase as any).from("employees").select("id,full_name,job_role")).eq("is_active", true),
-      (branchId === "all" ? (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at").gte("created_at", from).lte("created_at", to) : (supabase as any).from("order_items").select("name,service_type,qty,line_total,created_at,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
-      (branchId === "all" ? (supabase as any).from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to) : (supabase as any).from("service_units").select(`id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at${branchOrderSelect}`).gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
-      (supabase as any).from("qc_checks").select("id,result,severity,checked_at,service_unit_id").gte("checked_at", from).lte("checked_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      addBranch((supabase as any).from("inventory_items").select("id,name,current_qty,reorder_level,avg_unit_cost,is_active")).eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("customer_messages").select("id,status,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      addBranch((supabase as any).from("orders").select("id,payment_verification_status,total,created_at")).in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
-      addBranch((supabase as any).from("orders").select("id,status,invoice_finalized_at,created_at")).in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("pickup_requests").select("id,status,created_at,driver_employee_id").in("status", ["pending", "assigned"]).then((r: any) => r).catch(() => ({ data: [] })),
-      addBranch((supabase as any).from("orders").select("id,order_number,status,promised_delivery_at,updated_at,customers(full_name),task_assignments(employee_id,station,assigned_at,completed_at,employees(full_name))")).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString()).limit(50).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch(supabase.from("orders").select("id,status,total,created_at,updated_at,order_type,is_urgent,payment_status,payment_method,customer_id,task_assignments(employee_id,station,assigned_at,completed_at)")).gte("created_at", from).lte("created_at", to),
+      addBranch(supabase.from("orders").select("id,total,status,created_at")).gte("created_at", prevFrom).lte("created_at", prevTo),
+      addBranch(supabase.from("expenses").select("amount,category,status,source_type,spent_at")).gte("spent_at", from).lte("spent_at", to).neq("status", "void"),
+      addBranch(supabase.from("employees").select("id,full_name,job_role")).eq("is_active", true),
+      (branchId === "all" ? supabase.from("order_items").select("name,service_type,qty,line_total,created_at").gte("created_at", from).lte("created_at", to) : supabase.from("order_items").select("name,service_type,qty,line_total,created_at,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
+      (branchId === "all" ? supabase.from("service_units").select("id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at").gte("created_at", from).lte("created_at", to) : supabase.from("service_units").select(`id,order_id,current_stage,needs_reclean,line_value,created_at,updated_at,assigned_ironing_employee_id,ironing_assigned_at,ironing_completed_at${branchOrderSelect}`).gte("created_at", from).lte("created_at", to).eq("orders.branch_id", branchId)),
+      supabase.from("qc_checks").select("id,result,severity,checked_at,service_unit_id").gte("checked_at", from).lte("checked_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch(supabase.from("inventory_items").select("id,name,current_qty,reorder_level,avg_unit_cost,is_active")).eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("customer_messages").select("id,status,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch(supabase.from("orders").select("id,payment_verification_status,total,created_at")).in("payment_verification_status", ["pending_review", "underpaid"]).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch(supabase.from("orders").select("id,status,invoice_finalized_at,created_at")).in("status", ["packing", "ready"]).is("invoice_finalized_at", null).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("pickup_requests").select("id,status,created_at,driver_employee_id").in("status", ["pending", "assigned"]).then((r: any) => r).catch(() => ({ data: [] })),
+      addBranch(supabase.from("orders").select("id,order_number,status,promised_delivery_at,updated_at,customers(full_name),task_assignments(employee_id,station,assigned_at,completed_at,employees(full_name))")).not("status", "in", "(delivered,cancelled)").lt("promised_delivery_at", new Date().toISOString()).limit(50).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
 
     const orders = ordRes.data ?? [];
@@ -164,13 +164,13 @@ function ReportsPage() {
     });
     const lateEmployees = Object.values(lateByEmployee).sort((a, b) => b.count - a.count).slice(0, 6);
 
-    const branchRows = branches.length ? branches : ((await (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at")).data ?? []);
+    const branchRows = branches.length ? branches : ((await supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at")).data ?? []);
     const [cmpOrdRes, cmpExpRes, cmpUnitsRes, labelIssueRes, cmpCashRes] = await Promise.all([
-      (supabase as any).from("orders").select("id,branch_id,total,status,payment_status,is_urgent,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("expenses").select("branch_id,amount,status,category,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("service_units").select("id,current_stage,needs_reclean,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("service_units").select("id,label_status,created_at").in("label_status", ["missing_label", "unclear_label"]).gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("cash_accounts").select("branch_id,current_balance").eq("tenant_id", tenantId).eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("orders").select("id,branch_id,total,status,payment_status,is_urgent,created_at").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("expenses").select("branch_id,amount,status,category,spent_at").gte("spent_at", from).lte("spent_at", to).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("service_units").select("id,current_stage,needs_reclean,orders!inner(branch_id)").gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("service_units").select("id,label_status,created_at").in("label_status", ["missing_label", "unclear_label"]).gte("created_at", from).lte("created_at", to).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("cash_accounts").select("branch_id,current_balance").eq("tenant_id", tenantId).eq("is_active", true).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     const branchComparison = (branchRows as any[]).map((b: any) => {
       const bo = (cmpOrdRes.data ?? []).filter((o: any) => o.branch_id === b.id);
@@ -214,7 +214,7 @@ function ReportsPage() {
 
   useEffect(() => {
     if (!tenantId) return;
-    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+    supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
   }, [tenantId]);
 
   useEffect(() => { if (canView) load(); }, [year, month, branchId]);

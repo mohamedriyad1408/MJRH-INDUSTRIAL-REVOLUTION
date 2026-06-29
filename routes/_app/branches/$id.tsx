@@ -34,14 +34,14 @@ function BranchDashboardPage() {
     setLoading(true);
     const date = new Date().toISOString().slice(0, 10);
     const [bRes, cRes, eRes, oRes, expRes, suRes, qcRes, rDriverRes] = await Promise.all([
-      (supabase as any).from("branches").select("*").eq("id", id).maybeSingle(),
-      (supabase as any).from("cash_accounts").select("*").eq("branch_id", id).eq("is_active", true),
-      (supabase as any).from("employees").select("*").eq("branch_id", id),
-      (supabase as any).from("orders").select("*,customers(full_name)").eq("branch_id", id).gte("created_at", `${date}T00:00:00Z`),
-      (supabase as any).from("expenses").select("*").eq("branch_id", id).gte("spent_at", date),
-      (supabase as any).from("service_units").select("id").eq("needs_reclean", true),
-      (supabase as any).from("service_units").select("id").eq("current_stage", "qc_failed"),
-      (supabase as any).from("orders").select("id").eq("branch_id", id).eq("status", "ready").is("assigned_driver_employee_id", null),
+      supabase.from("branches").select("*").eq("id", id).maybeSingle(),
+      supabase.from("cash_accounts").select("*").eq("branch_id", id).eq("is_active", true),
+      supabase.from("employees").select("*").eq("branch_id", id),
+      supabase.from("orders").select("*,customers(full_name)").eq("branch_id", id).gte("created_at", `${date}T00:00:00Z`),
+      supabase.from("expenses").select("*").eq("branch_id", id).gte("spent_at", date),
+      supabase.from("service_units").select("id").eq("needs_reclean", true),
+      supabase.from("service_units").select("id").eq("current_stage", "qc_failed"),
+      supabase.from("orders").select("id").eq("branch_id", id).eq("status", "ready").is("assigned_driver_employee_id", null),
     ]);
     if (bRes.error) toast.error(bRes.error.message);
     const ords = oRes.data ?? [];

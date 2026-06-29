@@ -32,7 +32,7 @@ function BranchesPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any).from("branches").select("*").order("name");
+    const { data, error } = await supabase.from("branches").select("*").order("name");
     if (error) toast.error(error.message);
     setList((data ?? []) as B[]);
     setLoading(false);
@@ -43,7 +43,7 @@ function BranchesPage() {
     if (!editing?.name) return toast.error(t("branches.errName", "الاسم مطلوب"));
     setSaving(true);
     const payload = { tenant_id: tenantId, name: editing.name, address: editing.address || null, phone: editing.phone || null, is_active: editing.is_active };
-    const { error } = editing.id ? await (supabase as any).from("branches").update(payload).eq("id", editing.id) : await (supabase as any).from("branches").insert(payload);
+    const { error } = editing.id ? await supabase.from("branches").update(payload).eq("id", editing.id) : await supabase.from("branches").insert(payload);
     setSaving(false);
     if (error) toast.error(error.message); else { toast.success(t("branches.toastSaved", "تم الحفظ")); setOpen(false); load(); }
   }

@@ -53,7 +53,7 @@ function CustomerPortal() {
   async function verify() {
     if (!phone || phone.replace(/\D/g, "").length < 10) { toast.error("أدخل رقم هاتف صحيح"); return; }
     setLoading(true);
-    const { data } = await (supabase as any).rpc("customer_portal_verify", { _phone: phone, _slug: tenantSlug }).maybeSingle();
+    const { data } = await supabase.rpc("customer_portal_verify", { _phone: phone, _slug: tenantSlug }).maybeSingle();
     setLoading(false);
     if (!data) { toast.error("الرقم غير مسجل — تواصل مع المغسلة أو سجل من رابط المغسلة"); return; }
     setCustomerId(data.id);
@@ -65,12 +65,12 @@ function CustomerPortal() {
   }
 
   async function loadOrders() {
-    const { data } = await (supabase as any).rpc("customer_portal_orders", { _phone: phone, _slug: tenantSlug });
+    const { data } = await supabase.rpc("customer_portal_orders", { _phone: phone, _slug: tenantSlug });
     setOrders((data ?? []) as any);
   }
 
   async function loadServices() {
-    const { data } = await (supabase as any).rpc("customer_portal_services", { _phone: phone, _slug: tenantSlug });
+    const { data } = await supabase.rpc("customer_portal_services", { _phone: phone, _slug: tenantSlug });
     setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.price ?? 0), service_type: s.service_type })));
   }
 
@@ -129,15 +129,15 @@ function CustomerPortal() {
       },
     });
     setPayingOrderId(null);
-    if (fnErr || res?.ok === false) return toast.error(res?.error ?? fnErr?.message ?? "تعذر قراءة الإيصال");
-    toast.success(res?.message ?? "تم رفع إثبات الدفع");
+    if (fnErr || (res as any)?.ok === false) return toast.error((res as any)?.error ?? fnErr?.message ?? t("customer.uploadError", "تعذر قراءة الإيصال"));
+    toast.success((res as any)?.message ?? t("customer.uploadSuccess", "تم رفع إثبات الدفع"));
     loadOrders();
   }
 
   async function placeOrder() {
     if (!pieces.length && !notes) { toast.error("أضف قطعة واحدة أو ملاحظات على الأقل"); return; }
     setPlacing(true);
-    const { data: ord, error } = await (supabase as any).rpc("customer_portal_create_order", {
+    const { data: ord, error } = await supabase.rpc("customer_portal_create_order", {
       _phone: phone,
       _items: pieces.map((p) => ({ service_item_id: p.service_item_id, qty: 1, image_url: p.image_url ?? null })),
       _notes: notes || null,

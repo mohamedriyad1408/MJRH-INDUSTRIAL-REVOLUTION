@@ -9,10 +9,19 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env");
 }
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+type SupabaseCustomClient = {
+  from: (table: string) => { select: (columns?: string, options?: any) => any; insert: (p: any, options?: any) => any; update: (p: any, options?: any) => any; delete: (options?: any) => any; upsert: (p: any, options?: any) => any };
+  rpc: (fn: string, params?: any) => any;
+  auth: { getUser: (jwt?: string) => Promise<{ data: { user: any }; error: any }>; onAuthStateChange: (fn: (event: any, session: any) => void) => { data: { subscription: { unsubscribe: () => void } } }; getSession: () => Promise<{ data: { session: any }; error: any }>; signOut: () => Promise<{ error: any }>; signUp: (p: any) => Promise<{ data: any; error: any }>; signInWithPassword: (p: any) => Promise<{ data: any; error: any }>; resetPasswordForEmail: (email: string, options?: any) => Promise<{ data: any; error: any }>; updateUser: (p: any) => Promise<{ data: any; error: any }> };
+  functions: { invoke: <T>(fn: string, p?: any) => Promise<{ data: T; error: any }> };
+  storage: any;
+  [key: string]: any;
+};
+
+export const supabase: SupabaseCustomClient = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
   },
-});
+}) as unknown as SupabaseCustomClient;

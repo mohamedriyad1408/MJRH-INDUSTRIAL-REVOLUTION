@@ -37,7 +37,7 @@ function BudgetsPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any).from("v_operating_budgets").select("*").eq("tenant_id", tenantId).order("period_label", { ascending: false });
+    const { data, error } = await supabase.from("v_operating_budgets").select("*").eq("tenant_id", tenantId).order("period_label", { ascending: false });
     if (error) toast.error(error.message);
     setBudgets(data ?? []);
     if (data?.length && !selectedId) setSelectedId(data[0].id);
@@ -53,7 +53,7 @@ function BudgetsPage() {
     const details: Record<string, number> = {};
     Object.entries(cats).forEach(([k, v]) => { const n = Number(v || 0); details[k] = n; totalExp += n; });
 
-    const { error } = await (supabase as any).from("operating_budgets").insert({
+    const { error } = await supabase.from("operating_budgets").insert({
       tenant_id: tenantId, period_type: periodType, period_label: label, expected_revenue: Number(revenue), expected_expenses: totalExp, expense_details: details,
     });
     setSaving(false);

@@ -45,9 +45,9 @@ function CashClosingPage() {
     const date = new Date().toISOString().slice(0, 10);
 
     const [cRes, clRes, txRes] = await Promise.all([
-      (supabase as any).from("cash_accounts").select("*,branches(name)").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
-      (supabase as any).from("daily_cash_closings").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(20),
-      (supabase as any).from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).gte("happened_at", `${date}T00:00:00Z`).order("happened_at", { ascending: false }),
+      supabase.from("cash_accounts").select("*,branches(name)").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
+      supabase.from("daily_cash_closings").select("*,cash_accounts(name)").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(20),
+      supabase.from("cash_transactions").select("*,cash_accounts(name)").eq("tenant_id", tenantId).gte("happened_at", `${date}T00:00:00Z`).order("happened_at", { ascending: false }),
     ]);
 
     const accs = cRes.data ?? [];
@@ -63,8 +63,8 @@ function CashClosingPage() {
     setRepairing(true);
     const errs: string[] = [];
     try {
-      const r1 = await (supabase as any).rpc("repair_cash_account_balances"); if (r1.error) errs.push(r1.error.message);
-      const r2 = await (supabase as any).rpc("repair_cash_closing_records"); if (r2.error) errs.push(r2.error.message);
+      const r1 = await supabase.rpc("repair_cash_account_balances"); if (r1.error) errs.push(r1.error.message);
+      const r2 = await supabase.rpc("repair_cash_closing_records"); if (r2.error) errs.push(r2.error.message);
       if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("cashClosing.prepSuccess", "تم تجهيز الخزن للإقفال"));
       await load();
     } finally { setRepairing(false); }
@@ -121,13 +121,13 @@ function CashClosingPage() {
     ].filter(Boolean);
 
     try {
-      const res = await (supabase as any).rpc("submit_all_cash_closings", {
+      const res = await supabase.rpc("submit_all_cash_closings", {
         _tenant_id: tenantId, _closing_date: date, _notes: notes || null, _payload_rows: rows.map((r) => ({ cash_account_id: r.account.id, expected_balance: r.expected, counted_balance: r.counted, difference: r.diff, notes: r.notes })),
       });
       if (res.error) throw res.error;
 
       const title = Math.abs(totals.diff) >= 0.01 ? t("cashClosing.titleDiff", "إقفال الخزن - يوجد فرق") : t("cashClosing.titleNormal", "إقفال الخزن اليومي");
-      await (supabase as any).from("notifications").insert({ tenant_id: tenantId, title, message: lines.join("\n"), audience: ["owner", "ops_manager"], tone: Math.abs(totals.diff) >= 0.01 ? "amber" : "emerald" }).then(() => null);
+      await supabase.from("notifications").insert({ tenant_id: tenantId, title, message: lines.join("\n"), audience: ["owner", "ops_manager"], tone: Math.abs(totals.diff) >= 0.01 ? "amber" : "emerald" }).then(() => null);
 
       toast.success(t("cashClosing.successClose", "تم إقفال كل الخزن في حركة واحدة"));
       setNotes(""); load();

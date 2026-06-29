@@ -38,8 +38,8 @@ function OrdersPage() {
   async function load() {
     setLoading(true);
     try {
-      if (tenantId) (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
-      let q = (supabase as any)
+      if (tenantId) supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+      let q = supabase
         .from("orders")
         .select("id, order_number, status, payment_status, payment_verification_status, invoice_finalized_at, total, is_urgent, created_at, customer_id, branch_id, customers(full_name, phone), branches(name)")
         .order("created_at", { ascending: false })
@@ -50,8 +50,8 @@ function OrdersPage() {
       const base = (data ?? []) as any[];
       const ids = base.map((r) => r.id);
       const [unitsRes, pickupsRes] = await Promise.all([
-        ids.length ? (supabase as any).from("service_units").select("order_id,needs_reclean,current_stage,status").in("order_id", ids) : Promise.resolve({ data: [] }),
-        ids.length ? (supabase as any).from("pickup_requests").select("converted_order_id,status").in("converted_order_id", ids).in("status", ["pending", "assigned"]) : Promise.resolve({ data: [] }),
+        ids.length ? supabase.from("service_units").select("order_id,needs_reclean,current_stage,status").in("order_id", ids) : Promise.resolve({ data: [] }),
+        ids.length ? supabase.from("pickup_requests").select("converted_order_id,status").in("converted_order_id", ids).in("status", ["pending", "assigned"]) : Promise.resolve({ data: [] }),
       ]);
       const unitMap = new Map<string, any>();
       (unitsRes.data ?? []).forEach((u: any) => {

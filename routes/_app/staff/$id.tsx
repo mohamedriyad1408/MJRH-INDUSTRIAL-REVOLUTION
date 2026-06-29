@@ -59,7 +59,7 @@ function StaffDetailPage() {
 
   useEffect(() => {
     if (tenantId) {
-      (supabase as any)
+      supabase
         .from("branches")
         .select("id,name")
         .eq("tenant_id", tenantId)
@@ -72,7 +72,7 @@ function StaffDetailPage() {
   async function saveBasic() {
     if (!emp) return;
     setSaving(true);
-    const { error } = await (supabase as any).from("employees").update({
+    const { error } = await supabase.from("employees").update({
       full_name: emp.full_name, job_title: emp.job_title, phone: emp.phone, email: emp.email,
       role: emp.role || null, station: emp.station || null,
       branch_id: emp.branch_id || null,

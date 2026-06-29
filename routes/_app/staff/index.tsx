@@ -47,7 +47,7 @@ function StaffListPage() {
 
   useEffect(() => {
     if (tenantId) {
-      (supabase as any)
+      supabase
         .from("branches")
         .select("id,name")
         .eq("tenant_id", tenantId)
@@ -59,7 +59,7 @@ function StaffListPage() {
 
   async function load() {
     setLoading(true);
-    let query = (supabase as any).from("employees").select("*,branches(name)");
+    let query = supabase.from("employees").select("*,branches(name)");
     if (branchId !== "all") {
       query = query.eq("branch_id", branchId);
     }

@@ -62,7 +62,7 @@ function FinancePage() {
     setLoading(true);
     try {
       // الوضع السهل: أول ما صاحب العمل يفتح الحسابات، النظام يجهز رواتب الشهر كمصروفات آجلة بدون خطوات معقدة.
-      const { data: payrollData, error: payrollError } = await (supabase as any)
+      const { data: payrollData, error: payrollError } = await supabase
         .rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
       if (payrollError) toast.error(`تعذر تجهيز الرواتب: ${payrollError.message}`);
       setPayrollSync(payrollData ?? null);
@@ -71,7 +71,7 @@ function FinancePage() {
       let oq = addBranch(supabase.from("orders").select("total,payment_status,payment_method,branch_id").neq("status", "cancelled"));
       if (fromDate) oq = oq.gte("created_at", fromDate);
 
-      let eq = addBranch((supabase as any).from("expenses").select("*,branches(name),cash_accounts(name)").neq("status", "void")).order("spent_at", { ascending: false });
+      let eq = addBranch(supabase.from("expenses").select("*,branches(name),cash_accounts(name)").neq("status", "void")).order("spent_at", { ascending: false });
       if (fromDate) eq = eq.gte("spent_at", fromDate);
 
       const [ordRes, expRes, advRes, empRes, brRes, caRes] = await Promise.all([
@@ -83,8 +83,8 @@ function FinancePage() {
           .eq("type", "advance")
           .order("created_at", { ascending: false }),
         addBranch(supabase.from("employees").select("id,full_name,monthly_salary,commission_percent,branch_id").eq("is_active", true)).order("full_name"),
-        tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
-        branchId === "all" ? (supabase as any).from("cash_accounts").select("id,name,branch_id").eq("is_active", true).order("name") : (supabase as any).from("cash_accounts").select("id,name,branch_id").eq("is_active", true).eq("branch_id", branchId).order("name"),
+        tenantId ? supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
+        branchId === "all" ? supabase.from("cash_accounts").select("id,name,branch_id").eq("is_active", true).order("name") : supabase.from("cash_accounts").select("id,name,branch_id").eq("is_active", true).eq("branch_id", branchId).order("name"),
       ]);
 
       if (ordRes.error) toast.error(ordRes.error.message);
@@ -115,7 +115,7 @@ function FinancePage() {
 
   async function syncPayrollNow() {
     setSyncingPayroll(true);
-    const { data, error } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
+    const { data, error } = await supabase.rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
     setSyncingPayroll(false);
     if (error) return toast.error(error.message);
     setPayrollSync(data);
@@ -326,7 +326,7 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
     if (!branchId) { toast.error("اختار الفرع"); return; }
     if (status === "paid" && !cashAccountId) { toast.error("اختار الخزنة التي دفعت المصروف"); return; }
     setSaving(true);
-    const { data: expense, error } = await (supabase as any).from("expenses").insert({
+    const { data: expense, error } = await supabase.from("expenses").insert({
       tenant_id: tenantId,
       category: category as any,
       amount: amt,
@@ -341,7 +341,7 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
     // لا نسجل حركة خزنة يدويًا هنا.
     // قاعدة البيانات تقوم تلقائيًا بإنشاء حركة الخزنة والقيد المحاسبي عبر trg_expenses_financial_sync.
     if (!error && expense?.id) {
-      await (supabase as any).rpc("record_operation_event", {
+      await supabase.rpc("record_operation_event", {
         _process_key: "expense_created",
         _process_name: status === "paid" ? "تسجيل مصروف مدفوع" : "تسجيل مصروف آجل",
         _source_type: "expense",

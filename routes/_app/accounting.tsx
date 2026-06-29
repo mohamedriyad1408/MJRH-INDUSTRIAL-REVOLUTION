@@ -58,14 +58,14 @@ function AccountingPage() {
   async function ensureCashAccount() {
     if (!tenantId) return [];
     const errs: string[] = [];
-    const rpcFor = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId });
+    const rpcFor = await supabase.rpc("ensure_default_cash_account_for", { _tenant_id: tenantId });
     if (rpcFor.error) {
       errs.push(rpcFor.error.message);
-      const rpc = await (supabase as any).rpc("ensure_default_cash_account");
+      const rpc = await supabase.rpc("ensure_default_cash_account");
       if (rpc.error) errs.push(rpc.error.message);
     }
 
-    let dataQuery = (supabase as any)
+    let dataQuery = supabase
       .from("cash_accounts")
       .select("*,branches(name)")
       .eq("tenant_id", tenantId)
@@ -75,7 +75,7 @@ function AccountingPage() {
     if (error) errs.push(error.message);
 
     if ((!data || data.length === 0) && tenantId && branchId === "all") {
-      const ins = await (supabase as any).from("cash_accounts").insert({
+      const ins = await supabase.from("cash_accounts").insert({
         tenant_id: tenantId,
         name: "الخزنة الرئيسية",
         account_type: "cash",
@@ -107,12 +107,12 @@ function AccountingPage() {
       const branchEmployeeSelect = branchId === "all" ? "*,employees(full_name)" : "*,employees!inner(full_name,branch_id)";
       const results = await Promise.allSettled([
         Promise.resolve({ data: ensuredCash, error: null }),
-        (branchId === "all" ? (supabase as any).from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId) : (supabase as any).from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId).eq("cash_accounts.branch_id", branchId)).order("happened_at", { ascending: false }).limit(80),
-        addBranch((supabase as any).from("expenses").select("*,employees(full_name)").eq("tenant_id", tenantId)).gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
-        addBranch((supabase as any).from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("tenant_id", tenantId)).eq("is_active", true).order("full_name"),
-        (supabase as any).from("payroll_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(12),
-        (branchId === "all" ? (supabase as any).from("payroll_lines").select("*,employees(full_name,branch_id),payroll_periods(period_start,period_end,status)").eq("tenant_id", tenantId) : (supabase as any).from("payroll_lines").select(`${branchEmployeeSelect},payroll_periods(period_start,period_end,status)`).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("created_at", { ascending: false }).limit(100),
-        (branchId === "all" ? (supabase as any).from("employee_financial_ledger").select("*,employees(full_name)").eq("tenant_id", tenantId) : (supabase as any).from("employee_financial_ledger").select(branchEmployeeSelect).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("entry_at", { ascending: false }).limit(120),
+        (branchId === "all" ? supabase.from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId) : supabase.from("cash_transactions").select(branchCashSelect).eq("tenant_id", tenantId).eq("cash_accounts.branch_id", branchId)).order("happened_at", { ascending: false }).limit(80),
+        addBranch(supabase.from("expenses").select("*,employees(full_name)").eq("tenant_id", tenantId)).gte("spent_at", bounds.fromIso).lte("spent_at", bounds.toIso).order("spent_at", { ascending: false }),
+        addBranch(supabase.from("employees").select("id,full_name,monthly_salary,commission_percent,is_active").eq("tenant_id", tenantId)).eq("is_active", true).order("full_name"),
+        supabase.from("payroll_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(12),
+        (branchId === "all" ? supabase.from("payroll_lines").select("*,employees(full_name,branch_id),payroll_periods(period_start,period_end,status)").eq("tenant_id", tenantId) : supabase.from("payroll_lines").select(`${branchEmployeeSelect},payroll_periods(period_start,period_end,status)`).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("created_at", { ascending: false }).limit(100),
+        (branchId === "all" ? supabase.from("employee_financial_ledger").select("*,employees(full_name)").eq("tenant_id", tenantId) : supabase.from("employee_financial_ledger").select(branchEmployeeSelect).eq("tenant_id", tenantId).eq("employees.branch_id", branchId)).order("entry_at", { ascending: false }).limit(120),
       ]);
       const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
       const ca = val(0), ct = val(1), ex = val(2), em = val(3), pp = val(4), pl = val(5), lg = val(6);
@@ -125,7 +125,7 @@ function AccountingPage() {
   }
   useEffect(() => {
     if (!tenantId) return;
-    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => {
+    supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => {
       const list = data ?? [];
       setBranches(list);
       setCashForm((old) => ({ ...old, branch_id: old.branch_id || list[0]?.id || "" }));
@@ -149,14 +149,14 @@ function AccountingPage() {
     if (branches.length && !selectedBranchId) return toast.error("اختار الفرع قبل إضافة الخزنة");
     const opening = Number(cashForm.opening_balance || 0);
     let createdCashAccountId: string | null = null;
-    const rpc = await (supabase as any).rpc("create_cash_account_with_opening", {
+    const rpc = await supabase.rpc("create_cash_account_with_opening", {
       _name: cashForm.name.trim(),
       _account_type: cashForm.account_type,
       _opening_balance: opening,
     });
     if (rpc.error) {
       // Fallback for old deployments/database before the RPC migration: keep the owner working now.
-      const { data: account, error: insErr } = await (supabase as any).from("cash_accounts").insert({
+      const { data: account, error: insErr } = await supabase.from("cash_accounts").insert({
         tenant_id: tenantId,
         name: cashForm.name.trim(),
         account_type: cashForm.account_type,
@@ -168,7 +168,7 @@ function AccountingPage() {
       if (insErr) return toast.error(insErr.message || rpc.error.message);
       createdCashAccountId = account?.id ?? null;
       if (opening > 0 && account?.id) {
-        const tx = await (supabase as any).from("cash_transactions").insert({
+        const tx = await supabase.from("cash_transactions").insert({
           tenant_id: tenantId,
           cash_account_id: account.id,
           direction: "in",
@@ -178,15 +178,15 @@ function AccountingPage() {
           source_id: account.id,
           created_by: user?.id,
         });
-        if (tx.error) await (supabase as any).from("cash_accounts").update({ current_balance: opening }).eq("id", account.id);
+        if (tx.error) await supabase.from("cash_accounts").update({ current_balance: opening }).eq("id", account.id);
       }
       toast.success("تم إضافة الحساب. وسيتم ترحيل القيد المحاسبي تلقائيًا بعد تحديث قاعدة البيانات.");
     } else {
       createdCashAccountId = rpc.data ?? null;
-      if (rpc.data && selectedBranchId) await (supabase as any).from("cash_accounts").update({ branch_id: selectedBranchId }).eq("id", rpc.data);
+      if (rpc.data && selectedBranchId) await supabase.from("cash_accounts").update({ branch_id: selectedBranchId }).eq("id", rpc.data);
       toast.success("تم إضافة الحساب وتسجيل الرصيد في الخزنة والقيود");
     }
-    await (supabase as any).rpc("record_operation_event", { _process_key: "cash_account_created", _process_name: "إضافة خزنة أو حساب", _source_type: "cash_account", _source_id: createdCashAccountId, _branch_id: selectedBranchId || null, _cash_account_id: createdCashAccountId, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, name: cashForm.name.trim(), opening_balance: opening, account_type: cashForm.account_type }, _output: { cash_impact: opening > 0, journal_required: opening > 0, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "cash_account_created", _process_name: "إضافة خزنة أو حساب", _source_type: "cash_account", _source_id: createdCashAccountId, _branch_id: selectedBranchId || null, _cash_account_id: createdCashAccountId, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, name: cashForm.name.trim(), opening_balance: opening, account_type: cashForm.account_type }, _output: { cash_impact: opening > 0, journal_required: opening > 0, appears_in_report: true } }).then(() => null);
     setCashForm({ name: "", account_type: "cash", opening_balance: "0", branch_id: selectedBranchId || "" });
     load();
   }
@@ -196,10 +196,10 @@ function AccountingPage() {
     if (!txForm.cash_account_id) return toast.error("اختار الخزنة");
     if (!Number(txForm.amount)) return toast.error("اكتب مبلغ صحيح");
     const account = cashAccounts.find((c) => c.id === txForm.cash_account_id);
-    const { data: tx, error } = await (supabase as any).from("cash_transactions").insert({
+    const { data: tx, error } = await supabase.from("cash_transactions").insert({
       tenant_id: tenantId, cash_account_id: txForm.cash_account_id, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية", source_type: "manual_cash_transaction", created_by: user?.id,
     }).select("id").single();
-    if (!error && tx?.id) await (supabase as any).rpc("record_operation_event", { _process_key: "manual_cash_transaction", _process_name: "حركة خزنة يدوية", _source_type: "manual_cash_transaction", _source_id: tx.id, _branch_id: account?.branch_id ?? null, _cash_account_id: txForm.cash_account_id, _report_bucket: "accounting/ledger", _requires_notification: false, _data: { tenant_id: tenantId, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية" }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
+    if (!error && tx?.id) await supabase.rpc("record_operation_event", { _process_key: "manual_cash_transaction", _process_name: "حركة خزنة يدوية", _source_type: "manual_cash_transaction", _source_id: tx.id, _branch_id: account?.branch_id ?? null, _cash_account_id: txForm.cash_account_id, _report_bucket: "accounting/ledger", _requires_notification: false, _data: { tenant_id: tenantId, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية" }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success("تم تسجيل الحركة وتحديث الخزنة"); setTxForm({ cash_account_id: "", direction: "in", amount: "0", description: "" }); load(); }
   }
 
@@ -209,7 +209,7 @@ function AccountingPage() {
     if (transferForm.from_cash_account_id === transferForm.to_cash_account_id) return toast.error("لا يمكن التحويل لنفس الخزنة");
     const amount = Number(transferForm.amount || 0);
     if (amount <= 0) return toast.error("اكتب مبلغ تحويل صحيح");
-    const { error } = await (supabase as any).rpc("transfer_cash_between_accounts", {
+    const { error } = await supabase.rpc("transfer_cash_between_accounts", {
       _from_cash_account_id: transferForm.from_cash_account_id,
       _to_cash_account_id: transferForm.to_cash_account_id,
       _amount: amount,
@@ -218,7 +218,7 @@ function AccountingPage() {
     if (error) return toast.error(error.message);
     const fromAccount = cashAccounts.find((c) => c.id === transferForm.from_cash_account_id);
     const toAccount = cashAccounts.find((c) => c.id === transferForm.to_cash_account_id);
-    await (supabase as any).rpc("record_operation_event", { _process_key: "cash_transfer", _process_name: "تحويل بين الخزن", _source_type: "cash_transfer", _source_id: null, _branch_id: fromAccount?.branch_id ?? toAccount?.branch_id ?? null, _cash_account_id: transferForm.from_cash_account_id, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, from_cash_account_id: transferForm.from_cash_account_id, to_cash_account_id: transferForm.to_cash_account_id, amount, notes: transferForm.notes || null }, _output: { cash_impact: true, journal_required: true, appears_in_report: true, not_income_or_expense: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "cash_transfer", _process_name: "تحويل بين الخزن", _source_type: "cash_transfer", _source_id: null, _branch_id: fromAccount?.branch_id ?? toAccount?.branch_id ?? null, _cash_account_id: transferForm.from_cash_account_id, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, from_cash_account_id: transferForm.from_cash_account_id, to_cash_account_id: transferForm.to_cash_account_id, amount, notes: transferForm.notes || null }, _output: { cash_impact: true, journal_required: true, appears_in_report: true, not_income_or_expense: true } }).then(() => null);
     toast.success("تم التحويل بين الخزن بدون التأثير على الإيرادات أو المصروفات");
     setTransferForm({ from_cash_account_id: "", to_cash_account_id: "", amount: "0", notes: "" });
     load();
@@ -228,9 +228,9 @@ function AccountingPage() {
     setFixingCash(true);
     try {
       const errs: string[] = [];
-      const r1 = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
-      const r2 = await (supabase as any).rpc("repair_cash_account_balances"); if (r2.error) errs.push(r2.error.message);
-      const r3 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
+      const r1 = await supabase.rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
+      const r2 = await supabase.rpc("repair_cash_account_balances"); if (r2.error) errs.push(r2.error.message);
+      const r3 = await supabase.rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
       if (errs.length) toast.error(errs.join(" | ")); else toast.success("تم فحص وإصلاح الخزنة والحسابات");
       await load();
     } finally {
@@ -242,7 +242,7 @@ function AccountingPage() {
     const ensured = cashAccounts.length ? cashAccounts : await ensureCashAccount();
     const mainCash = ensured[0]?.id;
     if (!mainCash) return toast.error("تعذر إنشاء الخزنة الرئيسية");
-    const { data: adv, error } = await (supabase as any)
+    const { data: adv, error } = await supabase
       .from("employee_requests")
       .select("id,employee_id,amount,reason,created_at,employees(full_name)")
       .eq("type", "advance").eq("status", "approved")
@@ -252,13 +252,13 @@ function AccountingPage() {
     for (const a of adv ?? []) {
       const amount = Number(a.amount ?? 0); if (!amount) continue;
       const desc = `سلفة موظف: ${a.employees?.full_name ?? "موظف"}`;
-      const { data: exp, error: eErr } = await (supabase as any).from("expenses").upsert({
+      const { data: exp, error: eErr } = await supabase.from("expenses").upsert({
         tenant_id: tenantId, branch_id: ensured[0]?.branch_id ?? null, cash_account_id: mainCash, category: "salaries", amount, description: desc, spent_at: a.created_at, status: "paid", employee_id: a.employee_id, source_type: "employee_advance", source_id: a.id, paid_at: a.created_at, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
       if (!eErr) {
-        await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount, description: desc, source_type: "employee_advance", source_id: a.id, created_by: user?.id }).then(() => null);
-        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: a.employee_id, entry_type: "advance", amount, direction: "employee_owes", source_type: "employee_advance", source_id: a.id, description: desc, created_by: user?.id }).then(() => null);
-        await (supabase as any).rpc("record_operation_event", { _process_key: "employee_advance_synced", _process_name: "تسجيل سلفة موظف", _source_type: "employee_advance", _source_id: a.id, _branch_id: ensured[0]?.branch_id ?? null, _cash_account_id: mainCash, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: a.employee_id, amount }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
+        await supabase.from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount, description: desc, source_type: "employee_advance", source_id: a.id, created_by: user?.id }).then(() => null);
+        await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: a.employee_id, entry_type: "advance", amount, direction: "employee_owes", source_type: "employee_advance", source_id: a.id, description: desc, created_by: user?.id }).then(() => null);
+        await supabase.rpc("record_operation_event", { _process_key: "employee_advance_synced", _process_name: "تسجيل سلفة موظف", _source_type: "employee_advance", _source_id: a.id, _branch_id: ensured[0]?.branch_id ?? null, _cash_account_id: mainCash, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: a.employee_id, amount }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
         if (exp) created++;
       }
     }
@@ -267,7 +267,7 @@ function AccountingPage() {
   }
 
   async function generatePayroll() {
-    const { data, error } = await (supabase as any).rpc("sync_monthly_payroll_payables", { _month: bounds.start });
+    const { data, error } = await supabase.rpc("sync_monthly_payroll_payables", { _month: bounds.start });
     if (error) return toast.error(error.message);
     toast.success(`تم توليد مسير الرواتب: ${data?.employees_count ?? 0} موظف`);
     load();
@@ -278,17 +278,17 @@ function AccountingPage() {
     for (const l of periodLines) {
       const gross = Number(l.gross_pay ?? 0); if (!gross) continue;
       const desc = `استحقاق راتب ${l.employees?.full_name ?? "موظف"} عن ${l.payroll_periods?.period_start}`;
-      const { data: exp } = await (supabase as any).from("expenses").upsert({
+      const { data: exp } = await supabase.from("expenses").upsert({
         tenant_id: tenantId, category: "salaries", amount: gross, description: desc, spent_at: bounds.toIso, status: "payable", employee_id: l.employee_id, source_type: "payroll_line", source_id: l.id, due_at: bounds.toIso, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
-      await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_accrual", amount: gross, direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
+      await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_accrual", amount: gross, direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
       if (Number(l.advances_deducted ?? 0) > 0) {
-        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: "خصم سلف من الراتب", created_by: user?.id }).then(() => null);
+        await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: "خصم سلف من الراتب", created_by: user?.id }).then(() => null);
       }
-      await (supabase as any).from("payroll_lines").update({ status: "posted", expense_id: exp?.id ?? l.expense_id }).eq("id", l.id);
-      await (supabase as any).rpc("record_operation_event", { _process_key: "payroll_posted", _process_name: "اعتماد راتب كمصروف آجل", _source_type: "payroll_line", _source_id: l.id, _branch_id: l.employees?.branch_id ?? null, _cash_account_id: null, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, gross }, _output: { cash_impact: false, journal_required: true, appears_in_report: true } }).then(() => null);
+      await supabase.from("payroll_lines").update({ status: "posted", expense_id: exp?.id ?? l.expense_id }).eq("id", l.id);
+      await supabase.rpc("record_operation_event", { _process_key: "payroll_posted", _process_name: "اعتماد راتب كمصروف آجل", _source_type: "payroll_line", _source_id: l.id, _branch_id: l.employees?.branch_id ?? null, _cash_account_id: null, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, gross }, _output: { cash_impact: false, journal_required: true, appears_in_report: true } }).then(() => null);
     }
-    await (supabase as any).from("payroll_periods").update({ status: "posted", posted_at: new Date().toISOString() }).eq("id", periodId);
+    await supabase.from("payroll_periods").update({ status: "posted", posted_at: new Date().toISOString() }).eq("id", periodId);
     toast.success("تم ترحيل الرواتب كمصروفات مستحقة");
     load();
   }
@@ -301,15 +301,15 @@ function AccountingPage() {
     for (const l of periodLines) {
       const net = Number(l.net_pay ?? 0); if (!net) continue;
       const desc = `صرف راتب ${l.employees?.full_name ?? "موظف"}`;
-      const { data: tx, error } = await (supabase as any).from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount: net, description: desc, source_type: "payroll_payment", source_id: l.id, created_by: user?.id }).select("id").single();
+      const { data: tx, error } = await supabase.from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount: net, description: desc, source_type: "payroll_payment", source_id: l.id, created_by: user?.id }).select("id").single();
       if (!error) {
-        if (l.expense_id) await (supabase as any).from("expenses").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", l.expense_id);
-        await (supabase as any).from("payroll_lines").update({ status: "paid", cash_transaction_id: tx?.id }).eq("id", l.id);
-        await (supabase as any).from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_payment", amount: net, direction: "employee_due", source_type: "payroll_payment", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
-        await (supabase as any).rpc("record_operation_event", { _process_key: "payroll_paid", _process_name: "صرف راتب", _source_type: "payroll_payment", _source_id: l.id, _branch_id: l.employees?.branch_id ?? ensured[0]?.branch_id ?? null, _cash_account_id: mainCash, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, net }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
+        if (l.expense_id) await supabase.from("expenses").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", l.expense_id);
+        await supabase.from("payroll_lines").update({ status: "paid", cash_transaction_id: tx?.id }).eq("id", l.id);
+        await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_payment", amount: net, direction: "employee_due", source_type: "payroll_payment", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
+        await supabase.rpc("record_operation_event", { _process_key: "payroll_paid", _process_name: "صرف راتب", _source_type: "payroll_payment", _source_id: l.id, _branch_id: l.employees?.branch_id ?? ensured[0]?.branch_id ?? null, _cash_account_id: mainCash, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, net }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
       }
     }
-    await (supabase as any).from("payroll_periods").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", periodId);
+    await supabase.from("payroll_periods").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", periodId);
     toast.success("تم صرف الرواتب وتحديث الخزنة");
     load();
   }

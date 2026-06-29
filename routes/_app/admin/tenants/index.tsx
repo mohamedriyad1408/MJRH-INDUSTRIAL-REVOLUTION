@@ -36,7 +36,7 @@ function TenantsPage() {
     setLoading(true);
     const [{ data }, { data: healthRows }] = await Promise.all([
       supabase.from("tenants").select("*").order("created_at", { ascending: false }),
-      (supabase as any).from("tenant_bootstrap_health").select("*").then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("tenant_bootstrap_health").select("*").then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     setList((data ?? []) as Tenant[]);
     setHealth(Object.fromEntries(((healthRows ?? []) as any[]).map((h) => [h.tenant_id, h])));

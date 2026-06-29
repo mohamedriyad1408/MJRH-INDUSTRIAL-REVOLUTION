@@ -40,7 +40,7 @@ function NewStaffPage() {
 
   useEffect(() => {
     if (tenantId) {
-      (supabase as any)
+      supabase
         .from("branches")
         .select("id,name")
         .eq("tenant_id", tenantId)

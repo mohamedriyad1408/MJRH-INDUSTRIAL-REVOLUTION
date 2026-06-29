@@ -60,16 +60,16 @@ function TodayCenter() {
   }
 
   function orderQuery(select: string, options?: any) {
-    return withBranch((supabase as any).from("orders").select(select, options));
+    return withBranch(supabase.from("orders").select(select, options));
   }
 
   function unitQuery(select: string, options?: any) {
-    const q = (supabase as any).from("service_units").select(branchId === "all" ? select : `${select},orders!inner(branch_id)`, options);
+    const q = supabase.from("service_units").select(branchId === "all" ? select : `${select},orders!inner(branch_id)`, options);
     return branchId === "all" ? q : q.eq("orders.branch_id", branchId);
   }
 
   function cashTxQuery(select: string) {
-    const q = (supabase as any).from("cash_transactions").select(branchId === "all" ? select : `${select},cash_accounts!inner(branch_id)`);
+    const q = supabase.from("cash_transactions").select(branchId === "all" ? select : `${select},cash_accounts!inner(branch_id)`);
     return branchId === "all" ? q : q.eq("cash_accounts.branch_id", branchId);
   }
 
@@ -85,7 +85,7 @@ function TodayCenter() {
       deliveredToday, lastClosing, driverCash, reportsRes, cashSafesRes] = await Promise.all([
       orderQuery("id,total,status,promised_delivery_at,created_at").gte("created_at", startIso),
       cashTxQuery("amount,direction,happened_at,source_type").gte("happened_at", startIso).neq("status", "void").then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
+      supabase.from("pickup_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "assigned"]),
       orderQuery("id", { count: "exact", head: true }).eq("status", "ready").is("assigned_driver_employee_id", null),
       unitQuery("id", { count: "exact", head: true }).eq("needs_reclean", true),
       unitQuery("id", { count: "exact", head: true }).eq("current_stage", "qc_failed"),
@@ -93,9 +93,9 @@ function TodayCenter() {
       orderQuery("id", { count: "exact", head: true }).in("status", ["ready", "out_for_delivery"]).eq("payment_status", "unpaid"),
       orderQuery("id", { count: "exact", head: true }).in("status", ["packing", "ready"]).is("invoice_finalized_at", null),
       orderQuery("id", { count: "exact", head: true }).in("payment_verification_status", ["pending_review", "underpaid"]),
-      withBranch((supabase as any).from("daily_cash_closings").select("id", { count: "exact", head: true })).eq("closing_date", todayStr),
+      withBranch(supabase.from("daily_cash_closings").select("id", { count: "exact", head: true })).eq("closing_date", todayStr),
       orderQuery("id,order_number,status,promised_delivery_at,customers(full_name)").lt("promised_delivery_at", now).not("status", "in", "(delivered,cancelled)").limit(4),
-      (supabase as any).from("pickup_requests").select("id,customer_name,status").in("status", ["pending", "assigned"]).limit(4),
+      supabase.from("pickup_requests").select("id,customer_name,status").in("status", ["pending", "assigned"]).limit(4),
       orderQuery("id,order_number,customers(full_name)").eq("status", "ready").is("assigned_driver_employee_id", null).limit(4),
       unitQuery("id,label_code,name,order_id,reclean_reason,orders(order_number)").eq("needs_reclean", true).limit(4),
       unitQuery("id,label_code,name,order_id,orders(order_number)").eq("current_stage", "qc_failed").limit(4),
@@ -104,10 +104,10 @@ function TodayCenter() {
       orderQuery("id,order_number,status,customers(full_name)").in("status", ["packing", "ready"]).is("invoice_finalized_at", null).limit(4),
       orderQuery("id,order_number,payment_verification_status,customers(full_name)").in("payment_verification_status", ["pending_review", "underpaid"]).limit(4),
       orderQuery("id", { count: "exact", head: true }).eq("status", "delivered").gte("updated_at", startIso),
-      withBranch((supabase as any).from("daily_cash_closings").select("difference,cash_accounts(name),closed_at")).order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
+      withBranch(supabase.from("daily_cash_closings").select("difference,cash_accounts(name),closed_at")).order("closed_at", { ascending: false }).limit(1).maybeSingle().then((r: any) => r).catch(() => ({ data: null })),
       cashTxQuery("amount,source_type,happened_at").in("source_type", ["order_payment", "driver_tip_delivery", "driver_tip"]).gte("happened_at", startIso).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("app_notifications").select("id,title,body,href,tone,created_at").ilike("title", "%تقرير%").order("created_at", { ascending: false }).limit(5).then((r: any) => r).catch(() => ({ data: [] })),
-      withBranch((supabase as any).from("cash_accounts").select("id", { count: "exact", head: true })).eq("is_active", true).then((r: any) => r).catch(() => ({ count: 0 })),
+      supabase.from("app_notifications").select("id,title,body,href,tone,created_at").ilike("title", "%تقرير%").order("created_at", { ascending: false }).limit(5).then((r: any) => r).catch(() => ({ data: [] })),
+      withBranch(supabase.from("cash_accounts").select("id", { count: "exact", head: true })).eq("is_active", true).then((r: any) => r).catch(() => ({ count: 0 })),
     ]);
     const os = orders.data ?? [];
     const cs = cash.data ?? [];
@@ -161,7 +161,7 @@ function TodayCenter() {
 
   useEffect(() => {
     if (!tenantId) return;
-    (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
+    supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => setBranches(data ?? []));
   }, [tenantId]);
 
   useEffect(() => { load(); }, [canView, branchId]);
@@ -198,7 +198,7 @@ function TodayCenter() {
       `جاهز غير مدفوع: ${data.unpaidReady}`,
       `إقفالات خزنة اليوم: ${data.cashClosings}/${data.cashSafes}`,
     ].join("\n");
-    const { error } = await (supabase as any).from("app_notifications").insert({
+    const { error } = await supabase.from("app_notifications").insert({
       audience: "owner",
       title: "تقرير مركز اليوم",
       body,
@@ -258,7 +258,7 @@ function TodayCenter() {
   async function saveEndOfDayReport() {
     if (!data) return;
     const body = endOfDayReportText();
-    const { error } = await (supabase as any).from("app_notifications").insert({
+    const { error } = await supabase.from("app_notifications").insert({
       audience: "owner",
       title: data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "تقرير نهاية اليوم" : "تقرير نهاية اليوم - الخزن لم تكتمل",
       body,

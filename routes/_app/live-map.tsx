@@ -129,10 +129,10 @@ function LiveMapPage() {
 
     const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
     const [{ data: pickups }, { data: orders }, { data: drivers }, { data: branchRows }] = await Promise.all([
-      addBranch((supabase as any).from("pickup_requests").select("id,branch_id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id")).in("status", ["pending", "assigned"]),
-      addBranch((supabase as any).from("orders").select("id,branch_id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)")).in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
-      addBranch((supabase as any).from("employees").select("id,branch_id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true)),
-      tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
+      addBranch(supabase.from("pickup_requests").select("id,branch_id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id")).in("status", ["pending", "assigned"]),
+      addBranch(supabase.from("orders").select("id,branch_id,order_number,status,delivery_address,pickup_address,delivery_lat,delivery_lng,pickup_lat,pickup_lng,promised_delivery_at,is_urgent,assigned_driver_employee_id,customers(full_name,phone)")).in("status", ["received", "cleaning", "ironing", "packing", "ready", "out_for_delivery"]),
+      addBranch(supabase.from("employees").select("id,branch_id,full_name,phone,current_lat,current_lng,location_updated_at").eq("job_role", "driver").eq("is_active", true)),
+      tenantId ? supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
     ]);
     setBranches(branchRows ?? []);
 
@@ -140,7 +140,7 @@ function LiveMapPage() {
     const orderIds = (orders ?? []).map((o: any) => o.id);
     const pieceMap = new Map<string, number>();
     if (orderIds.length) {
-      const { data: pieces } = await (supabase as any).from("service_units").select("order_id,id").in("order_id", orderIds);
+      const { data: pieces } = await supabase.from("service_units").select("order_id,id").in("order_id", orderIds);
       (pieces ?? []).forEach((x: any) => pieceMap.set(x.order_id, (pieceMap.get(x.order_id) ?? 0) + 1));
     }
 
@@ -187,11 +187,11 @@ function LiveMapPage() {
       if (pin.type === "driver") return pin;
       const c = await geocode(pin.address);
       if (c && pin.source === "pickup" && pin.sourceId) {
-        await (supabase as any).from("pickup_requests").update({ lat: c.lat, lng: c.lng }).eq("id", pin.sourceId).then(() => null);
+        await supabase.from("pickup_requests").update({ lat: c.lat, lng: c.lng }).eq("id", pin.sourceId).then(() => null);
       }
       if (c && pin.source === "order" && pin.sourceId) {
         const patch = pin.coordKind === "pickup" ? { pickup_lat: c.lat, pickup_lng: c.lng } : { delivery_lat: c.lat, delivery_lng: c.lng };
-        await (supabase as any).from("orders").update(patch).eq("id", pin.sourceId).then(() => null);
+        await supabase.from("orders").update(patch).eq("id", pin.sourceId).then(() => null);
       }
       return c ? { ...pin, ...c } : pin;
     }));

@@ -33,13 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_e: any, s: any) => {
       setSession(s);
       if (s?.user) setTimeout(() => loadRoles(s.user.id), 0);
       else setRoleRows([]);
       qc.invalidateQueries();
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: any) => {
       setSession(data.session);
       if (data.session?.user) loadRoles(data.session.user.id).finally(() => setLoading(false));
       else setLoading(false);

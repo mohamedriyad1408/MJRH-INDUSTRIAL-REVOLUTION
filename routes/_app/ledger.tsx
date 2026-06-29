@@ -53,17 +53,17 @@ function LedgerPage() {
     setLoading(true);
     setLoadErrors([]);
     try {
-      const ensureFor = await (supabase as any).rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId });
+      const ensureFor = await supabase.rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId });
       if (ensureFor.error) {
-        const ensure = await (supabase as any).rpc("ensure_default_chart_accounts");
+        const ensure = await supabase.rpc("ensure_default_chart_accounts");
         if (ensure.error) setLoadErrors((old) => [...old, ensureFor.error.message, ensure.error.message]);
       }
       const results = await Promise.allSettled([
-        (supabase as any).from("chart_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("code"),
-        (supabase as any).from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").eq("tenant_id", tenantId).gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
-        (supabase as any).from("accounting_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(18),
-        (supabase as any).from("v_trial_balance").select("*").eq("tenant_id", tenantId).order("code"),
-        (supabase as any).from("v_profit_loss").select("*").eq("tenant_id", tenantId).order("code"),
+        supabase.from("chart_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("code"),
+        supabase.from("journal_entries").select("*,journal_lines(*,chart_accounts(code,name,account_type))").eq("tenant_id", tenantId).gte("entry_date", b.start).lte("entry_date", b.end).order("entry_date", { ascending: false }).order("created_at", { ascending: false }),
+        supabase.from("accounting_periods").select("*").eq("tenant_id", tenantId).order("period_start", { ascending: false }).limit(18),
+        supabase.from("v_trial_balance").select("*").eq("tenant_id", tenantId).order("code"),
+        supabase.from("v_profit_loss").select("*").eq("tenant_id", tenantId).order("code"),
       ]);
       const val = (i: number) => results[i].status === "fulfilled" ? (results[i] as any).value : { data: [], error: (results[i] as any).reason };
       const a = val(0), j = val(1), p = val(2), tr = val(3), profit = val(4);
@@ -102,7 +102,7 @@ function LedgerPage() {
 
   async function createJournal(description: string, sourceType: string | null, sourceId: string | null, lines: any[]) {
     if (!tenantId) throw new Error(t("ledger.err.noTenant", "لم يتم تحديد المغسلة"));
-    const forTenant = await (supabase as any).rpc("create_journal_entry_for_tenant", {
+    const forTenant = await supabase.rpc("create_journal_entry_for_tenant", {
       _tenant_id: tenantId,
       _entry_date: b.end,
       _description: description,
@@ -113,7 +113,7 @@ function LedgerPage() {
     if (!forTenant.error) return;
 
     // Fallback for databases before tenant-explicit RPC exists.
-    const legacy = await (supabase as any).rpc("create_journal_entry", {
+    const legacy = await supabase.rpc("create_journal_entry", {
       _entry_date: b.end,
       _description: description,
       _source_type: sourceType,
@@ -128,12 +128,12 @@ function LedgerPage() {
     setRepairing(true);
     const errs: string[] = [];
     try {
-      const base = await (supabase as any).rpc("repair_ledger_basics");
+      const base = await supabase.rpc("repair_ledger_basics");
       if (base.error) {
-        const r1 = await (supabase as any).rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
-        const r2 = await (supabase as any).rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r2.error) errs.push(r2.error.message);
-        const r3 = await (supabase as any).rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
-        const r4 = await (supabase as any).rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
+        const r1 = await supabase.rpc("ensure_default_chart_accounts_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
+        const r2 = await supabase.rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r2.error) errs.push(r2.error.message);
+        const r3 = await supabase.rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
+        const r4 = await supabase.rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
       }
       if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("ledger.toast.created", "تم إصلاح أساسيات دفتر القيود والخزنة"));
       await load();
@@ -148,8 +148,8 @@ function LedgerPage() {
       if (!tenantId) return toast.error(t("ledger.err.noTenant", "لم يتم تحديد المغسلة"));
 
       const [{ data: orders, error: oErr }, { data: expenses, error: eErr }] = await Promise.all([
-        (supabase as any).from("orders").select("id").eq("tenant_id", tenantId).neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
-        (supabase as any).from("expenses").select("id").eq("tenant_id", tenantId).neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
+        supabase.from("orders").select("id").eq("tenant_id", tenantId).neq("status", "cancelled").gte("created_at", b.fromIso).lte("created_at", b.toIso),
+        supabase.from("expenses").select("id").eq("tenant_id", tenantId).neq("status", "void").gte("spent_at", b.fromIso).lte("spent_at", b.toIso),
       ]);
       if (oErr) throw oErr;
       if (eErr) throw eErr;
@@ -157,14 +157,14 @@ function LedgerPage() {
       let syncedOrders = 0;
       let syncedExpenses = 0;
       for (const o of orders ?? []) {
-        const r = await (supabase as any).rpc("sync_order_financials", { _order_id: o.id });
+        const r = await supabase.rpc("sync_order_financials", { _order_id: o.id });
         if (!r.error) syncedOrders++;
       }
       for (const e of expenses ?? []) {
-        const r = await (supabase as any).rpc("sync_expense_financials", { _expense_id: e.id });
+        const r = await supabase.rpc("sync_expense_financials", { _expense_id: e.id });
         if (!r.error) syncedExpenses++;
       }
-      await (supabase as any).rpc("repair_ledger_basics").then(() => null);
+      await supabase.rpc("repair_ledger_basics").then(() => null);
       toast.success(`تم فحص وترحيل الناقص فقط: ${syncedOrders} طلب و ${syncedExpenses} مصروف. بدون مضاعفة شهرية.`);
       load();
     } catch (e: any) { toast.error(e.message ?? "تعذر فحص القيود"); }
@@ -185,7 +185,7 @@ function LedgerPage() {
 
   async function closeMonth() {
     if (!confirm(t("ledger.confirm.close", "إقفال الشهر يمنع إضافة أو تعديل قيود داخل الفترة. متأكد؟"))) return;
-    const { error } = await (supabase as any).from("accounting_periods").upsert({ tenant_id: tenantId, period_start: b.start, period_end: b.end, status: "closed", closed_at: new Date().toISOString() }, { onConflict: "tenant_id,period_start,period_end" });
+    const { error } = await supabase.from("accounting_periods").upsert({ tenant_id: tenantId, period_start: b.start, period_end: b.end, status: "closed", closed_at: new Date().toISOString() }, { onConflict: "tenant_id,period_start,period_end" });
     if (error) toast.error(error.message); else { toast.success(t("ledger.toast.closed", "تم إقفال الشهر")); load(); }
   }
 

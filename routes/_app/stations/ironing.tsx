@@ -53,7 +53,7 @@ function IroningManagerPage() {
   async function load() {
     setLoading(true);
     const [u, e] = await Promise.all([
-      (supabase as any)
+      supabase
         .from("service_units")
         .select("id,label_code,name,line_value,ironing_base_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
         .in("service_type", ["cleaning", "ironing", "both"])
@@ -98,7 +98,7 @@ function IroningManagerPage() {
   async function transferTasks(fromId: string) {
     const toId = transferTo[fromId];
     if (!toId || toId === fromId) return toast.error("اختر الفني البديل");
-    const { error } = await (supabase as any).from("service_units").update({
+    const { error } = await supabase.from("service_units").update({
       assigned_ironing_employee_id: toId,
       ironing_assigned_at: new Date().toISOString(),
     }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["cleaning", "ironing", "both"]).in("current_stage", ["ironing", "ironing_done"]);
@@ -198,7 +198,7 @@ function IroningWorkerPage() {
   async function load(employeeId = empId) {
     if (!employeeId) return;
     setLoading(true);
-    const { data } = await (supabase as any)
+    const { data } = await supabase
       .from("service_units")
       .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,reclean_return_to_employee_id,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,customers(full_name,phone))")
       .eq("assigned_ironing_employee_id", employeeId)
@@ -210,8 +210,8 @@ function IroningWorkerPage() {
     setUnits((data ?? []).filter((x: any) => x.orders) as Unit[]);
     const today = new Date(); today.setHours(0,0,0,0);
     const [{ data: todayUnits }, { data: rate }] = await Promise.all([
-      (supabase as any).from("service_units").select("line_value,ironing_base_value,ironing_completed_at").eq("assigned_ironing_employee_id", employeeId).gte("ironing_assigned_at", today.toISOString()),
-      (supabase as any).from("ironing_rates").select("percentage").eq("employee_id", employeeId).order("effective_from", { ascending: false }).limit(1).maybeSingle(),
+      supabase.from("service_units").select("line_value,ironing_base_value,ironing_completed_at").eq("assigned_ironing_employee_id", employeeId).gte("ironing_assigned_at", today.toISOString()),
+      supabase.from("ironing_rates").select("percentage").eq("employee_id", employeeId).order("effective_from", { ascending: false }).limit(1).maybeSingle(),
     ]);
     const allValue = (todayUnits ?? []).reduce((sum: number, u: any) => sum + Number(u.ironing_base_value ?? u.line_value ?? 0), 0);
     const doneValue = (todayUnits ?? []).filter((u: any) => u.ironing_completed_at).reduce((sum: number, u: any) => sum + Number(u.ironing_base_value ?? u.line_value ?? 0), 0);
@@ -223,9 +223,9 @@ function IroningWorkerPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(async ({ data }: any) => {
+    supabase.from("employees").select("id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(async ({ data }: any) => {
       setEmpId(data?.id ?? null);
-      if (data?.id && !data.profile_id) await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+      if (data?.id && !data.profile_id) await supabase.from("employees").update({ profile_id: user.id }).eq("id", data.id);
       if (data?.id) load(data.id);
       else setLoading(false);
     });
@@ -233,7 +233,7 @@ function IroningWorkerPage() {
   }, [user]);
 
   async function markDone(u: Unit) {
-    const { error } = await (supabase as any).from("service_units").update({
+    const { error } = await supabase.from("service_units").update({
       current_stage: "ironing_done",
       ironing_completed_at: new Date().toISOString(),
     }).eq("id", u.id);
@@ -244,7 +244,7 @@ function IroningWorkerPage() {
     const reason = prompt("سبب رجوع القطعة للتنظيف؟ لن يتم الرجوع بدون سبب واضح", u.reclean_reason ?? "");
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error("سبب المرتجع مطلوب");
-    const { error } = await (supabase as any).rpc("register_reclean_return", { _unit_id: u.id, _reason: reason.trim(), _photo_url: null });
+    const { error } = await supabase.rpc("register_reclean_return", { _unit_id: u.id, _reason: reason.trim(), _photo_url: null });
     if (error) toast.error(error.message); else { toast.success("تم إرسال القطعة للغسيل، وسترجع لك بعد تنظيفها"); load(); }
   }
 

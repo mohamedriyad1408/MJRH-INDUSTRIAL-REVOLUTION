@@ -32,9 +32,9 @@ function IroningPayrollPage() {
   async function load() {
     setLoading(true);
     const [cRes, pRes, rRes] = await Promise.all([
-      (supabase as any).from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
-      (supabase as any).from("daily_ironing_payouts").select("*,employees(full_name)").eq("tenant_id", tenantId).gte("payout_date", from).lte("payout_date", to).order("payout_date", { ascending: false }),
-      (supabase as any).from("v_ironing_technician_performance").select("*").eq("tenant_id", tenantId),
+      supabase.from("cash_accounts").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("name"),
+      supabase.from("daily_ironing_payouts").select("*,employees(full_name)").eq("tenant_id", tenantId).gte("payout_date", from).lte("payout_date", to).order("payout_date", { ascending: false }),
+      supabase.from("v_ironing_technician_performance").select("*").eq("tenant_id", tenantId),
     ]);
     if (cRes.error) toast.error(cRes.error.message);
     setCashAccounts(cRes.data ?? []);
@@ -48,7 +48,7 @@ function IroningPayrollPage() {
   async function payToday() {
     if (!cashAccountId) return toast.error(t("ironingPayroll.errCash", "اختار الخزنة التي سيتم الصرف منها"));
     setPaying(true);
-    const { data, error } = await (supabase as any).rpc("submit_daily_ironing_payout", {
+    const { data, error } = await supabase.rpc("submit_daily_ironing_payout", {
       _tenant_id: tenantId, _payout_date: to, _cash_account_id: cashAccountId,
     });
     setPaying(false);
@@ -59,7 +59,7 @@ function IroningPayrollPage() {
   }
 
   async function savePercentage(id: string, percentage: number) {
-    const { error } = await (supabase as any).from("employees").update({ commission_percent: percentage }).eq("id", id);
+    const { error } = await supabase.from("employees").update({ commission_percent: percentage }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success(t("ironingPayroll.toastSaved", "تم الحفظ")); load(); }
   }
 

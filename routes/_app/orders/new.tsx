@@ -91,14 +91,14 @@ function NewOrderPage() {
 
   useEffect(() => {
     if (!user) return;
-    (supabase as any).from("employees").select("station,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => { setEmployeeStation(data?.station ?? null); setEmployeeBranchId(data?.branch_id ?? null); if (data?.branch_id) setBranchId((old) => old || data.branch_id); });
+    supabase.from("employees").select("station,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => { setEmployeeStation(data?.station ?? null); setEmployeeBranchId(data?.branch_id ?? null); if (data?.branch_id) setBranchId((old) => old || data.branch_id); });
   }, [user]);
 
   useEffect(() => {
-    if (tenantId) (supabase as any).from("branches").select("id,name,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old) => old || employeeBranchId || list[0]?.id || ""); });
-    supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }) => setServices((data ?? []) as Service[]));
-    (supabase as any).from("service_areas").select("id,name,area_type,lat,lng,default_delivery_fee,aliases").eq("is_active", true).order("area_type").order("name").then(({ data }: any) => setAreas((data ?? []) as ServiceArea[]));
-    supabase.from("app_settings").select("*").limit(1).maybeSingle().then(({ data }) => {
+    if (tenantId) supabase.from("branches").select("id,name,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old) => old || employeeBranchId || list[0]?.id || ""); });
+    supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }: any) => setServices((data ?? []) as Service[]));
+    supabase.from("service_areas").select("id,name,area_type,lat,lng,default_delivery_fee,aliases").eq("is_active", true).order("area_type").order("name").then(({ data }: any) => setAreas((data ?? []) as ServiceArea[]));
+    supabase.from("app_settings").select("*").limit(1).maybeSingle().then(({ data }: any) => {
       if (data) {
         setSettings({ urgent_service_fee: Number(data.urgent_service_fee), default_delivery_fee: Number(data.default_delivery_fee), tax_percent: Number(data.tax_percent) });
         setDeliveryFee(String(data.default_delivery_fee));
@@ -110,7 +110,7 @@ function NewOrderPage() {
   useEffect(() => {
     if (!customerSearch || customer) { setCustomerMatches([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await (supabase as any).from("customers").select("id, full_name, phone, address, lat, lng, location_url")
+      const { data } = await supabase.from("customers").select("id, full_name, phone, address, lat, lng, location_url")
         .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%`).limit(8);
       setCustomerMatches((data ?? []) as Customer[]);
     }, 180);
@@ -210,7 +210,7 @@ function NewOrderPage() {
       customerId = data!.id;
     }
 
-    const { data: order, error: oErr } = await (supabase as any).from("orders").insert({
+    const { data: order, error: oErr } = await supabase.from("orders").insert({
       customer_id: customerId,
       branch_id: branchId,
       order_type: orderType,
@@ -261,11 +261,11 @@ function NewOrderPage() {
       }
     }
     if (units.length) {
-      const { error: uErr } = await (supabase as any).from("service_units").insert(units);
+      const { error: uErr } = await supabase.from("service_units").insert(units);
       if (uErr) toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`);
     }
 
-    await (supabase as any).rpc("record_operation_event", { _process_key: "order_created", _process_name: "إنشاء طلب", _source_type: "order", _source_id: order!.id, _branch_id: branchId, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: false, _data: { customer_id: customerId, order_type: orderType, pieces: units.length, items: items.length, total, payment_status: paymentStatus }, _output: { cash_impact: paymentStatus === "paid", journal_required: paymentStatus === "paid", appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "order_created", _process_name: "إنشاء طلب", _source_type: "order", _source_id: order!.id, _branch_id: branchId, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: false, _data: { customer_id: customerId, order_type: orderType, pieces: units.length, items: items.length, total, payment_status: paymentStatus }, _output: { cash_impact: paymentStatus === "paid", journal_required: paymentStatus === "paid", appears_in_report: true } }).then(() => null);
     toast.success("تم إنشاء الطلب وترقيم القطع");
     nav({ to: "/orders/$id", params: { id: order!.id } });
   }

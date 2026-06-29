@@ -39,10 +39,10 @@ function InventoryPage() {
     try {
       const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
       const [i, m, a, br] = await Promise.all([
-        addBranch((supabase as any).from("inventory_items").select("*,branches(name)")).order("name"),
-        addBranch((supabase as any).from("inventory_movements").select("*,branches(name),inventory_items(name,unit)")).order("created_at", { ascending: false }).limit(30),
-        addBranch((supabase as any).from("equipment_assets").select("*,branches(name)")).order("created_at", { ascending: false }),
-        tenantId ? (supabase as any).from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
+        addBranch(supabase.from("inventory_items").select("*,branches(name)")).order("name"),
+        addBranch(supabase.from("inventory_movements").select("*,branches(name),inventory_items(name,unit)")).order("created_at", { ascending: false }).limit(30),
+        addBranch(supabase.from("equipment_assets").select("*,branches(name)")).order("created_at", { ascending: false }),
+        tenantId ? supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
       ]);
       if (i.error) toast.error(i.error.message);
       if (m.error) toast.error(m.error.message);
@@ -71,7 +71,7 @@ function InventoryPage() {
     if (!itemForm.name.trim()) return toast.error("اكتب اسم الصنف");
     const selectedBranchId = itemForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
     if (!selectedBranchId) return toast.error("اختار الفرع");
-    const { data, error } = await (supabase as any).from("inventory_items").insert({
+    const { data, error } = await supabase.from("inventory_items").insert({
       name: itemForm.name.trim(), category: itemForm.category, unit: itemForm.unit || "وحدة", branch_id: selectedBranchId,
       reorder_level: Number(itemForm.reorder_level || 0), avg_unit_cost: Number(itemForm.avg_unit_cost || 0), supplier: itemForm.supplier || null,
     }).select("id").single();
@@ -79,9 +79,9 @@ function InventoryPage() {
       const qty = Number(itemForm.initial_qty || 0);
       const cost = Number(itemForm.avg_unit_cost || 0);
       if (qty > 0) {
-        await (supabase as any).from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: "رصيد بداية/شراء أول", created_by: user?.id });
+        await supabase.from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: "رصيد بداية/شراء أول", created_by: user?.id });
       }
-      await (supabase as any).rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: "إضافة صنف مخزون", _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
+      await supabase.rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: "إضافة صنف مخزون", _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
       toast.success("تم إضافة الصنف وربطه بالفرع والتقارير");
       setItemForm({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: selectedBranchId });
       load();
@@ -93,10 +93,10 @@ function InventoryPage() {
     const item = items.find((x) => x.id === moveForm.item_id);
     const selectedBranchId = item?.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
     if (!selectedBranchId) return toast.error("تعذر تحديد فرع حركة المخزون");
-    const { data, error } = await (supabase as any).from("inventory_movements").insert({
+    const { data, error } = await supabase.from("inventory_movements").insert({
       item_id: moveForm.item_id, branch_id: selectedBranchId, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0), unit_cost: Number(moveForm.unit_cost || 0), notes: moveForm.notes || null, created_by: user?.id,
     }).select("id").single();
-    if (!error && data?.id) await (supabase as any).rpc("record_operation_event", { _process_key: "inventory_movement", _process_name: "تسجيل حركة مخزون", _source_type: "inventory_movement", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: ["usage", "waste"].includes(moveForm.movement_type), _data: { tenant_id: tenantId, item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0) }, _output: { cash_impact: false, journal_required: ["purchase", "adjustment"].includes(moveForm.movement_type), appears_in_report: true } }).then(() => null);
+    if (!error && data?.id) await supabase.rpc("record_operation_event", { _process_key: "inventory_movement", _process_name: "تسجيل حركة مخزون", _source_type: "inventory_movement", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: ["usage", "waste"].includes(moveForm.movement_type), _data: { tenant_id: tenantId, item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0) }, _output: { cash_impact: false, journal_required: ["purchase", "adjustment"].includes(moveForm.movement_type), appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success("تم تسجيل حركة المخزون وربطها بالفرع"); setMoveForm({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" }); load(); }
   }
 
@@ -104,14 +104,14 @@ function InventoryPage() {
     if (!assetForm.name.trim()) return toast.error("اكتب اسم المعدة");
     const selectedBranchId = assetForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
     if (!selectedBranchId) return toast.error("اختار الفرع");
-    const { error } = await (supabase as any).from("equipment_assets").insert({
+    const { error } = await supabase.from("equipment_assets").insert({
       name: assetForm.name.trim(), branch_id: selectedBranchId, asset_type: assetForm.asset_type, status: assetForm.status, next_maintenance_at: assetForm.next_maintenance_at || null, purchase_cost: Number(assetForm.purchase_cost || 0), notes: assetForm.notes || null,
     });
     if (error) toast.error(error.message); else { toast.success("تم إضافة المعدة وربطها بالفرع"); setAssetForm({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "", branch_id: selectedBranchId }); load(); }
   }
 
   async function updateAsset(id: string, status: string) {
-    const { error } = await (supabase as any).from("equipment_assets").update({ status }).eq("id", id);
+    const { error } = await supabase.from("equipment_assets").update({ status }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success("تم تحديث حالة المعدة"); load(); }
   }
 

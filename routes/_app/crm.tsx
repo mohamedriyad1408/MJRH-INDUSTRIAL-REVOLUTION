@@ -40,9 +40,9 @@ function CrmPage() {
   async function load() {
     setLoading(true);
     const [c, l, m] = await Promise.all([
-      (supabase as any).from("customers").select("id,full_name,phone,created_at").order("created_at", { ascending: false }).limit(300),
-      (supabase as any).from("customer_loyalty").select("*,customers(full_name,phone)").order("points", { ascending: false }).limit(100).then((r: any) => r).catch(() => ({ data: [] })),
-      (supabase as any).from("customer_messages").select("*,customers(full_name,phone)").order("created_at", { ascending: false }).limit(60).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("customers").select("id,full_name,phone,created_at").order("created_at", { ascending: false }).limit(300),
+      supabase.from("customer_loyalty").select("*,customers(full_name,phone)").order("points", { ascending: false }).limit(100).then((r: any) => r).catch(() => ({ data: [] })),
+      supabase.from("customer_messages").select("*,customers(full_name,phone)").order("created_at", { ascending: false }).limit(60).then((r: any) => r).catch(() => ({ data: [] })),
     ]);
     if (c.error) toast.error(c.error.message);
     setCustomers(c.data ?? []); setLoyalty(l.data ?? []); setMessages(m.data ?? []); setLoading(false);
@@ -58,7 +58,7 @@ function CrmPage() {
   }, [loyalty, messages]);
 
   async function rebuildLoyalty() {
-    const { data: orders, error } = await (supabase as any).from("orders").select("customer_id,total,created_at,status").neq("status", "cancelled");
+    const { data: orders, error } = await supabase.from("orders").select("customer_id,total,created_at,status").neq("status", "cancelled");
     if (error) return toast.error(error.message);
     const map = new Map<string, { spend: number; last: string | null }>();
     (orders ?? []).forEach((o: any) => {
@@ -73,7 +73,7 @@ function CrmPage() {
       return { customer_id, lifetime_spend: v.spend, points, tier, last_order_at: v.last };
     });
     if (!rows.length) return toast.info("لا توجد طلبات لحساب الولاء");
-    const { error: upErr } = await (supabase as any).from("customer_loyalty").upsert(rows, { onConflict: "tenant_id,customer_id" });
+    const { error: upErr } = await supabase.from("customer_loyalty").upsert(rows, { onConflict: "tenant_id,customer_id" });
     if (upErr) toast.error(upErr.message); else { toast.success("تم تحديث نقاط الولاء"); load(); }
   }
 
@@ -84,7 +84,7 @@ function CrmPage() {
     if (!c) return toast.error("اختار عميل");
     if (!form.message.trim()) return toast.error("اكتب الرسالة");
     const messageText = form.message;
-    const { error } = await (supabase as any).from("customer_messages").insert({
+    const { error } = await supabase.from("customer_messages").insert({
       customer_id: c.id, phone: c.phone, channel: "whatsapp", template_key: form.template_key, message: messageText, status, created_by: user?.id,
     });
     if (error) toast.error(error.message); else {
@@ -100,7 +100,7 @@ function CrmPage() {
   }
 
   async function markSent(m: any) {
-    const { error } = await (supabase as any).from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", m.id);
+    const { error } = await supabase.from("customer_messages").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", m.id);
     if (error) toast.error(error.message); else { toast.success("تم تعليم الرسالة كمرسلة"); load(); }
   }
 

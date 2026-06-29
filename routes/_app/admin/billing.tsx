@@ -28,8 +28,8 @@ function AdminBillingPage() {
   async function load() {
     setLoading(true);
     const [tRes, rRes] = await Promise.all([
-      (supabase as any).from("tenants").select("id,name,subscription_fee").order("name"),
-      (supabase as any).from("tenant_billing_invoices").select("*,tenants(name)").order("created_at", { ascending: false }).limit(100),
+      supabase.from("tenants").select("id,name,subscription_fee").order("name"),
+      supabase.from("tenant_billing_invoices").select("*,tenants(name)").order("created_at", { ascending: false }).limit(100),
     ]);
     if (tRes.error) toast.error(tRes.error.message);
     setTenants(tRes.data ?? []); setRows(rRes.data ?? []); setLoading(false);
@@ -42,7 +42,7 @@ function AdminBillingPage() {
   }
   async function createInvoice() {
     if (!form.tenant_id) return toast.error(t("adminBilling.toastSelect", "اختار مغسلة"));
-    const { error } = await (supabase as any).from("tenant_billing_invoices").insert({
+    const { error } = await supabase.from("tenant_billing_invoices").insert({
       tenant_id: form.tenant_id, period_start: form.period_start, period_end: form.period_end, amount: Number(form.amount || 0), due_date: form.due_date || null, notes: form.notes || null, status: "issued",
     });
     if (error) toast.error(error.message); else { toast.success(t("adminBilling.toastIssued", "تم إصدار الفاتورة")); setForm({ tenant_id: "", period_start: new Date().toISOString().slice(0, 10), period_end: new Date().toISOString().slice(0, 10), amount: "0", due_date: "", notes: "" }); load(); }
@@ -50,7 +50,7 @@ function AdminBillingPage() {
   async function setStatus(id: string, status: string) {
     const patch: any = { status };
     if (status === "paid") patch.paid_at = new Date().toISOString();
-    const { error } = await (supabase as any).from("tenant_billing_invoices").update(patch).eq("id", id);
+    const { error } = await supabase.from("tenant_billing_invoices").update(patch).eq("id", id);
     if (error) toast.error(error.message); else { toast.success(t("adminBilling.toastUpdated", "تم تحديث الفاتورة")); load(); }
   }
 

@@ -23,8 +23,8 @@ function Dashboard() {
     const isManager = hasRole("owner", "ops_manager", "cs_manager");
     if (hasRole("courier") && !isManager) { nav({ to: "/driver" }); return; }
     if (hasRole("employee") && !isManager && user) {
-      (supabase as any).from("employees").select("id,station,job_role,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(async ({ data }: any) => {
-        if (data?.id && !data.profile_id) await (supabase as any).from("employees").update({ profile_id: user.id }).eq("id", data.id);
+      supabase.from("employees").select("id,station,job_role,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(async ({ data }: any) => {
+        if (data?.id && !data.profile_id) await supabase.from("employees").update({ profile_id: user.id }).eq("id", data.id);
         if (data?.job_role === "driver") nav({ to: "/driver" });
         else if (data?.station) nav({ to: `/stations/${data.station}` as any });
       });

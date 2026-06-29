@@ -30,8 +30,8 @@ function SchedulePage() {
   async function load() {
     setLoading(true);
     const [eRes, sRes] = await Promise.all([
-      (supabase as any).from("employees").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("full_name"),
-      (supabase as any).from("employee_schedule").select("*").eq("tenant_id", tenantId),
+      supabase.from("employees").select("*").eq("tenant_id", tenantId).eq("is_active", true).order("full_name"),
+      supabase.from("employee_schedule").select("*").eq("tenant_id", tenantId),
     ]);
     const empList = eRes.data ?? [];
     const scList = sRes.data ?? [];
@@ -58,7 +58,7 @@ function SchedulePage() {
     Object.entries(sched).forEach(([empId, days]) => {
       days.forEach((d) => { inserts.push({ id: d.id || undefined, tenant_id: tenantId, employee_id: empId, day_of_week: d.day_of_week, start_time: d.is_off ? null : d.start_time, end_time: d.is_off ? null : d.end_time, is_off: d.is_off }); });
     });
-    const { error } = await (supabase as any).from("employee_schedule").upsert(inserts);
+    const { error } = await supabase.from("employee_schedule").upsert(inserts);
     setSaving(false);
     if (error) toast.error(error.message); else toast.success(t("schedule.toastSaved", "تم حفظ الجدول"));
   }

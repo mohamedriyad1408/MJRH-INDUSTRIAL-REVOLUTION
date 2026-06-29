@@ -32,7 +32,7 @@ function StaffUsersPage() {
   async function load() {
     if (!tenantId) { setLoading(false); return; }
     setLoading(true);
-    const { data, error } = await (supabase as any).from("user_roles").select("*").eq("tenant_id", tenantId);
+    const { data, error } = await supabase.from("user_roles").select("*").eq("tenant_id", tenantId);
     if (error) toast.error(error.message);
     setRows((data ?? []) as RoleRow[]);
     setLoading(false);
@@ -85,7 +85,7 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
   const fn = useServerFn(adminApi.createTenantUser);
 
   useEffect(() => {
-    (supabase as any).from("branches").select("id, name").eq("tenant_id", tenantId).eq("is_active", true).then(({ data }: any) => setBranches(data ?? []));
+    supabase.from("branches").select("id, name").eq("tenant_id", tenantId).eq("is_active", true).then(({ data }: any) => setBranches(data ?? []));
   }, [tenantId]);
 
   async function submit(e: React.FormEvent) {

@@ -34,8 +34,8 @@ function DailySalariesPage() {
   async function load() {
     setLoading(true);
     const [s, e] = await Promise.all([
-      (supabase as any).from("daily_salaries").select("*,employees(full_name)").order("work_date", { ascending: false }).limit(100),
-      (supabase as any).from("employees").select("id, full_name").eq("is_active", true).order("full_name"),
+      supabase.from("daily_salaries").select("*,employees(full_name)").order("work_date", { ascending: false }).limit(100),
+      supabase.from("employees").select("id, full_name").eq("is_active", true).order("full_name"),
     ]);
     if (s.error) toast.error(s.error.message);
     setList((s.data ?? []) as S[]);
@@ -47,12 +47,12 @@ function DailySalariesPage() {
   async function add() {
     if (!form.employee_id || !form.amount) return toast.error(t("salaries.errForm", "اختر الموظف وأدخل المبلغ"));
     const payload = { tenant_id: tenantId, employee_id: form.employee_id, work_date: form.work_date, amount: Number(form.amount), paid: true, notes: form.notes || null };
-    const { error } = await (supabase as any).from("daily_salaries").insert(payload);
+    const { error } = await supabase.from("daily_salaries").insert(payload);
     if (error) toast.error(error.message); else { toast.success(t("salaries.toastDone", "تم")); setOpen(false); setForm({ employee_id: "", work_date: new Date().toISOString().slice(0, 10), amount: "", notes: "" }); load(); }
   }
 
   async function togglePaid(id: string, paid: boolean) {
-    const { error } = await (supabase as any).from("daily_salaries").update({ paid }).eq("id", id);
+    const { error } = await supabase.from("daily_salaries").update({ paid }).eq("id", id);
     if (error) toast.error(error.message); else { toast.success(t("salaries.toastDone", "تم")); load(); }
   }
 

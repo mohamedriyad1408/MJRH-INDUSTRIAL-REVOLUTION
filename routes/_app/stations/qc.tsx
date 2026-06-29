@@ -40,7 +40,7 @@ function QcStation() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("service_units")
       .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,branch_id,customers(full_name,phone))")
       .in("current_stage", ["cleaning_done", "ironing_done", "packing", "packing_done", "ready", "qc_failed"])
@@ -76,10 +76,10 @@ function QcStation() {
     let ok = 0;
     for (const u of c.safe) {
       if (u.current_stage === "qc_passed") continue;
-      const r = await (supabase as any).rpc("pass_qc_unit", { _unit_id: u.id, _notes: "اعتماد جماعي من محطة الجودة" });
+      const r = await supabase.rpc("pass_qc_unit", { _unit_id: u.id, _notes: "اعتماد جماعي من محطة الجودة" });
       if (!r.error) ok++;
     }
-    await (supabase as any).rpc("record_operation_event", { _process_key: "qc_bulk_passed", _process_name: "اعتماد جماعي لقطع سليمة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, passed: ok }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "qc_bulk_passed", _process_name: "اعتماد جماعي لقطع سليمة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, passed: ok }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     setBusy(null);
     toast.success(`تم اعتماد ${ok} قطعة سليمة`);
     load();
@@ -91,8 +91,8 @@ function QcStation() {
     const v = await validateOrderMove(g.orderId, "ready");
     if (!v.ok) return toast.error(v.message);
     setBusy(g.orderId);
-    const { error } = await (supabase as any).from("orders").update({ status: "ready" }).eq("id", g.orderId);
-    if (!error) await (supabase as any).rpc("record_operation_event", { _process_key: "qc_order_ready", _process_name: "اعتماد الطلب جاهز من الجودة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, pieces: g.units.length }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    const { error } = await supabase.from("orders").update({ status: "ready" }).eq("id", g.orderId);
+    if (!error) await supabase.rpc("record_operation_event", { _process_key: "qc_order_ready", _process_name: "اعتماد الطلب جاهز من الجودة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, pieces: g.units.length }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success("تم اعتماد الطلب جاهز للتسليم"); load(); }
   }
@@ -104,13 +104,13 @@ function QcStation() {
 
     let error: any = null;
     if (res === "passed") {
-      const r = await (supabase as any).rpc("pass_qc_unit", { _unit_id: unit.id, _notes: note || null });
+      const r = await supabase.rpc("pass_qc_unit", { _unit_id: unit.id, _notes: note || null });
       error = r.error;
     } else if (res === "reclean") {
-      const r = await (supabase as any).rpc("register_reclean_return", { _unit_id: unit.id, _reason: note, _photo_url: null });
+      const r = await supabase.rpc("register_reclean_return", { _unit_id: unit.id, _reason: note, _photo_url: null });
       error = r.error;
     } else {
-      const r = await (supabase as any).rpc("register_qc_issue", { _unit_id: unit.id, _result: res, _reason: note });
+      const r = await supabase.rpc("register_qc_issue", { _unit_id: unit.id, _result: res, _reason: note });
       error = r.error;
     }
 

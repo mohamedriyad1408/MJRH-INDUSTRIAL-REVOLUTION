@@ -45,15 +45,15 @@ function ManagerHubPage() {
 
     setStats({
       ordersTodayCount: (ordersToday ?? []).length,
-      ordersTodayRevenue: (ordersToday ?? []).reduce((a, r) => a + Number(r.total ?? 0), 0),
-      urgentToday: (ordersToday ?? []).filter((r) => r.is_urgent).length,
+      ordersTodayRevenue: (ordersToday ?? []).reduce((a: number, r: any) => a + Number(r.total ?? 0), 0),
+      urgentToday: (ordersToday ?? []).filter((r: any) => r.is_urgent).length,
       cleaning: byStatus(stationCounts, "cleaning"),
       ironing: byStatus(stationCounts, "ironing"),
       packing: byStatus(stationCounts, "packing"),
       received: byStatus(stationCounts, "received"),
       pendingLeaves: (pendingLeaves ?? []).length,
       pendingAdvances: (pendingAdvances ?? []).length,
-      pendingAdvancesTotal: (pendingAdvances ?? []).reduce((a, r) => a + Number(r.amount ?? 0), 0),
+      pendingAdvancesTotal: (pendingAdvances ?? []).reduce((a: number, r: any) => a + Number(r.amount ?? 0), 0),
       activeStaff: activeEmployees ?? [],
     });
     setLoading(false);

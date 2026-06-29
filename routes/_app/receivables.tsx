@@ -28,8 +28,8 @@ function ReceivablesPage() {
   async function load() {
     setLoading(true);
     const [b, l] = await Promise.all([
-      (supabase as any).from("v_customer_balances").select("*").order("balance", { ascending: false }),
-      (supabase as any).from("customer_financial_ledger").select("*,customers(full_name,phone),orders(order_number)").order("entry_at", { ascending: false }).limit(150),
+      supabase.from("v_customer_balances").select("*").order("balance", { ascending: false }),
+      supabase.from("customer_financial_ledger").select("*,customers(full_name,phone),orders(order_number)").order("entry_at", { ascending: false }).limit(150),
     ]);
     if (b.error) toast.error(b.error.message);
     setBalances((b.data ?? []).filter((x: any) => Number(x.balance ?? 0) !== 0));
@@ -38,11 +38,11 @@ function ReceivablesPage() {
   }
 
   async function syncUnpaidOrders() {
-    const { data, error } = await (supabase as any).from("orders").select("id").neq("status", "cancelled").eq("payment_status", "unpaid").limit(500);
+    const { data, error } = await supabase.from("orders").select("id").neq("status", "cancelled").eq("payment_status", "unpaid").limit(500);
     if (error) return toast.error(error.message);
     let n = 0;
     for (const o of data ?? []) {
-      const r = await (supabase as any).rpc("sync_order_financials", { _order_id: o.id });
+      const r = await supabase.rpc("sync_order_financials", { _order_id: o.id });
       if (!r.error) n++;
     }
     toast.success(interpolate(t("receivables.toastSync", "تمت مزامنة {count} طلب آجل مع ذمم العملاء"), { count: n }));
