@@ -59,8 +59,11 @@ Current repository still contains `.env.production` to keep Vercel stable. The s
 After deploy:
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run e2e
+PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run e2e:public
+E2E_AUTH_EMAIL="..." E2E_AUTH_PASSWORD="..." PLAYWRIGHT_BASE_URL=https://mjrh.vercel.app npm run e2e:auth:all
 ```
+
+The authenticated localization smoke tests specifically guard that Arabic protected pages/sidebar stay Arabic and commercial languages do not silently render English.
 
 ## Rollback
 

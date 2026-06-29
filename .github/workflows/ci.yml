@@ -38,6 +38,9 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Browser E2E smoke tests
+        env:
+          E2E_AUTH_EMAIL: ${{ secrets.E2E_AUTH_EMAIL }}
+          E2E_AUTH_PASSWORD: ${{ secrets.E2E_AUTH_PASSWORD }}
         run: npm run e2e
 
       - name: New tenant readiness rollback verification
