@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Check, X, Wallet, CalendarDays } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/requests")({
   component: RequestsPage,
@@ -23,11 +24,8 @@ type Leave = {
   reason: string | null; status: "pending" | "approved" | "rejected"; created_at: string;
 };
 
-const LEAVE_AR: Record<string, string> = {
-  annual: "اعتيادية", sick: "مرضية", unpaid: "بدون أجر", emergency: "طارئة",
-};
-
 function RequestsPage() {
+  const { t, dir } = useI18n();
   const { hasRole, user } = useAuth();
   const canDecide = hasRole("owner", "cs_manager", "ops_manager");
   const [advances, setAdvances] = useState<Advance[]>([]);
@@ -56,7 +54,7 @@ function RequestsPage() {
       status, decided_by: user?.id, decided_at: new Date().toISOString(),
     }).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success(status === "approved" ? "تمت الموافقة" : "تم الرفض");
+    toast.success(status === "approved" ? t("requests.toastApproved", "تمت الموافقة") : t("requests.toastRejected", "تم الرفض"));
     load();
   }
 
@@ -65,18 +63,23 @@ function RequestsPage() {
       status, decided_by: user?.id, decided_at: new Date().toISOString(),
     }).eq("id", id);
     if (error) { toast.error(error.message); return; }
-    toast.success(status === "approved" ? "تمت الموافقة" : "تم الرفض");
+    toast.success(status === "approved" ? t("requests.toastApproved", "تمت الموافقة") : t("requests.toastRejected", "تم الرفض"));
     load();
   }
 
   const pendingAdv = advances.filter((a) => a.status === "pending");
   const pendingLv = leaves.filter((l) => l.status === "pending");
+  const curr = t("common.egp");
+
+  function leaveTypeLabel(s: string) {
+    return ({ annual: t("leave.annual", "اعتيادية"), sick: t("leave.sick", "مرضية"), unpaid: t("leave.unpaid", "بدون أجر"), emergency: t("leave.emergency", "طارئة") } as Record<string,string>)[s] ?? s;
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">الطلبات المالية والإجازات</h1>
-        <p className="text-sm text-muted-foreground">كل طلبات الموظفين في مكان واحد</p>
+        <h1 className="text-2xl font-bold">{t("requests.title", "الطلبات المالية والإجازات")}</h1>
+        <p className="text-sm text-muted-foreground">{t("requests.subtitle", "كل طلبات الموظفين في مكان واحد")}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
@@ -84,14 +87,14 @@ function RequestsPage() {
           <Wallet className="w-8 h-8 text-amber-500" />
           <div>
             <div className="text-2xl font-bold">{pendingAdv.length}</div>
-            <div className="text-xs text-muted-foreground">سلف معلقة</div>
+            <div className="text-xs text-muted-foreground">{t("requests.pendingAdv", "سلف معلقة")}</div>
           </div>
         </Card>
         <Card className="p-4 flex items-center gap-3">
           <CalendarDays className="w-8 h-8 text-blue-500" />
           <div>
             <div className="text-2xl font-bold">{pendingLv.length}</div>
-            <div className="text-xs text-muted-foreground">طلبات إجازة معلقة</div>
+            <div className="text-xs text-muted-foreground">{t("requests.pendingLv", "طلبات إجازة معلقة")}</div>
           </div>
         </Card>
       </div>
@@ -101,8 +104,8 @@ function RequestsPage() {
       ) : (
         <Tabs defaultValue="advances">
           <TabsList>
-            <TabsTrigger value="advances">طلبات السلف ({advances.length})</TabsTrigger>
-            <TabsTrigger value="leaves">طلبات الإجازات ({leaves.length})</TabsTrigger>
+            <TabsTrigger value="advances">{t("requests.tabAdv", "طلبات السلف")} ({advances.length})</TabsTrigger>
+            <TabsTrigger value="leaves">{t("requests.tabLv", "طلبات الإجازات")} ({leaves.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="advances">
@@ -111,25 +114,25 @@ function RequestsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-start p-3">الموظف</th>
-                      <th className="text-start p-3">المبلغ</th>
-                      <th className="text-start p-3">السبب</th>
-                      <th className="text-start p-3">التاريخ</th>
-                      <th className="text-start p-3">الحالة</th>
+                      <th className="text-start p-3">{t("requests.employee", "الموظف")}</th>
+                      <th className="text-start p-3">{t("requests.amount", "المبلغ")}</th>
+                      <th className="text-start p-3">{t("requests.reason", "السبب")}</th>
+                      <th className="text-start p-3">{t("requests.date", "التاريخ")}</th>
+                      <th className="text-start p-3">{t("requests.status", "الحالة")}</th>
                       <th className="p-3"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {advances.length === 0 && (
-                      <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">لا توجد طلبات</td></tr>
+                      <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">{t("requests.empty", "لا توجد طلبات")}</td></tr>
                     )}
                     {advances.map((a) => (
                       <tr key={a.id} className="border-t">
                         <td className="p-3 font-medium">{a.technician_name}</td>
-                        <td className="p-3">{fmtMoney(a.amount)}</td>
+                        <td className="p-3">{fmtMoney(a.amount, curr)}</td>
                         <td className="p-3 text-xs text-muted-foreground max-w-[200px] truncate">{a.reason || "—"}</td>
                         <td className="p-3 text-xs">{fmtDate(a.created_at)}</td>
-                        <td className="p-3"><StatusBadge s={a.status} /></td>
+                        <td className="p-3"><StatusBadge s={a.status} t={t} /></td>
                         <td className="p-3 text-end">
                           {canDecide && a.status === "pending" && (
                             <div className="flex gap-1 justify-end">
@@ -156,27 +159,27 @@ function RequestsPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-start p-3">الموظف</th>
-                      <th className="text-start p-3">النوع</th>
-                      <th className="text-start p-3">من</th>
-                      <th className="text-start p-3">إلى</th>
-                      <th className="text-start p-3">السبب</th>
-                      <th className="text-start p-3">الحالة</th>
+                      <th className="text-start p-3">{t("requests.employee", "الموظف")}</th>
+                      <th className="text-start p-3">{t("requests.type", "النوع")}</th>
+                      <th className="text-start p-3">{t("requests.from", "من")}</th>
+                      <th className="text-start p-3">{t("requests.to", "إلى")}</th>
+                      <th className="text-start p-3">{t("requests.reason", "السبب")}</th>
+                      <th className="text-start p-3">{t("requests.status", "الحالة")}</th>
                       <th className="p-3"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {leaves.length === 0 && (
-                      <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">لا توجد طلبات</td></tr>
+                      <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{t("requests.empty", "لا توجد طلبات")}</td></tr>
                     )}
                     {leaves.map((l) => (
                       <tr key={l.id} className="border-t">
                         <td className="p-3 font-medium">{empNames[l.employee_id] ?? "—"}</td>
-                        <td className="p-3"><Badge variant="secondary">{LEAVE_AR[l.leave_type] ?? l.leave_type}</Badge></td>
+                        <td className="p-3"><Badge variant="secondary">{leaveTypeLabel(l.leave_type)}</Badge></td>
                         <td className="p-3 text-xs">{l.start_date}</td>
                         <td className="p-3 text-xs">{l.end_date}</td>
                         <td className="p-3 text-xs text-muted-foreground max-w-[200px] truncate">{l.reason || "—"}</td>
-                        <td className="p-3"><StatusBadge s={l.status} /></td>
+                        <td className="p-3"><StatusBadge s={l.status} t={t} /></td>
                         <td className="p-3 text-end">
                           {canDecide && l.status === "pending" && (
                             <div className="flex gap-1 justify-end">
@@ -202,8 +205,8 @@ function RequestsPage() {
   );
 }
 
-function StatusBadge({ s }: { s: string }) {
-  if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
-  if (s === "rejected") return <Badge variant="destructive">مرفوض</Badge>;
-  return <Badge variant="outline">قيد المراجعة</Badge>;
+function StatusBadge({ s, t }: { s: string; t: any }) {
+  if (s === "approved") return <Badge className="bg-emerald-600">{t("requests.approved", "موافق")}</Badge>;
+  if (s === "rejected") return <Badge variant="destructive">{t("requests.rejected", "مرفوض")}</Badge>;
+  return <Badge variant="outline">{t("requests.pending", "قيد المراجعة")}</Badge>;
 }
