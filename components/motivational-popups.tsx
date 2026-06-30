@@ -155,20 +155,45 @@ export function MotivationalPopups() {
   }, [user]);
 
   useEffect(() => {
-    if (!user || !messages.length) return;
-    const key = `mjrh_motivation_${user.id}`;
-    const show = () => {
-      const last = Number(localStorage.getItem(key) || 0);
-      // Trigger at most once every 8 hours (work shift duration) to avoid spamming the user
-      const due = Date.now() - last > 8 * 60 * 60 * 1000;
-      if (due) {
+    if (!user || !messages.length || typeof window === "undefined") return;
+    const muteKey = `mjrh_motivation_${user.id}`;
+    const mutedUntil = Number(localStorage.getItem(muteKey) || 0);
+    if (Date.now() < mutedUntil) return;
+
+    // 1. Initial Session Check: Shows when user first opens/returns to app after closing tab/reloading
+    const sessionKey = `mjrh_session_motivate_${user.id}`;
+    if (!sessionStorage.getItem(sessionKey)) {
+      const t0 = setTimeout(() => {
         setMessage(messages[Math.floor(Math.random() * messages.length)]);
         setOpen(true);
-        localStorage.setItem(key, String(Date.now()));
-      }
+        sessionStorage.setItem(sessionKey, "active");
+      }, 1500);
+      return () => clearTimeout(t0);
+    }
+
+    // 2. Idle Screensaver Timer: Shows after 20 minutes of no user interaction
+    let lastActivity = Date.now();
+    const IDLE_THRESHOLD = 20 * 60 * 1000; // 20 minutes
+
+    const onActivity = () => {
+      lastActivity = Date.now();
     };
-    const t0 = setTimeout(show, 5000);
-    return () => { clearTimeout(t0); };
+
+    const events = ["mousemove", "keydown", "touchstart", "scroll", "click"];
+    events.forEach((ev) => window.addEventListener(ev, onActivity, { passive: true }));
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity >= IDLE_THRESHOLD) {
+        setMessage(messages[Math.floor(Math.random() * messages.length)]);
+        setOpen(true);
+        lastActivity = Date.now(); // Reset so it doesn't immediately re-trigger
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, onActivity));
+      clearInterval(interval);
+    };
   }, [user, messages]);
 
   if (!dataExists(messages, message)) return null;
