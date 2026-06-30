@@ -39,7 +39,7 @@ function extractAmount(text: string): number | null {
   for (const re of currencyPatterns) {
     const hits = [...t.matchAll(re)]
       .map((m) => normalizeNumber(m[1]))
-      .filter((n): n is number => n !== null && n > 0 && n < 100000);
+      .filter((n): n is number => n !== null && n > 0 && n < 100000 && n !== 2026 && n !== 2027 && n !== 2025);
     if (hits.length) return hits[0];
   }
 
@@ -50,7 +50,7 @@ function extractAmount(text: string): number | null {
       const nearby = [lines[i - 1], lines[i], lines[i + 1]].filter(Boolean).join(" ");
       const nums = [...nearby.matchAll(/[0-9٠-٩۰-۹][0-9٠-٩۰-۹,\.]{0,14}/g)]
         .map((m) => ({ raw: m[0], n: normalizeNumber(m[0]) }))
-        .filter((x) => x.n !== null && x.n > 0 && x.n < 100000 && x.raw.replace(/\D/g, "").length <= 6)
+        .filter((x) => x.n !== null && x.n > 0 && x.n < 100000 && x.n !== 2026 && x.n !== 2027 && x.raw.replace(/\D/g, "").length <= 6)
         .map((x) => x.n as number);
       if (nums.length) return nums[0];
     }

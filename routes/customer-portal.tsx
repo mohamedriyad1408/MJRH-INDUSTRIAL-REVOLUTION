@@ -105,14 +105,17 @@ function CustomerPortal() {
   }
 
   function detectAmountFromFilename(file: File) {
-    const m = file.name.match(/(?:egp|ج|amount|مبلغ)?\s*(\d{2,7}(?:[.,]\d{1,2})?)/i);
+    if (/^(?:img|screenshot|whatsapp|snap|capture|pwa|scan)/i.test(file.name) && !/(?:egp|amount|paid|instapay[_-]\d)/i.test(file.name)) {
+      return null;
+    }
+    const m = file.name.match(/(?:egp|amount|paid|instapay)[_-]?(\d{2,6}(?:[.,]\d{1,2})?)/i);
     return m ? Number(m[1].replace(",", ".")) : null;
   }
 
   async function uploadPaymentProof(order: Order, file: File) {
     const typedAmount = Number(paymentAmounts[order.id] || 0);
     const detected = detectAmountFromFilename(file);
-    const amount = detected || typedAmount || order.total;
+    const amount = typedAmount || detected || order.total;
 
     setPayingOrderId(order.id);
     const ext = file.name.split(".").pop() || "jpg";
