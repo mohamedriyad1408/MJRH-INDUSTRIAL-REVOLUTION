@@ -280,10 +280,10 @@ function OrderCard({ order, onDownloadInvoice, onUploadProof, paymentAmount, set
         <CustomerOrderHint order={order} />
         {order.order_items?.length ? <div className="text-xs text-slate-500 space-y-0.5">{order.order_items.slice(0, 3).map((it, i) => <div key={i}>{it.qty}× {it.name}</div>)}</div> : null}
         <div className="flex justify-between items-center pt-1 border-t"><span className="text-sm text-slate-500">الإجمالي</span><span className="font-black text-teal-700">{order.total} ج.م</span></div>
-        {order.invoice_finalized_at ? <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3 space-y-2">
-          <div className="flex items-center justify-between gap-2"><Badge className="bg-emerald-600">{t("customer.invoiceReviewed")}</Badge><Button size="sm" variant="outline" onClick={() => onDownloadInvoice(order)}><Download className="w-4 h-4 ms-1" />{t("customer.downloadInvoice")}</Button></div>
+        {(order.invoice_finalized_at || (order.status !== "cancelled" && order.status !== "delivered")) ? <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2"><Badge className="bg-emerald-600">{order.invoice_finalized_at ? t("customer.invoiceReviewed", "الفاتورة تمت مراجعتها") : t("customer.invoiceConfirmed", "تم تأكيد بنود الفاتورة")}</Badge><Button size="sm" variant="outline" onClick={() => onDownloadInvoice(order)}><Download className="w-4 h-4 ms-1" />{t("customer.downloadInvoice")}</Button></div>
           {order.payment_status === "paid" ? <div className="text-sm font-bold text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" />{t("track.paid")}{Number(order.overpayment_amount ?? 0) > 0 ? ` — الزائد ${order.overpayment_amount} ج.م بقشيش للمندوب` : ""}</div> : <div className="space-y-2">
-            <div className="text-xs text-slate-500">Pay with InstaPay, then upload the receipt image. Any extra payment is recorded as a courier tip.</div>
+            <div className="text-xs text-slate-500">{t("customer.payInstaPay", "ادفع عبر InstaPay ثم ارفع صورة الإيصال. أي زيادة تسجل كبقشيش للمندوب.")}</div>
             <div className="grid grid-cols-[1fr_auto] gap-2"><Input type="number" placeholder={t("customer.amountPaid")} value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /><Button asChild disabled={paying}><label className="cursor-pointer">{paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 ms-1" />{t("customer.uploadProof")}</>}<input hidden type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && onUploadProof(order, e.target.files[0])} /></label></Button></div>
             {order.payment_proof_url && <div className="text-xs text-amber-700">تم رفع إيصال سابق — الحالة: {statusAr(order.payment_verification_status, t)}</div>}
           </div>}
@@ -304,4 +304,4 @@ function CustomerOrderHint({ order }: { order: Order }) {
   return null;
 }
 
-function statusAr(s?: string | null, t?: any) { return ({ none: t?.("proof.none", "لا يوجد") ?? "لا يوجد", pending_review: t?.("proof.pending_review", "قيد المراجعة") ?? "قيد المراجعة", matched: t?.("proof.matched", "مطابق") ?? "مطابق", overpaid: t?.("proof.overpaid", "مدفوع بزيادة") ?? "مدفوع بزيادة", underpaid: t?.("proof.underpaid", "أقل من المطلوب") ?? "أقل من المطلوب", rejected: t?.("proof.rejected", "مرفوض") ?? "مرفوض" } as any)[s || "none"] ?? s; }
+function statusAr(s?: string | null, t?: any) { return ({ none: t?.("proof.none", "لا يوجد") ?? "لا يوجد", pending_review: t?.("proof.pending_review", "قيد المراجعة") ?? "قيد المراجعة", matched: t?.("proof.matched", "مطابق") ?? "مطابق", overpaid: t?.("proof.overpaid", "مدفوع بزيادة") ?? "مدفوع بزيادة", underpaid: t?.("proof.underpaid", "أقل من المطلوب") ?? "أقل من المطلوب", rejected: t?.("proof.rejected", "مرفوض") ?? "مرفوض" } as Record<string, string>)[s || "none"] ?? s; }
