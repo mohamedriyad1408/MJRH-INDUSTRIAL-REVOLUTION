@@ -20,7 +20,8 @@ test.describe("authenticated smoke tests", () => {
 
   test("owner/staff can authenticate and see app chrome", async ({ page }) => {
     await login(page);
-    await expect(page.getByText(/MJRH|Dry Tech|نظام تشغيل/).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("header.app-topbar")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/MJRH|Dry Tech|نظام تشغيل/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("core protected pages render after login", async ({ page }) => {
