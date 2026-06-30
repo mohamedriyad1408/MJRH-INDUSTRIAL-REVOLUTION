@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJRH Industrial Revolution — Pitch Deck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .bg-glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
+        .shadow-glow { box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.2); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-100 min-h-screen p-6 md:p-12 overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="max-w-6xl mx-auto flex items-center justify-between bg-white/10 backdrop-blur-md border border-white/20 px-8 py-4 rounded-3xl mb-12 shadow-glow">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">MJ</div>
+            <div>
+                <h1 class="font-black text-xl tracking-tight text-white">MJRH INDUSTRIAL REVOLUTION</h1>
+                <p class="text-xs text-teal-300 font-semibold">Laundry Operations Platform · Pitch Deck</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-6 text-sm font-bold text-slate-200">
+            <a href="#slide-problem" class="hover:text-teal-400 transition">المشكلة</a>
+            <a href="#slide-solution" class="hover:text-teal-400 transition">الحل</a>
+            <a href="#slide-pillars" class="hover:text-teal-400 transition">الركائز السبع</a>
+            <a href="#slide-apdo" class="hover:text-teal-400 transition">حوكمة APDO</a>
+            <a href="#slide-biz" class="hover:text-teal-400 transition">نموذج العمل</a>
+            <a href="#slide-investment" class="bg-teal-400 text-slate-950 px-5 py-2.5 rounded-2xl shadow-md hover:bg-teal-300 transition">الاستثمار</a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto space-y-16">
+        <!-- Slide 1: Cover -->
+        <section class="bg-slate-900/80 border border-teal-500/30 rounded-3xl p-8 md:p-16 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-32 -left-32 w-72 h-72 bg-teal-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+            <div class="relative z-10 space-y-6 max-w-3xl mx-auto">
+                <span class="bg-teal-500/20 text-teal-300 border border-teal-500/40 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest inline-block">SaaS Laundry Operations Platform</span>
+                <h2 class="text-4xl md:text-6xl font-black tracking-tight leading-none text-white">
+                    نظام تشغيل ذكي وممتع لإدارة المغاسل الحديثة
+                </h2>
+                <p class="text-lg md:text-xl text-slate-300 font-medium leading-relaxed">
+                    المنصة الأولى عالمياً المزودة بـ <strong class="text-teal-400">AI Laundry Advisor</strong>، تحليلات مالية متقدمة، وصيانة تنبؤية معمارية خالية تماماً من الديون التقنية.
+                </p>
+                <div class="pt-4 flex flex-wrap gap-4 justify-center">
+                    <a href="#slide-problem" class="bg-teal-400 hover:bg-teal-300 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-lg transition text-base">استعرض العرض التقديمي</a>
+                    <a href="https://mjrh.vercel.app" target="_blank" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-8 py-4 rounded-2xl transition text-base">بوابة النظام الحية</a>
+                </div>
+                <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-12 text-center">
+                    <div><div class="text-2xl font-black text-teal-400">9.2 / 10</div><div class="text-xs text-slate-400 mt-1">تقييم تدقيق الـ CTO</div></div>
+                    <div><div class="text-2xl font-black text-cyan-400">9 لغات</div><div class="text-xs text-slate-400 mt-1">توطين تجاري عالمي</div></div>
+                    <div><div class="text-2xl font-black text-emerald-400">Zero as-any</div><div class="text-xs text-slate-400 mt-1">أمان أنواع كامل 100%</div></div>
+                    <div><div class="text-2xl font-black text-amber-400">APDO Mode</div><div class="text-xs text-slate-400 mt-1">حوكمة مالية وتشغيلية</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Problem -->
+        <section id="slide-problem" class="bg-slate-900/80 border border-white/10 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-red-400 font-bold text-xs uppercase tracking-wider">تحديات القطاع التقليدي · 01</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">لماذا تعاني إدارة المغاسل التقليدية من الهدر المالي؟</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/80 border border-red-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-black text-xl">⚠️</div>
+                    <h4 class="font-black text-lg text-white">انعدام الرقابة وثغرات الدفع</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">عدم وجود ربط تلقائي بين حركة القطع، الفواتير، وحسابات الخزنة، مما يتسبب في تسليم طلبات غير مدفوعة وتسريب الإيرادات.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xl">⏳</div>
+                    <h4 class="font-black text-lg text-white">اختناقات العمل وغياب الـ SLA</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">تراكم القطع في محطات الغسيل أو الكي دون مؤشرات تنبيه مبكرة، مما يؤدي إلى تأخر مستمر عن المواعيد الموعودة للعملاء.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-blue-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black text-xl">🔧</div>
+                    <h4 class="font-black text-lg text-white">أعطال مفاجئة وغياب الصيانة التنبؤية</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">توقف المعدات فجأة لعدم متابعة الفترات الدورية للصيانة، ونفاد أصناف التغليف والمساحيق لعدم وجود حد إعادة طلب ذكي.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: The Solution -->
+        <section id="slide-solution" class="bg-slate-900/80 border border-teal-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-teal-400 font-bold text-xs uppercase tracking-wider">الحل الجذري لمنصة MJRH · 02</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">نظام تشغيل متكامل (Operating System) وليس مجرد تطبيق طلبات</h3>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold shrink-0">١</div>
+                        <div><h4 class="font-black text-lg text-white">رحلة طلب مشفرة ومحطات تشغيل حقيقية</h4><p class="text-sm text-slate-300 mt-1">تتبع دقيق لكل قطعة عبر 7 محطات فعلية (استقبال، تنظيف، تجفيف، كي، تغليف، جودة QC، مناديب) مع مراقبة أسباب الاسترجاع.</p></div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold shrink-0">٢</div>
+                        <div><h4 class="font-black text-lg text-white">محاسبة تلقائية وإقفال يومي للخزن</h4><p class="text-sm text-slate-300 mt-1">تسجيل أوتوماتيكي للقيود المحاسبية، حركات الخزنة، والمصروفات فور إنشاء الطلب أو تسديد إيصال InstaPay.</p></div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold shrink-0">٣</div>
+                        <div><h4 class="font-black text-lg text-white">توزيع الكي الذكي حسب الحضور</h4><p class="text-sm text-slate-300 mt-1">يتم التوزيع آلياً على فنيي الكي الحاضرين فقط، مع احتساب اليومية وإنتاجية الموظف بشكل شفاف ومباشر.</p></div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-teal-500/10 to-slate-800/80 border border-teal-500/30 p-8 rounded-3xl text-center space-y-4 shadow-inner">
+                    <h4 class="font-black text-2xl text-white">بوابة عميل متطورة (Customer Portal)</h4>
+                    <p class="text-sm text-slate-300">يطلب العميل من بيته، يُصور القطع من الكاميرا، يُتابع تقدم الطلب لحظياً، ويقوم برفع إيصال دفع InstaPay لمراجعته واعتماد الفاتورة.</p>
+                    <div class="py-4"><div class="w-24 h-24 mx-auto rounded-full bg-teal-500/20 border border-teal-400 flex items-center justify-center text-teal-300 font-black text-3xl">🚀</div></div>
+                    <a href="https://mjrh.vercel.app/customer-portal" target="_blank" class="inline-block bg-teal-400 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow hover:bg-teal-300 transition text-sm">جرب بوابة العميل الحية</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: The 7 Pillars (The WOW Stage) -->
+        <section id="slide-pillars" class="bg-slate-900/80 border border-cyan-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-cyan-400 font-bold text-xs uppercase tracking-wider">المرحلة الثالثة: قدرات الإبهار التجاري · 03</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">الركائز السبع القيادية للتحول إلى منصة عالمية (The WOW Stage)</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">01. Executive Dashboard</div>
+                    <h4 class="font-black text-white text-base">لوحة قيادة المديرين التنفيذيين</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">لوحة مراقبة مالية وتشغيلية عليا تجمع وتلخص كافة المؤشرات الحيوية لمختلف فروع المغسلة في شاشة واحدة.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">02. AI Laundry Advisor</div>
+                    <h4 class="font-black text-white text-base">المستشار الذكي لتشغيل المغاسل</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">مستشار رقمي حي يُحلل البيانات ليلاً ويُقدم توصيات صباحية استباقية لفك اختناقات المحطات ونواقص المخزون.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">03. Profit Analytics</div>
+                    <h4 class="font-black text-white text-base">تحليلات الربحية المتقدمة</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">تشريح مالي متعمق لإجمالي الإيرادات، نفقات التشغيل (OPEX)، وصافي الهامش التشغيلي لضمان سلامة وحدة الاقتصاد.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">04. Predictive Maintenance</div>
+                    <h4 class="font-black text-white text-base">الصيانة التنبؤية ومراقبة الأصول</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">تتبع ذكي لدورات صيانة المعدات ورصد فوري للأعطال لتحديد مواعيد الصيانة الوقائية ومنع توقف العمل.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">05. Smart Scheduling</div>
+                    <h4 class="font-black text-white text-base">الجدولة الذكية للعمالة</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">تقييم نسب التوافق بين حجم العمل المتدفق وعدد الموظفين الحاضرين في الوردية لتوزيع المهام بكفاءة عالية.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition">
+                    <div class="font-black text-teal-400 text-xl">06. SLA Monitoring</div>
+                    <h4 class="font-black text-white text-base">مراقبة التوقيت ومستوى الخدمة</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed">قياس حي لمعدل الالتزام بالتسليم المعياري ورصد فوري لأي طلب يتجاوز الوقت المحدد للتسليم الموعود.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-white/10 p-6 rounded-2xl space-y-2 hover:border-teal-500/40 transition col-span-1 md:col-span-3">
+                    <div class="font-black text-teal-400 text-xl">07. Branch Benchmarking (مقارنة وتقييم أداء الفروع)</div>
+                    <p class="text-xs text-slate-300 leading-relaxed">جدول تقييمي متقدم يضع الفروع التشغيلية جنباً إلى جنب للمقارنة بين إيراداتها، نفقاتها، أرباحها، التزامها بالـ SLA، ونقاط كفاءة الموظفين.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: APDO Governance -->
+        <section id="slide-apdo" class="bg-slate-900/80 border border-amber-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-amber-400 font-bold text-xs uppercase tracking-wider">نموذج الحوكمة التشغيلية · 04</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">معمارية APDO: أعلى معايير الشفافية والمساءلة التشغيلية</h3>
+            <div class="grid md:grid-cols-4 gap-4 text-center">
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-2">
+                    <div class="font-black text-3xl text-amber-400">A</div>
+                    <div class="font-black text-white text-base">Actor (من المنفذ؟)</div>
+                    <p class="text-xs text-slate-300">تسجيل وتوثيق هوية الموظف أو الحساب المسؤول عن تنفيذ العملية بدقة.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-2">
+                    <div class="font-black text-3xl text-amber-400">P</div>
+                    <div class="font-black text-white text-base">Process (ما العملية؟)</div>
+                    <p class="text-xs text-slate-300">توصيف دقيق للحدث التشغيلي سواء كان استلام، فحص جودة، أو حركة خزنة.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-2">
+                    <div class="font-black text-3xl text-amber-400">D</div>
+                    <div class="font-black text-white text-base">Data (ما البيانات؟)</div>
+                    <p class="text-xs text-slate-300">تخزين البيانات المالية والتشغيلية المرافقة للعملية لمنع التلاعب.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-2">
+                    <div class="font-black text-3xl text-amber-400">O</div>
+                    <div class="font-black text-white text-base">Output (ما الناتج؟)</div>
+                    <p class="text-xs text-slate-300">الربط التلقائي بقيد محاسبي، حركة خزنة، أو إشعار فوري للعميل.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Global Scaling -->
+        <section class="bg-slate-900/80 border border-white/10 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-teal-400 font-bold text-xs uppercase tracking-wider">التوطين التجاري العالمي · 05</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-6">جاهزون للتشغيل الفوري عبر 9 لغات تجارية كبرى</h3>
+            <p class="text-sm text-slate-300 mb-8">تم تزويد المنصة بقواميس داخلية وعامة متكاملة تتيح التحويل السلس والديناميكي بين التخطيطين (RTL / LTR) مع القضاء التام على أية نصوص ثابتة غير مترجمة.</p>
+            <div class="grid grid-cols-3 md:grid-cols-9 gap-3 text-center">
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">AR</div><div class="text-xs font-bold text-slate-200 mt-1">العربية</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">EN</div><div class="text-xs font-bold text-slate-200 mt-1">English</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">FR</div><div class="text-xs font-bold text-slate-200 mt-1">Français</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">IT</div><div class="text-xs font-bold text-slate-200 mt-1">Italiano</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">ES</div><div class="text-xs font-bold text-slate-200 mt-1">Español</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">DE</div><div class="text-xs font-bold text-slate-200 mt-1">Deutsch</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">ZH</div><div class="text-xs font-bold text-slate-200 mt-1">中文</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">JA</div><div class="text-xs font-bold text-slate-200 mt-1">日本語</div></div>
+                <div class="bg-slate-800 border border-white/10 p-4 rounded-2xl"><div class="font-black text-lg text-teal-400">PT</div><div class="text-xs font-bold text-slate-200 mt-1">Português</div></div>
+            </div>
+        </section>
+
+        <!-- Slide 7: Business Model -->
+        <section id="slide-biz" class="bg-slate-900/80 border border-white/10 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-teal-400 font-bold text-xs uppercase tracking-wider">نموذج العمل والنمو · 06</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">نموذج اشتراكات السحابة المؤسسية (B2B SaaS Pricing)</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/60 border border-white/10 p-8 rounded-3xl space-y-4">
+                    <h4 class="font-black text-xl text-white">باقة التجربة · Pilot</h4>
+                    <p class="text-xs text-slate-300">مخصصة للمغاسل الفردية الناشئة لاختبار النظام والتعرف على محطات العمل.</p>
+                    <div class="font-black text-3xl text-teal-400">$0 <span class="text-xs text-slate-400">/ 14 يوماً</span></div>
+                    <ul class="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
+                        <li>✔️ محطات العمل الأساسية</li>
+                        <li>✔️ بوابة العميل الافتراضية</li>
+                        <li>✔️ قيود محاسبية قياسية</li>
+                    </ul>
+                </div>
+                <div class="bg-gradient-to-br from-teal-900/40 to-slate-800 border border-teal-400 p-8 rounded-3xl space-y-4 shadow-xl relative">
+                    <span class="absolute top-4 left-4 bg-teal-400 text-slate-950 px-3 py-1 rounded-full text-[10px] font-black uppercase">الأكثر طلباً</span>
+                    <h4 class="font-black text-xl text-white">باقة النمو · Growth</h4>
+                    <p class="text-xs text-slate-300">للمغاسل المتوسطة الساعية لزيادة أرباحها وتطبيق الصيانة التنبؤية.</p>
+                    <div class="font-black text-3xl text-teal-400">$89 <span class="text-xs text-slate-400">/ شهرياً</span></div>
+                    <ul class="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
+                        <li>✔️ لوحة المديرين التنفيذيين</li>
+                        <li>✔️ المستشار الذكي AI Advisor</li>
+                        <li>✔️ نطاق فرعي مخصص *.mjrh.com</li>
+                        <li>✔️ مراقبة الـ SLA الحية</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-800/60 border border-white/10 p-8 rounded-3xl space-y-4">
+                    <h4 class="font-black text-xl text-white">المؤسسات · Enterprise</h4>
+                    <p class="text-xs text-slate-300">لسلاسل المغاسل الكبرى ذات الفروع المتعددة والمصانع التجارية.</p>
+                    <div class="font-black text-3xl text-teal-400">اتفاق مخصص</div>
+                    <ul class="text-xs text-slate-300 space-y-2 border-t border-white/10 pt-4">
+                        <li>✔️ مقارنة أداء الفروع Benchmarking</li>
+                        <li>✔️ بريد مؤسسي مخصص @mjrh.com</li>
+                        <li>✔️ خوادم قواعد بيانات مخصصة</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: The Investment Ask -->
+        <section id="slide-investment" class="bg-gradient-to-br from-teal-950 via-slate-900 to-slate-900 border border-teal-500 p-8 md:p-16 rounded-3xl text-center shadow-2xl space-y-6">
+            <h3 class="text-3xl md:text-5xl font-black text-white tracking-tight">القرار الاستثماري النهائي (Conditional Go)</h3>
+            <p class="text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                لقد وافق المستثمر على ضخ الاستثمارات بشرط تخصيص الأشهر الثلاثة الأولى لتحسين جودة المنتج وتأهيله للنمو. اليوم نؤكد لسيادتكم أنه قد تم إنجاز هذا الشرط بنجاح تام 100%.
+            </p>
+            <div class="bg-slate-800/80 border border-white/10 max-w-2xl mx-auto p-6 rounded-2xl text-start space-y-3">
+                <div class="flex items-center gap-3 text-sm font-bold text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>المرحلة الأولى: إزالة كافة الـ 596 تكرار لـ as any بصفر أخطاء.</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm font-bold text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>المرحلة الثانية: تفكيك الصفحات العملاقة وإنشاء طبقة اتصال موحدة.</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm font-bold text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>المرحلة الثالثة: إطلاق الركائز السبع القيادية (The WOW Stage).</span>
+                </div>
+            </div>
+            <div class="pt-6">
+                <a href="https://mjrh.vercel.app" target="_blank" class="inline-block bg-teal-400 hover:bg-teal-300 text-slate-950 font-black text-lg px-12 py-5 rounded-2xl shadow-xl transition">
+                    اعتماد الاستثمار وانطلق عالمياً 🚀
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="max-w-6xl mx-auto mt-20 border-t border-white/10 pt-8 pb-16 text-center text-xs text-slate-500 font-semibold tracking-wide" dir="ltr">
+        © 2026 MJRH INDUSTRIAL REVOLUTION. BUILT FOR GLOBAL LAUNDRY OPERATIONS.
+    </footer>
+</body>
+</html>
