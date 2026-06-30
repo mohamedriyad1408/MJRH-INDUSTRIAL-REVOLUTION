@@ -4,6 +4,13 @@ const email = process.env.E2E_AUTH_EMAIL;
 const password = process.env.E2E_AUTH_PASSWORD;
 const runAuthenticated = Boolean(email && password);
 
+async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
+  const errors: string[] = [];
+  page.on("pageerror", (err) => errors.push(err.message));
+  await run();
+  expect(errors, `Unexpected browser errors: ${errors.join(" | ")}`).toEqual([]);
+}
+
 async function login(page: Page, language: "ar" | "fr") {
   await page.addInitScript((lang) => {
     window.localStorage.setItem("mjrh.language.v2", lang);
@@ -21,24 +28,28 @@ test.describe("authenticated i18n smoke", () => {
 
   test("Arabic remains Arabic in protected pages and sidebar labels", async ({ page }) => {
     test.skip(test.info().project.name.includes("mobile"), "sidebar labels are validated on desktop layout");
-    await login(page, "ar");
-    await page.goto("/system-health");
-    await expect(page.locator("html")).toHaveAttribute("lang", "ar");
-    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-    await expect(page.locator("body")).toContainText("فحص النظام");
-    await expect(page.locator("body")).toContainText("المالية والتشغيل");
-    await expect(page.locator("body")).not.toContainText("System health");
-    await expect(page.locator("body")).not.toContainText("Finance & operations");
+    await expectNoPageErrors(page, async () => {
+      await login(page, "ar");
+      await page.goto("/system-health");
+      await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+      await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+      await expect(page.locator("body")).toContainText("فحص النظام");
+      await expect(page.locator("body")).toContainText("المالية والتشغيل");
+      await expect(page.locator("body")).not.toContainText("System health");
+      await expect(page.locator("body")).not.toContainText("Finance & operations");
+    });
   });
 
   test("French does not fall back to English navigation", async ({ page }) => {
     test.skip(test.info().project.name.includes("mobile"), "sidebar labels are validated on desktop layout");
-    await login(page, "fr");
-    await page.goto("/system-health");
-    await expect(page.locator("html")).toHaveAttribute("lang", "fr");
-    await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-    await expect(page.locator("body")).toContainText("Santé système");
-    await expect(page.locator("body")).toContainText("Finance & opérations");
-    await expect(page.locator("body")).not.toContainText("System health");
+    await expectNoPageErrors(page, async () => {
+      await login(page, "fr");
+      await page.goto("/system-health");
+      await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+      await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+      await expect(page.locator("body")).toContainText("Santé système");
+      await expect(page.locator("body")).toContainText("Finance & opérations");
+      await expect(page.locator("body")).not.toContainText("System health");
+    });
   });
 });
