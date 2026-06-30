@@ -12,6 +12,7 @@ import { NotificationCenter } from "@/components/notification-center";
 import { MotivationalPopups } from "@/components/motivational-popups";
 import { MobileWorkDock } from "@/components/mobile-work-dock";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { UnifiedSearch } from "@/components/unified-search";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app")({
@@ -124,6 +125,7 @@ function AppLayout() {
           <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 p-0.5 shadow-sm shrink-0">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-2xl object-cover bg-white" /> : <div className="h-full w-full rounded-2xl bg-white/20 flex items-center justify-center text-white font-black">MJ</div>}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("app.tagline")}</div></div></div>
+            <UnifiedSearch />
             <LanguageSwitcher compact />
             <NotificationCenter />
             <AttendanceWidget />

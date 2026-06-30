@@ -96,6 +96,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "العملاء", url: "/customers", icon: Users, roles: ["cs_manager", "owner"] },
       { title: "CRM والولاء", url: "/crm", icon: HeartHandshake, roles: ["cs_manager", "ops_manager", "owner"] },
+      { title: "رعاية العملاء والتعويضات", url: "/customer-care", icon: HeartHandshake, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "كتالوج الخدمات", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
       { title: "نقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
       { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },

@@ -38,6 +38,7 @@ import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDailyOperationsRouteImport } from './routes/_app/daily-operations'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
+import { Route as AppCustomerCareRouteImport } from './routes/_app/customer-care'
 import { Route as AppCsRouteImport } from './routes/_app/cs'
 import { Route as AppCrmRouteImport } from './routes/_app/crm'
 import { Route as AppCashClosingRouteImport } from './routes/_app/cash-closing'
@@ -215,6 +216,11 @@ const AppDailyOperationsRoute = AppDailyOperationsRouteImport.update({
 const AppCustomersRoute = AppCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomerCareRoute = AppCustomerCareRouteImport.update({
+  id: '/customer-care',
+  path: '/customer-care',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCsRoute = AppCsRouteImport.update({
@@ -405,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
+  '/customer-care': typeof AppCustomerCareRoute
   '/customers': typeof AppCustomersRoute
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -468,6 +475,7 @@ export interface FileRoutesByTo {
   '/cash-closing': typeof AppCashClosingRoute
   '/crm': typeof AppCrmRoute
   '/cs': typeof AppCsRoute
+  '/customer-care': typeof AppCustomerCareRoute
   '/customers': typeof AppCustomersRoute
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/_app/cash-closing': typeof AppCashClosingRoute
   '/_app/crm': typeof AppCrmRoute
   '/_app/cs': typeof AppCsRoute
+  '/_app/customer-care': typeof AppCustomerCareRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/daily-operations': typeof AppDailyOperationsRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -601,6 +610,7 @@ export interface FileRouteTypes {
     | '/cash-closing'
     | '/crm'
     | '/cs'
+    | '/customer-care'
     | '/customers'
     | '/daily-operations'
     | '/dashboard'
@@ -664,6 +674,7 @@ export interface FileRouteTypes {
     | '/cash-closing'
     | '/crm'
     | '/cs'
+    | '/customer-care'
     | '/customers'
     | '/daily-operations'
     | '/dashboard'
@@ -729,6 +740,7 @@ export interface FileRouteTypes {
     | '/_app/cash-closing'
     | '/_app/crm'
     | '/_app/cs'
+    | '/_app/customer-care'
     | '/_app/customers'
     | '/_app/daily-operations'
     | '/_app/dashboard'
@@ -997,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/customer-care': {
+      id: '/_app/customer-care'
+      path: '/customer-care'
+      fullPath: '/customer-care'
+      preLoaderRoute: typeof AppCustomerCareRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/cs': {
       id: '/_app/cs'
       path: '/cs'
@@ -1258,6 +1277,7 @@ interface AppRouteChildren {
   AppCashClosingRoute: typeof AppCashClosingRoute
   AppCrmRoute: typeof AppCrmRoute
   AppCsRoute: typeof AppCsRoute
+  AppCustomerCareRoute: typeof AppCustomerCareRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDailyOperationsRoute: typeof AppDailyOperationsRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -1313,6 +1333,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCashClosingRoute: AppCashClosingRoute,
   AppCrmRoute: AppCrmRoute,
   AppCsRoute: AppCsRoute,
+  AppCustomerCareRoute: AppCustomerCareRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDailyOperationsRoute: AppDailyOperationsRoute,
   AppDashboardRoute: AppDashboardRoute,
