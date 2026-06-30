@@ -33,6 +33,7 @@ import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
 import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
 import { Route as AppHelpRouteImport } from './routes/_app/help'
 import { Route as AppFinanceRouteImport } from './routes/_app/finance'
+import { Route as AppExecutiveRouteImport } from './routes/_app/executive'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDailyOperationsRouteImport } from './routes/_app/daily-operations'
@@ -189,6 +190,11 @@ const AppHelpRoute = AppHelpRouteImport.update({
 const AppFinanceRoute = AppFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExecutiveRoute = AppExecutiveRouteImport.update({
+  id: '/executive',
+  path: '/executive',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDriverRoute = AppDriverRouteImport.update({
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
   '/driver': typeof AppDriverRoute
+  '/executive': typeof AppExecutiveRoute
   '/finance': typeof AppFinanceRoute
   '/help': typeof AppHelpRoute
   '/inventory': typeof AppInventoryRoute
@@ -465,6 +472,7 @@ export interface FileRoutesByTo {
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
   '/driver': typeof AppDriverRoute
+  '/executive': typeof AppExecutiveRoute
   '/finance': typeof AppFinanceRoute
   '/help': typeof AppHelpRoute
   '/inventory': typeof AppInventoryRoute
@@ -530,6 +538,7 @@ export interface FileRoutesById {
   '/_app/daily-operations': typeof AppDailyOperationsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/driver': typeof AppDriverRoute
+  '/_app/executive': typeof AppExecutiveRoute
   '/_app/finance': typeof AppFinanceRoute
   '/_app/help': typeof AppHelpRoute
   '/_app/inventory': typeof AppInventoryRoute
@@ -596,6 +605,7 @@ export interface FileRouteTypes {
     | '/daily-operations'
     | '/dashboard'
     | '/driver'
+    | '/executive'
     | '/finance'
     | '/help'
     | '/inventory'
@@ -658,6 +668,7 @@ export interface FileRouteTypes {
     | '/daily-operations'
     | '/dashboard'
     | '/driver'
+    | '/executive'
     | '/finance'
     | '/help'
     | '/inventory'
@@ -722,6 +733,7 @@ export interface FileRouteTypes {
     | '/_app/daily-operations'
     | '/_app/dashboard'
     | '/_app/driver'
+    | '/_app/executive'
     | '/_app/finance'
     | '/_app/help'
     | '/_app/inventory'
@@ -948,6 +960,13 @@ declare module '@tanstack/react-router' {
       path: '/finance'
       fullPath: '/finance'
       preLoaderRoute: typeof AppFinanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/executive': {
+      id: '/_app/executive'
+      path: '/executive'
+      fullPath: '/executive'
+      preLoaderRoute: typeof AppExecutiveRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/driver': {
@@ -1243,6 +1262,7 @@ interface AppRouteChildren {
   AppDailyOperationsRoute: typeof AppDailyOperationsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDriverRoute: typeof AppDriverRoute
+  AppExecutiveRoute: typeof AppExecutiveRoute
   AppFinanceRoute: typeof AppFinanceRoute
   AppHelpRoute: typeof AppHelpRoute
   AppInventoryRoute: typeof AppInventoryRoute
@@ -1297,6 +1317,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDailyOperationsRoute: AppDailyOperationsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDriverRoute: AppDriverRoute,
+  AppExecutiveRoute: AppExecutiveRoute,
   AppFinanceRoute: AppFinanceRoute,
   AppHelpRoute: AppHelpRoute,
   AppInventoryRoute: AppInventoryRoute,

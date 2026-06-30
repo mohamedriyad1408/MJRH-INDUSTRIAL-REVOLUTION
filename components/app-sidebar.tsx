@@ -37,6 +37,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "مركز اليوم", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
+      { title: "لوحة المديرين التنفيذيين", url: "/executive", icon: BarChart3, roles: ["owner"] },
       { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
       { title: "خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
       { title: "لوحة المدير", url: "/manager", icon: ShieldCheck, roles: ["cs_manager", "ops_manager", "owner"] },
