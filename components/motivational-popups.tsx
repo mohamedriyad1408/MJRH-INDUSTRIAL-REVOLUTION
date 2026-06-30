@@ -159,16 +159,16 @@ export function MotivationalPopups() {
     const key = `mjrh_motivation_${user.id}`;
     const show = () => {
       const last = Number(localStorage.getItem(key) || 0);
-      const due = Date.now() - last > 20 * 60 * 1000;
-      if (due || isMobile()) {
+      // Trigger at most once every 8 hours (work shift duration) to avoid spamming the user
+      const due = Date.now() - last > 8 * 60 * 60 * 1000;
+      if (due) {
         setMessage(messages[Math.floor(Math.random() * messages.length)]);
         setOpen(true);
         localStorage.setItem(key, String(Date.now()));
       }
     };
-    const t0 = setTimeout(show, isMobile() ? 1200 : 5000);
-    const interval = setInterval(show, 20 * 60 * 1000);
-    return () => { clearTimeout(t0); clearInterval(interval); };
+    const t0 = setTimeout(show, 5000);
+    return () => { clearTimeout(t0); };
   }, [user, messages]);
 
   if (!dataExists(messages, message)) return null;
@@ -181,7 +181,10 @@ export function MotivationalPopups() {
         <div className="mx-auto w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center"><Trophy className="w-7 h-7 text-amber-300" /></div>
         <div className="font-black text-xl flex items-center justify-center gap-2"><Sparkles className="w-5 h-5 text-teal-200" />{t("motivate.title")}</div>
         <p className="text-lg font-bold leading-8 text-white/95">{message}</p>
-        <Button onClick={() => setOpen(false)} className="bg-teal-300 hover:bg-teal-200 text-slate-950 font-black rounded-2xl">{t("motivate.button")}</Button>
+        <div className="flex gap-2 justify-center pt-2">
+          <Button onClick={() => setOpen(false)} className="flex-1 bg-teal-300 hover:bg-teal-200 text-slate-950 font-black rounded-2xl">{t("motivate.button")}</Button>
+          <Button onClick={() => { localStorage.setItem(`mjrh_motivation_${user?.id}`, String(Date.now() + 365 * 24 * 60 * 60 * 1000)); setOpen(false); }} variant="outline" className="text-xs bg-white/10 hover:bg-white/20 text-white border-0 font-bold rounded-2xl">{t("motivate.mute", "عدم الإظهار مجدداً")}</Button>
+        </div>
       </div>
     </DialogContent>
   </Dialog>;
