@@ -56,7 +56,7 @@ The platform is fully localized across **9 major commercial languages** with dyn
 ## 7. Business Model (نموذج العمل والنمو)
 B2B tiered SaaS subscription model designed for rapid vertical expansion:
 * **Pilot Tier ($0 / 14 Days):** For emerging individual laundries to test standard workstations and customer portals.
-* **Growth Tier ($89 / Month):** For growing operations requiring the Executive Dashboard, AI Advisor, live SLA monitoring, and custom subdomains (`*.mjrh.com`).
+* **Growth Tier ($399 / Month):** For growing operations requiring the Executive Dashboard, AI Advisor, live SLA monitoring, and custom subdomains (`*.mjrh.com`).
 * **Enterprise Tier (Custom Deal):** For multi-branch commercial chains requiring Branch Benchmarking, dedicated database clusters, and custom email routing (`@mjrh.com`).
 
 ---
