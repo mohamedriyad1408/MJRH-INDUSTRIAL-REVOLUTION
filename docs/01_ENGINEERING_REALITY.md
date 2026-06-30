@@ -216,3 +216,56 @@ Conclusion: the “<90KB” claim in v1 referred to **raw main entry**, not gzip
 > This document deliberately separates **Facts** (CI-verified), **Constraints** (known gaps), and **Aspirations** (roadmap).  
 > “Zero `as any`” is a hygiene practice improving type safety — not a standalone product differentiator.  
 > OCR is regex heuristics. “AI Advisor” UI is Live Simulation + rule-based recommendations today — no ML training pipeline yet.
+
+---
+
+## Evidence
+
+### Repository Evidence
+- **Files:**
+  - `integrations/supabase/client.ts` — zero `as any` — `grep -rn " as any" lib routes` → **0**
+  - `integrations/supabase/types.ts` — 5,659 lines
+  - `lib/station-workflow.ts` — 7 stations
+  - `lib/ai-advisor.ts` — rule-based — **NO ML**
+  - `vite.config.ts` + `scripts/check-bundle-size.mjs` — budget pass — initial gzip ~285KB
+  - `supabase/functions/ocr-payment-proof/index.ts` — regex heuristics — **OCR ≠ banking**
+- **Database Objects (live `dngjfjrjddigqadlyain` 2026-06-30):**
+  - `tenants`: **1** | `branches`: **2** | `customers`: **6** | `employees`: **10** | `profiles`: **12**
+  - `orders`: **24** (19 delivered) | `order_items`: **106** | `service_units`: **134**
+  - `journal_entries`: **95** | `journal_lines`: **190** — balanced
+  - `cash_transactions`: **58** | `daily_cash_closings`: **10**
+  - `qc_checks`: **19** | `pickup_requests`: **8** | `operation_events`: **119**
+  - RLS: `can_access_branch()` enforced
+- **Tests:**
+  - `tsc -b` → **0 errors**
+  - `vitest` → **28/28**
+  - `build` → **13.04s / 2017 modules**
+  - `bundle:check` → **pass**
+  - `prod:health` → **HTTP 200 https://mjrh.vercel.app**
+
+### Operational Evidence
+- **Customers:** **6** (all last 30d)
+- **Orders:** **24 total / 19 delivered / 11 last 7d**
+  - First: 2026-06-21 18:10 UTC | Last: 2026-06-30 09:13 UTC
+- **Revenue — FACTS:**
+  - **GMV: 12,549.00 EGP**
+  - **Delivered GMV: 11,339.00 EGP**
+  - **AOV: 522.88 EGP**
+- **Tenants:** **1 active — Dry Tech (`dry-tech`) — since 2026-06-21**
+- **Branches:** **2**
+  - الفرع الرئيسي — **24 orders / 5 safes / 50,903.40 EGP main safe**
+  - فرع البنفسج — **0 orders / 0 safes yet**
+- **Employees:** **10** / **Profiles: 12**
+
+### Business Assumptions
+| Metric | Status |
+|---|---|
+| **CAC** | **$1,200 → ASSUMPTION — $0 paid to date** |
+| **NRR / Churn** | **NO DATA — cohort 9 days old** |
+| **Gross Margin** | **88% → PROJECTION — pending COGS audit** |
+| **Payback** | **3 months → FINANCIAL MODEL — NOT validated** |
+| **MRR $199/$399** | **0 verified invoices — PRE-REVENUE PILOT** |
+| **AI / ML** | **ASPIRATIONAL — Phase 4 2027 — today rule-based Live Simulation only** |
+| **Bank API / IoT** | **NOT SHIPPED — Phase 2/3 roadmap** |
+
+> Source: `docs/FACTS_SHEET_2026-06-30.md` — Supabase `dngjfjrjddigqadlyain` — `supabase db query --linked -o json` — 2026-06-30 22:40 UTC

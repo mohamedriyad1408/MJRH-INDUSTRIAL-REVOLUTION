@@ -189,3 +189,45 @@ Per external CTO feedback:
 ---
 
 **Engineering Reality cross-reference:** see `01_ENGINEERING_REALITY.md` v2.1 for: bundle raw/gzip/brotli table, NFR table, Risk Register (High/Med/Low), Security Architecture, Error Recovery, and Facts/Constraints/Aspirations separation.
+
+---
+
+## Evidence
+
+### Repository Evidence
+- **Files:**
+  - `lib/rules/workflow-engine-v1.ts` — `GARMENT_PROFILES` — wash-only bypass ironing — Business Rule
+  - `lib/ai-advisor.ts` — **Operational Advisor — rule-based ONLY — NO ML**
+  - `lib/station-workflow.ts` — 7 stations validated
+  - `routes/_app/executive.tsx` — Executive Dashboard
+  - `lib/query-layer.ts` — Unified Data Layer
+- **Database Objects (live 2026-06-30):**
+  - `orders`: **24** | `order_items`: **106** | `service_units`: **134**
+  - `journal_entries`: **95** | `journal_lines`: **190**
+  - `employees`: **10** | `customers`: **6**
+  - `branches`: **2** — الفرع الرئيسي (24 orders) / فرع البنفسج (0 orders)
+  - `cash_accounts`: **5** — all linked to الفرع الرئيسي — main safe **50,903.40 EGP**
+- **Tests:** typecheck 0 / vitest 28/28 / build 13s / bundle pass
+
+### Operational Evidence
+- **Tenant:** Dry Tech — 1 active — since 2026-06-21
+- **Orders:** 24 total / 19 delivered / 11 last 7d — GMV **12,549 EGP** — Delivered **11,339 EGP** — AOV **522.88 EGP**
+- **Workflow validation — CTO praised:**
+  - Wash-only bypass ironing — ✅ `lib/station-workflow.ts`
+  - Rework Orders `#1025-R1` — independent linked records — zero billing impact — ✅
+  - Overpayment split Invoice • Driver Tip — ✅ automatic ledger split
+- **Operational Advisor:** inputs = orders+service_units+employees+inventory+equipment+cash — **rule-based Live Simulation — NO ML**
+- **Branch filter need:** فرع البنفسج = **0 orders / 0 safes** — P0 code / P2 operationally — defer UI globalization until ≥5 orders/day
+
+### Business Assumptions
+| Metric | Status |
+|---|---|
+| **Scalability: 100 concurrent users** | **DESIGN TARGET — NOT load-tested** |
+| **Orders: 1M / tenant / year** | **SCHEMA-READY — NOT load-tested** |
+| **AI forecasting (ML)** | **ASPIRATIONAL — Phase 4 2027** — today rule-based only — first operational data only 9 days old |
+| **Bank webhook MT940** | **PLANNED Q3 2026** — today OCR regex only |
+| **IoT predictive maintenance** | **ASPIRATIONAL Q4 2026** |
+| **NRR / Churn** | **NO DATA** |
+| **CAC / Payback / Gross Margin** | **ASSUMPTIONS — see Facts Sheet** |
+
+> Evidence source: `docs/FACTS_SHEET_2026-06-30.md`

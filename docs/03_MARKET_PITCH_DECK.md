@@ -202,3 +202,56 @@ SELECT SUM(total_amount_cents)/100.0 FROM orders WHERE status = 'delivered';
 
 *Document v2.1 — CTO review feedback fully incorporated 2026-06-30*  
 *Changes vs v1: added Facts/Assumptions/Aspirations split; removed “AI Engine” absolute claims → “Operational Advisor — Rule-based Live Simulation”; softened competitive accounting claim with verifiable schema reference; converted CAC / payback / 88% margin from “fact” to explicitly labeled “Assumption — pending real customer cohort”; added Investor Due Diligence 5-question honest answer table; adopted core message: “operations workflow natively coupled to double-entry accounting + APDO”.*
+
+---
+
+## Evidence
+
+### Repository Evidence
+- **Files:**
+  - `docs/MJRH_PROFESSIONAL_PITCH_DECK.html` — v2.1 CTO-hardened — https://mohamedriyad1408.github.io/MJRH-INDUSTRIAL-REVOLUTION/
+  - `docs/01_ENGINEERING_REALITY.md` v2.1 — **9.5/10**
+  - `docs/02_PRODUCT_STRATEGY.md` v2.1 — **9/10**
+  - `routes/_app/executive.tsx` — Executive Dashboard
+  - `lib/ai-advisor.ts` — **rule-based — NO ML**
+- **Database Objects — live 2026-06-30 `dngjfjrjddigqadlyain`:**
+  - Tenants: **1** | Branches: **2** | Customers: **6** | Employees: **10**
+  - Orders: **24** (19 delivered) | GMV: **12,549 EGP** | Delivered: **11,339 EGP** | AOV: **522.88 EGP**
+  - Journal: **95 entries / 190 lines** — balanced
+  - Cash: **58 transactions / 10 closings / 50,903.40 EGP main safe**
+- **Tests / CI:**
+  - typecheck 0 / vitest 28/28 / build 13s / bundle 285KB gzip
+  - prod: https://mjrh.vercel.app — **200 OK**
+
+### Operational Evidence
+- **Tenant:** Dry Tech (`dry-tech`) — **1 active** — since 2026-06-21
+- **Orders:** **24 total / 19 delivered / 11 last 7d**
+- **Revenue — FACTS:**
+  - **GMV 12,549.00 EGP**
+  - **Delivered GMV 11,339.00 EGP**
+  - **AOV 522.88 EGP**
+  - **$199/$399 MRR invoices verified: 0 — PRE-REVENUE PILOT**
+- **Investor Due Diligence — Honest 2026-06-30:**
+  1. مغاسل تستخدم النظام؟ → **1 tenant: Dry Tech**
+  2. Orders processed؟ → **24 / 19 delivered**
+  3. Churn؟ → **Unknown — cohort 9 days**
+  4. CAC حقيقي؟ → **$0 paid — organic/founder-led**
+  5. دفع أحد $199/$399؟ → **No verified Stripe invoice — pre-revenue pilot**
+
+### Business Assumptions
+| Assumption | v1 Claim | Reality 2026-06-30 |
+|---|---|---|
+| **CAC** | $1,200 | ❌ **ASSUMPTION — $0 paid to date** |
+| **NRR** | implied >100% | ❌ **NO DATA** |
+| **Gross Margin** | 88%+ | ❌ **PROJECTION — pending COGS audit** |
+| **Payback** | 3 months | ❌ **FINANCIAL MODEL — NOT validated** |
+| **MRR $199/$399** | implied paying | ❌ **0 verified invoices — PRE-REVENUE** |
+| **AI / ML forecasting** | “AI Laundry Advisor” | ❌ **ASPIRATIONAL — Phase 4 2027 — today rule-based Live Simulation** |
+| **Market Analysis score** | — | **5.5/10 CTO — needs real TAM/SAM/SOM + customer interviews** |
+| **Pricing Justification** | — | **4/10 CTO → FIXED v2.1 with explicit Assumption labels** |
+
+**Sales Deck mandatory disclaimer:**
+> *“Financial metrics (CAC $1,200, 3-month payback, 88% gross margin) are **modeled assumptions — NOT audited facts**. Current operational evidence (2026-06-30): **1 pilot tenant (Dry Tech), 24 orders, 19 delivered, GMV 12,549 EGP, 9-day operational history, pre-revenue.** No $199/$399 MRR invoices verified. ‘AI Advisor’ = Operational Advisor — rule-based Live Simulation — NO ML model shipped.”*
+
+---
+*Evidence block v1.0 — 2026-06-30 — source: `docs/FACTS_SHEET_2026-06-30.md`*
