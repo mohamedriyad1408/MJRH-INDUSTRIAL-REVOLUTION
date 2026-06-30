@@ -31,7 +31,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (!tenantId) { setTenantBrand(null); return; }
-    supabase.from("tenants").select("name,logo_url,public_url,business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => setTenantBrand(data ?? null));
+    supabase.from("tenants").select("name,logo_url,public_url,business_type,is_active").eq("id", tenantId).maybeSingle().then(({ data }: any) => setTenantBrand(data ?? null));
   }, [tenantId]);
 
   // Super admin: لو دخل على صفحة تشغيل وهو ليس عضو في tenant، حوّله لـ /admin/tenants
@@ -93,6 +93,24 @@ function AppLayout() {
             {t("waiting.body")}
           </p>
           <Button variant="outline" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut")}</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // إيقاف تفعيل المغسلة من مدير المنصة (Super Admin)
+  if (tenantBrand && tenantBrand.is_active === false && !isSuperAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
+        <Card className="max-w-md w-full p-8 text-center space-y-4 border-red-200 bg-red-50/40 shadow-lg">
+          <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+            <LogOut className="w-7 h-7 text-red-600" />
+          </div>
+          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title", "تم إيقاف تفعيل حساب المغسلة")}</h1>
+          <p className="text-sm text-red-800 font-medium">
+            {t("tenant.suspended.body", "حساب هذه المغسلة موقوف حالياً من قِبل إدارة المنصة (Super Admin). يرجى التواصل مع الدعم الفني أو إدارة المنصة لإعادة التفعيل.")}
+          </p>
+          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut", "تسجيل الخروج")}</Button>
         </Card>
       </div>
     );
