@@ -17,7 +17,7 @@ import { Route as LandingRouteImport } from './routes/landing'
 import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as SlugRouteImport } from './routes/$slug'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as AppTodayRouteImport } from './routes/_app/today'
@@ -113,10 +113,10 @@ const SlugRoute = SlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const TrackTokenRoute = TrackTokenRouteImport.update({
   id: '/track/$token',
@@ -396,8 +396,8 @@ const AppAdminTenantsIdRoute = AppAdminTenantsIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/': typeof AppIndexRoute
   '/customer-portal': typeof CustomerPortalRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
@@ -461,6 +461,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof AppAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/customer-portal': typeof CustomerPortalRoute
   '/landing': typeof LandingRoute
@@ -496,7 +497,6 @@ export interface FileRoutesByTo {
   '/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
-  '/': typeof AppIndexRoute
   '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/branches/$id': typeof AppBranchesIdRoute
@@ -527,6 +527,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/_app': typeof AppRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
@@ -563,7 +564,6 @@ export interface FileRoutesById {
   '/_app/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
-  '/_app/': typeof AppIndexRoute
   '/_app/admin/billing': typeof AppAdminBillingRoute
   '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/_app/branches/$id': typeof AppBranchesIdRoute
@@ -595,8 +595,8 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/$slug'
     | '/'
+    | '/$slug'
     | '/customer-portal'
     | '/landing'
     | '/login'
@@ -660,6 +660,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/$slug'
     | '/customer-portal'
     | '/landing'
@@ -695,7 +696,6 @@ export interface FileRouteTypes {
     | '/today'
     | '/join/$slug'
     | '/track/$token'
-    | '/'
     | '/admin/billing'
     | '/admin/platform-fees'
     | '/branches/$id'
@@ -725,6 +725,7 @@ export interface FileRouteTypes {
     | '/admin/users'
   id:
     | '__root__'
+    | '/'
     | '/$slug'
     | '/_app'
     | '/customer-portal'
@@ -761,7 +762,6 @@ export interface FileRouteTypes {
     | '/_app/today'
     | '/join/$slug'
     | '/track/$token'
-    | '/_app/'
     | '/_app/admin/billing'
     | '/_app/admin/platform-fees'
     | '/_app/branches/$id'
@@ -792,6 +792,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
   AppRoute: typeof AppRouteWithChildren
   CustomerPortalRoute: typeof CustomerPortalRoute
@@ -862,12 +863,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/track/$token': {
       id: '/track/$token'
@@ -1296,7 +1297,6 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppSystemHealthRoute: typeof AppSystemHealthRoute
   AppTodayRoute: typeof AppTodayRoute
-  AppIndexRoute: typeof AppIndexRoute
   AppAdminBillingRoute: typeof AppAdminBillingRoute
   AppAdminPlatformFeesRoute: typeof AppAdminPlatformFeesRoute
   AppOrdersIdRoute: typeof AppOrdersIdRoute
@@ -1352,7 +1352,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppSystemHealthRoute: AppSystemHealthRoute,
   AppTodayRoute: AppTodayRoute,
-  AppIndexRoute: AppIndexRoute,
   AppAdminBillingRoute: AppAdminBillingRoute,
   AppAdminPlatformFeesRoute: AppAdminPlatformFeesRoute,
   AppOrdersIdRoute: AppOrdersIdRoute,
@@ -1384,6 +1383,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
   AppRoute: AppRouteWithChildren,
   CustomerPortalRoute: CustomerPortalRoute,
