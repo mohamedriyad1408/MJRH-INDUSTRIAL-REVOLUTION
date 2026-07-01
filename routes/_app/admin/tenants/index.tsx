@@ -46,8 +46,8 @@ function TenantsPage() {
 
   if (!isSuperAdmin) return <Card className="p-8 text-center">صلاحية مدير المنصة فقط.</Card>;
 
-  async function toggle(t: Tenant) {
-    const { error } = await supabase.from("tenants").update({ is_active: !t.is_active }).eq("id", t.id);
+  async function toggle(tenant: Tenant) {
+    const { error } = await supabase.from("tenants").update({ is_active: !tenant.is_active }).eq("id", tenant.id);
     if (error) toast.error(error.message); else { toast.success("تم"); load(); }
   }
 
@@ -66,21 +66,22 @@ function TenantsPage() {
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-3">
-          {list.map((t) => (
-            <Card key={t.id} className="p-4 flex items-center justify-between">
+          {list.map((tenant) => (
+            <Card key={tenant.id} className="p-4 flex items-center justify-between">
               <div>
-                <div className="font-bold">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.slug} · {businessTypeAr(t.business_type ?? "laundry", t)}</div>
+                <div className="font-bold">{tenant.name}</div>
+                <div className="text-xs text-muted-foreground">{tenant.slug} · {businessTypeAr(tenant.business_type ?? "laundry", t)}</div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={health[t.id]?.is_ready ? "default" : "destructive"}>{health[t.id]?.is_ready ? "جاهز" : "ناقص إعداد"}</Badge><Badge variant={t.is_active ? "default" : "secondary"}>{t.is_active ? "مفعلة" : "موقوفة"}</Badge>
-                <Button variant="outline" size="sm" onClick={() => toggle(t)}>{t.is_active ? "إيقاف" : "تفعيل"}</Button>
+                <Badge variant={health[tenant.id]?.is_ready ? "default" : "destructive"}>{health[tenant.id]?.is_ready ? "جاهز" : "ناقص إعداد"}</Badge><Badge variant={tenant.is_active ? "default" : "secondary"}>{tenant.is_active ? "مفعلة" : "موقوفة"}</Badge>
+                <Button variant="outline" size="sm" onClick={() => toggle(tenant)}>{tenant.is_active ? "إيقاف" : "تفعيل"}</Button>
               </div>
             </Card>
           ))}
           {!list.length && <Card className="p-8 text-center text-muted-foreground col-span-2">لا توجد مغاسل بعد. ابدأ بإضافة واحدة.</Card>}
         </div>
       )}
+
 
       <Card className="p-4 text-xs text-muted-foreground">
         إدارة المستخدمين عبر <Link to="/admin/users" className="text-primary underline">صفحة المستخدمين</Link>.
