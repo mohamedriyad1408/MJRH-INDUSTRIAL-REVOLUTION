@@ -70,12 +70,14 @@ function calculateDuration(checkIn: string, checkOut?: string | null) {
 }
 
 function AttendanceMawaredPage() {
-  const { tenantId, hasRole } = useAuth();
+  const { tenantId, hasRole, user } = useAuth();
   const { t, dir } = useI18n();
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [currentEmp, setCurrentEmp] = useState<Employee | null>(null);
+  const [busyMyShift, setBusyMyShift] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"all" | "present" | "checked_out" | "absent">("all");
@@ -96,7 +98,7 @@ function AttendanceMawaredPage() {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const [empRes, attRes] = await Promise.all([
+      const [empRes, attRes, myEmpRes] = await Promise.all([
         supabase
           .from("employees")
           .select("id, full_name, job_title, station, role, is_active, branches(name)")
@@ -109,6 +111,12 @@ function AttendanceMawaredPage() {
           .eq("tenant_id", tenantId)
           .eq("work_date", date)
           .order("check_in_at", { ascending: false }),
+        user ? supabase
+          .from("employees")
+          .select("id, full_name, job_title, station, role, is_active, branches(name)")
+          .eq("tenant_id", tenantId)
+          .or(`profile_id.eq.${user.id},email.eq.${user.email}`)
+          .maybeSingle() : Promise.resolve({ data: null }),
       ]);
 
       if (empRes.error) toast.error(empRes.error.message);
@@ -116,6 +124,7 @@ function AttendanceMawaredPage() {
 
       setEmployees((empRes.data ?? []) as Employee[]);
       setRecords((attRes.data ?? []) as AttendanceRecord[]);
+      setCurrentEmp((myEmpRes.data ?? null) as Employee | null);
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "خطأ في تحميل البيانات");
@@ -127,6 +136,52 @@ function AttendanceMawaredPage() {
   useEffect(() => {
     loadData();
   }, [tenantId, date]);
+
+  const myOpenShift = useMemo(() => records.find((r) => r.employee_id === currentEmp?.id && !r.check_out_at), [records, currentEmp]);
+
+  function getLocation(): Promise<{ lat?: number; lng?: number }> {
+    return new Promise((resolve) => {
+      if (typeof navigator === "undefined" || !navigator.geolocation) return resolve({});
+      navigator.geolocation.getCurrentPosition(
+        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => resolve({}),
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
+
+  async function checkInMyShift() {
+    if (!currentEmp) return toast.error("حسابك غير مربوط بموظف");
+    setBusyMyShift(true);
+    const loc = await getLocation();
+    const { error } = await supabase.from("employee_attendance").insert({
+      tenant_id: tenantId,
+      employee_id: currentEmp.id,
+      work_date: date,
+      check_in_lat: loc.lat ?? null,
+      check_in_lng: loc.lng ?? null,
+      notes: "تسجيل حضور شخصي بالهاتف / المتصفح",
+    });
+    setBusyMyShift(false);
+    if (error) return toast.error(error.message);
+    toast.success("تم تسجيل حضوري بنجاح");
+    loadData();
+  }
+
+  async function checkOutMyShift() {
+    if (!myOpenShift) return;
+    setBusyMyShift(true);
+    const loc = await getLocation();
+    const { error } = await supabase.from("employee_attendance").update({
+      check_out_at: new Date().toISOString(),
+      check_out_lat: loc.lat ?? null,
+      check_out_lng: loc.lng ?? null,
+    }).eq("id", myOpenShift.id);
+    setBusyMyShift(false);
+    if (error) return toast.error(error.message);
+    toast.success("تم تسجيل انصرافي بنجاح");
+    loadData();
+  }
 
   // Derive KPIs and filtered views
   const presentRecords = useMemo(() => records.filter((r) => !r.check_out_at), [records]);
@@ -297,6 +352,40 @@ function AttendanceMawaredPage() {
           </div>
         )}
       </div>
+
+      {/* My Personal Attendance Banner */}
+      {currentEmp && (
+        <Card className="border-2 border-teal-500/40 bg-gradient-to-br from-teal-600 to-slate-900 text-white rounded-3xl shadow-xl overflow-hidden">
+          <CardContent className="p-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                ⏱️
+              </div>
+              <div>
+                <div className="text-xs text-teal-200 font-bold uppercase tracking-wider font-mono">سجلك الشخصي اليومي في الموارد البشرية</div>
+                <h3 className="text-xl font-black mt-0.5">أهلاً بك، {currentEmp.full_name} 👋</h3>
+                <p className="text-xs text-teal-100 font-medium mt-1">
+                  {myOpenShift ? `🟢 أنت حاضر في العمل منذ ${formatTime(myOpenShift.check_in_at)}` : "⭕ لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {myOpenShift ? (
+                <Button onClick={checkOutMyShift} disabled={busyMyShift} className="bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl h-12 px-6 shadow-lg transition">
+                  {busyMyShift ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-5 h-5 ms-1.5" />}
+                  <span>تسجيل الانصراف الآن (GPS)</span>
+                </Button>
+              ) : (
+                <Button onClick={checkInMyShift} disabled={busyMyShift} className="bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl h-12 px-6 shadow-lg transition">
+                  {busyMyShift ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-5 h-5 ms-1.5" />}
+                  <span>تسجيل حضوري الآن (GPS)</span>
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Date Filter & Search Controls */}
       <Card className="border border-slate-200 shadow-sm rounded-3xl bg-slate-50/60 overflow-hidden">

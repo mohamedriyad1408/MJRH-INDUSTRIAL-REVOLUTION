@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AttendanceWidget } from "@/components/attendance-widget";
 import { NotificationCenter } from "@/components/notification-center";
-import { MotivationalPopups } from "@/components/motivational-popups";
 import { MobileWorkDock } from "@/components/mobile-work-dock";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { UnifiedSearch } from "@/components/unified-search";
@@ -141,7 +140,6 @@ function AppLayout() {
               <a href="tel:+201130804784" className="inline-block whitespace-nowrap text-slate-500 hover:text-teal-700 font-mono">+20 113 080 4784</a>
             </footer>
           </main>
-          <MotivationalPopups />
           <MobileWorkDock />
         </div>
       </div>
