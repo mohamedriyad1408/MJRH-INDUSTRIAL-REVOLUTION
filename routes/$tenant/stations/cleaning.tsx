@@ -55,7 +55,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
     setLoading(true);
     const { data } = await supabase
       .from("service_units")
-      .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,customers(full_name,phone))")
+      .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,notes,customers(full_name,phone))")
       .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
       .in("orders.status", ["cleaning", "ironing", "packing", "ready", "delivered"])
       .order("unit_number");
@@ -118,6 +118,12 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
                   {g.order?.id && <Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.order.id } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
                 </div>
                 <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
+                {((g.order as any)?.notes || "").includes("[👑 تفضيلات VIP المميزة]") && (
+                  <div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
+                    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل الملكية:</div>
+                    {(g.order as any).notes}
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="p-3 space-y-2">
                 {g.units.map((u) => (

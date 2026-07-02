@@ -42,7 +42,7 @@ function QcStation() {
     setLoading(true);
     const { data, error } = await supabase
       .from("service_units")
-      .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,branch_id,customers(full_name,phone))")
+      .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,notes,branch_id,customers(full_name,phone))")
       .in("current_stage", ["cleaning_done", "ironing_done", "packing", "packing_done", "ready", "qc_failed"])
       .order("updated_at", { ascending: false })
       .limit(120);
@@ -156,6 +156,12 @@ function QcStation() {
                   {g.order?.id && <Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.order.id } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
                 </div>
                 <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
+                {((g.order as any)?.notes || "").includes("[👑 تفضيلات VIP المميزة]") && (
+                  <div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
+                    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل الملكية:</div>
+                    {(g.order as any).notes}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs"><Check label={t("station.packing.markOk")} ok={!c.label} bad={c.label} /><Check label={t("station.packing.noReturns")} ok={!c.reclean} bad={c.reclean} /><Check label={t("station.packing.packedCheck")} ok={!c.notPacked} bad={c.notPacked} /><Check label={t("station.qc.qcApproved")} ok={c.allPassed} bad={g.units.length - c.passed} /><Check label={t("station.qc.issues")} ok={!c.qcFailed} bad={c.qcFailed} /></div>
                 <div className="flex flex-wrap justify-end gap-2 mt-3"><Button size="sm" variant="outline" disabled={busy === g.orderId} onClick={() => approveSafeGroup(g)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.qc.approveSafe")}</Button><Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" disabled={busy === g.orderId || !c.allPassed} onClick={() => markReady(g)}><Trophy className="w-4 h-4 ms-1" />{t("station.qc.markReady")}</Button></div></>; })()}
               </CardHeader>
