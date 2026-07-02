@@ -438,7 +438,7 @@ function SuperAdminCommandCenter() {
                 <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-xs">
-                      <Link to=".." params={{ tenant: tn.slug } as any}>
+                      <Link to={`/${tn.slug}/today` as any}>
                         <Eye className="w-3.5 h-3.5 ms-1 text-teal-400" />
                         <span>دخول لوحة التشغيل</span>
                       </Link>
