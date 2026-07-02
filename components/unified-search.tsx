@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
 import { Search, Loader2, QrCode, Phone, User, FileText, Package, AlertTriangle } from "lucide-react";
@@ -28,6 +27,7 @@ export function UnifiedSearch() {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -35,28 +35,19 @@ export function UnifiedSearch() {
       const trigger = isMac ? e.metaKey : e.ctrlKey;
       if (trigger && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen(true);
+        window.setTimeout(() => inputRef.current?.focus(), 60);
       }
       if (e.key === "/" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault();
         setOpen(true);
+        window.setTimeout(() => inputRef.current?.focus(), 60);
       }
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
-
-  useEffect(() => {
-    if (open) {
-      const tm = window.setTimeout(() => inputRef.current?.focus(), 80);
-      return () => clearTimeout(tm);
-    } else {
-      setQuery("");
-      setResults([]);
-      setError(null);
-    }
-  }, [open]);
 
   const performSearch = useCallback(async (q: string) => {
     setError(null);
@@ -166,28 +157,62 @@ export function UnifiedSearch() {
         }));
       }
       setResults(matches);
-    } catch(err:any){ setError(err?.message ?? String(err)); setResults([]);} 
+    } catch(err:any){ setError(err?.message ?? String(err)); setResults([]);}
     finally { setLoading(false); }
   }, [tenantId, t]);
 
-  const onChange = (v:string)=>{ setQuery(v); if(debounceRef.current) window.clearTimeout(debounceRef.current); debounceRef.current= window.setTimeout(()=>performSearch(v),220); };
+  const onChange = (v:string)=>{
+    setQuery(v);
+    if (!open) setOpen(true);
+    if(debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(()=>performSearch(v),220);
+  };
+
+  function reset() {
+    setQuery("");
+    setResults([]);
+    setError(null);
+  }
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.setAttribute("data-search-open", open ? "true" : "false");
+    return () => { document.body.removeAttribute("data-search-open"); };
+  }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" onClick={()=>setOpen(true)} className="h-9 w-60 rounded-xl bg-slate-50 border-slate-200 px-3 text-xs text-muted-foreground shadow-sm flex items-center justify-between hover:bg-slate-100 transition" aria-label={t("search.openAria","فتح البحث الموحد")}>
-          <span className="flex items-center gap-2"><Search className="w-4 h-4 text-teal-600" />{t("search.placeholder","بحث موحد (هاتف، QR، طلب)...")}</span>
-          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded bg-white px-1.5 font-mono text-[10px] font-medium text-slate-500 border">{typeof navigator!=="undefined"&&navigator.platform.toUpperCase().indexOf("MAC")>=0?"⌘K":"Ctrl+K"}</kbd>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-xl p-0 border-0 rounded-3xl overflow-hidden shadow-2xl bg-white" dir={dir} aria-describedby={undefined}>
-        <DialogTitle className="sr-only">{t("search.title","بحث موحد")}</DialogTitle>
-        <div className="flex items-center border-b border-slate-100 px-4 py-3 bg-slate-50/80">
-          <Search className="w-5 h-5 text-teal-600 shrink-0 me-3" />
-          <Input ref={inputRef} placeholder={t("search.modalPrompt","اكتب رقم هاتف، كود QR، اسم عميل، أو رقم طلب...")} value={query} onChange={(e)=>onChange(e.target.value)} onKeyDown={(e)=>{if(e.key==="Enter"&&results[0]){window.location.href=results[0].url; setOpen(false);}}} className="flex-1 border-0 bg-transparent shadow-none text-base font-bold focus-visible:ring-0 px-0" autoComplete="off" autoCorrect="off" spellCheck={false} />
-          {loading && <Loader2 className="w-5 h-5 animate-spin text-teal-600 shrink-0 ms-2" />}
-          {!loading && query && <button onClick={()=>onChange("")} className="text-[10px] text-slate-400 hover:text-slate-600 ms-2">{t("search.clear","مسح")}</button>}
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+      <PopoverAnchor asChild>
+        <div ref={containerRef} className="relative h-9 w-60 shrink-0">
+          <Search className="w-4 h-4 text-teal-600 absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Input
+            ref={inputRef}
+            value={query}
+            onFocus={() => setOpen(true)}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && results[0]) { window.location.href = results[0].url; setOpen(false); }
+              if (e.key === "Escape") setOpen(false);
+            }}
+            placeholder={t("search.placeholder", "بحث موحد (هاتف، QR، طلب)...")}
+            aria-label={t("search.openAria", "فتح البحث الموحد")}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            className="h-9 w-full rounded-xl bg-slate-50 border-slate-200 ps-9 pe-14 text-xs shadow-sm focus-visible:ring-1 focus-visible:ring-teal-500"
+          />
+          <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded bg-white px-1.5 font-mono text-[10px] font-medium text-slate-500 border absolute end-2 top-1/2 -translate-y-1/2 pointer-events-none">
+            {typeof navigator!=="undefined"&&navigator.platform.toUpperCase().indexOf("MAC")>=0?"⌘K":"Ctrl+K"}
+          </kbd>
         </div>
+      </PopoverAnchor>
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="w-[26rem] p-0 rounded-3xl overflow-hidden shadow-2xl border-slate-100"
+        dir={dir}
+      >
         {!tenantId && (
           <div className="mx-4 mt-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -201,8 +226,13 @@ export function UnifiedSearch() {
           </div>
         )}
         <div className="max-h-[420px] overflow-y-auto p-4 space-y-2">
-          {results.length === 0 && query.trim().length > 0 && !loading && !error && (
-            <div className="p-10 text-center text-xs text-muted-foreground font-bold space-y-3">
+          {loading && (
+            <div className="flex items-center justify-center gap-2 p-3 text-xs text-muted-foreground font-bold">
+              <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> {t("common.loading", "جاري التحميل")}
+            </div>
+          )}
+          {!loading && results.length === 0 && query.trim().length > 0 && !error && (
+            <div className="p-8 text-center text-xs text-muted-foreground font-bold space-y-3">
               <Package className="w-8 h-8 text-slate-300 mx-auto" />
               <p>{t("search.noResults","لا توجد نتائج مطابقة لبحثك في قاعدة البيانات.")}</p>
               <p className="text-[11px] text-slate-400 font-normal leading-relaxed">{t("search.noResultsHelp","جرّب: رقم طلب مثل 91 أو 34 — أو جزء من رقم هاتف — أو أول 6 حروف من QR — أو اسم عميل")}</p>
@@ -215,7 +245,7 @@ export function UnifiedSearch() {
             </div>
           )}
           {results.length === 0 && query.trim().length === 0 && !error && (
-            <div className="p-6 text-center text-xs text-muted-foreground font-semibold space-y-4">
+            <div className="p-4 text-center text-xs text-muted-foreground font-semibold space-y-3">
               <div className="flex justify-center gap-5 text-slate-500 flex-wrap">
                 <div className="flex flex-col items-center gap-1 min-w-[64px]"><QrCode className="w-6 h-6 text-teal-600" /><span>{t("search.qr","كود QR")}</span></div>
                 <div className="flex flex-col items-center gap-1 min-w-[64px]"><Phone className="w-6 h-6 text-blue-600" /><span>{t("search.phone","هاتف")}</span></div>
@@ -224,8 +254,6 @@ export function UnifiedSearch() {
               </div>
               <p className="leading-relaxed max-w-sm mx-auto">{t("search.subtext","يدعم المحرك البحث اللحظي الموحد في سجلات التشغيل والعملاء والفواتير.")}</p>
               <div className="text-[11px] text-slate-400 space-y-1">
-                <div><kbd className="px-1.5 py-0.5 bg-slate-100 border rounded text-[10px]">Ctrl+K</kbd> / <kbd className="px-1.5 py-0.5 bg-slate-100 border rounded text-[10px]">⌘K</kbd> {t("search.openHint","فتح البحث")}</div>
-                <div><kbd className="px-1.5 py-0.5 bg-slate-100 border rounded text-[10px]">/</kbd> {t("search.slashHint","فتح سريع")} • <kbd className="px-1.5 py-0.5 bg-slate-100 border rounded text-[10px]">Esc</kbd> {t("search.closeHint","إغلاق")}</div>
                 <div className="text-teal-700 font-bold">{t("search.tryExamples","أمثلة حية من Dry Tech: 91 • 34 • 010 • QR-")}</div>
               </div>
             </div>
@@ -250,7 +278,7 @@ export function UnifiedSearch() {
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }

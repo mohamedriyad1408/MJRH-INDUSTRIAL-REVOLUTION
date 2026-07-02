@@ -160,10 +160,13 @@ export function MotivationalPopups() {
     const mutedUntil = Number(localStorage.getItem(muteKey) || 0);
     if (Date.now() < mutedUntil) return;
 
+    const isSearchOpen = () => typeof document !== "undefined" && document.body.getAttribute("data-search-open") === "true";
+
     // 1. Initial Session Check: Shows when user first opens/returns to app after closing tab/reloading
     const sessionKey = `mjrh_session_motivate_${user.id}`;
     if (!sessionStorage.getItem(sessionKey)) {
       const t0 = setTimeout(() => {
+        if (isSearchOpen()) return; // avoid covering the unified search popover
         setMessage(messages[Math.floor(Math.random() * messages.length)]);
         setOpen(true);
         sessionStorage.setItem(sessionKey, "active");
@@ -184,6 +187,7 @@ export function MotivationalPopups() {
 
     const interval = setInterval(() => {
       if (Date.now() - lastActivity >= IDLE_THRESHOLD) {
+        if (isSearchOpen()) { lastActivity = Date.now(); return; } // avoid covering the unified search popover
         setMessage(messages[Math.floor(Math.random() * messages.length)]);
         setOpen(true);
         lastActivity = Date.now(); // Reset so it doesn't immediately re-trigger
@@ -193,6 +197,7 @@ export function MotivationalPopups() {
     return () => {
       events.forEach((ev) => window.removeEventListener(ev, onActivity));
       clearInterval(interval);
+
     };
   }, [user, messages]);
 
