@@ -170,6 +170,7 @@ const navArabic: Record<string, string> = {
   "nav./stations/packing": "Packing",
   "nav./stations/qc": "Quality QC",
   "nav./stations/delivery": "Couriers",
+  "nav./staff/attendance": "Time & Attendance (Mawared HR)",
   "nav./staff/users": "Users",
   "nav./staff": "Staff",
   "nav./staff/schedule": "Work schedule",

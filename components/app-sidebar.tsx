@@ -69,6 +69,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "الموظفون",
     items: [
+      { title: "الحضور والانصراف (Mawared HR)", url: "/staff/attendance", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "إدارة المستخدمين", url: "/staff/users", icon: Crown, roles: ["owner"] },
       { title: "كل الموظفين", url: "/staff", icon: BriefcaseBusiness, roles: ["cs_manager", "ops_manager", "owner"] },
       { title: "جدول العمل", url: "/staff/schedule", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },

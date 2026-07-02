@@ -64,6 +64,7 @@ import { Route as AppStaffRequestsRouteImport } from './routes/_app/staff/reques
 import { Route as AppStaffNewRouteImport } from './routes/_app/staff/new'
 import { Route as AppStaffLeavesRouteImport } from './routes/_app/staff/leaves'
 import { Route as AppStaffIroningPayrollRouteImport } from './routes/_app/staff/ironing-payroll'
+import { Route as AppStaffAttendanceRouteImport } from './routes/_app/staff/attendance'
 import { Route as AppStaffIdRouteImport } from './routes/_app/staff/$id'
 import { Route as AppPickupsNewRouteImport } from './routes/_app/pickups/new'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
@@ -350,6 +351,11 @@ const AppStaffIroningPayrollRoute = AppStaffIroningPayrollRouteImport.update({
   path: '/staff/ironing-payroll',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStaffAttendanceRoute = AppStaffAttendanceRouteImport.update({
+  id: '/staff/attendance',
+  path: '/staff/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStaffIdRoute = AppStaffIdRouteImport.update({
   id: '/staff/$id',
   path: '/staff/$id',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
   '/staff/$id': typeof AppStaffIdRoute
+  '/staff/attendance': typeof AppStaffAttendanceRoute
   '/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
   '/staff/leaves': typeof AppStaffLeavesRoute
   '/staff/new': typeof AppStaffNewRoute
@@ -512,6 +519,7 @@ export interface FileRoutesByTo {
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
   '/staff/$id': typeof AppStaffIdRoute
+  '/staff/attendance': typeof AppStaffAttendanceRoute
   '/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
   '/staff/leaves': typeof AppStaffLeavesRoute
   '/staff/new': typeof AppStaffNewRoute
@@ -580,6 +588,7 @@ export interface FileRoutesById {
   '/_app/orders/new': typeof AppOrdersNewRoute
   '/_app/pickups/new': typeof AppPickupsNewRoute
   '/_app/staff/$id': typeof AppStaffIdRoute
+  '/_app/staff/attendance': typeof AppStaffAttendanceRoute
   '/_app/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
   '/_app/staff/leaves': typeof AppStaffLeavesRoute
   '/_app/staff/new': typeof AppStaffNewRoute
@@ -648,6 +657,7 @@ export interface FileRouteTypes {
     | '/orders/new'
     | '/pickups/new'
     | '/staff/$id'
+    | '/staff/attendance'
     | '/staff/ironing-payroll'
     | '/staff/leaves'
     | '/staff/new'
@@ -714,6 +724,7 @@ export interface FileRouteTypes {
     | '/orders/new'
     | '/pickups/new'
     | '/staff/$id'
+    | '/staff/attendance'
     | '/staff/ironing-payroll'
     | '/staff/leaves'
     | '/staff/new'
@@ -781,6 +792,7 @@ export interface FileRouteTypes {
     | '/_app/orders/new'
     | '/_app/pickups/new'
     | '/_app/staff/$id'
+    | '/_app/staff/attendance'
     | '/_app/staff/ironing-payroll'
     | '/_app/staff/leaves'
     | '/_app/staff/new'
@@ -1204,6 +1216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStaffIroningPayrollRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/staff/attendance': {
+      id: '/_app/staff/attendance'
+      path: '/staff/attendance'
+      fullPath: '/staff/attendance'
+      preLoaderRoute: typeof AppStaffAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/staff/$id': {
       id: '/_app/staff/$id'
       path: '/staff/$id'
@@ -1323,6 +1342,7 @@ interface AppRouteChildren {
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppPickupsNewRoute: typeof AppPickupsNewRoute
   AppStaffIdRoute: typeof AppStaffIdRoute
+  AppStaffAttendanceRoute: typeof AppStaffAttendanceRoute
   AppStaffIroningPayrollRoute: typeof AppStaffIroningPayrollRoute
   AppStaffLeavesRoute: typeof AppStaffLeavesRoute
   AppStaffNewRoute: typeof AppStaffNewRoute
@@ -1379,6 +1399,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppPickupsNewRoute: AppPickupsNewRoute,
   AppStaffIdRoute: AppStaffIdRoute,
+  AppStaffAttendanceRoute: AppStaffAttendanceRoute,
   AppStaffIroningPayrollRoute: AppStaffIroningPayrollRoute,
   AppStaffLeavesRoute: AppStaffLeavesRoute,
   AppStaffNewRoute: AppStaffNewRoute,
