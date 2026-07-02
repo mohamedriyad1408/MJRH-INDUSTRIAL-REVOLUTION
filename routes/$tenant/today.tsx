@@ -328,6 +328,7 @@ function TodayCenter() {
       <ActionCard title={t("today.card.safe")} detail={t("today.card.safeDetail")} to={"/$tenant/cash-closing" as any} icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
       <ActionCard title={t("today.card.reports")} detail={t("today.card.reportsDetail")} to={"/$tenant/reports" as any} icon={<BarChart3 />} />
       <ActionCard title={t("today.card.receivables")} detail={t("today.card.receivablesDetail")} to={"/$tenant/receivables" as any} icon={<Wallet />} count={data.unpaidReady} />
+      <ActionCard title="مرصد المشاكل والتعثرات" detail="مراقبة الأعطال والمختنقات ومتابعة التحديثات" to={"/$tenant/issues" as any} icon={<AlertTriangle className="text-amber-600 animate-pulse" />} />
     </div>
   </div>;
 }

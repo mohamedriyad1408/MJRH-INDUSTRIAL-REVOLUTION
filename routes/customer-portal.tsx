@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import {
   Loader2, Plus, Minus, Camera, CheckCircle2, Clock, Truck, Package,
   Shirt, Sparkles, Inbox, Trash2, Send, Download, Upload, CreditCard,
   Crown, Calendar, MapPin, ShieldCheck, AlertTriangle, Scissors, Wind, HeartHandshake,
+  Zap, FileText, Check, Award, Eye, Receipt,
 } from "lucide-react";
 
 export const Route = createFileRoute("/customer-portal")({
@@ -29,6 +31,23 @@ const ORDER_STEPS = [
   { key: "ready", label: "جاهز ✅", icon: CheckCircle2, color: "#10b981" },
   { key: "out_for_delivery", label: "خرج للتسليم", icon: Truck, color: "#f97316" },
   { key: "delivered", label: "تم التسليم 🎉", icon: CheckCircle2, color: "#059669" },
+];
+
+const ALL_CONTINUOUS_SLOTS = [
+  "اليوم 08:00 - 10:00 صباحاً",
+  "اليوم 10:00 - 12:00 ظهراً",
+  "اليوم 12:00 - 02:00 مساءً",
+  "اليوم 02:00 - 04:00 مساءً",
+  "اليوم 04:00 - 06:00 مساءً",
+  "اليوم 06:00 - 08:00 مساءً (ذروة 🔥)",
+  "اليوم 08:00 - 10:00 مساءً (ذروة 🔥)",
+  "غداً 08:00 - 10:00 صباحاً",
+  "غداً 10:00 - 12:00 ظهراً",
+  "غداً 12:00 - 02:00 مساءً",
+  "غداً 02:00 - 04:00 مساءً",
+  "غداً 04:00 - 06:00 مساءً",
+  "غداً 06:00 - 08:00 مساءً (ذروة 🔥)",
+  "غداً 08:00 - 10:00 مساءً (ذروة 🔥)",
 ];
 
 type Order = {
@@ -52,7 +71,7 @@ type Order = {
 };
 
 type ServiceItem = { id: string; name: string; price: number; service_type: string };
-type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null };
+type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null; notes?: string | null };
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
 
 function CustomerPortal() {
@@ -76,18 +95,26 @@ function CustomerPortal() {
   const [liveVerifyStep, setLiveVerifyStep] = useState<number>(1);
   const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>({});
 
-  // VIP Concierge Preferences State
+  // VIP Concierge Preferences & Notes State
   const [categoryFilter, setCategoryFilter] = useState<"all" | "cleaning" | "ironing" | "both">("all");
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
+  const [itemPhotoMap, setItemPhotoMap] = useState<Record<string, string>>({}); // map service_item_id -> img url
   const [prefPackaging, setPrefPackaging] = useState<"hangers" | "folded" | "mixed">("hangers");
-  const [prefPantsCrease, setPrefPantsCrease] = useState<boolean>(true);
   const [prefIndividualBags, setPrefIndividualBags] = useState<boolean>(false);
-  const [prefPerfume, setPrefPerfume] = useState<"lavender" | "musk_rose" | "fresh_breeze" | "none">("lavender");
   const [prefSplitDelivery, setPrefSplitDelivery] = useState<boolean>(false);
+  const [customIroningNotes, setCustomIroningNotes] = useState<string>("");
+  const [permanentNotes, setPermanentNotes] = useState<string>("");
+
+  // Urgent Surcharges State
+  const [urgentCleaningTier, setUrgentCleaningTier] = useState<"standard" | "express_24h" | "super_urgent_6h">("standard");
+  const [urgentIroningTier, setUrgentIroningTier] = useState<"standard" | "express_6h" | "super_urgent_2h">("standard");
 
   // Scheduling Slots State
   const [pickupSlot, setPickupSlot] = useState<string>("اليوم 02:00 - 04:00 مساءً");
   const [deliverySlot, setDeliverySlot] = useState<string>("غداً 06:00 - 08:00 مساءً");
+
+  // Celebration Modal
+  const [confirmedOrderNum, setConfirmedOrderNum] = useState<number | null>(null);
 
   async function verify() {
     if (!phone || phone.replace(/\D/g, "").length < 10) { toast.error("أدخل رقم هاتف صحيح"); return; }
@@ -98,6 +125,7 @@ function CustomerPortal() {
     setCustomerId(data.id);
     setCustomerName(data.full_name);
     setCustomerInfo(data as CustomerInfo);
+    if ((data as any).notes) setPermanentNotes((data as any).notes);
     setVerified(true);
     loadOrders();
     loadServices();
@@ -124,6 +152,18 @@ function CustomerPortal() {
     }));
   }
 
+  async function uploadItemPhoto(id: string, file: File) {
+    setUploadingKey(id);
+    const safe = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "-");
+    const path = `order-images/${Date.now()}-${Math.random().toString(36).slice(2)}-${safe}`;
+    const { error } = await supabase.storage.from("order-attachments").upload(path, file, { contentType: file.type });
+    if (error) { setUploadingKey(null); return toast.error("فشل رفع الصورة: " + error.message); }
+    const { data } = supabase.storage.from("order-attachments").getPublicUrl(path);
+    setItemPhotoMap((prev) => ({ ...prev, [id]: data.publicUrl }));
+    setUploadingKey(null);
+    toast.success("✅ تم توثيق وحفظ صورة القطعة في النظام لتأمينك وتأمين المغسلة");
+  }
+
   async function uploadPieceImage(pieceKey: string, file: File) {
     setUploadingKey(pieceKey);
     const safe = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "-");
@@ -133,7 +173,7 @@ function CustomerPortal() {
     const { data } = supabase.storage.from("order-attachments").getPublicUrl(path);
     setPieces((prev) => prev.map((p) => p.key === pieceKey ? { ...p, image_url: data.publicUrl } : p));
     setUploadingKey(null);
-    toast.success("تم حفظ صورة القطعة");
+    toast.success("✅ تم توثيق وحفظ صورة القطعة");
   }
 
   function downloadInvoice(order: Order) {
@@ -207,14 +247,46 @@ function CustomerPortal() {
     return services.filter((s) => (itemQuantities[s.id] || 0) > 0);
   }, [services, itemQuantities]);
 
-  const subtotal = useMemo(() => {
-    const fromQty = selectedServicesList.reduce((sum, s) => sum + (itemQuantities[s.id] || 0) * s.price, 0);
-    const fromPieces = pieces.reduce((sum, p) => sum + p.price, 0);
-    return fromQty + fromPieces;
-  }, [selectedServicesList, itemQuantities, pieces]);
+  const isPeakPickupSlot = useMemo(() => {
+    return pickupSlot.includes("ذروة") || pickupSlot.includes("06:00") || pickupSlot.includes("08:00") || pickupSlot.includes("04:00");
+  }, [pickupSlot]);
 
-  const splitDeliveryFee = prefSplitDelivery ? 25 : 0;
-  const total = subtotal + splitDeliveryFee;
+  const { baseSubtotal, urgentSurcharge, splitDeliveryFee, total } = useMemo(() => {
+    let base = 0;
+    let surcharge = 0;
+
+    selectedServicesList.forEach((s) => {
+      const qty = itemQuantities[s.id] || 0;
+      const lineBase = qty * s.price;
+      base += lineBase;
+      if (s.service_type === "ironing") {
+        if (urgentIroningTier === "express_6h") surcharge += lineBase * 0.5;
+        else if (urgentIroningTier === "super_urgent_2h") surcharge += lineBase * 1.0;
+      } else {
+        if (urgentCleaningTier === "express_24h") surcharge += lineBase * 0.5;
+        else if (urgentCleaningTier === "super_urgent_6h") surcharge += lineBase * 1.0;
+      }
+    });
+
+    pieces.forEach((p) => {
+      base += p.price;
+      if (p.service_type === "ironing") {
+        if (urgentIroningTier === "express_6h") surcharge += p.price * 0.5;
+        else if (urgentIroningTier === "super_urgent_2h") surcharge += p.price * 1.0;
+      } else {
+        if (urgentCleaningTier === "express_24h") surcharge += p.price * 0.5;
+        else if (urgentCleaningTier === "super_urgent_6h") surcharge += p.price * 1.0;
+      }
+    });
+
+    const splitFee = prefSplitDelivery ? 25 : 0;
+    return {
+      baseSubtotal: base,
+      urgentSurcharge: surcharge,
+      splitDeliveryFee: splitFee,
+      total: base + surcharge + splitFee,
+    };
+  }, [selectedServicesList, itemQuantities, pieces, urgentCleaningTier, urgentIroningTier, prefSplitDelivery]);
 
   async function placeOrder() {
     if (selectedServicesList.length === 0 && !pieces.length && !notes.trim()) {
@@ -225,13 +297,16 @@ function CustomerPortal() {
 
     const vipNotes = `[👑 تفضيلات VIP المميزة]: 👔 التغليف: ${
       prefPackaging === "hangers" ? "شماعات معلقة" : prefPackaging === "folded" ? "مطوي ومنسق" : "تغليف فاخر مختلط"
-    } • 👖 البنطلون: ${prefPantsCrease ? "بكسرة كلاسيكية" : "بدون كسرة"} • 🛍️ أكياس فردية: ${
-      prefIndividualBags ? "نعم" : "لا"
-    } • 🌸 العطر: ${
-      prefPerfume === "lavender" ? "لافندر فرنسي" : prefPerfume === "musk_rose" ? "مسك وعنبر" : prefPerfume === "fresh_breeze" ? "نسيم الصباح" : "بدون عطر"
-    } • 🚚 توصيل مجزأ (الكي أولاً): ${prefSplitDelivery ? "نعم (+25 ج.م رسوم توصيل الكي المجزأ)" : "لا (استلام موحد)"}
-[📅 جدولة مواعيد المندوب]: 🟢 استلام الغسيل: ${pickupSlot} • 🔵 تسليم الغسيل: ${deliverySlot}
-${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.trim();
+    } • 🛍️ أكياس فردية: ${prefIndividualBags ? "نعم" : "لا"} • 🚚 توصيل مجزأ: ${
+      prefSplitDelivery ? "نعم (+25 ج.م توصيل الكي المجزأ)" : "لا"
+    }
+[⚡ سرعة التشغيل والاستعجال]: 🫧 الغسيل: ${
+      urgentCleaningTier === "standard" ? "قياسي" : urgentCleaningTier === "express_24h" ? "سريع 24 ساعة (+50%)" : "عاجل جداً أقل من 6 ساعات (+100%)"
+    } • 👔 الكي: ${
+      urgentIroningTier === "standard" ? "قياسي" : urgentIroningTier === "express_6h" ? "سريع 6 ساعات (+50%)" : "صاروخي ساعتين (+100%)"
+    }
+${customIroningNotes.trim() ? `[✂️ تعليمات وتفضيلات الكي المخصصة]: ${customIroningNotes.trim()}\n` : ""}${permanentNotes.trim() ? `[📌 الملاحظات الدائمة للعميل]: ${permanentNotes.trim()}\n` : ""}[📅 جدولة مواعيد المندوب]: 🟢 استلام الغسيل: ${pickupSlot} • 🔵 تسليم الغسيل: ${deliverySlot}
+${notes.trim() ? `[📝 ملاحظات الطلب الحالي]: ${notes.trim()}` : ""}`.trim();
 
     const combinedItems = [
       ...selectedServicesList.map((s) => ({
@@ -240,6 +315,7 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
         unit_price: s.price,
         name: s.name,
         service_type: s.service_type,
+        image_url: itemPhotoMap[s.id] ?? null,
       })),
       ...pieces.map((p) => ({
         service_item_id: p.service_item_id,
@@ -256,7 +332,10 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
         _phone: phone,
         _items: combinedItems,
         _notes: vipNotes,
-        _image_urls: pieces.map((p) => p.image_url).filter(Boolean),
+        _image_urls: [
+          ...Object.values(itemPhotoMap),
+          ...pieces.map((p) => p.image_url),
+        ].filter(Boolean),
         _slug: tenantSlug,
       }).single();
 
@@ -268,20 +347,26 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
           delivery_slot: deliverySlot,
           vip_preferences: {
             packaging: prefPackaging,
-            pants_crease: prefPantsCrease,
             individual_bags: prefIndividualBags,
-            perfume: prefPerfume,
             split_delivery: prefSplitDelivery,
             split_fee: splitDeliveryFee,
+            urgent_cleaning: urgentCleaningTier,
+            urgent_ironing: urgentIroningTier,
+            urgent_fee: urgentSurcharge,
+            custom_ironing_notes: customIroningNotes.trim() || null,
           },
         }).eq("id", ord.id);
+
+        if (customerId && permanentNotes.trim()) {
+          await supabase.from("customers").update({ notes: permanentNotes.trim() }).eq("id", customerId);
+        }
       }
 
-      toast.success(`✅ تم إرسال طلبك الملكي VIP بنجاح برقم #${ord?.order_number || "?"}`);
       setItemQuantities({});
+      setItemPhotoMap({});
       setPieces([]);
       setNotes("");
-      setTab("orders");
+      setConfirmedOrderNum(ord?.order_number || 0);
       loadOrders();
     } catch (err: any) {
       toast.error(err?.message || "حدث خطأ أثناء إرسال الطلب");
@@ -327,7 +412,7 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ccfbf1,#f8fafc_45%,#e0f2fe)] p-3" dir="rtl">
-      <div className="max-w-2xl mx-auto space-y-5 pb-24">
+      <div className="max-w-3xl mx-auto space-y-5 pb-28">
         {/* Customer Top Bar & Welcome */}
         <div className="rounded-3xl bg-gradient-to-br from-teal-700 via-slate-900 to-slate-950 text-white p-6 shadow-xl border border-teal-500/30">
           <div className="flex items-center justify-between gap-4">
@@ -502,13 +587,13 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
               </CardContent>
             </Card>
 
-            {/* Step 2: VIP Concierge Preferences Box (تفضيلات العميل الملكية) */}
+            {/* Step 2: VIP Concierge Preferences Box (تفضيلات العميل الملكية والتعليمات المخصصة) */}
             <Card className="border-2 border-amber-400 bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 rounded-3xl overflow-hidden shadow-lg">
               <div className="p-5 bg-gradient-to-r from-amber-600 to-orange-600 text-white flex items-center justify-between">
                 <div>
                   <h3 className="font-black text-lg flex items-center gap-2">
                     <Crown className="w-5 h-5 text-amber-200" />
-                    <span>2. تخصيص تفضيلات العناية والطي (VIP Concierge)</span>
+                    <span>2. تخصيص تفضيلات العناية والطي وتعليمات الكي (VIP Concierge)</span>
                   </h3>
                   <p className="text-xs text-amber-100 mt-0.5">تظهر هذه التفضيلات بوضوح لفنيي الغسيل والكي والتغليف وموظفي الاستقبال</p>
                 </div>
@@ -542,78 +627,38 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
                   </div>
                 </div>
 
-                {/* 2. Pants Crease & Individual Bags */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/80">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
-                      <Scissors className="w-4 h-4 text-indigo-600" />
-                      <span>كي البنطلونات والبدل:</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPrefPantsCrease(true)}
-                        className={`flex-1 p-2.5 rounded-xl border text-xs font-black transition ${
-                          prefPantsCrease ? "bg-indigo-600 text-white border-indigo-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        ✂️ بكسرة كلاسيكية حادة
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPrefPantsCrease(false)}
-                        className={`flex-1 p-2.5 rounded-xl border text-xs font-black transition ${
-                          !prefPantsCrease ? "bg-indigo-600 text-white border-indigo-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        🚫 بدون كسرة (مسطح)
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
-                      <Package className="w-4 h-4 text-teal-600" />
-                      <span>أكياس الحماية الفردية:</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setPrefIndividualBags(!prefIndividualBags)}
-                      className={`w-full p-2.5 rounded-xl border text-xs font-black transition flex items-center justify-between px-4 ${
-                        prefIndividualBags ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span>🛍️ تغليف كل قطعة في كيس حفظ منفصل</span>
-                      <span>{prefIndividualBags ? "مفعّل ✓" : "إيقاف"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 3. Laundry Perfume / Scent */}
+                {/* 2. Individual Bags Checkbox */}
                 <div className="space-y-2 pt-2 border-t border-slate-200/80">
                   <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-purple-600" />
-                    <span>عطر الغسيل والانتعاش (Fragrance Scent):</span>
+                    <Package className="w-4 h-4 text-teal-600" />
+                    <span>أكياس الحماية الفردية:</span>
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { id: "lavender", label: "🪻 لافندر فرنسي" },
-                      { id: "musk_rose", label: "🌹 مسك وعنبر" },
-                      { id: "fresh_breeze", label: "🍃 نسيم الصباح" },
-                      { id: "none", label: "🚫 بدون عطر (بشرة حساسة)" },
-                    ].map((sc) => (
-                      <button
-                        key={sc.id}
-                        type="button"
-                        onClick={() => setPrefPerfume(sc.id as any)}
-                        className={`p-2.5 rounded-xl border text-xs font-black transition ${
-                          prefPerfume === sc.id ? "bg-purple-600 text-white border-purple-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        {sc.label}
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPrefIndividualBags(!prefIndividualBags)}
+                    className={`w-full p-3 rounded-xl border-2 text-xs font-black transition flex items-center justify-between px-4 ${
+                      prefIndividualBags ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>🛍️ تغليف كل قطعة في كيس حفظ وحماية منفصل على حدة</span>
+                    <span>{prefIndividualBags ? "مفعّل ✓" : "إيقاف"}</span>
+                  </button>
+                </div>
+
+                {/* 3. Custom Ironing Instructions Dialog/Input */}
+                <div className="space-y-2 pt-3 border-t border-slate-200/80">
+                  <label className="text-xs font-black text-slate-900 block flex items-center gap-1.5">
+                    <Scissors className="w-4 h-4 text-indigo-600" />
+                    <span>تفضيلات وتعليمات الكي المخصصة (Custom Ironing Instructions):</span>
+                  </label>
+                  <Textarea
+                    value={customIroningNotes}
+                    onChange={(e) => setCustomIroningNotes(e.target.value)}
+                    rows={2}
+                    placeholder="اكتب تفضيلاتك الخاصة بالكي هنا بكلماتك: (مثال: كي البنطلون بكسرة كلاسيكية حادة، نشا خفيف للياقات، عدم ضغط الأزرار الحساسة، طي القمصان بدون دبابيس)..."
+                    className="rounded-2xl font-bold text-xs bg-white border-2 border-slate-300 focus:border-indigo-600 shadow-2xs"
+                  />
+                  <p className="text-[11px] text-slate-500 font-semibold">💡 تظهر هذه التعليمات مباشرة في شاشة فنيي الكي لضمان الالتزام الفائق بها.</p>
                 </div>
 
                 {/* 4. Split Delivery Option for Washing + Ironing */}
@@ -649,39 +694,115 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
               </CardContent>
             </Card>
 
-            {/* Step 3: Appointment Scheduling Slots */}
+            {/* Step 3: Urgent Surcharges & Execution Speed */}
+            <Card className="shadow-md border-2 border-indigo-200 rounded-3xl overflow-hidden bg-white">
+              <div className="p-5 bg-gradient-to-r from-indigo-700 to-violet-800 text-white flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-lg flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-amber-300" />
+                    <span>3. سرعة التشغيل ونظام الطلب المستعجل (Urgent Tiers)</span>
+                  </h3>
+                  <p className="text-xs text-indigo-100 mt-0.5">حدد سرعة إنجاز الغسيل أو الكي مع احتساب الرسوم الاستثنائية بدقة</p>
+                </div>
+              </div>
+
+              <CardContent className="p-6 space-y-6">
+                {/* 1. Cleaning Urgency */}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <span>سرعة إنجاز خدمات التنظيف والغسيل:</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { id: "standard", label: "🟢 تنظيف قياسي (48-72 ساعة)", badge: "السعر المعتاد (0%)", border: "border-slate-200 bg-white" },
+                      { id: "express_24h", label: "🟡 تنظيف سريع (خلال 24 ساعة)", badge: "إضافة +50% على التنظيف", border: "border-amber-400 bg-amber-50/50" },
+                      { id: "super_urgent_6h", label: "🔴 تنظيف صاروخي (أقل من 6 ساعات)", badge: "إضافة +100% على التنظيف", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
+                    ].map((tr) => (
+                      <button
+                        key={tr.id}
+                        type="button"
+                        onClick={() => setUrgentCleaningTier(tr.id as any)}
+                        className={`p-3 rounded-2xl border-2 text-start transition flex flex-col justify-between gap-1.5 ${
+                          urgentCleaningTier === tr.id ? "border-indigo-600 bg-indigo-50/90 shadow-md ring-2 ring-indigo-500/20" : tr.border
+                        }`}
+                      >
+                        <span className="text-xs font-black text-slate-900">{tr.label}</span>
+                        <Badge variant="outline" className="text-[10px] font-mono bg-white font-bold">{tr.badge}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Ironing Urgency */}
+                <div className="space-y-2 pt-3 border-t border-slate-200/80">
+                  <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
+                    <Shirt className="w-4 h-4 text-purple-600" />
+                    <span>سرعة إنجاز خدمات الكي فقط:</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { id: "standard", label: "🟢 كي قياسي (خلال 24 ساعة)", badge: "السعر المعتاد (0%)", border: "border-slate-200 bg-white" },
+                      { id: "express_6h", label: "🟡 كي سريع (خلال 6 ساعات)", badge: "إضافة +50% على الكي", border: "border-amber-400 bg-amber-50/50" },
+                      { id: "super_urgent_2h", label: "🔴 كي صاروخي (خلال ساعتين فقط)", badge: "إضافة +100% على الكي", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
+                    ].map((tr) => (
+                      <button
+                        key={tr.id}
+                        type="button"
+                        onClick={() => setUrgentIroningTier(tr.id as any)}
+                        className={`p-3 rounded-2xl border-2 text-start transition flex flex-col justify-between gap-1.5 ${
+                          urgentIroningTier === tr.id ? "border-purple-600 bg-purple-50/90 shadow-md ring-2 ring-purple-500/20" : tr.border
+                        }`}
+                      >
+                        <span className="text-xs font-black text-slate-900">{tr.label}</span>
+                        <Badge variant="outline" className="text-[10px] font-mono bg-white font-bold">{tr.badge}</Badge>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Step 4: Appointment Scheduling Slots & Peak Surge Telemetry */}
             <Card className="shadow-md border border-teal-200 rounded-3xl overflow-hidden bg-white">
               <div className="p-5 bg-gradient-to-r from-teal-700 to-cyan-800 text-white flex items-center justify-between">
                 <div>
                   <h3 className="font-black text-lg flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-teal-200" />
-                    <span>3. جدولة مواعيد استلام وتسليم الغسيل من عنوانك</span>
+                    <span>4. جدولة مواعيد المندوب المتاحة باستمرار (بدون فراغات زمنية)</span>
                   </h3>
-                  <p className="text-xs text-teal-100 mt-0.5">حدد الأوقات المناسبة لمرور المندوب دون أي تعارض أو انتظار</p>
+                  <p className="text-xs text-teal-100 mt-0.5">جميع الفترات الزمنية متاحة على مدار اليوم مع قياس معامل الذروة</p>
                 </div>
               </div>
 
               <CardContent className="p-6 space-y-5">
+                {/* Peak Slot Alert Notice */}
+                {isPeakPickupSlot && (
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-md animate-pulse space-y-1">
+                    <div className="font-black text-sm flex items-center gap-1.5 text-amber-100">
+                      <AlertTriangle className="w-5 h-5 text-amber-200 shrink-0 animate-bounce" />
+                      <span>⚠️ تنبيه الذروة والكثافة التشغيلية (Surge Notice):</span>
+                    </div>
+                    <p className="leading-6 text-amber-50 font-semibold">
+                      الموعد المختار ({pickupSlot}) يشهد حالياً كثافة عالية وطلب متزايد للاستلام والتسليم في نفس الوقت، مما قد يسبب تأخيراً طفيفاً لخط سير المندوب. ننصحك باختيار موعد بديل أقل ازدحاماً إذا كنت تفضل استلاماً أسرع وأكثر انسيابية!
+                    </p>
+                  </div>
+                )}
+
                 {/* Pickup Slot Selection */}
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
                     <Truck className="w-4 h-4 text-teal-600" />
-                    <span>توقيت استلام الغسيل من باب بيتك (Pickup Window):</span>
+                    <span>توقيت استلام الغسيل من باب بيتك (Continuous Pickup Window):</span>
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      "اليوم 10:00 - 12:00 ص",
-                      "اليوم 02:00 - 04:00 م",
-                      "اليوم 06:00 - 08:00 م",
-                      "غداً 10:00 - 12:00 ص",
-                      "غداً 06:00 - 08:00 م",
-                    ].map((slot) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {ALL_CONTINUOUS_SLOTS.map((slot) => (
                       <button
                         key={slot}
                         type="button"
                         onClick={() => setPickupSlot(slot)}
                         className={`p-2.5 rounded-xl border text-xs font-black transition ${
-                          pickupSlot === slot ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          pickupSlot === slot ? "bg-teal-600 text-white border-teal-600 shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                         }`}
                       >
                         {slot}
@@ -694,21 +815,16 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
                 <div className="space-y-2 pt-3 border-t border-slate-200/80">
                   <label className="text-xs font-black text-slate-800 block flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>توقيت تسليم الملابس إليك بعد التشغيل (Delivery Window):</span>
+                    <span>توقيت تسليم الملابس إليك بعد التشغيل (Continuous Delivery Window):</span>
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      "غداً 06:00 - 08:00 م",
-                      "بعد غد 10:00 - 12:00 ص",
-                      "بعد غد 06:00 - 08:00 م",
-                      "توصيل عاجل مستعجل (+50%)",
-                    ].map((slot) => (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {ALL_CONTINUOUS_SLOTS.slice(7).map((slot) => (
                       <button
                         key={slot}
                         type="button"
                         onClick={() => setDeliverySlot(slot)}
                         className={`p-2.5 rounded-xl border text-xs font-black transition ${
-                          deliverySlot === slot ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          deliverySlot === slot ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                         }`}
                       >
                         {slot}
@@ -719,64 +835,165 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
               </CardContent>
             </Card>
 
-            {/* Step 4: Optional Custom Pieces & Special Notes */}
+            {/* Step 5: Permanent Notes & Current Order Notes */}
             <Card className="shadow-sm border-0 rounded-3xl overflow-hidden bg-white">
               <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <h3 className="font-black text-base text-slate-900">إضافة قطع خاصة أو تصوير ملابس معينة</h3>
-                    <p className="text-xs text-slate-500">يمكنك إضافة قطع غير موجودة بالكتالوج وتصويرها بالكاميرا لحفظ حقك</p>
-                  </div>
-                  {services[0] && (
-                    <Button size="sm" variant="outline" onClick={() => addPiece(services[0])} className="font-bold rounded-xl">
-                      <Plus className="w-4 h-4 ms-1" /> إضافة قطعة مخصصة
-                    </Button>
-                  )}
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-900 block flex items-center gap-1.5">
+                    <Crown className="w-4 h-4 text-amber-600" />
+                    <span>📌 الملاحظات الدائمة لحسابك (Permanent Profile Notes):</span>
+                  </label>
+                  <Textarea
+                    value={permanentNotes}
+                    onChange={(e) => setPermanentNotes(e.target.value)}
+                    rows={2}
+                    placeholder="ملاحظات تظهر دائماً في كل طلباتك المستقبلية (مثال: حساسية من بعض المنظفات، عنوان الباب خلف العمارة، الاتصال قبل الوصول بـ 10 دقائق)..."
+                    className="rounded-2xl font-semibold text-xs bg-amber-50/30 border-amber-200 focus:border-amber-600"
+                  />
+                  <p className="text-[10px] text-slate-500 font-semibold">💡 يتم حفظ هذه الملاحظات دائماً في ملفك الشخصي لتراها المغسلة في كل طلباتك.</p>
                 </div>
 
-                {pieces.map((p) => (
-                  <div key={p.key} className="grid grid-cols-[70px_1fr_auto] gap-3 items-center rounded-2xl border bg-slate-50 p-2.5 shadow-2xs">
-                    <label className="w-[70px] h-[70px] rounded-xl border bg-white overflow-hidden flex items-center justify-center cursor-pointer">
-                      {p.image_url ? <img src={p.image_url} className="w-full h-full object-cover" /> : uploadingKey === p.key ? <Loader2 className="w-6 h-6 animate-spin text-teal-600" /> : <Camera className="w-7 h-7 text-teal-600" />}
-                      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPieceImage(p.key, e.target.files[0])} />
-                    </label>
-                    <div className="min-w-0 space-y-0.5">
-                      <Input
-                        value={p.name}
-                        onChange={(e) => setPieces((rows) => rows.map((x) => x.key === p.key ? { ...x, name: e.target.value } : x))}
-                        placeholder="اسم القطعة (مثال: فستان حرير سواريه)"
-                        className="h-8 text-xs font-bold bg-white"
-                      />
-                      <div className="text-xs text-teal-700 font-bold">{p.price} ج.م (تقديري)</div>
-                      <div className="text-[10px] text-slate-400">{p.image_url ? "✓ تم توثيق وحفظ صورة القطعة" : "اضغط على الأيقونة لتصوير القطعة بالكاميرا"}</div>
-                    </div>
-                    <Button size="icon" variant="ghost" onClick={() => setPieces((rows) => rows.filter((x) => x.key !== p.key))}>
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </Button>
-                  </div>
-                ))}
-
-                <div className="pt-2">
-                  <label className="text-xs font-black text-slate-800 block mb-1.5">ملاحظات إضافية للمحطات (اختياري):</label>
+                <div className="space-y-2 pt-3 border-t border-slate-200/80">
+                  <label className="text-xs font-black text-slate-900 block flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-teal-600" />
+                    <span>📝 ملاحظات خاصة بهذا الطلب الحالي فقط (Current Order Notes):</span>
+                  </label>
                   <Textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
-                    placeholder="أي ملاحظات إضافية للمغسلة (مثال: يرجى تنظيف البقع في الأكمام بعناية، عدم استخدام مبيضات)..."
-                    className="rounded-2xl font-medium text-sm"
+                    placeholder="أي تعليمات إضافية لهذا الغسيل تحديداً (مثال: يرجى التركيز على بقعة القهوة في الكم الأيمن للقميص الأبيض)..."
+                    className="rounded-2xl font-semibold text-xs bg-white border-slate-300 focus:border-teal-600"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Expected Total Summary Banner & Submit Button */}
-            <div className="sticky bottom-3 z-30 bg-slate-900 text-white p-5 rounded-3xl shadow-2xl border-2 border-teal-500/40 space-y-3">
+            {/* Step 6: Prominent Grand Invoice Table & Photo Protection System */}
+            <Card className="shadow-2xl border-2 border-teal-500 rounded-3xl overflow-hidden bg-white">
+              <div className="p-5 bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-black text-xl flex items-center gap-2">
+                    <Receipt className="w-6 h-6 text-teal-300" />
+                    <span>جدول الفاتورة المبدئية وتأمين القطع بالتصوير</span>
+                  </h3>
+                  <p className="text-xs text-teal-200 mt-0.5">قم بتصوير ملابسك بجانب كل صنف لتأمين حقك وتأمين المغسلة قبل استلام المندوب</p>
+                </div>
+                <Badge className="bg-teal-500/30 text-teal-200 border border-teal-400/40 font-mono text-sm px-3 py-1">
+                  إجمالي مبدئي: {total} ج.م
+                </Badge>
+              </div>
+
+              <CardContent className="p-6 space-y-5">
+                <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-black">
+                      <tr>
+                        <th className="p-3 text-start">الخدمة / الصنف</th>
+                        <th className="p-3 text-center">الكمية</th>
+                        <th className="p-3 text-end">السعر</th>
+                        <th className="p-3 text-end">الإجمالي</th>
+                        <th className="p-3 text-center">تأمين بالتصوير 📷</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium">
+                      {selectedServicesList.length === 0 && pieces.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="p-8 text-center text-slate-400 font-bold">لم تقم باختيار أي أصناف من الكتالوج بعد</td>
+                        </tr>
+                      ) : (
+                        <>
+                          {selectedServicesList.map((svc) => {
+                            const qty = itemQuantities[svc.id] || 0;
+                            const lineTotal = qty * svc.price;
+                            const photoUrl = itemPhotoMap[svc.id];
+                            return (
+                              <tr key={svc.id} className="hover:bg-slate-50/70">
+                                <td className="p-3 font-bold text-slate-900">
+                                  <div>{svc.name}</div>
+                                  <Badge variant="outline" className="text-[9px] mt-0.5">{svc.service_type === "both" ? "غسيل وكي" : svc.service_type === "ironing" ? "كي فقط" : "غسيل"}</Badge>
+                                </td>
+                                <td className="p-3 text-center font-mono font-black text-sm">{qty}</td>
+                                <td className="p-3 text-end font-mono text-slate-600">{svc.price} ج.م</td>
+                                <td className="p-3 text-end font-mono font-black text-teal-700">{lineTotal} ج.م</td>
+                                <td className="p-3 text-center">
+                                  <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 border-teal-500 bg-teal-50/60 text-teal-800 text-[11px] font-bold cursor-pointer hover:bg-teal-100 transition shadow-2xs">
+                                    {photoUrl ? <img src={photoUrl} className="w-8 h-8 rounded-lg object-cover border" /> : uploadingKey === svc.id ? <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> : <Camera className="w-4 h-4 text-teal-600" />}
+                                    <span>{photoUrl ? "تغيير الصورة" : "تصوير القطعة"}</span>
+                                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && uploadItemPhoto(svc.id, e.target.files[0])} />
+                                  </label>
+                                </td>
+                              </tr>
+                            );
+                          })}
+
+                          {pieces.map((p) => (
+                            <tr key={p.key} className="hover:bg-slate-50/70 bg-amber-50/20">
+                              <td className="p-3 font-bold text-slate-900">
+                                <div>{p.name} (صنف مخصص)</div>
+                                <Badge variant="outline" className="text-[9px] mt-0.5 text-amber-800">صنف خاص</Badge>
+                              </td>
+                              <td className="p-3 text-center font-mono font-black text-sm">1</td>
+                              <td className="p-3 text-end font-mono text-slate-600">{p.price} ج.م</td>
+                              <td className="p-3 text-end font-mono font-black text-teal-700">{p.price} ج.م</td>
+                              <td className="p-3 text-center">
+                                <label className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 border-teal-500 bg-teal-50/60 text-teal-800 text-[11px] font-bold cursor-pointer hover:bg-teal-100 transition shadow-2xs">
+                                  {p.image_url ? <img src={p.image_url} className="w-8 h-8 rounded-lg object-cover border" /> : uploadingKey === p.key ? <Loader2 className="w-4 h-4 animate-spin text-teal-600" /> : <Camera className="w-4 h-4 text-teal-600" />}
+                                  <span>{p.image_url ? "تغيير الصورة" : "تصوير القطعة"}</span>
+                                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPieceImage(p.key, e.target.files[0])} />
+                                </label>
+                              </td>
+                            </tr>
+                          ))}
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Surcharges Breakdown inside Table */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs font-bold text-slate-700">
+                  <div className="flex justify-between">
+                    <span>مجموع أسعار الغسيل والكي من الكتالوج:</span>
+                    <span className="font-mono font-black text-slate-900">{baseSubtotal} ج.م</span>
+                  </div>
+                  {urgentSurcharge > 0 && (
+                    <div className="flex justify-between text-indigo-700">
+                      <span>⚡ إضافة الاستعجال الاستثنائي (Express Surcharge):</span>
+                      <span className="font-mono font-black">+{urgentSurcharge} ج.م</span>
+                    </div>
+                  )}
+                  {splitDeliveryFee > 0 && (
+                    <div className="flex justify-between text-amber-700">
+                      <span>🚚 رسوم التوصيل المجزأ لقطع الكي أولاً (+50% توصيل):</span>
+                      <span className="font-mono font-black">+{splitDeliveryFee} ج.م</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t border-slate-200 text-sm font-black text-teal-800">
+                    <span>الإجمالي التقديري للفاتورة المبدئية:</span>
+                    <span className="font-mono text-lg text-teal-900">{total} ج.م</span>
+                  </div>
+                </div>
+
+                {/* Optional Custom Piece Addition Button */}
+                <div className="flex justify-end">
+                  {services[0] && (
+                    <Button size="sm" variant="outline" onClick={() => addPiece(services[0])} className="font-bold rounded-xl text-xs">
+                      <Plus className="w-3.5 h-3.5 ms-1" /> إضافة صنف مخصص غير موجود بالكتالوج
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sticky Submit Order Banner */}
+            <div className="sticky bottom-3 z-30 bg-slate-950 text-white p-5 rounded-3xl shadow-2xl border-2 border-teal-500/50 space-y-3">
               <div className="flex items-center justify-between text-sm sm:text-base font-black">
                 <span className="flex items-center gap-2">
-                  <span>الإجمالي المتوقع للخدمات المختارة:</span>
-                  {prefSplitDelivery && <Badge className="bg-amber-500 text-white text-[10px] font-mono">+25 ج.م توصيل مجزأ</Badge>}
+                  <span>إجمالي الفاتورة المبدئية الملكية:</span>
+                  {urgentSurcharge > 0 && <Badge className="bg-indigo-600 text-white text-[10px] font-mono">استعجال +{urgentSurcharge} ج.م</Badge>}
                 </span>
-                <span className="font-mono text-xl text-teal-300 font-black">{total} ج.م</span>
+                <span className="font-mono text-2xl text-teal-300 font-black">{total} ج.م</span>
               </div>
 
               <Button
@@ -799,6 +1016,31 @@ ${notes.trim() ? `[📝 ملاحظات العميل]: ${notes.trim()}` : ""}`.tr
             </div>
           </div>
         )}
+
+        {/* Celebration Confirmation Dialog */}
+        <Dialog open={!!confirmedOrderNum} onOpenChange={(o) => !o && setConfirmedOrderNum(null)}>
+          <DialogContent className="max-w-md rounded-3xl text-center p-6 space-y-4" dir={dir}>
+            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center text-4xl shadow-xl animate-bounce">
+              🎉
+            </div>
+            <DialogTitle className="text-2xl font-black text-slate-900">
+              تم استلام طلبك الملكي بنجاح برقم #{confirmedOrderNum}!
+            </DialogTitle>
+            <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-teal-950 text-xs font-bold leading-6 text-start space-y-2">
+              <p>
+                ✨ <span className="font-black text-teal-900">رسالة تأكيد شيك:</span> سيتم مراجعة وفرز القطع والتصنيف بعناية فائقة فور وصول الطلب إلى محطة الاستلام داخل المغسلة.
+              </p>
+              <p>
+                📷 عند التأكيد النهائي والمطابقة مع صور التوثيق المرفقة من قبلك، سيتم إرسال الفاتورة النهائية المعتمدة إليك عبر البوابة لبدء التشغيل الفوري. شكرًا لثقتك الملكية بنا!
+              </p>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setConfirmedOrderNum(null)} className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black rounded-2xl h-12">
+                متابعة مسار المندوب وحالة الطلب &larr;
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <footer className="pt-8 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-1.5 pb-8">
           <div className="flex items-center justify-center gap-1.5">
@@ -984,7 +1226,7 @@ function CustomerOrderHint({ order }: { order: Order }) {
         <div className="flex items-center justify-between gap-2 border-b border-white/20 pb-2">
           <div className="font-black text-sm flex items-center gap-2">
             <Truck className="w-5 h-5 text-indigo-200 animate-bounce" />
-            <span>{order.status === "out_for_delivery" ? "مندوب التسليم في طريقه لباب بيتك 🎁" : "طلبك جاهز بالمغسلة وبانتظار تحرك المندوب 🚀"}</span>
+            <span>{order.status === "out_for_delivery" ? "مندوب التسليم في طريق العودة لباب بيتك 🎁" : "طلبك جاهز بالمغسلة وبانتظار تحرك المندوب 🚀"}</span>
           </div>
           <Badge className="bg-white/20 text-white font-mono text-xs font-black animate-pulse">تحديث حي</Badge>
         </div>
