@@ -32,6 +32,7 @@ import { Route as TenantOpsRouteImport } from './routes/$tenant/ops'
 import { Route as TenantManagerRouteImport } from './routes/$tenant/manager'
 import { Route as TenantLiveMapRouteImport } from './routes/$tenant/live-map'
 import { Route as TenantLedgerRouteImport } from './routes/$tenant/ledger'
+import { Route as TenantIssuesRouteImport } from './routes/$tenant/issues'
 import { Route as TenantInventoryRouteImport } from './routes/$tenant/inventory'
 import { Route as TenantHelpRouteImport } from './routes/$tenant/help'
 import { Route as TenantFinanceRouteImport } from './routes/$tenant/finance'
@@ -52,6 +53,7 @@ import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index
 import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
 import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
 import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
+import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
 import { Route as AdminAdminBillingRouteImport } from './routes/_admin/admin/billing'
 import { Route as TenantStationsReceptionRouteImport } from './routes/$tenant/stations/reception'
@@ -193,6 +195,11 @@ const TenantLedgerRoute = TenantLedgerRouteImport.update({
   path: '/ledger',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantIssuesRoute = TenantIssuesRouteImport.update({
+  id: '/issues',
+  path: '/issues',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantInventoryRoute = TenantInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -292,6 +299,11 @@ const TenantOrdersIndexRoute = TenantOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
   getParentRoute: () => TenantRoute,
+} as any)
+const AdminAdminTelemetryRoute = AdminAdminTelemetryRouteImport.update({
+  id: '/admin/telemetry',
+  path: '/admin/telemetry',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminAdminPlatformFeesRoute = AdminAdminPlatformFeesRouteImport.update({
   id: '/admin/platform-fees',
@@ -452,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/finance': typeof TenantFinanceRoute
   '/$tenant/help': typeof TenantHelpRoute
   '/$tenant/inventory': typeof TenantInventoryRoute
+  '/$tenant/issues': typeof TenantIssuesRoute
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
@@ -488,6 +501,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
   '/admin/billing': typeof AdminAdminBillingRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
@@ -522,6 +536,7 @@ export interface FileRoutesByTo {
   '/$tenant/finance': typeof TenantFinanceRoute
   '/$tenant/help': typeof TenantHelpRoute
   '/$tenant/inventory': typeof TenantInventoryRoute
+  '/$tenant/issues': typeof TenantIssuesRoute
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
@@ -558,6 +573,7 @@ export interface FileRoutesByTo {
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
   '/admin/billing': typeof AdminAdminBillingRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/$tenant/orders': typeof TenantOrdersIndexRoute
   '/$tenant/pickups': typeof TenantPickupsIndexRoute
   '/$tenant/staff': typeof TenantStaffIndexRoute
@@ -594,6 +610,7 @@ export interface FileRoutesById {
   '/$tenant/finance': typeof TenantFinanceRoute
   '/$tenant/help': typeof TenantHelpRoute
   '/$tenant/inventory': typeof TenantInventoryRoute
+  '/$tenant/issues': typeof TenantIssuesRoute
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
@@ -630,6 +647,7 @@ export interface FileRoutesById {
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
   '/_admin/admin/billing': typeof AdminAdminBillingRoute
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
@@ -666,6 +684,7 @@ export interface FileRouteTypes {
     | '/$tenant/finance'
     | '/$tenant/help'
     | '/$tenant/inventory'
+    | '/$tenant/issues'
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
@@ -702,6 +721,7 @@ export interface FileRouteTypes {
     | '/$tenant/stations/reception'
     | '/admin/billing'
     | '/admin/platform-fees'
+    | '/admin/telemetry'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
@@ -736,6 +756,7 @@ export interface FileRouteTypes {
     | '/$tenant/finance'
     | '/$tenant/help'
     | '/$tenant/inventory'
+    | '/$tenant/issues'
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
@@ -772,6 +793,7 @@ export interface FileRouteTypes {
     | '/$tenant/stations/reception'
     | '/admin/billing'
     | '/admin/platform-fees'
+    | '/admin/telemetry'
     | '/$tenant/orders'
     | '/$tenant/pickups'
     | '/$tenant/staff'
@@ -807,6 +829,7 @@ export interface FileRouteTypes {
     | '/$tenant/finance'
     | '/$tenant/help'
     | '/$tenant/inventory'
+    | '/$tenant/issues'
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
@@ -843,6 +866,7 @@ export interface FileRouteTypes {
     | '/$tenant/stations/reception'
     | '/_admin/admin/billing'
     | '/_admin/admin/platform-fees'
+    | '/_admin/admin/telemetry'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
@@ -1030,6 +1054,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantLedgerRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/issues': {
+      id: '/$tenant/issues'
+      path: '/issues'
+      fullPath: '/$tenant/issues'
+      preLoaderRoute: typeof TenantIssuesRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/inventory': {
       id: '/$tenant/inventory'
       path: '/inventory'
@@ -1169,6 +1200,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$tenant/orders/'
       preLoaderRoute: typeof TenantOrdersIndexRouteImport
       parentRoute: typeof TenantRoute
+    }
+    '/_admin/admin/telemetry': {
+      id: '/_admin/admin/telemetry'
+      path: '/admin/telemetry'
+      fullPath: '/admin/telemetry'
+      preLoaderRoute: typeof AdminAdminTelemetryRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/admin/platform-fees': {
       id: '/_admin/admin/platform-fees'
@@ -1384,6 +1422,7 @@ interface TenantRouteChildren {
   TenantFinanceRoute: typeof TenantFinanceRoute
   TenantHelpRoute: typeof TenantHelpRoute
   TenantInventoryRoute: typeof TenantInventoryRoute
+  TenantIssuesRoute: typeof TenantIssuesRoute
   TenantLedgerRoute: typeof TenantLedgerRoute
   TenantLiveMapRoute: typeof TenantLiveMapRoute
   TenantManagerRoute: typeof TenantManagerRoute
@@ -1437,6 +1476,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantFinanceRoute: TenantFinanceRoute,
   TenantHelpRoute: TenantHelpRoute,
   TenantInventoryRoute: TenantInventoryRoute,
+  TenantIssuesRoute: TenantIssuesRoute,
   TenantLedgerRoute: TenantLedgerRoute,
   TenantLiveMapRoute: TenantLiveMapRoute,
   TenantManagerRoute: TenantManagerRoute,
@@ -1479,6 +1519,7 @@ const TenantRouteWithChildren =
 interface AdminRouteChildren {
   AdminAdminBillingRoute: typeof AdminAdminBillingRoute
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
+  AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
   AdminAdminIndexRoute: typeof AdminAdminIndexRoute
   AdminAdminTenantsIdRoute: typeof AdminAdminTenantsIdRoute
   AdminAdminTenantsIndexRoute: typeof AdminAdminTenantsIndexRoute
@@ -1488,6 +1529,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBillingRoute: AdminAdminBillingRoute,
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
+  AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,
   AdminAdminIndexRoute: AdminAdminIndexRoute,
   AdminAdminTenantsIdRoute: AdminAdminTenantsIdRoute,
   AdminAdminTenantsIndexRoute: AdminAdminTenantsIndexRoute,

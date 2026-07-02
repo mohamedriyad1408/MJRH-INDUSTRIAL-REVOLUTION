@@ -146,6 +146,7 @@ const dict: Record<LanguageCode, Record<string, string>> = {
 const navArabic: Record<string, string> = {
   "navGroup.اللوحات": "Dashboards",
   "nav./search": "Unified Search & Results",
+  "nav./issues": "Project Issues & Telemetry",
   "navGroup.الطلبات": "Orders",
   "navGroup.محطات العمل": "Work stations",
   "navGroup.الموظفون": "Staff",
@@ -195,6 +196,7 @@ const navArabic: Record<string, string> = {
   "nav./settings": "Settings",
   "nav./help": "Help center",
   "nav./admin/tenants": "Tenants",
+  "nav./admin/telemetry": "Telemetry & Issues",
   "nav./admin/users": "All users",
   "nav./admin/platform-fees": "Platform fees",
   "nav./admin/billing": "SaaS invoices",

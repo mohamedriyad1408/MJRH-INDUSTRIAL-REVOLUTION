@@ -199,6 +199,13 @@ function SuperAdminCommandCenter() {
             </Link>
           </Button>
 
+          <Button asChild variant="outline" className="font-black bg-red-50 border-red-300 text-red-700 hover:bg-red-100 h-11 shadow-xs">
+            <Link to={"/admin/telemetry" as any} className="flex items-center">
+              <AlertTriangle className="w-4 h-4 ms-1.5 text-red-600 animate-pulse" />
+              <span>مرصد المشاكل والتعثرات</span>
+            </Link>
+          </Button>
+
           <Dialog open={openNew} onOpenChange={setOpenNew}>
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-black shadow-lg rounded-2xl h-11 px-6">

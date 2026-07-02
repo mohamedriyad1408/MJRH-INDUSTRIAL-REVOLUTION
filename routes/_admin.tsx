@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -58,6 +58,12 @@ function AdminLayout() {
                 <div className="text-[10px] text-muted-foreground truncate">Super Admin Control Center</div>
               </div>
             </div>
+            <Button asChild size="sm" variant="outline" className="hidden sm:flex font-black text-xs border-red-300 bg-red-50 text-red-700 hover:bg-red-100 shadow-2xs">
+              <Link to="/admin/telemetry">
+                <span className="w-2 h-2 rounded-full bg-red-600 animate-ping me-1.5 inline-block" />
+                <span>مرصد التعثرات والمشاكل</span>
+              </Link>
+            </Button>
             <LanguageSwitcher compact />
           </header>
           <main className="app-main flex-1 p-4 md:p-7">
