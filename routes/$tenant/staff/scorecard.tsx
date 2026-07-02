@@ -51,6 +51,7 @@ type LedgerEntry = {
   amount: number;
   direction: string;
   description?: string | null;
+  source_type?: string | null;
   entry_at: string;
 };
 
@@ -94,13 +95,19 @@ function computeEuropeanAppraisal(
   let totalEarned = 0;
   let totalDeductions = 0;
   let totalBonuses = 0;
+  let totalTips = 0;
   let totalAdvances = 0;
 
   ledger.forEach((l) => {
     const amt = Number(l.amount || 0);
+    const isTip = l.source_type === "driver_tip" || (l.description || "").includes("بقشيش");
     if (l.direction === "employee_due") {
       totalEarned += amt;
-      if (l.entry_type === "adjustment" || (l.description || "").includes("مكافأة")) totalBonuses += amt;
+      if (isTip) {
+        totalTips += amt;
+      } else if (l.entry_type === "adjustment" || (l.description || "").includes("مكافأة") || (l.description || "").includes("حافز")) {
+        totalBonuses += amt;
+      }
     } else {
       if (l.entry_type === "advance") totalAdvances += amt;
       else if (l.entry_type === "adjustment" || (l.description || "").includes("خصم")) totalDeductions += amt;
@@ -177,6 +184,7 @@ function computeEuropeanAppraisal(
     totalEarned,
     totalDeductions,
     totalBonuses,
+    totalTips,
     totalAdvances,
     gridCategory,
     gridBoxColor,
@@ -255,7 +263,7 @@ function EuropeanScorecardPage() {
           .order("work_date", { ascending: false }),
         supabase
           .from("employee_financial_ledger")
-          .select("id, entry_type, amount, direction, description, entry_at")
+          .select("id, entry_type, amount, direction, description, source_type, entry_at")
           .eq("tenant_id", tenantId)
           .eq("employee_id", emp.id)
           .order("entry_at", { ascending: false })
@@ -540,9 +548,15 @@ function EuropeanScorecardPage() {
                             <span className="font-mono font-black">{stats.totalShifts} وردية</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">حوافز الإنجاز المضافة:</span>
+                            <span className="text-slate-500">حوافز ومكافآت التميز:</span>
                             <span className="font-mono font-black text-emerald-600">+{fmtMoney(stats.totalBonuses)}</span>
                           </div>
+                          {stats.totalTips > 0 && (
+                            <div className="flex justify-between text-teal-700">
+                              <span>إكراميات وبقشيش عملاء (Driver Tips):</span>
+                              <span className="font-mono font-black">+{fmtMoney(stats.totalTips)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -705,15 +719,17 @@ function EuropeanScorecardPage() {
                           ) : (
                             ledger.map((l) => {
                               const isDue = l.direction === "employee_due";
-                              const isBonus = l.entry_type === "adjustment" && isDue;
+                              const isTip = l.source_type === "driver_tip" || (l.description || "").includes("بقشيش");
+                              const isBonus = l.entry_type === "adjustment" && isDue && !isTip;
                               const isDeduct = l.entry_type === "adjustment" && !isDue;
                               return (
                                 <tr key={l.id} className="hover:bg-slate-50/70">
                                   <td className="p-3 font-bold text-slate-800">{l.description || l.entry_type}</td>
                                   <td className="p-3">
+                                    {isTip && <Badge className="bg-teal-600 text-white font-bold">بقشيش عميل (+)</Badge>}
                                     {isBonus && <Badge className="bg-emerald-600 text-white font-bold">حافز تميز (+)</Badge>}
                                     {isDeduct && <Badge className="bg-red-600 text-white font-bold">جزاء SOP (-)</Badge>}
-                                    {!isBonus && !isDeduct && <Badge variant="outline" className="font-mono">{l.entry_type}</Badge>}
+                                    {!isTip && !isBonus && !isDeduct && <Badge variant="outline" className="font-mono">{l.entry_type}</Badge>}
                                   </td>
                                   <td className="p-3 text-slate-500 font-mono">{fmtDate(l.entry_at)}</td>
                                   <td className={`p-3 text-end font-mono font-black ${isDue ? "text-emerald-700" : "text-red-600"}`}>
