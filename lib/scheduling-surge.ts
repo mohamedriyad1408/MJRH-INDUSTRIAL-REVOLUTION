@@ -45,17 +45,7 @@ export function calculateSlotPressure(orders: any[], slotName: string): SlotPres
     return pSlot === slotName || dSlot === slotName || notes.includes(slotName);
   }).length;
 
-  // Add baseline daily operational load pattern (evening hours experience standard surge)
-  let timeWeight = 1;
-  if (slotName.includes("06:00 - 08:00 مساءً") || slotName.includes("08:00 - 10:00 مساءً")) {
-    timeWeight = 6; // Medium Peak load (>5 to <=7)
-  } else if (slotName.includes("04:00 - 06:00 مساءً")) {
-    timeWeight = 4; // Normal Peak load (>3 to <=5)
-  } else if (slotName.includes("02:00 - 04:00 مساءً")) {
-    timeWeight = 2; // Normal load
-  }
-
-  const totalLoad = activeInSlot + timeWeight;
+  const totalLoad = activeInSlot;
 
   if (totalLoad > 7) {
     return {
