@@ -155,11 +155,11 @@ export function AppSidebar() {
     <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary-glow flex items-center justify-center shrink-0">
-            <Shirt className="w-5 h-5 text-sidebar" />
+          <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-xs border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
+            <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
-            <div className="font-bold text-sm truncate">MJRH</div>
+            <div className="font-black text-sm truncate tracking-tight text-slate-900">MJRH</div>
             <div className="text-xs opacity-70 truncate">{user?.email}</div>
           </div>
         </div>

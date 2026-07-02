@@ -174,7 +174,9 @@ function CustomerPortal() {
       <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ccfbf1,#f8fafc_45%,#e0f2fe)] flex items-center justify-center p-4" dir="rtl">
         <Card className="w-full max-w-sm shadow-2xl border-0 overflow-hidden">
           <div className="bg-gradient-to-br from-teal-700 to-slate-900 text-white p-8 text-center">
-            <div className="text-6xl mb-3">👕</div>
+            <div className="w-20 h-20 mx-auto rounded-3xl bg-white p-2 flex items-center justify-center shadow-lg border border-slate-200/80 mb-3 overflow-hidden">
+              <img src="/mjrh-logo.png" alt="MJRH Logo" className="w-full h-full object-contain" />
+            </div>
             <h1 className="text-3xl font-black">{t("customer.title")}</h1>
             <p className="text-sm text-teal-100 mt-1">{t("customer.tagline")}</p><div className="mt-4 flex justify-center"><LanguageSwitcher compact /></div>
           </div>
@@ -274,6 +276,13 @@ function CustomerPortal() {
             </Card>
           </div>
         )}
+
+        <footer className="pt-6 text-center text-xs text-slate-500 font-bold flex flex-col items-center gap-1.5 pb-8">
+          <div className="flex items-center justify-center gap-1.5">
+            <img src="/mjrh-logo.png" alt="MJRH" className="w-5 h-5 object-contain" />
+            <span className="font-black tracking-wider text-slate-700 uppercase font-mono">POWERED BY MJRH INDUSTRIAL REVOLUTION</span>
+          </div>
+        </footer>
       </div>
     </div>
   );

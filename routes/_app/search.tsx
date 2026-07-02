@@ -517,10 +517,8 @@ function SearchResultsPage() {
       {/* Empty State when no query and no initial data */}
       {!loading && totalCount === 0 && !query.trim() && !error && (
         <div className="py-12 text-center space-y-6">
-          <div className="flex justify-center gap-4 text-slate-400">
-            <FileText className="w-12 h-12" />
-            <User className="w-12 h-12" />
-            <QrCode className="w-12 h-12" />
+          <div className="flex justify-center mb-4">
+            <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-32 sm:h-40 object-contain drop-shadow-lg" />
           </div>
           <div className="text-base font-bold text-slate-600 max-w-md mx-auto">
             {t("searchPage.emptyPrompt", "ابدأ بكتابة أي كلمة أو رقم في مربع البحث أعلاه لعرض النتائج اللحظية من جميع السجلات في مكان واحد.")}

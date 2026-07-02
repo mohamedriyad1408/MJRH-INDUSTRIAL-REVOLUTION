@@ -72,9 +72,15 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4 py-8" dir={dir}>
       <Card className="w-full max-w-md p-8 shadow-xl relative"><div className="absolute top-3 left-3"><LanguageSwitcher compact /></div>
         <div className="flex flex-col items-center mb-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md mb-2">
-            <Shirt className="w-7 h-7" />
-          </div>
+          {tenantSlug ? (
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md mb-2">
+              <Shirt className="w-7 h-7" />
+            </div>
+          ) : (
+            <div className="w-24 h-24 rounded-3xl bg-white p-2.5 flex items-center justify-center shadow-lg border border-slate-200/80 mb-3 overflow-hidden">
+              <img src="/mjrh-logo.png" alt="MJRH Logo" className="w-full h-full object-contain" />
+            </div>
+          )}
           {tenantSlug ? (
             <div className="mb-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
               <span>📁 دخول مشروع:</span>

@@ -76,12 +76,12 @@ function HomeDirectory() {
     >
       <header className="mx-auto max-w-5xl px-4 py-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center font-black shadow-lg">
-            MJ
+          <div className="h-14 w-14 rounded-2xl bg-white p-1 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/mjrh-logo.png" alt="MJRH Logo" className="h-full w-full object-contain" />
           </div>
           <div>
-            <div className="font-black text-xl">MJRH</div>
-            <div className="text-xs text-slate-500">{t("home.tagline", "منظومة تشغيل المشاريع — Industrial Revolution")}</div>
+            <div className="font-black text-xl text-slate-900 tracking-tight">MJRH</div>
+            <div className="text-xs text-slate-500 font-semibold">{t("home.tagline", "منظومة تشغيل المشاريع — Industrial Revolution")}</div>
           </div>
         </div>
         <div className="flex gap-2 items-center">
@@ -93,9 +93,12 @@ function HomeDirectory() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-16">
-        <section className="text-center py-10 md:py-14 space-y-5">
-          <div className="inline-flex items-center gap-2 rounded-full border bg-white/70 px-4 py-1.5 text-xs font-bold text-teal-800">
-            <ShieldCheck className="w-3.5 h-3.5" /> {t("home.badge", "منصة MJRH لتشغيل المشاريع")}
+        <section className="text-center py-8 md:py-12 space-y-5">
+          <div className="flex justify-center mb-2">
+            <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-36 sm:h-48 md:h-56 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border bg-white/80 px-4 py-1.5 text-xs font-bold text-teal-800 shadow-2xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-teal-600" /> {t("home.badge", "منصة MJRH لتشغيل المشاريع")}
           </div>
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-950 leading-tight">
             {t("home.heroTitle", "نظام واحد.. يشغّل أكثر من مشروع")}

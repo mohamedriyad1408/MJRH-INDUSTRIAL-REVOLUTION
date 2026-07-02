@@ -52,8 +52,8 @@ function TenantEntryPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ccfbf1,#f8fafc_45%,#e0f2fe)] p-4 flex items-center justify-center" dir="rtl">
       <Card className="w-full max-w-lg overflow-hidden border-0 shadow-2xl">
         <div className="p-8 text-center text-white" style={{ background: `linear-gradient(135deg, ${color}, #0f172a)` }}>
-          <div className="w-20 h-20 mx-auto rounded-3xl bg-white/15 flex items-center justify-center mb-4 overflow-hidden">
-            {tenant.logo_url ? <img src={tenant.logo_url} className="w-full h-full object-cover" /> : <Shirt className="w-11 h-11" />}
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-white/15 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
+            {tenant.logo_url ? <img src={tenant.logo_url} className="w-full h-full object-cover" /> : <img src="/mjrh-logo.png" alt="MJRH Logo" className="w-full h-full object-contain p-2 bg-white" />}
           </div>
           <h1 className="text-3xl font-black">{tenant.name}</h1>
           <p className="text-sm text-white/80 mt-2">مدخل العملاء والموظفين والمالك</p>
@@ -78,7 +78,11 @@ function TenantEntryPage() {
             </Link>
           </Button>
 
-          {tenant.business_phone && <a href={`tel:${tenant.business_phone}`} className="block text-center text-sm text-muted-foreground hover:underline pt-2">اتصل بالمغسلة: {tenant.business_phone}</a>}
+          {tenant.business_phone && <a href={`tel:${tenant.business_phone}`} className="block text-center text-sm text-muted-foreground hover:underline pt-2 font-mono">اتصل بالمغسلة: {tenant.business_phone}</a>}
+          <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] font-black tracking-wider text-slate-400">
+            <img src="/mjrh-logo.png" alt="MJRH Logo" className="w-5 h-5 object-contain" />
+            <span>POWERED BY MJRH INDUSTRIAL REVOLUTION</span>
+          </div>
         </CardContent>
       </Card>
     </div>

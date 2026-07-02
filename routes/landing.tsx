@@ -29,10 +29,12 @@ function LandingPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#99f6e4,transparent_28rem),radial-gradient(circle_at_bottom_left,#ddd6fe,transparent_30rem),linear-gradient(135deg,#f8fafc,#eef2ff)]" dir={dir}>
       <header className="mx-auto max-w-7xl px-4 py-5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center font-black shadow-lg">MJ</div>
+          <div className="h-14 w-14 rounded-2xl bg-white p-1 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/mjrh-logo.png" alt="MJRH Logo" className="h-full w-full object-contain" />
+          </div>
           <div>
-            <div className="font-black text-xl">MJRH</div>
-            <div className="text-xs text-slate-500">Industrial Revolution for Laundry Operations</div>
+            <div className="font-black text-xl text-slate-900 tracking-tight">MJRH</div>
+            <div className="text-xs text-slate-500 font-semibold">Industrial Revolution for Laundry Operations</div>
           </div>
         </div>
         <div className="flex gap-2 items-center">
@@ -43,9 +45,12 @@ function LandingPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 pb-16">
-        <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-center py-10 md:py-16">
+        <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-center py-8 md:py-14">
           <div className="space-y-6">
-            <Badge className="bg-teal-600 text-white px-3 py-1">{t("landing.badge")}</Badge>
+            <div className="mb-2">
+              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-28 sm:h-36 object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300" />
+            </div>
+            <Badge className="bg-teal-600 text-white px-3 py-1 font-bold shadow-xs">{t("landing.badge")}</Badge>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-950 leading-tight">
               {t("landing.heroTitle")}
             </h1>
@@ -94,9 +99,13 @@ function LandingPage() {
           <Plan title="Enterprise" price={t("landing.planEnterprise")} popularLabel={t("landing.popular")} lines={["Customization", "Integrations", "Advanced training", "Priority support"]} />
         </section>
 
-        <footer className="py-8 text-center text-sm text-slate-500">
-          <div>© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION — BY MUHAMMAD RIYAD</div>
-          <div className="mt-2 flex justify-center gap-4"><Link to="/privacy">{t("legal.privacyTitle")}</Link><Link to="/terms">{t("legal.termsTitle")}</Link><Link to="/login">{t("landing.login")}</Link></div>
+        <footer className="py-8 text-center text-sm text-slate-500 space-y-2 font-medium">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/mjrh-logo.png" alt="MJRH" className="h-6 w-6 object-contain" />
+            <span className="font-black text-slate-900 tracking-wide">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</span>
+          </div>
+          <div className="font-semibold text-slate-500">BY MUHAMMAD RIYAD</div>
+          <div className="mt-2 flex justify-center gap-4"><Link to="/privacy" className="hover:underline">{t("legal.privacyTitle")}</Link><Link to="/terms" className="hover:underline">{t("legal.termsTitle")}</Link><Link to="/login" className="hover:underline font-bold text-slate-700">{t("landing.login")}</Link></div>
         </footer>
       </main>
     </div>
