@@ -213,6 +213,27 @@ function SuperAdminTelemetryPage() {
     }
   }
 
+  async function handleBulkResolveErrors() {
+    if (!confirm("هل أنت متأكد من الإغلاق الجماعي لجميع الأخطاء التقنية المفتوحة حالياً في المرصد؟")) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("client_error_logs")
+        .update({
+          resolved_at: new Date().toISOString(),
+          resolution_notes: "إغلاق جماعي من قبل مدير المنصة عبر مرصد التعثرات",
+        })
+        .is("resolved_at", null);
+      if (error) throw error;
+      toast.success("تم الإغلاق الجماعي لكافة الأخطاء التقنية المسجلة");
+      loadTelemetry();
+    } catch (err: any) {
+      toast.error(err?.message || "فشل الإغلاق الجماعي");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (!isSuperAdmin) {
     return <Card className="p-12 text-center text-red-600 font-black">صلاحية مدير المنصة (Super Admin) فقط.</Card>;
   }
@@ -235,7 +256,19 @@ function SuperAdminTelemetryPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {kpis.unresolved > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleBulkResolveErrors}
+              disabled={loading}
+              className="font-black border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 h-11 px-4 shadow-2xs"
+            >
+              <CheckCircle2 className="w-4 h-4 ms-1.5 text-emerald-600" />
+              <span>إغلاق جماعي لكافة الأخطاء ({kpis.unresolved})</span>
+            </Button>
+          )}
+
           <Button variant="outline" onClick={loadTelemetry} disabled={loading} className="font-bold border-slate-300 hover:bg-slate-100 h-11 px-5">
             <RefreshCw className={`w-4 h-4 ms-1.5 ${loading ? "animate-spin text-teal-600" : ""}`} />
             <span>تحديث المرصد</span>
