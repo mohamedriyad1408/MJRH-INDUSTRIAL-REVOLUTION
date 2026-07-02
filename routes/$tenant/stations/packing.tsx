@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Image as ImageIcon, Loader2, Package, PackageCheck, ShieldCheck, Shirt, Tags } from "lucide-react";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 export const Route = createFileRoute("/$tenant/stations/packing")({
   head: () => ({ meta: [{ title: "محطة التغليف" }] }),
@@ -38,6 +39,7 @@ function PackingStation() {
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   async function load() {
     setLoading(true);
@@ -80,7 +82,7 @@ function PackingStation() {
       _cash_account_id: null,
       _report_bucket: "operations/packing",
       _requires_notification: false,
-      _data: { order_number: g.order.order_number, pieces: g.units.length },
+      _data: { order_number: g.order.order_number, pieces: g.units.length, actor_id: activeActor?.id || user?.id, actor_name: activeActor?.full_name || "التغليف" },
       _output: { cash_impact: false, journal_required: false, appears_in_report: true, ...output },
     }).then(() => null);
   }
@@ -125,6 +127,8 @@ function PackingStation() {
   }), [groups.length, units]);
 
   return <div className="space-y-5" dir={dir}>
+    <StationActorWidget stationId="packing" stationLabel="التغليف النهائي ومطابقة الفواتير 📦" onActorChange={setActiveActor} />
+
     <div className="rounded-3xl bg-gradient-to-br from-amber-600 via-slate-900 to-teal-800 text-white p-5 shadow-xl overflow-hidden relative">
       <div className="absolute -top-20 -left-16 w-48 h-48 bg-amber-300/20 rounded-full blur-3xl" />
       <div className="relative flex flex-wrap justify-between items-center gap-3"><div><h1 className="text-2xl font-black flex items-center gap-2"><Package className="w-7 h-7 text-amber-200" /> {t("station.packing.title")}</h1><p className="text-sm text-white/75 mt-1">{t("station.packing.subtitle")}</p></div><Button variant="secondary" onClick={load}>{t("common.refresh")}</Button></div>

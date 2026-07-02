@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ArrowLeft, Camera, CheckCircle2, Image as ImageIcon, Loader2, PackageCheck, Search, Shirt, Tags, Wind } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 type Row = {
   id: string; tenant_id: string; branch_id?: string | null; order_id: string; label_code: string; name: string; garment_type: string; service_type: string;
@@ -30,6 +31,7 @@ function DryingAssemblyStation() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [matches, setMatches] = useState<Record<string, any[]>>({});
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   async function load() {
     setLoading(true);
@@ -138,6 +140,12 @@ function DryingAssemblyStation() {
     const { error } = await supabase.from("service_units").update({ current_stage: "ironing", label_status: "labeled", assembly_checked_at: new Date().toISOString(), assembly_checked_by: user?.id, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id);
     if (!error) {
       await recordEvent(row, "drying_assembly_completed", "إنهاء التجفيف والتجميع");
+      if (activeActor) {
+        await supabase.from("order_status_history").insert({
+          order_id: row.order_id, from_status: "drying_assembly", to_status: "ironing",
+          changed_by: user?.id, notes: `👤 التجميع: ${row.label_code} — نفذه: ${activeActor.full_name}`,
+        });
+      }
       const { data: remaining } = await supabase.from("service_units").select("id").eq("order_id", row.order_id).in("current_stage", ["cleaning", "cleaning_done", "drying_assembly"]).limit(1);
       if (!remaining?.length) await supabase.from("orders").update({ status: "ironing" }).eq("id", row.order_id).neq("status", "cancelled");
     }
@@ -148,6 +156,8 @@ function DryingAssemblyStation() {
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("station.assembly.accessDenied")}</CardContent></Card>;
 
   return <div className="space-y-5" dir={dir}>
+    <StationActorWidget stationId="drying-assembly" stationLabel="التجفيف والتجميع والفرز 🧺" onActorChange={setActiveActor} />
+
     <div className="rounded-3xl bg-gradient-to-br from-cyan-700 via-slate-900 to-violet-800 text-white p-5 shadow-xl overflow-hidden relative">
       <div className="absolute -top-20 -left-16 w-48 h-48 rounded-full bg-teal-300/20 blur-3xl" />
       <div className="relative flex flex-wrap items-center justify-between gap-3">

@@ -28,6 +28,7 @@ function NewStaffPage() {
     branch_id: "",
     role: "none",
     station: "none",
+    assigned_stations: [] as string[],
     phone: "",
     email: "",
     hire_date: new Date().toISOString().slice(0, 10),
@@ -71,6 +72,7 @@ function NewStaffPage() {
       branch_id: form.branch_id || null,
       role: form.role === "none" ? null : form.role,
       station: form.station === "none" ? null : form.station,
+      assigned_stations: form.assigned_stations.length > 0 ? form.assigned_stations : (form.station && form.station !== "none" ? [form.station] : []),
       phone: form.phone || null,
       email: form.email || null,
       hire_date: form.hire_date,
@@ -128,19 +130,39 @@ function NewStaffPage() {
               </SelectContent>
             </Select>
           </Field>
-          <Field label={t("stage.received")}>
-            <Select value={form.station} onValueChange={(v) => setForm({ ...form, station: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">—</SelectItem>
-                <SelectItem value="reception">{t("stage.received")}ist</SelectItem>
-                <SelectItem value="cleaning">{t("stage.cleaning")}</SelectItem>
-                <SelectItem value="ironing">{t("stage.ironing")}</SelectItem>
-                <SelectItem value="packing">{t("stage.packing")}</SelectItem>
-                <SelectItem value="delivery">{t("stage.ready")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
+          <div className="md:col-span-2 space-y-2 pt-2 border-t">
+            <Label className="text-sm font-bold block">🔄 المحطات التشغيلية متعددة الأدوار (Staff Rotational Stations):</Label>
+            <p className="text-xs text-muted-foreground">تحديد أكثر من محطة أو دور تشغيلي للموظف (مثل الاستقبال والتجميع والتغليف) لتمكينه من التبديل واختيار اسمه (مبدأ Actor) في شاشات المحطات.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {[
+                { id: "reception", label: "الاستقبال والفرز واستلام الطلبات 🛎️" },
+                { id: "cleaning", label: "التنظيف والغسيل 🫧" },
+                { id: "drying-assembly", label: "التجفيف والتجميع 🧺" },
+                { id: "ironing", label: "الكي بالبخار 👔" },
+                { id: "packing", label: "التغليف النهائي 📦" },
+                { id: "qc", label: "فحص الجودة QC 🛡️" },
+                { id: "delivery", label: "التوصيل الخارجي 🚚" },
+              ].map((st) => {
+                const checked = form.assigned_stations.includes(st.id) || form.station === st.id;
+                return (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() => {
+                      const next = checked ? form.assigned_stations.filter((x) => x !== st.id) : [...form.assigned_stations, st.id];
+                      setForm({ ...form, assigned_stations: next, station: next[0] ?? "none" });
+                    }}
+                    className={`p-2.5 rounded-xl border text-xs font-black transition flex items-center justify-between text-start ${
+                      checked ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{st.label}</span>
+                    <span>{checked ? "✓ مفعّل" : "+ إضافة"}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </CardContent>
       </Card>
 

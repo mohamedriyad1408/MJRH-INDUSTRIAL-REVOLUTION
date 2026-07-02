@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { RotateCcw, CheckCircle2, Sparkles, Package, Shirt, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { interpolate, useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 export const Route = createFileRoute("/$tenant/stations/cleaning")({
   head: () => ({ meta: [{ title: "الغسيل والتنظيف" }] }),
@@ -48,8 +49,10 @@ function CleaningStation() {
 
 function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
   const { t, dir } = useI18n();
+  const { user } = useAuth();
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   async function load() {
     setLoading(true);
@@ -67,12 +70,30 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
 
   async function resolveReclean(unit: Unit) {
     const { error } = await supabase.rpc("resolve_reclean_return", { _unit_id: unit.id });
-    if (error) toast.error(error.message); else { toast.success("تم تنظيف المرتجع ورجوعه لنفس فني الكي"); load(); }
+    if (error) toast.error(error.message); else {
+      toast.success("تم تنظيف المرتجع ورجوعه لنفس فني الكي");
+      if (activeActor) {
+        await supabase.from("order_status_history").insert({
+          order_id: unit.order_id, from_status: "cleaning", to_status: "ironing",
+          changed_by: user?.id, notes: `👤 معالجة المرتجع: ${unit.label_code} — نفذه: ${activeActor.full_name}`,
+        });
+      }
+      load();
+    }
   }
 
   async function markCleaned(unit: Unit) {
     const { error } = await supabase.from("service_units").update({ current_stage: "cleaning_done" }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success(`تم تنظيف ${unit.label_code}`); load(); }
+    if (error) toast.error(error.message); else {
+      toast.success(`تم تنظيف ${unit.label_code}`);
+      if (activeActor) {
+        await supabase.from("order_status_history").insert({
+          order_id: unit.order_id, from_status: "cleaning", to_status: "cleaning_done",
+          changed_by: user?.id, notes: `👤 إتمام التنظيف: ${unit.label_code} — نفذه: ${activeActor.full_name}`,
+        });
+      }
+      load();
+    }
   }
 
   const groups = useMemo(() => {
@@ -88,6 +109,8 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
 
   return (
     <div className="space-y-5" dir={dir}>
+      <StationActorWidget stationId="cleaning" stationLabel="التنظيف والغسيل والمعالجة 🫧" onActorChange={setActiveActor} />
+
       <div className="rounded-3xl bg-gradient-to-br from-blue-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

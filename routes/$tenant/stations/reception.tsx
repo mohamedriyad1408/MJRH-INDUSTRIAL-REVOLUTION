@@ -11,6 +11,7 @@ import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { interpolate, useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 export const Route = createFileRoute("/$tenant/stations/reception")({
   head: () => ({ meta: [{ title: "الاستقبال" }] }),
@@ -40,6 +41,7 @@ function ReceptionPage() {
   const [loading, setLoading] = useState(true);
   const [assignFor, setAssignFor] = useState<string | null>(null);
   const [acting, setActing] = useState<string | null>(null);
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,7 +94,7 @@ function ReceptionPage() {
     if (!error) {
       await supabase.from("order_status_history").insert({
         order_id: id, from_status: "received", to_status: nextStatus,
-        changed_by: user?.id, notes: "محطة الاستلام",
+        changed_by: user?.id, notes: `👤 نفذه الموظف: ${activeActor?.full_name ?? "الاستقبال"} (${activeActor?.job_title ?? "محطة الاستلام"})`,
       });
       if (nextStatus === "ironing") {
         try {
@@ -130,6 +132,7 @@ function ReceptionPage() {
         <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : (
         <div className="space-y-6" dir={dir}>
+          <StationActorWidget stationId="reception" stationLabel="الاستقبال والفرز واستلام الطلبات 🛎️" onActorChange={setActiveActor} />
 
           {/* Active Pickup Requests — visible to reception */}
           {incomingPickups.length > 0 && (

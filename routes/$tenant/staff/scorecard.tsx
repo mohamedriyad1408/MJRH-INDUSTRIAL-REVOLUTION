@@ -228,7 +228,7 @@ function EuropeanScorecardPage() {
         .eq("is_active", true)
         .order("full_name");
       if (error) throw error;
-      const list = (data ?? []) as Employee[];
+      const list = ((data ?? []) as Employee[]).filter((e: any) => e.role !== "owner" && !e.job_title?.includes("مالك") && !e.full_name?.includes("مالك"));
       setEmployees(list);
       if (list.length > 0 && !selectedEmp) {
         selectEmployee(list[0]);

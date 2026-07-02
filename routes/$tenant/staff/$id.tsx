@@ -75,6 +75,7 @@ function StaffDetailPage() {
     const { error } = await supabase.from("employees").update({
       full_name: emp.full_name, job_title: emp.job_title, phone: emp.phone, email: emp.email,
       role: emp.role || null, station: emp.station || null,
+      assigned_stations: (emp as any).assigned_stations || (emp.station ? [emp.station] : []),
       branch_id: emp.branch_id || null,
       monthly_salary: Number(emp.monthly_salary) || 0,
       commission_percent: Number(emp.commission_percent) || 0,
@@ -161,33 +162,70 @@ function StaffDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">الدور والمحطة</CardTitle></CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-4">
-              <Fld label="الدور">
-                <Select value={emp.role ?? "none"} onValueChange={(v) => setEmp({ ...emp, role: v === "none" ? null : v })} disabled={!isOwner}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">بدون</SelectItem>
-                    <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
-                    <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
-                    <SelectItem value="courier">مندوب</SelectItem>
-                    <SelectItem value="owner">مالك</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Fld>
-              <Fld label="المحطة">
-                <Select value={emp.station ?? "none"} onValueChange={(v) => setEmp({ ...emp, station: v === "none" ? null : v })} disabled={!isOwner}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">—</SelectItem>
-                    <SelectItem value="reception">الاستلام</SelectItem>
-                    <SelectItem value="cleaning">التنظيف</SelectItem>
-                    <SelectItem value="ironing">الكي</SelectItem>
-                    <SelectItem value="packing">التغليف</SelectItem>
-                    <SelectItem value="delivery">التسليم</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Fld>
+            <CardHeader><CardTitle className="text-base">الدور والمحطات متعددة الأدوار (Rotational Roles)</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <Fld label="الدور الرئيسي">
+                  <Select value={emp.role ?? "none"} onValueChange={(v) => setEmp({ ...emp, role: v === "none" ? null : v })} disabled={!isOwner}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">بدون</SelectItem>
+                      <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
+                      <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
+                      <SelectItem value="courier">مندوب</SelectItem>
+                      <SelectItem value="owner">مالك</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Fld>
+                <Fld label="المحطة الافتراضية">
+                  <Select value={emp.station ?? "none"} onValueChange={(v) => setEmp({ ...emp, station: v === "none" ? null : v })} disabled={!isOwner}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">—</SelectItem>
+                      <SelectItem value="reception">الاستقبال والفرز</SelectItem>
+                      <SelectItem value="cleaning">التنظيف والغسيل</SelectItem>
+                      <SelectItem value="ironing">الكي بالبخار</SelectItem>
+                      <SelectItem value="packing">التغليف النهائي</SelectItem>
+                      <SelectItem value="delivery">التسليم والندب</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Fld>
+              </div>
+
+              <div className="space-y-2 pt-2 border-t">
+                <Label className="text-xs font-bold block">🔄 المحطات التشغيلية المخصصة للروتيشن (Staff Rotational Stations):</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {[
+                    { id: "reception", label: "الاستقبال والفرز واستلام الطلبات 🛎️" },
+                    { id: "cleaning", label: "التنظيف والغسيل 🫧" },
+                    { id: "drying-assembly", label: "التجفيف والتجميع 🧺" },
+                    { id: "ironing", label: "الكي بالبخار 👔" },
+                    { id: "packing", label: "التغليف النهائي 📦" },
+                    { id: "qc", label: "فحص الجودة QC 🛡️" },
+                    { id: "delivery", label: "التوصيل الخارجي 🚚" },
+                  ].map((st) => {
+                    const assigned = (emp as any).assigned_stations || (emp.station ? [emp.station] : []);
+                    const checked = assigned.includes(st.id);
+                    return (
+                      <button
+                        key={st.id}
+                        type="button"
+                        disabled={!isOwner}
+                        onClick={() => {
+                          const next = checked ? assigned.filter((x: string) => x !== st.id) : [...assigned, st.id];
+                          setEmp({ ...emp, assigned_stations: next, station: next[0] ?? emp.station } as any);
+                        }}
+                        className={`p-2.5 rounded-xl border text-xs font-black transition flex items-center justify-between text-start ${
+                          checked ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{st.label}</span>
+                        <span>{checked ? "✓ مفعّل" : "+ إضافة"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </CardContent>
           </Card>
 

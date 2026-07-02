@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft, Loader2, Trophy, Tags } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 export const Route = createFileRoute("/$tenant/stations/qc")({
   head: () => ({ meta: [{ title: "محطة الجودة QC" }] }),
@@ -37,6 +38,7 @@ function QcStation() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [result, setResult] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   async function load() {
     setLoading(true);
@@ -126,6 +128,8 @@ function QcStation() {
 
   return (
     <div className="space-y-5" dir={dir}>
+      <StationActorWidget stationId="qc" stationLabel="فحص الجودة والمطابقة (QC) 🛡️" onActorChange={setActiveActor} />
+
       <div className="rounded-3xl bg-gradient-to-br from-emerald-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

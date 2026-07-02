@@ -122,9 +122,15 @@ function AttendanceMawaredPage() {
       if (empRes.error) toast.error(empRes.error.message);
       if (attRes.error) toast.error(attRes.error.message);
 
-      setEmployees((empRes.data ?? []) as Employee[]);
-      setRecords((attRes.data ?? []) as AttendanceRecord[]);
-      setCurrentEmp((myEmpRes.data ?? null) as Employee | null);
+      const staffOnly = (empRes.data ?? []).filter((e: any) => e.role !== "owner" && !e.job_title?.includes("مالك") && !e.full_name?.includes("مالك"));
+      setEmployees(staffOnly as Employee[]);
+      setRecords((attRes.data ?? []).filter((r: any) => r.employees?.role !== "owner" && !r.employees?.job_title?.includes("مالك")) as AttendanceRecord[]);
+      const myEmp = myEmpRes.data;
+      if (myEmp && (myEmp.role === "owner" || myEmp.job_title?.includes("مالك") || myEmp.full_name?.includes("مالك") || hasRole("owner"))) {
+        setCurrentEmp(null);
+      } else {
+        setCurrentEmp(myEmp as Employee | null);
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "خطأ في تحميل البيانات");

@@ -10,6 +10,7 @@ import { Loader2, Shirt, CheckCircle2, RotateCcw, Scale, User, Image as ImageIco
 import { StationBoard } from "@/components/station-board";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { useI18n } from "@/lib/i18n";
+import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 export const Route = createFileRoute("/$tenant/stations/ironing")({
   head: () => ({ meta: [{ title: "الكي" }] }),
@@ -36,13 +37,19 @@ type Employee = { id: string; full_name: string };
 
 function IroningRoute() {
   const { hasRole } = useAuth();
+  const { dir } = useI18n();
   const isManager = hasRole("owner", "ops_manager");
+  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
-  if (isManager) return <IroningManagerPage />;
-  return <IroningWorkerPage />;
+  return (
+    <div className="space-y-5" dir={dir}>
+      <StationActorWidget stationId="ironing" stationLabel="الكي بالبخار والمكابس 👔" onActorChange={setActiveActor} />
+      {isManager ? <IroningManagerPage activeActor={activeActor} /> : <IroningWorkerPage activeActor={activeActor} />}
+    </div>
+  );
 }
 
-function IroningManagerPage() {
+function IroningManagerPage({ activeActor }: { activeActor?: ActiveActor | null }) {
   const { t, dir } = useI18n();
   const [units, setUnits] = useState<Unit[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -185,7 +192,7 @@ function IroningManagerPage() {
   );
 }
 
-function IroningWorkerPage() {
+function IroningWorkerPage({ activeActor }: { activeActor?: ActiveActor | null }) {
   const { user } = useAuth();
   const { t, dir } = useI18n();
   const [empId, setEmpId] = useState<string | null>(null);
@@ -237,7 +244,16 @@ function IroningWorkerPage() {
       current_stage: "ironing_done",
       ironing_completed_at: new Date().toISOString(),
     }).eq("id", u.id);
-    if (error) toast.error(error.message); else { toast.success(`تم كي ${u.label_code}`); load(); }
+    if (error) toast.error(error.message); else {
+      toast.success(`تم كي ${u.label_code}`);
+      if (activeActor) {
+        await supabase.from("order_status_history").insert({
+          order_id: (u.orders as any)?.id || u.id, from_status: "ironing", to_status: "ironing_done",
+          changed_by: user?.id, notes: `👤 إتمام الكي: ${u.label_code} — نفذه: ${activeActor.full_name}`,
+        });
+      }
+      load();
+    }
   }
 
   async function markReclean(u: Unit) {
