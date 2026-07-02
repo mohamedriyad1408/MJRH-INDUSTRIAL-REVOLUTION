@@ -66,16 +66,27 @@ function LoginPage() {
   }
 
   const title = mode === "signin" ? t("login.signinTitle") : mode === "signup" ? t("login.signupTitle") : t("login.forgotTitle");
+  const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4" dir={dir}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4 py-8" dir={dir}>
       <Card className="w-full max-w-md p-8 shadow-xl relative"><div className="absolute top-3 left-3"><LanguageSwitcher compact /></div>
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+        <div className="flex flex-col items-center mb-6 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md mb-2">
             <Shirt className="w-7 h-7" />
           </div>
-          <h1 className="mt-3 text-2xl font-bold">{t("login.heading")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{title}</p>
+          {tenantSlug ? (
+            <div className="mb-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+              <span>📁 دخول مشروع:</span>
+              <span className="font-mono text-teal-900 font-black uppercase">{tenantSlug}</span>
+            </div>
+          ) : (
+            <div className="mb-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-900 text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
+              <span>🛡️ دخول إدارة وموظفو منصة MJRH</span>
+            </div>
+          )}
+          <h1 className="mt-1 text-2xl font-black text-slate-900">{tenantSlug ? t("login.tenantHeading", "دخول الموظفين والمالك") : t("login.heading")}</h1>
+          <p className="text-xs text-muted-foreground mt-1 font-semibold">{title}</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -118,11 +129,16 @@ function LoginPage() {
             </button>
           )}
         </div>
-        <p className="mt-4 text-xs text-muted-foreground text-center">
+        <p className="mt-4 text-xs text-muted-foreground text-center font-medium leading-relaxed">
           {t("login.firstAccountNote")}
         </p>
+        {!tenantSlug && (
+          <div className="mt-4 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-center text-slate-700 font-bold shadow-2xs">
+            هل تعمل في أحد المشاريع؟ <Link to="/" className="text-teal-700 font-black hover:underline block mt-0.5">اختر مشروعك من قائمة المشاريع الرئيسية ⮐</Link>
+          </div>
+        )}
         <div className="mt-4 text-center">
-          <Link to="/landing" className="text-xs text-muted-foreground hover:underline">{t("login.backHome")}</Link>
+          <Link to="/landing" className="text-xs text-muted-foreground hover:underline font-semibold">{t("login.backHome")}</Link>
         </div>
       </Card>
     </div>

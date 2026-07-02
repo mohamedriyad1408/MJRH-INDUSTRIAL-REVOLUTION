@@ -86,8 +86,8 @@ function HomeDirectory() {
         </div>
         <div className="flex gap-2 items-center">
           <LanguageSwitcher compact />
-          <Button asChild variant="outline" size="sm">
-            <Link to="/login"><LogIn className="w-4 h-4 ms-1" /> {t("home.staffLogin", "دخول الموظفين")}</Link>
+          <Button asChild variant="outline" size="sm" className="font-bold border-slate-300 hover:bg-slate-100 text-slate-800">
+            <Link to="/login"><LogIn className="w-4 h-4 ms-1 text-teal-600" /> {t("home.platformLogin", "🛡️ إدارة وموظفو المنصة")}</Link>
           </Button>
         </div>
       </header>
@@ -116,11 +116,15 @@ function HomeDirectory() {
         </section>
 
         <section className="py-6">
-          <div className="text-center mb-6">
+          <div className="text-center mb-6 space-y-3">
             <h2 className="text-2xl font-black flex items-center justify-center gap-2">
               <Boxes className="w-5 h-5 text-teal-700" /> {t("home.projectsTitle", "المشاريع النشطة")}
             </h2>
-            <p className="text-slate-600 mt-1 text-sm">{t("home.projectsText", "اختر مشروعك للدخول على بوابة العملاء أو الموظفين")}</p>
+            <p className="text-slate-600 text-sm font-medium">{t("home.projectsText", "اختر مشروعك للدخول على بوابة العملاء أو الموظفين")}</p>
+            <div className="max-w-2xl mx-auto p-3 rounded-2xl bg-teal-50/90 border border-teal-200 text-teal-900 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 text-center shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0" />
+              <span>{t("home.tenantNotice", "تنويه مهم: عملاء وموظفو المشاريع يرجى النقر على بطاقة مشروعكم أدناه للدخول إلى بوابة العميل أو لوحة التحكم الخاصة بالمشروع.")}</span>
+            </div>
           </div>
 
           {loading ? (
@@ -182,12 +186,12 @@ function HomeDirectory() {
           </Card>
         </section>
 
-        <footer className="py-6 text-center text-xs text-slate-500 space-y-2">
+        <footer className="py-6 text-center text-xs text-slate-500 space-y-2 font-medium">
           <div>© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION — BY MUHAMMAD RIYAD</div>
           <div className="flex justify-center gap-4">
             <Link to="/privacy" className="hover:underline">{t("legal.privacyTitle", "الخصوصية")}</Link>
             <Link to="/terms" className="hover:underline">{t("legal.termsTitle", "الشروط")}</Link>
-            <Link to="/login" className="hover:underline">{t("home.staffLogin", "دخول الموظفين")}</Link>
+            <Link to="/login" className="hover:underline font-bold text-slate-700">{t("home.platformLogin", "دخول إدارة وموظفي المنصة")}</Link>
           </div>
         </footer>
       </main>
