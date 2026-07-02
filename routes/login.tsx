@@ -25,10 +25,25 @@ function LoginPage() {
   const nav = useNavigate();
   const { session } = useAuth();
   const { t, dir } = useI18n();
+  const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
 
   useEffect(() => {
-    if (session) nav({ to: "/dashboard" });
-  }, [session, nav]);
+    if (session) {
+      if (tenantSlug) {
+        nav({ to: `/${tenantSlug}/today` as any });
+      } else {
+        supabase.from("user_roles").select("role, tenant_id, tenants(slug)").eq("user_id", session.user.id).then(({ data }: any) => {
+          const rows = data || [];
+          if (rows.some((r: any) => r.role === "super_admin")) {
+            nav({ to: "/admin/tenants" as any });
+          } else {
+            const firstTenantSlug = rows.find((r: any) => r.tenants?.slug)?.tenants?.slug || "dry-tech";
+            nav({ to: `/${firstTenantSlug}/today` as any });
+          }
+        });
+      }
+    }
+  }, [session, nav, tenantSlug]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,7 +81,6 @@ function LoginPage() {
   }
 
   const title = mode === "signin" ? t("login.signinTitle") : mode === "signup" ? t("login.signupTitle") : t("login.forgotTitle");
-  const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4 py-8" dir={dir}>

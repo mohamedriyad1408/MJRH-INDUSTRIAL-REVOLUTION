@@ -116,6 +116,8 @@ export function AppSidebar() {
   const [employeeStation, setEmployeeStation] = useState<string | null>(null);
   const [employeeJobRole, setEmployeeJobRole] = useState<string | null>(null);
 
+  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
+
   useEffect(() => {
     if (!user) return;
     supabase
@@ -176,11 +178,12 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visible.map((item) => {
-                    const active = path === item.url || path.startsWith(item.url + "/");
+                    const targetUrl = tenantSlug && !isSuperAdmin && !item.url.startsWith("/admin") ? `/${tenantSlug}${item.url}` : item.url;
+                    const active = path === targetUrl || path.startsWith(targetUrl + "/");
                     return (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton asChild isActive={active}>
-                          <Link to={item.url} className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
+                          <Link to={targetUrl as any} className="flex items-center gap-2 font-bold" onClick={() => setOpenMobile(false)}>
                             <item.icon className="w-4 h-4 shrink-0" />
                             <span>{t(`nav.${item.url}`, item.title)}</span>
                           </Link>
@@ -195,19 +198,19 @@ export function AppSidebar() {
         })}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border p-2">
-        <div className="px-2 pb-2 text-xs opacity-70">
+        <div className="px-2 pb-2 text-xs opacity-70 font-semibold">
           {roles.length ? `${t("common.role")}: ${roles.map((r) => t(`role.${r}`, roleAr(r))).join(dir === "rtl" ? "، " : ", ")}` : t("common.noRole")}
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="/customer-portal" target="_blank" className="flex items-center gap-2 text-teal-600" onClick={() => setOpenMobile(false)}>
+              <a href={`/customer-portal?tenant=${tenantSlug || "dry-tech"}`} target="_blank" className="flex items-center gap-2 text-teal-600 font-bold" onClick={() => setOpenMobile(false)}>
                 <UserCircle className="w-4 h-4" /><span>{t("app.portal")}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => signOut()}>
+            <SidebarMenuButton onClick={() => signOut()} className="font-bold text-red-600 hover:text-red-700">
               <LogOut className="w-4 h-4" /><span>{t("app.signOut")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

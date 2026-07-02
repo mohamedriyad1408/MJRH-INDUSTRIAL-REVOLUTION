@@ -47,10 +47,10 @@ function HomeDirectory() {
   useEffect(() => {
     if (authLoading || !session) return;
     if (isSuperAdmin) return void nav({ to: "/admin/tenants" });
-    if (hasRole("owner", "ops_manager", "cs_manager")) return void nav({ to: "/today" });
-    if (hasRole("courier")) return void nav({ to: "/driver" });
+    if (hasRole("owner", "ops_manager", "cs_manager")) return void nav({ to: "/$tenant/today" as any });
+    if (hasRole("courier")) return void nav({ to: "/$tenant/driver" as any });
     // موظف بدور محطة، أو مستخدم بجلسة بدون دور بعد (بانتظار التفعيل) — كلاهما تتكفل بهما /dashboard.
-    nav({ to: "/dashboard" });
+    nav({ to: "/$tenant/dashboard" as any });
   }, [authLoading, session, isSuperAdmin, hasRole, nav]);
 
   useEffect(() => {
