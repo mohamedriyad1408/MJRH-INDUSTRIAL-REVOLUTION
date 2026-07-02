@@ -76,11 +76,11 @@ function HomeDirectory() {
     >
       <header className="mx-auto max-w-5xl px-4 py-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="h-14 w-14 rounded-2xl bg-white p-1 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="h-16 w-16 rounded-2xl bg-white p-0.5 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
             <img src="/mjrh-logo.png" alt="MJRH Logo" className="h-full w-full object-contain" />
           </div>
           <div>
-            <div className="font-black text-xl text-slate-900 tracking-tight">MJRH</div>
+            <div className="font-black text-2xl text-slate-900 tracking-tight">MJRH</div>
             <div className="text-xs text-slate-500 font-semibold">{t("home.tagline", "منظومة تشغيل المشاريع — Industrial Revolution")}</div>
           </div>
         </div>
@@ -93,12 +93,20 @@ function HomeDirectory() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-16">
-        <section className="text-center py-8 md:py-12 space-y-5">
-          <div className="flex justify-center mb-2">
-            <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-36 sm:h-48 md:h-56 object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
+        <section className="text-center py-6 md:py-10 space-y-6">
+          <div className="flex justify-center py-4 md:py-6">
+            <div className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl flex items-center justify-center">
+              <div className="absolute -inset-6 bg-gradient-to-r from-teal-400/25 via-cyan-500/25 to-indigo-500/25 rounded-full blur-3xl opacity-80 pointer-events-none" />
+              
+              <img
+                src="/mjrh-logo.png"
+                alt="MJRH INDUSTRIAL REVOLUTION"
+                className="relative w-full h-auto max-h-[320px] sm:max-h-[400px] md:max-h-[460px] object-contain drop-shadow-[0_20px_40px_rgba(13,148,136,0.3)] hover:scale-[1.03] transition-all duration-500"
+              />
+            </div>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border bg-white/80 px-4 py-1.5 text-xs font-bold text-teal-800 shadow-2xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-teal-600" /> {t("home.badge", "منصة MJRH لتشغيل المشاريع")}
+          <div className="inline-flex items-center gap-2 rounded-full border bg-white/90 px-4 py-1.5 text-xs font-bold text-teal-800 shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-teal-600" /> {t("home.badge", "منصة MJRH لتشغيل المشاريع")}
           </div>
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-950 leading-tight">
             {t("home.heroTitle", "نظام واحد.. يشغّل أكثر من مشروع")}

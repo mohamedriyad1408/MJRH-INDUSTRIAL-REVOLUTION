@@ -47,8 +47,8 @@ function LandingPage() {
       <main className="mx-auto max-w-7xl px-4 pb-16">
         <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-center py-8 md:py-14">
           <div className="space-y-6">
-            <div className="mb-2">
-              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-28 sm:h-36 object-contain drop-shadow-xl hover:scale-105 transition-transform duration-300" />
+            <div className="mb-4">
+              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-44 sm:h-56 md:h-64 object-contain drop-shadow-2xl hover:scale-[1.03] transition-transform duration-500" />
             </div>
             <Badge className="bg-teal-600 text-white px-3 py-1 font-bold shadow-xs">{t("landing.badge")}</Badge>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-950 leading-tight">

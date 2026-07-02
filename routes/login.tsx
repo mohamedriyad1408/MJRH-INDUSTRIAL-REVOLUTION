@@ -77,7 +77,7 @@ function LoginPage() {
               <Shirt className="w-7 h-7" />
             </div>
           ) : (
-            <div className="w-24 h-24 rounded-3xl bg-white p-2.5 flex items-center justify-center shadow-lg border border-slate-200/80 mb-3 overflow-hidden">
+            <div className="w-36 h-36 sm:w-44 sm:h-44 p-2 flex items-center justify-center mb-2 drop-shadow-xl hover:scale-105 transition-transform duration-300">
               <img src="/mjrh-logo.png" alt="MJRH Logo" className="w-full h-full object-contain" />
             </div>
           )}
