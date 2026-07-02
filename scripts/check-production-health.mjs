@@ -18,8 +18,8 @@ function readEnvFile(path) {
 }
 
 const fileEnv = readEnvFile(".env.production");
-const supabaseUrl = process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL;
-const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || fileEnv.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL || "https://dngjfjrjddigqadlyain.supabase.co";
+const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || fileEnv.VITE_SUPABASE_PUBLISHABLE_KEY || fileEnv.VITE_SUPABASE_ANON_KEY || "sb_publishable_JRp6rlQy0si3ZEA4WAHIYw_3dlJ4hfY";
 const email = process.env.E2E_AUTH_EMAIL;
 const password = process.env.E2E_AUTH_PASSWORD;
 const appUrl = process.env.PLAYWRIGHT_BASE_URL || "https://mjrh.vercel.app";

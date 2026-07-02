@@ -1,13 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
-const SUPABASE_URL       = import.meta.env.VITE_SUPABASE_URL       as string;
-const SUPABASE_ANON_KEY  = import.meta.env.VITE_SUPABASE_ANON_KEY  as string ||
-                           import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in .env");
-}
+const SUPABASE_URL       = (import.meta.env.VITE_SUPABASE_URL as string) || "https://dngjfjrjddigqadlyain.supabase.co";
+const SUPABASE_ANON_KEY  = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
+                           (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+                           "sb_publishable_JRp6rlQy0si3ZEA4WAHIYw_3dlJ4hfY";
 
 type SupabaseCustomClient = {
   from: (table: string) => { select: (columns?: string, options?: any) => any; insert: (p: any, options?: any) => any; update: (p: any, options?: any) => any; delete: (options?: any) => any; upsert: (p: any, options?: any) => any };
