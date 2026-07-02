@@ -137,7 +137,7 @@ function PackingStation() {
         <CardHeader className="bg-muted/40 pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base flex items-center gap-2"><PackageCheck className="w-4 h-4 text-teal-600" /> {t("order.orderNo", "طلب #{order}").replace("{order}", String(g.order.order_number))}<Badge variant="outline">{g.units.length} {t("station.common.pieces")}</Badge>{!c.okToPack && <Badge variant="destructive">{t("station.packing.notFit")}</Badge>}{c.okToReady && <Badge className="bg-emerald-600">{t("station.packing.readyApproval")}</Badge>}</CardTitle><Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.orderId } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button></div><div className="text-xs text-muted-foreground">{g.order.customers?.full_name ?? "—"} · {g.order.customers?.phone ?? ""}</div>
 {((g.order as any)?.notes || "").includes("[👑 تفضيلات VIP المميزة]") && (
   <div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
-    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل الملكية:</div>
+    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل (VIP Concierge):</div>
     {(g.order as any).notes}
   </div>
 )}</CardHeader>

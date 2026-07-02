@@ -120,7 +120,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
                 <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
                 {((g.order as any)?.notes || "").includes("[👑 تفضيلات VIP المميزة]") && (
                   <div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
-                    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل الملكية:</div>
+                    <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5">👑 تعليمات وتفضيلات العميل (VIP Concierge):</div>
                     {(g.order as any).notes}
                   </div>
                 )}

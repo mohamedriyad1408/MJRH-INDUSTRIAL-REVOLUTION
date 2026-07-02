@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { getSurgeReportData } from "@/lib/scheduling-surge";
 
 export const Route = createFileRoute("/$tenant/reports")({
   head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
@@ -47,6 +48,7 @@ function ReportsPage() {
   const [data, setData] = useState<any>(null);
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
+  const [surgeData, setSurgeData] = useState<any>(null);
 
   async function load() {
     setLoading(true);
@@ -209,6 +211,8 @@ function ReportsPage() {
       queuedMessages, sentMessages, proofIssues: proofIssues.length, invoiceNeedsReview: invoiceNeedsReview.length, pendingPickups,
       lateByStage, lateEmployees, branchComparison, labelIssues: labelIssueRes.data?.length ?? 0,
     });
+    const { data: allActive } = await supabase.from("orders").select("id,order_number,status,notes").not("status", "in", "(delivered,cancelled)");
+    setSurgeData(getSurgeReportData(allActive || []));
     setLoading(false);
   }
 
@@ -287,6 +291,44 @@ function ReportsPage() {
           <RoleFocus isOwner={isOwner} isOps={isOps} isCs={isCs} data={data} t={t} />
 
           <DelayResponsibility data={data} t={t} />
+
+          {surgeData && (
+            <Card className="border-teal-200 bg-gradient-to-br from-white via-slate-50 to-teal-50/30 shadow-md">
+              <CardHeader className="pb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
+                    <Clock className="w-5 h-5 text-teal-600" />
+                    <span>📊 مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
+                  </CardTitle>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 عادي: {surgeData.normalCount}</Badge>
+                    <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 ذروة عادية: {surgeData.normalPeakCount}</Badge>
+                    <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 ذروة متوسطة: {surgeData.mediumPeakCount}</Badge>
+                    <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">🔴 ذروة شديدة: {surgeData.severePeakCount}</Badge>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  متابعة الضغط التشغيلي على فترات استلام وتسليم المندوب الموزعة على مدار اليوم وغداً (فترات ساعتين متصلتين).
+                </p>
+              </CardHeader>
+              <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                {surgeData.slots.map((st: any) => (
+                  <div key={st.slot} className={`p-3 rounded-xl border text-xs space-y-1.5 transition ${st.disabled ? "bg-red-50/80 border-red-300 opacity-90" : `${st.bgClass} bg-white`}`}>
+                    <div className="flex items-center justify-between font-black">
+                      <span className="text-slate-800 truncate">{st.slot}</span>
+                      <Badge className={`text-[9px] ${st.disabled ? "bg-red-600 text-white" : st.level === "medium" ? "bg-orange-500 text-white" : st.level === "normal_peak" ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"}`}>
+                        {st.badge}
+                      </Badge>
+                    </div>
+                    <div className={`text-[11px] font-bold ${st.colorClass}`}>
+                      {st.count} طلبات مجدولة
+                    </div>
+                    <div className="text-[10px] text-slate-500 line-clamp-1">{st.label}</div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Brain className="w-5 h-5 text-teal-700" />ماذا يقول النظام؟</CardTitle></CardHeader>
