@@ -58,6 +58,7 @@ import { Route as AppStationsDryingAssemblyRouteImport } from './routes/_app/sta
 import { Route as AppStationsDeliveryRouteImport } from './routes/_app/stations/delivery'
 import { Route as AppStationsCleaningRouteImport } from './routes/_app/stations/cleaning'
 import { Route as AppStaffUsersRouteImport } from './routes/_app/staff/users'
+import { Route as AppStaffScorecardRouteImport } from './routes/_app/staff/scorecard'
 import { Route as AppStaffScheduleRouteImport } from './routes/_app/staff/schedule'
 import { Route as AppStaffSalariesRouteImport } from './routes/_app/staff/salaries'
 import { Route as AppStaffRequestsRouteImport } from './routes/_app/staff/requests'
@@ -321,6 +322,11 @@ const AppStaffUsersRoute = AppStaffUsersRouteImport.update({
   path: '/staff/users',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStaffScorecardRoute = AppStaffScorecardRouteImport.update({
+  id: '/staff/scorecard',
+  path: '/staff/scorecard',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStaffScheduleRoute = AppStaffScheduleRouteImport.update({
   id: '/staff/schedule',
   path: '/staff/schedule',
@@ -459,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/staff/requests': typeof AppStaffRequestsRoute
   '/staff/salaries': typeof AppStaffSalariesRoute
   '/staff/schedule': typeof AppStaffScheduleRoute
+  '/staff/scorecard': typeof AppStaffScorecardRoute
   '/staff/users': typeof AppStaffUsersRoute
   '/stations/cleaning': typeof AppStationsCleaningRoute
   '/stations/delivery': typeof AppStationsDeliveryRoute
@@ -526,6 +533,7 @@ export interface FileRoutesByTo {
   '/staff/requests': typeof AppStaffRequestsRoute
   '/staff/salaries': typeof AppStaffSalariesRoute
   '/staff/schedule': typeof AppStaffScheduleRoute
+  '/staff/scorecard': typeof AppStaffScorecardRoute
   '/staff/users': typeof AppStaffUsersRoute
   '/stations/cleaning': typeof AppStationsCleaningRoute
   '/stations/delivery': typeof AppStationsDeliveryRoute
@@ -595,6 +603,7 @@ export interface FileRoutesById {
   '/_app/staff/requests': typeof AppStaffRequestsRoute
   '/_app/staff/salaries': typeof AppStaffSalariesRoute
   '/_app/staff/schedule': typeof AppStaffScheduleRoute
+  '/_app/staff/scorecard': typeof AppStaffScorecardRoute
   '/_app/staff/users': typeof AppStaffUsersRoute
   '/_app/stations/cleaning': typeof AppStationsCleaningRoute
   '/_app/stations/delivery': typeof AppStationsDeliveryRoute
@@ -664,6 +673,7 @@ export interface FileRouteTypes {
     | '/staff/requests'
     | '/staff/salaries'
     | '/staff/schedule'
+    | '/staff/scorecard'
     | '/staff/users'
     | '/stations/cleaning'
     | '/stations/delivery'
@@ -731,6 +741,7 @@ export interface FileRouteTypes {
     | '/staff/requests'
     | '/staff/salaries'
     | '/staff/schedule'
+    | '/staff/scorecard'
     | '/staff/users'
     | '/stations/cleaning'
     | '/stations/delivery'
@@ -799,6 +810,7 @@ export interface FileRouteTypes {
     | '/_app/staff/requests'
     | '/_app/staff/salaries'
     | '/_app/staff/schedule'
+    | '/_app/staff/scorecard'
     | '/_app/staff/users'
     | '/_app/stations/cleaning'
     | '/_app/stations/delivery'
@@ -1174,6 +1186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStaffUsersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/staff/scorecard': {
+      id: '/_app/staff/scorecard'
+      path: '/staff/scorecard'
+      fullPath: '/staff/scorecard'
+      preLoaderRoute: typeof AppStaffScorecardRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/staff/schedule': {
       id: '/_app/staff/schedule'
       path: '/staff/schedule'
@@ -1349,6 +1368,7 @@ interface AppRouteChildren {
   AppStaffRequestsRoute: typeof AppStaffRequestsRoute
   AppStaffSalariesRoute: typeof AppStaffSalariesRoute
   AppStaffScheduleRoute: typeof AppStaffScheduleRoute
+  AppStaffScorecardRoute: typeof AppStaffScorecardRoute
   AppStaffUsersRoute: typeof AppStaffUsersRoute
   AppStationsCleaningRoute: typeof AppStationsCleaningRoute
   AppStationsDeliveryRoute: typeof AppStationsDeliveryRoute
@@ -1406,6 +1426,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppStaffRequestsRoute: AppStaffRequestsRoute,
   AppStaffSalariesRoute: AppStaffSalariesRoute,
   AppStaffScheduleRoute: AppStaffScheduleRoute,
+  AppStaffScorecardRoute: AppStaffScorecardRoute,
   AppStaffUsersRoute: AppStaffUsersRoute,
   AppStationsCleaningRoute: AppStationsCleaningRoute,
   AppStationsDeliveryRoute: AppStationsDeliveryRoute,
