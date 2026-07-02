@@ -96,7 +96,7 @@ function LoginPage() {
             <div className="flex flex-wrap gap-2 pt-1">
               {isSuperAdmin && (
                 <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 font-black">
-                  <Link to="/admin/tenants">لوحة إدارة المنصة (Super Admin) &larr;</Link>
+                  <Link to={"/admin/tenants" as any}>لوحة إدارة المنصة (Super Admin) &larr;</Link>
                 </Button>
               )}
               <Button asChild size="sm" variant="outline" className="font-black bg-white border-slate-300">

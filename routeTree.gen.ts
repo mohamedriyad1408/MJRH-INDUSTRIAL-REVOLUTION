@@ -48,6 +48,7 @@ import { Route as TenantBudgetsRouteImport } from './routes/$tenant/budgets'
 import { Route as TenantBranchesRouteImport } from './routes/$tenant/branches'
 import { Route as TenantBillingRouteImport } from './routes/$tenant/billing'
 import { Route as TenantAccountingRouteImport } from './routes/$tenant/accounting'
+import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index'
 import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
 import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
 import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
@@ -272,6 +273,11 @@ const TenantAccountingRoute = TenantAccountingRouteImport.update({
   path: '/accounting',
   getParentRoute: () => TenantRoute,
 } as any)
+const AdminAdminIndexRoute = AdminAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const TenantStaffIndexRoute = TenantStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -485,6 +491,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
+  '/admin/': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
   '/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/admin/users/': typeof AdminAdminUsersIndexRoute
@@ -554,6 +561,7 @@ export interface FileRoutesByTo {
   '/$tenant/orders': typeof TenantOrdersIndexRoute
   '/$tenant/pickups': typeof TenantPickupsIndexRoute
   '/$tenant/staff': typeof TenantStaffIndexRoute
+  '/admin': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
   '/admin/tenants': typeof AdminAdminTenantsIndexRoute
   '/admin/users': typeof AdminAdminUsersIndexRoute
@@ -625,6 +633,7 @@ export interface FileRoutesById {
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
+  '/_admin/admin/': typeof AdminAdminIndexRoute
   '/_admin/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
   '/_admin/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
@@ -696,6 +705,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
+    | '/admin/'
     | '/admin/tenants/$id'
     | '/admin/tenants/'
     | '/admin/users/'
@@ -765,6 +775,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders'
     | '/$tenant/pickups'
     | '/$tenant/staff'
+    | '/admin'
     | '/admin/tenants/$id'
     | '/admin/tenants'
     | '/admin/users'
@@ -835,6 +846,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
+    | '/_admin/admin/'
     | '/_admin/admin/tenants/$id'
     | '/_admin/admin/tenants/'
     | '/_admin/admin/users/'
@@ -1129,6 +1141,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$tenant/accounting'
       preLoaderRoute: typeof TenantAccountingRouteImport
       parentRoute: typeof TenantRoute
+    }
+    '/_admin/admin/': {
+      id: '/_admin/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminAdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/$tenant/staff/': {
       id: '/$tenant/staff/'
@@ -1460,6 +1479,7 @@ const TenantRouteWithChildren =
 interface AdminRouteChildren {
   AdminAdminBillingRoute: typeof AdminAdminBillingRoute
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
+  AdminAdminIndexRoute: typeof AdminAdminIndexRoute
   AdminAdminTenantsIdRoute: typeof AdminAdminTenantsIdRoute
   AdminAdminTenantsIndexRoute: typeof AdminAdminTenantsIndexRoute
   AdminAdminUsersIndexRoute: typeof AdminAdminUsersIndexRoute
@@ -1468,6 +1488,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBillingRoute: AdminAdminBillingRoute,
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
+  AdminAdminIndexRoute: AdminAdminIndexRoute,
   AdminAdminTenantsIdRoute: AdminAdminTenantsIdRoute,
   AdminAdminTenantsIndexRoute: AdminAdminTenantsIndexRoute,
   AdminAdminUsersIndexRoute: AdminAdminUsersIndexRoute,

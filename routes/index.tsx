@@ -94,7 +94,7 @@ function HomeDirectory() {
             <div className="flex items-center gap-2">
               {isSuperAdmin ? (
                 <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl">
-                  <Link to="/admin/tenants">لوحة إدارة المنصة (Super Admin) &larr;</Link>
+                  <Link to={"/admin/tenants" as any}>لوحة إدارة المنصة (Super Admin) &larr;</Link>
                 </Button>
               ) : (
                 <a href="#active-projects-list" className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl px-4 py-2 text-xs transition inline-block">

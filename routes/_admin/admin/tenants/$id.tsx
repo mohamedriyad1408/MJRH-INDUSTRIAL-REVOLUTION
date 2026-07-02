@@ -70,7 +70,7 @@ function TenantDetailPage() {
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/admin/tenants"><ArrowRight className="w-4 h-4" /></Link></Button>
+        <Button asChild variant="ghost" size="sm"><Link to={"/admin/tenants" as any}><ArrowRight className="w-4 h-4" /></Link></Button>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="w-6 h-6" /> {t.name}</h1>
       </div>
 
