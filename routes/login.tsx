@@ -23,25 +23,13 @@ function LoginPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
-  const { session } = useAuth();
+  const { session, isSuperAdmin } = useAuth();
   const { t, dir } = useI18n();
   const tenantSlug = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tenant") : null;
 
   useEffect(() => {
-    if (session) {
-      if (tenantSlug) {
-        nav({ to: `/${tenantSlug}/today` as any });
-      } else {
-        supabase.from("user_roles").select("role, tenant_id, tenants(slug)").eq("user_id", session.user.id).then(({ data }: any) => {
-          const rows = data || [];
-          if (rows.some((r: any) => r.role === "super_admin")) {
-            nav({ to: "/admin/tenants" as any });
-          } else {
-            const firstTenantSlug = rows.find((r: any) => r.tenants?.slug)?.tenants?.slug || "dry-tech";
-            nav({ to: `/${firstTenantSlug}/today` as any });
-          }
-        });
-      }
+    if (session && tenantSlug) {
+      nav({ to: `/${tenantSlug}/today` as any });
     }
   }, [session, nav, tenantSlug]);
 
@@ -71,6 +59,16 @@ function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("تم تسجيل الدخول");
+        if (!tenantSlug) {
+          const { data: userRoles } = await supabase.from("user_roles").select("role, tenant_id, tenants(slug)").eq("user_id", (await supabase.auth.getUser()).data.user?.id || "");
+          const rows = userRoles || [];
+          if (rows.some((r: any) => r.role === "super_admin")) {
+            nav({ to: "/admin/tenants" as any });
+          } else {
+            const firstSlug = rows.find((r: any) => r.tenants?.slug)?.tenants?.slug || "dry-tech";
+            nav({ to: `/${firstSlug}/today` as any });
+          }
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "خطأ";
@@ -85,6 +83,29 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4 py-8" dir={dir}>
       <Card className="w-full max-w-md p-8 shadow-xl relative"><div className="absolute top-3 left-3"><LanguageSwitcher compact /></div>
+        {!tenantSlug && session && (
+          <div className="mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-950 text-xs space-y-2.5 shadow-2xs">
+            <div className="font-black flex items-center gap-1.5 text-indigo-900">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+              <span>أنت مسجل الدخول حالياً بحساب:</span>
+              <span className="font-mono">{session.user.email}</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed font-semibold">
+              هذه الصفحة مخصصة لدخول إدارة منصة MJRH العامة. للوصول لمغسلتك، يمكنك الانتقال إليها من القائمة الرئيسية:
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {isSuperAdmin && (
+                <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 font-black">
+                  <Link to="/admin/tenants">لوحة إدارة المنصة (Super Admin) &larr;</Link>
+                </Button>
+              )}
+              <Button asChild size="sm" variant="outline" className="font-black bg-white border-slate-300">
+                <Link to="/">قائمة المشاريع والمغاسل &larr;</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col items-center mb-6 text-center">
           {tenantSlug ? (
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-700 via-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md mb-2">

@@ -42,17 +42,6 @@ function HomeDirectory() {
   const [loading, setLoading] = useState(true);
   const [errored, setErrored] = useState(false);
 
-  // إذا كان المستخدم مسجّل دخوله بالفعل (موظف/مالك/سوبر أدمن)، حوّله لصفحته المناسبة
-  // بدل ما يشوف دليل المشاريع العام. الزوار بدون جلسة يشوفون الدليل كما هو.
-  useEffect(() => {
-    if (authLoading || !session) return;
-    if (isSuperAdmin) return void nav({ to: "/admin/tenants" });
-    if (hasRole("owner", "ops_manager", "cs_manager")) return void nav({ to: "/$tenant/today" as any });
-    if (hasRole("courier")) return void nav({ to: "/$tenant/driver" as any });
-    // موظف بدور محطة، أو مستخدم بجلسة بدون دور بعد (بانتظار التفعيل) — كلاهما تتكفل بهما /dashboard.
-    nav({ to: "/$tenant/dashboard" as any });
-  }, [authLoading, session, isSuperAdmin, hasRole, nav]);
-
   useEffect(() => {
     supabase
       .rpc("list_active_tenants_public")
@@ -63,9 +52,7 @@ function HomeDirectory() {
       .finally(() => setLoading(false));
   }, []);
 
-  // بينما بيتحدد لو فيه جلسة مسجلة أو لأ، أو بينما بنجهز التحويل لمستخدم مسجل دخوله بالفعل،
-  // نعرض مؤشر تحميل بدل ما يظهر دليل المشاريع للحظة ثم يختفي.
-  if (authLoading || session) {
+  if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>;
   }
 
@@ -93,6 +80,31 @@ function HomeDirectory() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-16">
+        {session && (
+          <div className="mb-6 p-4 rounded-3xl bg-slate-900 text-white shadow-xl flex flex-wrap items-center justify-between gap-4 border border-teal-500/30">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center font-bold shrink-0">
+                🟢
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs text-teal-300 font-bold uppercase tracking-wider">أنت مسجل الدخول حالياً في المنظومة</div>
+                <div className="font-black text-sm truncate text-white">{session.user.email}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isSuperAdmin ? (
+                <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl">
+                  <Link to="/admin/tenants">لوحة إدارة المنصة (Super Admin) &larr;</Link>
+                </Button>
+              ) : (
+                <a href="#active-projects-list" className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl px-4 py-2 text-xs transition inline-block">
+                  اختر مغسلتك من القائمة أدناه &larr;
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         <section className="text-center py-6 md:py-10 space-y-6">
           <div className="flex justify-center py-4 md:py-6">
             <div className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl flex items-center justify-center">
@@ -126,7 +138,7 @@ function HomeDirectory() {
           </div>
         </section>
 
-        <section className="py-6">
+        <section className="py-6 scroll-mt-24" id="active-projects-list">
           <div className="text-center mb-6 space-y-3">
             <h2 className="text-2xl font-black flex items-center justify-center gap-2">
               <Boxes className="w-5 h-5 text-teal-700" /> {t("home.projectsTitle", "المشاريع النشطة")}
