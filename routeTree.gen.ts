@@ -24,6 +24,7 @@ import { Route as AppTodayRouteImport } from './routes/_app/today'
 import { Route as AppSystemHealthRouteImport } from './routes/_app/system-health'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppServicesRouteImport } from './routes/_app/services'
+import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppReceivablesRouteImport } from './routes/_app/receivables'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
@@ -146,6 +147,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
 const AppServicesRoute = AppServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
 const AppReportsRoute = AppReportsRouteImport.update({
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/ops': typeof AppOpsRoute
   '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/system-health': typeof AppSystemHealthRoute
@@ -491,6 +498,7 @@ export interface FileRoutesByTo {
   '/ops': typeof AppOpsRoute
   '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
   '/services': typeof AppServicesRoute
   '/settings': typeof AppSettingsRoute
   '/system-health': typeof AppSystemHealthRoute
@@ -558,6 +566,7 @@ export interface FileRoutesById {
   '/_app/ops': typeof AppOpsRoute
   '/_app/receivables': typeof AppReceivablesRoute
   '/_app/reports': typeof AppReportsRoute
+  '/_app/search': typeof AppSearchRoute
   '/_app/services': typeof AppServicesRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/system-health': typeof AppSystemHealthRoute
@@ -625,6 +634,7 @@ export interface FileRouteTypes {
     | '/ops'
     | '/receivables'
     | '/reports'
+    | '/search'
     | '/services'
     | '/settings'
     | '/system-health'
@@ -690,6 +700,7 @@ export interface FileRouteTypes {
     | '/ops'
     | '/receivables'
     | '/reports'
+    | '/search'
     | '/services'
     | '/settings'
     | '/system-health'
@@ -756,6 +767,7 @@ export interface FileRouteTypes {
     | '/_app/ops'
     | '/_app/receivables'
     | '/_app/reports'
+    | '/_app/search'
     | '/_app/services'
     | '/_app/settings'
     | '/_app/system-health'
@@ -910,6 +922,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof AppServicesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/reports': {
@@ -1293,6 +1312,7 @@ interface AppRouteChildren {
   AppOpsRoute: typeof AppOpsRoute
   AppReceivablesRoute: typeof AppReceivablesRoute
   AppReportsRoute: typeof AppReportsRoute
+  AppSearchRoute: typeof AppSearchRoute
   AppServicesRoute: typeof AppServicesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSystemHealthRoute: typeof AppSystemHealthRoute
@@ -1348,6 +1368,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppOpsRoute: AppOpsRoute,
   AppReceivablesRoute: AppReceivablesRoute,
   AppReportsRoute: AppReportsRoute,
+  AppSearchRoute: AppSearchRoute,
   AppServicesRoute: AppServicesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSystemHealthRoute: AppSystemHealthRoute,

@@ -160,7 +160,7 @@ export function MotivationalPopups() {
     const mutedUntil = Number(localStorage.getItem(muteKey) || 0);
     if (Date.now() < mutedUntil) return;
 
-    const isSearchOpen = () => typeof document !== "undefined" && document.body.getAttribute("data-search-open") === "true";
+    const isSearchOpen = () => typeof document !== "undefined" && (document.body.getAttribute("data-search-open") === "true" || window.location.pathname.includes("/search"));
 
     // 1. Initial Session Check: Shows when user first opens/returns to app after closing tab/reloading
     const sessionKey = `mjrh_session_motivate_${user.id}`;

@@ -5,7 +5,7 @@ import {
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
-  UsersRound, LockKeyhole, HelpCircle,
+  UsersRound, LockKeyhole, HelpCircle, Search,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -34,6 +34,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "اللوحات",
     items: [
+      { title: "البحث الموحد والنتائج", url: "/search", icon: Search, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
       { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "مركز اليوم", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
@@ -134,14 +135,16 @@ export function AppSidebar() {
 
   function isVisible(item: NavItem) {
     if (!isSuperAdmin && hasRole("employee") && !isManager) {
+      if (item.url === "/search") return true;
       if (employeeStation === "reception") {
-        return ["/orders", "/orders/new", "/customers", "/stations/reception"].includes(item.url);
+        return ["/orders", "/orders/new", "/customers", "/stations/reception", "/search"].includes(item.url);
       }
       if (item.url === "/driver") return employeeJobRole === "driver";
       if (item.url.startsWith("/stations/")) return item.url === stationUrl;
       return false;
     }
     if (!isSuperAdmin && hasRole("courier") && !isManager) {
+      if (item.url === "/search") return true;
       return item.url === "/driver";
     }
     if (item.roles && !hasRole(...item.roles)) return false;
