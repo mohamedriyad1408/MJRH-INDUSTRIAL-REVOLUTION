@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { WORKFLOW_STATIONS_10 } from "@/lib/staff-roles";
 
 export const Route = createFileRoute("/$tenant/staff/new")({
   component: NewStaffPage,
@@ -123,26 +124,20 @@ function NewStaffPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t("common.noRole")}</SelectItem>
-                <SelectItem value="cs_manager">{t("role.cs_manager")}</SelectItem>
-                <SelectItem value="ops_manager">{t("role.ops_manager")}</SelectItem>
-                <SelectItem value="courier">{t("role.courier")}</SelectItem>
-                <SelectItem value="owner">{t("role.owner")}</SelectItem>
+                <SelectItem value="cs_manager">مدير خدمة عملاء 📞</SelectItem>
+                <SelectItem value="ops_manager">مدير تشغيل ⚙️</SelectItem>
+                <SelectItem value="owner">مالك المغسلة 👑</SelectItem>
+                {WORKFLOW_STATIONS_10.map((ws) => (
+                  <SelectItem key={ws.role} value={ws.role}>{ws.roleLabel} ({ws.id})</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
           <div className="md:col-span-2 space-y-2 pt-2 border-t">
-            <Label className="text-sm font-bold block">🔄 المحطات التشغيلية متعددة الأدوار (Staff Rotational Stations):</Label>
-            <p className="text-xs text-muted-foreground">تحديد أكثر من محطة أو دور تشغيلي للموظف (مثل الاستقبال والتجميع والتغليف) لتمكينه من التبديل واختيار اسمه (مبدأ Actor) في شاشات المحطات.</p>
+            <Label className="text-sm font-bold block">🔄 المحطات والأدوار التشغيلية الـ 10 (10 Rotational Workstations):</Label>
+            <p className="text-xs text-muted-foreground">تحديد محطة أو دور تشغيلي للموظف حسب ترتيب خط سير العمل (من الاستقبال حتى التوصيل) لتمكينه من التبديل واختيار اسمه (Actor) في شاشات المحطات.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {[
-                { id: "reception", label: "الاستقبال والفرز واستلام الطلبات 🛎️" },
-                { id: "cleaning", label: "التنظيف والغسيل 🫧" },
-                { id: "drying-assembly", label: "التجفيف والتجميع 🧺" },
-                { id: "ironing", label: "الكي بالبخار 👔" },
-                { id: "packing", label: "التغليف النهائي 📦" },
-                { id: "qc", label: "فحص الجودة QC 🛡️" },
-                { id: "delivery", label: "التوصيل الخارجي 🚚" },
-              ].map((st) => {
+              {WORKFLOW_STATIONS_10.map((st) => {
                 const checked = form.assigned_stations.includes(st.id) || form.station === st.id;
                 return (
                   <button
@@ -150,7 +145,7 @@ function NewStaffPage() {
                     type="button"
                     onClick={() => {
                       const next = checked ? form.assigned_stations.filter((x) => x !== st.id) : [...form.assigned_stations, st.id];
-                      setForm({ ...form, assigned_stations: next, station: next[0] ?? "none" });
+                      setForm({ ...form, assigned_stations: next, station: next[0] ?? "none", role: form.role === "none" ? st.role : form.role });
                     }}
                     className={`p-2.5 rounded-xl border text-xs font-black transition flex items-center justify-between text-start ${
                       checked ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"

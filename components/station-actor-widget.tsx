@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserCheck, RefreshCw, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getRoleLabel } from "@/lib/staff-roles";
 
 export type ActiveActor = {
   id: string;
@@ -37,12 +38,15 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
       .order("full_name")
       .then(({ data }: any) => {
         const list = ((data ?? []) as ActiveActor[]).filter((e) => {
-          // Owners shouldn't be rotational operators unless needed, filter out owner from normal operational actors unless they are supervisor/ops
           if (e.role === "owner" || e.job_title?.includes("مالك") || e.full_name?.includes("مالك")) return false;
-          // Check if employee has station role or supervisory ability
           if (["ops_manager", "cs_manager", "supervisor"].includes(String(e.role))) return true;
           if (e.station === stationId) return true;
           if (Array.isArray(e.assigned_stations) && e.assigned_stations.includes(stationId)) return true;
+          if (stationId === "reception" && (
+            ["reception", "sorting", "intake", "cs"].includes(String(e.station)) ||
+            (Array.isArray(e.assigned_stations) && e.assigned_stations.some(st => ["reception", "sorting", "intake", "cs"].includes(st))) ||
+            ["receptionist", "sorter", "intake_rep", "cs_rep"].includes(String(e.role))
+          )) return true;
           return false;
         });
         setStaffList(list);
@@ -75,7 +79,7 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
               <Badge variant="outline" className="text-[9px] bg-white/10 text-white border-white/20">{stationLabel}</Badge>
             </div>
             <div className="text-sm font-black text-white truncate mt-0.5">
-              {activeActor ? `${activeActor.full_name} (${activeActor.job_title || "فني/موظف"})` : "لم يتم تحديد الموظف بعد — يرجى اختيار اسمك"}
+              {activeActor ? `${activeActor.full_name} (${activeActor.job_title || getRoleLabel(activeActor.role) || "فني/موظف"})` : "لم يتم تحديد الموظف بعد — يرجى اختيار اسمك"}
             </div>
           </div>
         </div>
@@ -121,7 +125,7 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
                   >
                     <div>
                       <div className="text-sm">{emp.full_name}</div>
-                      <div className="text-[10px] text-slate-500 font-normal">{emp.job_title || "موظف محطة"}</div>
+                      <div className="text-[10px] text-slate-500 font-normal">{emp.job_title || getRoleLabel(emp.role) || "موظف محطة"}</div>
                     </div>
                     {isSelected && <Badge className="bg-teal-600 text-white font-black text-[10px]">محدد حالياً ✓</Badge>}
                   </button>

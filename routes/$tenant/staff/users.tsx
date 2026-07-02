@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Crown, Plus, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { WORKFLOW_STATIONS_10 } from "@/lib/staff-roles";
 
 export const Route = createFileRoute("/$tenant/staff/users")({
   head: () => ({ meta: [{ title: "إدارة المستخدمين" }] }),
@@ -125,33 +126,28 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
             </Select>
           </div>}
           <div>
-            <Label>{t("staffUsers.labelStation", "المحطة")}</Label>
+            <Label>{t("staffUsers.labelStation", "المحطة الافتراضية")}</Label>
             <Select value={station} onValueChange={setStation}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t("staffUsers.stationNone", "بدون محطة")}</SelectItem>
-                <SelectItem value="reception">{t("staffUsers.stationReception", "الاستقبال")}</SelectItem>
-                <SelectItem value="cleaning">{t("staffUsers.stationCleaning", "الغسيل")}</SelectItem>
-                <SelectItem value="drying_assembly">{t("staffUsers.stationAssembly", "التجفيف والتجميع")}</SelectItem>
-                <SelectItem value="ironing">{t("staffUsers.stationIroning", "الكي")}</SelectItem>
-                <SelectItem value="packing">{t("staffUsers.stationPacking", "التغليف")}</SelectItem>
-                <SelectItem value="delivery">{t("staffUsers.stationDelivery", "التوصيل")}</SelectItem>
+                {WORKFLOW_STATIONS_10.map((ws) => (
+                  <SelectItem key={ws.id} value={ws.id}>{ws.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>{t("staffUsers.labelJobRole", "نوع الوظيفة")}</Label>
+            <Label>{t("staffUsers.labelJobRole", "الدور الوظيفي (10 Rotational Roles)")}</Label>
             <Select value={jobRole} onValueChange={setJobRole}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="ops_manager">Ops Manager</SelectItem>
-                <SelectItem value="cs_manager">CS Manager</SelectItem>
-                <SelectItem value="cleaning_tech">Cleaning Tech</SelectItem>
-                <SelectItem value="ironing_tech">Ironing Tech</SelectItem>
-                <SelectItem value="packing_tech">Packing Tech</SelectItem>
-                <SelectItem value="driver">Driver</SelectItem>
-                <SelectItem value="receptionist">Receptionist</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="ops_manager">مدير تشغيل ⚙️</SelectItem>
+                <SelectItem value="cs_manager">مدير خدمة عملاء 📞</SelectItem>
+                <SelectItem value="owner">مالك المغسلة 👑</SelectItem>
+                {WORKFLOW_STATIONS_10.map((ws) => (
+                  <SelectItem key={ws.role} value={ws.role}>{ws.roleLabel} ({ws.id})</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
