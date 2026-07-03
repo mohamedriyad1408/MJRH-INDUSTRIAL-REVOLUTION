@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye } from "lucide-react";
+import { Loader2, Zap, ArrowLeft, PackageOpen, Truck, Eye, Plus } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { interpolate, useI18n } from "@/lib/i18n";
@@ -116,63 +116,46 @@ function ReceptionPage() {
     load();
   }
 
-  const walkIn = orders.filter((o) => o.order_type === "walk_in");
-  const fromPickup = orders.filter((o) => o.order_type === "delivery");
+  const walkIn = orders.filter((o) => o.order_type === "walk_in" || !o.order_type || o.notes?.includes("داخلي") || !o.notes?.includes("[👑"));
 
   return (
     <div className="space-y-6" dir={dir}>
-      <div>
-        <h1 className="text-2xl font-bold">{t("station.reception.title")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {interpolate(t("station.reception.summary"), { walkIn: walkIn.length, fromPickup: fromPickup.length, pickups: incomingPickups.length })}
-        </p>
+      <div className="rounded-3xl bg-gradient-to-br from-teal-800 via-slate-900 to-indigo-900 text-white p-5 shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black flex items-center gap-2"><PackageOpen className="w-7 h-7 text-teal-300" /> 3. محطة الاستقبال ومطابقة الفواتير (Reception)</h1>
+            <p className="text-sm text-white/70 mt-1">المحطة التشغيلية الثالثة: استقبال عملاء الباب الداخليين (Walk-In)، تسجيل بيانات العميل الجديد أو البحث عن القديم وإصدار الفواتير.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button asChild className="bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"><Link to={"/$tenant/orders/new" as any}><Plus className="w-4 h-4 ms-1" /> ➕ تسجيل عميل داخلي وإنشاء فاتورة</Link></Button>
+            <Button variant="secondary" onClick={load}>تحديث</Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="p-3 rounded-2xl bg-white/10 border border-white/15 text-center"><div className="text-xs text-white/70">فواتير عملاء الباب الداخلية</div><div className="text-xl font-black">{walkIn.length} فاتورة</div></div>
+          <div className="p-3 rounded-2xl bg-white/10 border border-white/15 text-center"><div className="text-xs text-white/70">توجيه الطلبات الخارجية (Pickup/VIP)</div><div className="text-sm font-black text-amber-300 mt-1">🏷️ تتم مباشرة عبر محطة الفرز رقم 4</div></div>
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
+        <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin text-teal-600" /></div>
       ) : (
         <div className="space-y-6" dir={dir}>
-          <StationActorWidget stationId="reception" stationLabel="الاستقبال والفرز واستلام الطلبات 🛎️" onActorChange={setActiveActor} />
-
-          {/* Active Pickup Requests — visible to reception */}
-          {incomingPickups.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">{t("station.reception.activePickups")} ({incomingPickups.length})</span>
-                <Badge variant="outline" className="text-xs">{t("station.reception.waitingDriver")}</Badge>
-                <Link to={"/$tenant/pickups" as any} className="text-xs text-primary underline ms-auto">{t("station.reception.manageAll")}</Link>
-              </div>
-              <div className="grid md:grid-cols-2 gap-3">
-                {incomingPickups.map((p) => (
-                  <Card key={p.id} className="border-dashed border-amber-300 bg-amber-50/30">
-                    <CardContent className="p-3 space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-sm">{p.customer_name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {p.status === "pending" ? t("station.reception.pickupPending") : t("station.reception.driverOnWay")}
-                        </Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground">{p.address}</div>
-                      {p.notes && <div className="text-xs text-muted-foreground italic">{p.notes}</div>}
-                      <div className="text-xs text-muted-foreground">{fmtDate(p.created_at)}</div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+          <StationActorWidget stationId="reception" stationLabel="الاستقبال ومطابقة الفواتير 🛎️" onActorChange={setActiveActor} />
 
           {/* Walk-in orders */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <PackageOpen className="w-4 h-4 text-primary" />
-              <span className="font-bold text-sm">{t("station.reception.walkInOrders")} ({walkIn.length})</span>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <PackageOpen className="w-5 h-5 text-teal-600" />
+                <span className="font-black text-base text-slate-900">طلبات وفواتير عملاء الباب الداخلية ({walkIn.length})</span>
+              </div>
+              <Button asChild size="sm" variant="outline" className="rounded-xl font-bold border-teal-300 text-teal-900 hover:bg-teal-50"><Link to={"/$tenant/orders/new" as any}>➕ إنشاء فاتورة استلام داخلي</Link></Button>
             </div>
             {walkIn.length === 0 ? (
-              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("station.reception.noOrders")}</CardContent></Card>
+              <Card className="rounded-3xl border-dashed"><CardContent className="p-8 text-center text-sm text-slate-400 font-bold">لا توجد فواتير داخلية معلقة حالياً في الاستقبال</CardContent></Card>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {walkIn.map((o) => (
                   <OrderCard
                     key={o.id} o={o} acting={acting} canMove={canMove}
@@ -183,26 +166,6 @@ function ReceptionPage() {
               </div>
             )}
           </div>
-
-          {/* Pickup-origin orders (already converted) */}
-          {fromPickup.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">{t("station.reception.fromPickup")} ({fromPickup.length})</span>
-              </div>
-              <div className="space-y-2">
-                {fromPickup.map((o) => (
-                  <OrderCard
-                    key={o.id} o={o} acting={acting} canMove={canMove}
-                    onMove={moveToProcessing}
-                    onAssign={() => setAssignFor(o.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
         </div>
       )}
 
