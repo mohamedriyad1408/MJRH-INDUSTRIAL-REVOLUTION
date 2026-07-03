@@ -5,7 +5,7 @@ import {
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
-  UsersRound, LockKeyhole, HelpCircle, Search, AlertTriangle,
+  UsersRound, LockKeyhole, HelpCircle, Search, AlertTriangle, ClipboardCheck, Tags,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 
-type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: AppRole[] };
+type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: any[] };
 
 const adminGroups: { label: string; items: NavItem[] }[] = [
   {
@@ -57,15 +57,18 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "محطات العمل",
+    label: "المحطات التشغيلية الـ 10 (Workstations)",
     items: [
-      { title: "الاستقبال", url: "/stations/reception", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee"] },
-      { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee"] },
-      { title: "التجفيف والتجميع", url: "/stations/drying-assembly", icon: Wind, roles: ["ops_manager", "owner", "employee"] },
-      { title: "الكي", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee"] },
-      { title: "التغليف", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee"] },
-      { title: "الجودة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee"] },
-      { title: "المناديب", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
+      { title: "1. خدمة العملاء CS", url: "/stations/cs", icon: Headphones, roles: ["cs_manager", "ops_manager", "owner", "employee", "cs_rep"] },
+      { title: "2. استلام الطلبات Intake", url: "/stations/intake", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee", "intake_rep"] },
+      { title: "3. الاستقبال ومطابقة الفواتير", url: "/stations/reception", icon: ClipboardCheck, roles: ["cs_manager", "ops_manager", "owner", "employee", "receptionist"] },
+      { title: "4. الفرز والتصنيف والمارك", url: "/stations/sorting", icon: Tags, roles: ["ops_manager", "owner", "employee", "sorter"] },
+      { title: "5. التنظيف والغسيل", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee", "cleaning_tech"] },
+      { title: "6. التجفيف والتجميع", url: "/stations/drying-assembly", icon: Wind, roles: ["ops_manager", "owner", "employee", "assembly_tech"] },
+      { title: "7. الكي بالبخار", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee", "ironing_tech"] },
+      { title: "8. التغليف النهائي", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee", "packer"] },
+      { title: "9. فحص الجودة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee", "qc_tech"] },
+      { title: "10. التوصيل والندب", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
     ],
   },
   {
@@ -142,8 +145,8 @@ export function AppSidebar() {
   function isVisible(item: NavItem) {
     if (!isSuperAdmin && hasRole("employee") && !isManager) {
       if (item.url === "/search") return true;
-      if (employeeStation === "reception") {
-        return ["/orders", "/orders/new", "/customers", "/stations/reception", "/search"].includes(item.url);
+      if (["reception", "cs", "intake", "sorting"].includes(String(employeeStation))) {
+        return ["/orders", "/orders/new", "/customers", "/stations/cs", "/stations/intake", "/stations/reception", "/stations/sorting", "/search"].includes(item.url);
       }
       if (item.url === "/driver") return employeeJobRole === "driver";
       if (item.url.startsWith("/stations/")) return item.url === stationUrl;

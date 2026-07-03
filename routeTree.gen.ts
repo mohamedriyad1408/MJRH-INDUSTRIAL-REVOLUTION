@@ -56,12 +56,15 @@ import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/i
 import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
 import { Route as AdminAdminBillingRouteImport } from './routes/_admin/admin/billing'
+import { Route as TenantStationsSortingRouteImport } from './routes/$tenant/stations/sorting'
 import { Route as TenantStationsReceptionRouteImport } from './routes/$tenant/stations/reception'
 import { Route as TenantStationsQcRouteImport } from './routes/$tenant/stations/qc'
 import { Route as TenantStationsPackingRouteImport } from './routes/$tenant/stations/packing'
 import { Route as TenantStationsIroningRouteImport } from './routes/$tenant/stations/ironing'
+import { Route as TenantStationsIntakeRouteImport } from './routes/$tenant/stations/intake'
 import { Route as TenantStationsDryingAssemblyRouteImport } from './routes/$tenant/stations/drying-assembly'
 import { Route as TenantStationsDeliveryRouteImport } from './routes/$tenant/stations/delivery'
+import { Route as TenantStationsCsRouteImport } from './routes/$tenant/stations/cs'
 import { Route as TenantStationsCleaningRouteImport } from './routes/$tenant/stations/cleaning'
 import { Route as TenantStaffUsersRouteImport } from './routes/$tenant/staff/users'
 import { Route as TenantStaffScorecardRouteImport } from './routes/$tenant/staff/scorecard'
@@ -315,6 +318,11 @@ const AdminAdminBillingRoute = AdminAdminBillingRouteImport.update({
   path: '/admin/billing',
   getParentRoute: () => AdminRoute,
 } as any)
+const TenantStationsSortingRoute = TenantStationsSortingRouteImport.update({
+  id: '/stations/sorting',
+  path: '/stations/sorting',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantStationsReceptionRoute = TenantStationsReceptionRouteImport.update({
   id: '/stations/reception',
   path: '/stations/reception',
@@ -335,6 +343,11 @@ const TenantStationsIroningRoute = TenantStationsIroningRouteImport.update({
   path: '/stations/ironing',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantStationsIntakeRoute = TenantStationsIntakeRouteImport.update({
+  id: '/stations/intake',
+  path: '/stations/intake',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantStationsDryingAssemblyRoute =
   TenantStationsDryingAssemblyRouteImport.update({
     id: '/stations/drying-assembly',
@@ -344,6 +357,11 @@ const TenantStationsDryingAssemblyRoute =
 const TenantStationsDeliveryRoute = TenantStationsDeliveryRouteImport.update({
   id: '/stations/delivery',
   path: '/stations/delivery',
+  getParentRoute: () => TenantRoute,
+} as any)
+const TenantStationsCsRoute = TenantStationsCsRouteImport.update({
+  id: '/stations/cs',
+  path: '/stations/cs',
   getParentRoute: () => TenantRoute,
 } as any)
 const TenantStationsCleaningRoute = TenantStationsCleaningRouteImport.update({
@@ -493,12 +511,15 @@ export interface FileRoutesByFullPath {
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
+  '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
   '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
+  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
   '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
   '/$tenant/stations/packing': typeof TenantStationsPackingRoute
   '/$tenant/stations/qc': typeof TenantStationsQcRoute
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
+  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
   '/admin/billing': typeof AdminAdminBillingRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -565,12 +586,15 @@ export interface FileRoutesByTo {
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
+  '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
   '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
+  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
   '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
   '/$tenant/stations/packing': typeof TenantStationsPackingRoute
   '/$tenant/stations/qc': typeof TenantStationsQcRoute
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
+  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
   '/admin/billing': typeof AdminAdminBillingRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -639,12 +663,15 @@ export interface FileRoutesById {
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
+  '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
   '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
+  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
   '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
   '/$tenant/stations/packing': typeof TenantStationsPackingRoute
   '/$tenant/stations/qc': typeof TenantStationsQcRoute
   '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
+  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
   '/_admin/admin/billing': typeof AdminAdminBillingRoute
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -713,12 +740,15 @@ export interface FileRouteTypes {
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
     | '/$tenant/stations/cleaning'
+    | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
     | '/$tenant/stations/drying-assembly'
+    | '/$tenant/stations/intake'
     | '/$tenant/stations/ironing'
     | '/$tenant/stations/packing'
     | '/$tenant/stations/qc'
     | '/$tenant/stations/reception'
+    | '/$tenant/stations/sorting'
     | '/admin/billing'
     | '/admin/platform-fees'
     | '/admin/telemetry'
@@ -785,12 +815,15 @@ export interface FileRouteTypes {
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
     | '/$tenant/stations/cleaning'
+    | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
     | '/$tenant/stations/drying-assembly'
+    | '/$tenant/stations/intake'
     | '/$tenant/stations/ironing'
     | '/$tenant/stations/packing'
     | '/$tenant/stations/qc'
     | '/$tenant/stations/reception'
+    | '/$tenant/stations/sorting'
     | '/admin/billing'
     | '/admin/platform-fees'
     | '/admin/telemetry'
@@ -858,12 +891,15 @@ export interface FileRouteTypes {
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
     | '/$tenant/stations/cleaning'
+    | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
     | '/$tenant/stations/drying-assembly'
+    | '/$tenant/stations/intake'
     | '/$tenant/stations/ironing'
     | '/$tenant/stations/packing'
     | '/$tenant/stations/qc'
     | '/$tenant/stations/reception'
+    | '/$tenant/stations/sorting'
     | '/_admin/admin/billing'
     | '/_admin/admin/platform-fees'
     | '/_admin/admin/telemetry'
@@ -1222,6 +1258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminBillingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/$tenant/stations/sorting': {
+      id: '/$tenant/stations/sorting'
+      path: '/stations/sorting'
+      fullPath: '/$tenant/stations/sorting'
+      preLoaderRoute: typeof TenantStationsSortingRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/stations/reception': {
       id: '/$tenant/stations/reception'
       path: '/stations/reception'
@@ -1250,6 +1293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStationsIroningRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/stations/intake': {
+      id: '/$tenant/stations/intake'
+      path: '/stations/intake'
+      fullPath: '/$tenant/stations/intake'
+      preLoaderRoute: typeof TenantStationsIntakeRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/stations/drying-assembly': {
       id: '/$tenant/stations/drying-assembly'
       path: '/stations/drying-assembly'
@@ -1262,6 +1312,13 @@ declare module '@tanstack/react-router' {
       path: '/stations/delivery'
       fullPath: '/$tenant/stations/delivery'
       preLoaderRoute: typeof TenantStationsDeliveryRouteImport
+      parentRoute: typeof TenantRoute
+    }
+    '/$tenant/stations/cs': {
+      id: '/$tenant/stations/cs'
+      path: '/stations/cs'
+      fullPath: '/$tenant/stations/cs'
+      preLoaderRoute: typeof TenantStationsCsRouteImport
       parentRoute: typeof TenantRoute
     }
     '/$tenant/stations/cleaning': {
@@ -1448,12 +1505,15 @@ interface TenantRouteChildren {
   TenantStaffScorecardRoute: typeof TenantStaffScorecardRoute
   TenantStaffUsersRoute: typeof TenantStaffUsersRoute
   TenantStationsCleaningRoute: typeof TenantStationsCleaningRoute
+  TenantStationsCsRoute: typeof TenantStationsCsRoute
   TenantStationsDeliveryRoute: typeof TenantStationsDeliveryRoute
   TenantStationsDryingAssemblyRoute: typeof TenantStationsDryingAssemblyRoute
+  TenantStationsIntakeRoute: typeof TenantStationsIntakeRoute
   TenantStationsIroningRoute: typeof TenantStationsIroningRoute
   TenantStationsPackingRoute: typeof TenantStationsPackingRoute
   TenantStationsQcRoute: typeof TenantStationsQcRoute
   TenantStationsReceptionRoute: typeof TenantStationsReceptionRoute
+  TenantStationsSortingRoute: typeof TenantStationsSortingRoute
   TenantOrdersIndexRoute: typeof TenantOrdersIndexRoute
   TenantPickupsIndexRoute: typeof TenantPickupsIndexRoute
   TenantStaffIndexRoute: typeof TenantStaffIndexRoute
@@ -1502,12 +1562,15 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantStaffScorecardRoute: TenantStaffScorecardRoute,
   TenantStaffUsersRoute: TenantStaffUsersRoute,
   TenantStationsCleaningRoute: TenantStationsCleaningRoute,
+  TenantStationsCsRoute: TenantStationsCsRoute,
   TenantStationsDeliveryRoute: TenantStationsDeliveryRoute,
   TenantStationsDryingAssemblyRoute: TenantStationsDryingAssemblyRoute,
+  TenantStationsIntakeRoute: TenantStationsIntakeRoute,
   TenantStationsIroningRoute: TenantStationsIroningRoute,
   TenantStationsPackingRoute: TenantStationsPackingRoute,
   TenantStationsQcRoute: TenantStationsQcRoute,
   TenantStationsReceptionRoute: TenantStationsReceptionRoute,
+  TenantStationsSortingRoute: TenantStationsSortingRoute,
   TenantOrdersIndexRoute: TenantOrdersIndexRoute,
   TenantPickupsIndexRoute: TenantPickupsIndexRoute,
   TenantStaffIndexRoute: TenantStaffIndexRoute,
