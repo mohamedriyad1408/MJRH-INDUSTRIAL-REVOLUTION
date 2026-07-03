@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   AlertTriangle, ShieldCheck, Activity, CheckCircle2, Clock, Loader2,
-  RefreshCw, Search, Sparkles, AlertCircle, Laptop, Wrench, ArrowLeft,
+  RefreshCw, Search, Sparkles, AlertCircle, Laptop, Wrench, ArrowLeft, Users,
 } from "lucide-react";
 
 export const Route = createFileRoute("/$tenant/issues")({
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/$tenant/issues")({
 
 type ProjectIssue = {
   id: string;
-  type: "software_error" | "operational_bottleneck" | "quality_reclean";
+  type: "technical" | "operational" | "financial" | "customer";
   title: string;
   description: string;
   severity: "error" | "warning";
@@ -33,6 +33,8 @@ function TenantIssuesPage() {
   const { tenantId, hasRole } = useAuth();
   const { t, dir } = useI18n();
   const [issues, setIssues] = useState<ProjectIssue[]>([]);
+  const [activeStaff, setActiveStaff] = useState<any[]>([]);
+  const [filterType, setFilterType] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   const isManager = hasRole("owner", "ops_manager", "cs_manager", "super_admin");
@@ -71,7 +73,7 @@ function TenantIssuesPage() {
     try {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 86400000).toISOString();
 
-      const [errRes, recleanRes, staleRes] = await Promise.all([
+      const [errRes, recleanRes, staleRes, unpaidRes, attRes] = await Promise.all([
         supabase
           .from("client_error_logs")
           .select("*")
@@ -94,7 +96,21 @@ function TenantIssuesPage() {
           .lte("created_at", twentyFourHoursAgo)
           .order("created_at", { ascending: false })
           .limit(20),
+        supabase
+          .from("orders")
+          .select("id, order_number, status, created_at, total, payment_verification_status, customers(full_name)")
+          .eq("tenant_id", tenantId)
+          .in("payment_verification_status", ["pending_review", "underpaid"])
+          .limit(20),
+        supabase
+          .from("employee_attendance")
+          .select("id, employee_id, check_in_at, employees(full_name, station, assigned_stations, role)")
+          .eq("tenant_id", tenantId)
+          .eq("work_date", new Date().toISOString().slice(0, 10))
+          .is("check_out_at", null),
       ]);
+
+      setActiveStaff(attRes?.data ?? []);
 
       const items: ProjectIssue[] = [];
 
@@ -102,7 +118,7 @@ function TenantIssuesPage() {
         errRes.data.forEach((err: any) => {
           items.push({
             id: `err-${err.id}`,
-            type: "software_error",
+            type: "technical",
             title: `[خطأ بالواجهة] ${err.message?.slice(0, 70) || "خطأ غير محدد"}`,
             description: "تم إرسال هذا الخطأ آلياً لإدارة المنصة وسجل الصيانة للتطوير والتحديث.",
             severity: "error",
@@ -116,7 +132,7 @@ function TenantIssuesPage() {
         recleanRes.data.forEach((u: any) => {
           items.push({
             id: `reclean-${u.id}`,
-            type: "quality_reclean",
+            type: "operational",
             title: `[إعادة غسيل وتراجع جودة] قطعة ${u.name} في طلب #${u.orders?.order_number}`,
             description: `السبب المسجل: (${u.reclean_reason}). القطعة في المحطة: ${u.current_stage}`,
             severity: "warning",
@@ -131,12 +147,27 @@ function TenantIssuesPage() {
         staleRes.data.forEach((o: any) => {
           items.push({
             id: `stale-${o.id}`,
-            type: "operational_bottleneck",
-            title: `[مختنق تشغيلي] طلب #${o.order_number} عالق في مرحلة الاستلام لأكثر من 24 ساعة`,
+            type: "customer",
+            title: `[مختنق تشغيلي / تأخير عميل] طلب #${o.order_number} عالق في مرحلة الاستلام لأكثر من 24 ساعة`,
             description: `العميل: ${o.customers?.full_name || "بدون اسم"} • المبلغ: ${fmtMoney(o.total || 0)}`,
             severity: "error",
             createdAt: o.created_at,
             detail: "يجب توجيه محطة الغسيل أو الاستقبال للبدء الفوري بمعالجة الطلب.",
+            actionUrl: `/orders/${o.id}`,
+          });
+        });
+      }
+
+      if (unpaidRes?.data) {
+        unpaidRes.data.forEach((o: any) => {
+          items.push({
+            id: `fin-${o.id}`,
+            type: "financial",
+            title: `[مراجعة مالية معلقة] طلب #${o.order_number} إيصال الدفع يحتاج تدقيق أو تحصيل`,
+            description: `العميل: ${o.customers?.full_name || "عميل"} • القيمة: ${fmtMoney(o.total || 0)}`,
+            severity: "warning",
+            createdAt: o.created_at,
+            detail: o.payment_verification_status === "underpaid" ? "المبلغ المدفوع أقل من الفاتورة" : "إيصال انستabay قيد المراجعة",
             actionUrl: `/orders/${o.id}`,
           });
         });
@@ -182,6 +213,59 @@ function TenantIssuesPage() {
         </Button>
       </div>
 
+      {/* HR Staffing Real-Time Monitor */}
+      <Card className="rounded-3xl border-2 border-teal-500/30 bg-gradient-to-br from-teal-900 via-slate-900 to-slate-950 text-white shadow-xl overflow-hidden">
+        <CardContent className="p-5 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2 font-black text-base text-teal-300">
+              <Users className="w-5 h-5 text-teal-400" />
+              <span>🧑‍🔧 المراقبة اللحظية لقوى الفروع والمحطات العاملة الآن (Live HR Station Staffing)</span>
+            </div>
+            <Badge className="bg-emerald-600 text-white font-black text-xs">🟢 إجمالي الحاضرين الآن: {activeStaff.length} موظف</Badge>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+            {[
+              { id: "reception", label: "الاستقبال والفرز 🛎️", count: activeStaff.filter(x => ["reception", "sorting", "intake", "cs"].includes(String(x.employees?.station))).length },
+              { id: "cleaning", label: "الغسيل والتنظيف 🫧", count: activeStaff.filter(x => x.employees?.station === "cleaning" || x.employees?.role === "cleaning_tech").length },
+              { id: "drying-assembly", label: "التجفيف والتجميع 🧺", count: activeStaff.filter(x => x.employees?.station === "drying-assembly" || x.employees?.role === "assembly_tech").length },
+              { id: "ironing", label: "الكي بالبخار 👔", count: activeStaff.filter(x => x.employees?.station === "ironing" || x.employees?.role === "ironing_tech").length },
+              { id: "packing", label: "التغليف والجودة 📦", count: activeStaff.filter(x => ["packing", "qc"].includes(String(x.employees?.station))).length },
+              { id: "delivery", label: "الندب والتوصيل 🚚", count: activeStaff.filter(x => x.employees?.station === "delivery" || x.employees?.role === "courier").length },
+            ].map((st) => (
+              <div key={st.id} className="p-3 rounded-2xl bg-white/10 border border-white/15 flex flex-col justify-between gap-1">
+                <span className="text-xs font-bold text-white/90 truncate">{st.label}</span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-mono font-black text-lg text-teal-300">{st.count} حاضر</span>
+                  {st.count === 0 && <span className="text-[9px] bg-red-500/80 text-white px-1.5 py-0.5 rounded font-bold">شاغر ⚠️</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Exception Taxonomy Tabs */}
+      <div className="flex flex-wrap gap-2 items-center bg-slate-100 p-1.5 rounded-2xl border">
+        {[
+          { id: "all", label: "🌐 كافة التعثرات", count: issues.length },
+          { id: "operational", label: "⚙️ تشغيلي (Operational)", count: issues.filter(x => x.type === "operational").length },
+          { id: "technical", label: "🛠️ فني (Technical)", count: issues.filter(x => x.type === "technical").length },
+          { id: "financial", label: "💰 مالي (Financial)", count: issues.filter(x => x.type === "financial").length },
+          { id: "customer", label: "👑 عميل (Customer)", count: issues.filter(x => x.type === "customer").length },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setFilterType(tab.id)}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
+              filterType === tab.id ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <span>{tab.label}</span>
+            <Badge className={filterType === tab.id ? "bg-white text-slate-900" : "bg-slate-200 text-slate-700"}>{tab.count}</Badge>
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="py-20 text-center space-y-4">
           <Loader2 className="w-10 h-10 animate-spin text-teal-600 mx-auto" />
@@ -194,13 +278,13 @@ function TenantIssuesPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {issues.map((inc) => (
+          {(filterType === "all" ? issues : issues.filter(x => x.type === filterType)).map((inc) => (
             <Card key={inc.id} className="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
               <div className="p-5 flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Badge className={inc.severity === "error" ? "bg-red-600 text-white" : "bg-amber-500 text-white"}>
-                      {inc.type === "software_error" ? "تقني" : inc.type === "quality_reclean" ? "جودة" : "تشغيلي"}
+                      {inc.type === "technical" ? "فني 🛠️" : inc.type === "financial" ? "مالي 💰" : inc.type === "customer" ? "عميل 👑" : "تشغيلي ⚙️"}
                     </Badge>
                     <span className="text-xs text-slate-500 font-mono font-bold">{fmtDate(inc.createdAt)}</span>
                   </div>
