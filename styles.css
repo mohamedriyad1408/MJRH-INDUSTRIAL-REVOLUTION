@@ -134,11 +134,28 @@
     box-shadow: 0 18px 45px rgba(15, 23, 42, .06);
   }
 
-  .joy-card, .rounded-3xl, [class*="rounded-2xl"] {
+  .joy-card {
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease;
   }
-  .joy-card:hover, .rounded-3xl:hover {
+  .joy-card:hover {
     transform: translateY(-1px);
+  }
+
+  /* Enforce stable centering for all dialogs and modals, preventing any hover drift or corner sliding on mobile */
+  [role="dialog"], [role="alertdialog"], .radix-dialog-content {
+    transform: translate(-50%, -50%) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  @media (max-width: 640px) {
+    [role="dialog"], [role="alertdialog"] {
+      width: calc(100vw - 28px) !important;
+      max-width: calc(100vw - 28px) !important;
+      left: 50% !important;
+      top: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      margin: 0 !important;
+    }
   }
   .app-main .bg-card, .app-main .rounded-xl.border, .app-main .rounded-2xl.border, .app-main .rounded-3xl.border {
     box-shadow: 0 16px 42px rgba(15, 23, 42, .055);
