@@ -34,7 +34,7 @@ type Pickup = {
 function ReceptionPage() {
   const { user, hasRole } = useAuth();
   const { t, dir } = useI18n();
-  const canMove = hasRole("ops_manager", "owner", "cs_manager");
+  const canMove = hasRole("ops_manager", "owner", "cs_manager", "employee");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [incomingPickups, setIncomingPickups] = useState<Pickup[]>([]);

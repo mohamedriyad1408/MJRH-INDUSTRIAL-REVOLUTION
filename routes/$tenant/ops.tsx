@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Calendar, AlertTriangle, Zap, Inbox, Banknote, Smartphone, UserCog, ShieldCheck, Truck, PackageOpen, RotateCcw } from "lucide-react";
 import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";
+import { resolveAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/$tenant/ops")({
   head: () => ({ meta: [{ title: "لوحة التشغيل" }] }),
@@ -115,7 +116,7 @@ function OpsDashboard() {
           {attention.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700 font-bold text-center">{t("ops.stable")}</div>}
           {attention.map((a) => {
             const Icon = a.icon;
-            return <Link key={a.label} to={a.href as any} className={`flex items-center justify-between rounded-xl border p-3 text-sm hover:shadow-sm transition ${a.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : a.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}>
+            return <Link key={a.label} to={resolveAppUrl(a.href) as any} className={`flex items-center justify-between rounded-xl border p-3 text-sm hover:shadow-sm transition ${a.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : a.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}>
               <span className="font-bold flex items-center gap-2"><Icon className="w-4 h-4" />{a.label}</span><span className="font-black">{a.count}</span>
             </Link>;
           })}
@@ -154,11 +155,16 @@ function OpsDashboard() {
           <div className="font-bold">{t("ops.roleDistribution")}</div>
           <p className="text-xs text-muted-foreground">{t("ops.roleDistributionDetail")}</p>
           <div className="flex flex-wrap gap-2 pt-2">
-            <Link to={"/$tenant/stations/reception" as any} className="text-xs px-3 py-1 rounded border hover:bg-muted">{t("stage.received")}</Link>
-            <Link to={"/$tenant/stations/cleaning" as any} className="text-xs px-3 py-1 rounded border hover:bg-muted">{t("stage.cleaning")}</Link>
-            <Link to={"/$tenant/stations/ironing" as any} className="text-xs px-3 py-1 rounded border hover:bg-muted">{t("stage.ironing")}</Link>
-            <Link to={"/$tenant/stations/packing" as any} className="text-xs px-3 py-1 rounded border hover:bg-muted">{t("stage.packing")}</Link>
-            <Link to={"/$tenant/stations/delivery" as any} className="text-xs px-3 py-1 rounded border hover:bg-muted">{t("stage.ready")}</Link>
+            <Link to={"/$tenant/stations/cs" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">خدمة العملاء</Link>
+            <Link to={"/$tenant/stations/intake" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">استلام الطلبات</Link>
+            <Link to={"/$tenant/stations/reception" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">الاستقبال الداخلي</Link>
+            <Link to={"/$tenant/stations/sorting" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">الفرز والمارك</Link>
+            <Link to={"/$tenant/stations/cleaning" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">التنظيف والغسيل</Link>
+            <Link to={"/$tenant/stations/drying-assembly" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">التجفيف والتجميع</Link>
+            <Link to={"/$tenant/stations/ironing" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">الكي بالبخار</Link>
+            <Link to={"/$tenant/stations/packing" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">التغليف النهائي</Link>
+            <Link to={"/$tenant/stations/qc" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">فحص الجودة QC</Link>
+            <Link to={"/$tenant/stations/delivery" as any} className="text-xs px-3 py-1 rounded border bg-white hover:bg-muted font-bold">المناديب والتوصيل</Link>
           </div>
         </CardContent>
       </Card>

@@ -90,6 +90,10 @@ function SortingStationPage() {
           changed_by: user?.id, notes: `👤 الفرز والتصنيف: ${u.label_code} (${u.name}) — نفذه: ${activeActor.full_name}`,
         });
       }
+      const { data: rem } = await supabase.from("service_units").select("id").eq("order_id", u.orders?.id || u.order_id).in("current_stage", ["received", "sorting"]).limit(1);
+      if (!rem?.length) {
+        await supabase.from("orders").update({ status: nextStage }).eq("id", u.orders?.id || u.order_id).neq("status", "cancelled");
+      }
       load();
     }
     setBusy(null);

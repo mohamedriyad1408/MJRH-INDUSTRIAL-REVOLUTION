@@ -1,5 +1,6 @@
 import { Row } from "@/components/new-order-components";
 import { useI18n } from "@/lib/i18n";
+import { resolveAppUrl } from "@/lib/utils";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -276,9 +277,9 @@ function NewOrderPage() {
       <div className="p-3 md:p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Button asChild variant="secondary" size="sm"><Link to={"/$tenant/orders" as any}><ArrowRight className="w-4 h-4" /></Link></Button>
+            <Button asChild variant="secondary" size="sm"><Link to={resolveAppUrl("/orders") as any}><ArrowRight className="w-4 h-4" /></Link></Button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("orders.orderNo", "Order")} جديدة</h1>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight">إنشاء فاتورة طلب جديد (POS Intake)</h1>
               <p className="text-xs md:text-sm text-teal-100/80">شاشة POS سريعة — اختار العميل، اضغط الخدمات، أنشئ الطلب</p>
             </div>
           </div>
@@ -341,7 +342,7 @@ function NewOrderPage() {
                   <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>آجل</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to={"/$tenant/orders" as any}>إلغاء</Link></Button>
+                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to={resolveAppUrl("/orders") as any}>إلغاء</Link></Button>
                   <Button onClick={submit} disabled={saving} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black h-12">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الطلب"}
                   </Button>

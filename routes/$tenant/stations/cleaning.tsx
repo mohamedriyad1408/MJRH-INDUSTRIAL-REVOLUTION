@@ -92,6 +92,10 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
           changed_by: user?.id, notes: `👤 إتمام التنظيف: ${unit.label_code} — نفذه: ${activeActor.full_name}`,
         });
       }
+      const { data: rem } = await supabase.from("service_units").select("id").eq("order_id", unit.order_id).in("current_stage", ["received", "sorting", "cleaning"]).limit(1);
+      if (!rem?.length) {
+        await supabase.from("orders").update({ status: "ironing" }).eq("id", unit.order_id).neq("status", "cancelled");
+      }
       load();
     }
   }

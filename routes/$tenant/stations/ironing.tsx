@@ -252,6 +252,13 @@ function IroningWorkerPage({ activeActor }: { activeActor?: ActiveActor | null }
           changed_by: user?.id, notes: `👤 إتمام الكي: ${u.label_code} — نفذه: ${activeActor.full_name}`,
         });
       }
+      const orderId = (u.orders as any)?.id || (u as any).order_id;
+      if (orderId) {
+        const { data: rem } = await supabase.from("service_units").select("id").eq("order_id", orderId).is("ironing_completed_at", null).neq("status", "cancelled").limit(1);
+        if (!rem?.length) {
+          await supabase.from("orders").update({ status: "packing" }).eq("id", orderId).neq("status", "cancelled");
+        }
+      }
       load();
     }
   }

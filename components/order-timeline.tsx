@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { resolveAppUrl } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, History, MapPin, Truck, CheckCircle2, ArrowRight, Shirt, RotateCcw, ShieldCheck, Image as ImageIcon, CreditCard, Scale, Send, Trash2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -49,7 +50,7 @@ export function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
           </div> : null}
           <div className="text-xs font-bold mt-2">{t("order.nextStep")}: {x.action}</div>
         </div>;
-        return x.href ? <Link key={i} to={x.href as any}>{body}</Link> : <div key={i}>{body}</div>;
+        return x.href ? <Link key={i} to={resolveAppUrl(x.href) as any}>{body}</Link> : <div key={i}>{body}</div>;
       })}
     </CardContent>
   </Card>;

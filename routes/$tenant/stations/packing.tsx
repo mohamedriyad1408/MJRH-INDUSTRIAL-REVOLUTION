@@ -101,7 +101,10 @@ function PackingStation() {
     setBusy(g.orderId);
     const ids = g.units.filter((u) => !["qc_passed", "ready"].includes(u.current_stage)).map((u) => u.id);
     const { error } = await supabase.from("service_units").update({ current_stage: "packing_done", staff_notes: "تمت مراجعة التغليف" }).in("id", ids);
-    if (!error) await record(g, "packing_completed", "إنهاء تغليف الطلب", { packed_units: ids.length });
+    if (!error) {
+      await record(g, "packing_completed", "إنهاء تغليف الطلب", { packed_units: ids.length });
+      await supabase.from("orders").update({ status: "qc" }).eq("id", g.orderId).neq("status", "cancelled");
+    }
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success("تم تغليف كل القطع وإرسالها للجودة"); load(); }
   }

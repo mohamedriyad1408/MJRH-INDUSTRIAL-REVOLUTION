@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-type Station = "reception" | "cleaning" | "drying_assembly" | "ironing" | "packing" | "delivery";
+type Station = string;
 
 export function AssignEmployeeDialog({
   open, onOpenChange, orderId, station, onAssigned,

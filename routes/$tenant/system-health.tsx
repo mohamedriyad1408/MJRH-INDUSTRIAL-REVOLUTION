@@ -12,6 +12,7 @@ import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { whatsappLink } from "@/lib/rules/whatsapp";
 import { interpolate, useI18n } from "@/lib/i18n";
+import { resolveAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/$tenant/system-health")({
   head: () => ({ meta: [{ title: "فحص النظام" }] }),
@@ -431,7 +432,7 @@ function SystemHealthPage() {
       <CardContent className="space-y-2 text-sm">
         {deliveryBlockedRows.length === 0 ? <div className="font-bold text-emerald-800">{t("system.deliveryReadinessOk")}</div> : <>
           <div className="font-bold text-red-900">{t("system.deliveryBlocked")}</div>
-          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={`/orders/${r.order_id}` as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{t("order.orderNo", "طلب #{order}").replace("{order}", String(r.order_number))}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes, t)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">{t("order.piecesCount")} {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">{t("order.reclean")} {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">{t("system.check.unpaid.title")}</Badge>}</div></div></Link>)}</div>
+          <div className="grid md:grid-cols-2 gap-2">{deliveryBlockedRows.map((r) => <Link key={r.order_id} to={resolveAppUrl(`/orders/${r.order_id}`) as any}><div className="rounded-xl border bg-white/80 p-3 text-xs hover:shadow-sm"><div className="font-black">{t("order.orderNo", "طلب #{order}").replace("{order}", String(r.order_number))}</div><div className="text-muted-foreground mt-1">{deliveryIssuesAr(r.issue_codes, t)}</div><div className="flex flex-wrap gap-1 mt-2"><Badge variant="outline">{t("order.piecesCount")} {r.total_units}</Badge>{r.label_issue_count > 0 && <Badge variant="destructive">مارك {r.label_issue_count}</Badge>}{r.reclean_count > 0 && <Badge className="bg-amber-500">{t("order.reclean")} {r.reclean_count}</Badge>}{r.not_qc_count > 0 && <Badge variant="outline">QC {r.not_qc_count}</Badge>}{r.unpaid > 0 && <Badge variant="destructive">{t("system.check.unpaid.title")}</Badge>}</div></div></Link>)}</div>
         </>}
       </CardContent>
     </Card>}
@@ -453,7 +454,7 @@ function SystemHealthPage() {
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               <Button size="sm" className="h-7 text-[11px]" onClick={() => repairApdoEvent(r.id)} disabled={fixingKey === r.id}>{fixingKey === r.id ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <Wrench className="w-3 h-3 ms-1" />}{t("system.repairOperation")}</Button>
-              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={apdoHref(r) as any}>{t("common.openSource")}</Link></Button>
+              <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={resolveAppUrl(apdoHref(r)) as any}>{t("common.openSource")}</Link></Button>
             </div>
           </div>)}</div>
         </>}

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, ClipboardList, Users, Sparkles, Shirt, Package, Wallet } from "lucide-react";
+import { resolveAppUrl } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/manager")({
@@ -168,5 +169,5 @@ function Stat({ label, value, icon, tone, link }: { label: string; value: string
       </CardContent>
     </Card>
   );
-  return link ? <Link to={link as any}>{content}</Link> : content;
+  return link ? <Link to={resolveAppUrl(link) as any}>{content}</Link> : content;
 }
