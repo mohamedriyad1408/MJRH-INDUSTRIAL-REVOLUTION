@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { fmtDate, fmtMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/$tenant/stations/sorting")({
-  head: () => ({ meta: [{ title: "4. الفرز والتصنيف Sorting" }] }),
+  head: () => ({ meta: [{ title: "الفرز والتصنيف" }] }),
   component: SortingStationPage,
 });
 
@@ -102,8 +102,8 @@ function SortingStationPage() {
       <div className="rounded-3xl bg-gradient-to-br from-violet-800 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><Tags className="w-7 h-7 text-violet-300" /> 4. محطة الفرز والتصنيف وإصدار المارك (Sorting & Tagging)</h1>
-            <p className="text-sm text-white/70 mt-1">المحطة التشغيلية الرابعة: مراجعة وتأكيد الفاتورة المبدئية، الفرز الفني للأقمشة والتصوير، إصدار الباركود وتوجيه الملابس للغسيل أو الكي.</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Tags className="w-7 h-7 text-violet-300" /> محطة الفرز والتصنيف وإصدار المارك</h1>
+            <p className="text-sm text-white/70 mt-1">مراجعة وتأكيد الفاتورة المبدئية، الفرز الفني للأقمشة والتصوير، إصدار الباركود وتوجيه الملابس للغسيل أو الكي.</p>
           </div>
           <Button variant="secondary" onClick={load}><RefreshCw className="w-4 h-4 ms-1" /> تحديث الفرز</Button>
         </div>

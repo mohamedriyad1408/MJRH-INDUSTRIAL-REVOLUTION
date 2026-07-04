@@ -14,7 +14,7 @@ import { fmtDate, fmtMoney } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/$tenant/stations/cs")({
-  head: () => ({ meta: [{ title: "1. خدمة العملاء والدعم CS" }] }),
+  head: () => ({ meta: [{ title: "خدمة العملاء والدعم" }] }),
   component: CsStationPage,
 });
 
@@ -214,8 +214,8 @@ function CsStationPage() {
       <div className="rounded-3xl bg-gradient-to-br from-indigo-800 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><Headphones className="w-7 h-7 text-indigo-300" /> 1. محطة خدمة العملاء والدعم (CS Concierge)</h1>
-            <p className="text-sm text-white/70 mt-1">المحطة التشغيلية الأولى: الرد على استفسارات العملاء، متابعة طلبات الاستلام، وتنسيق الإشعارات والدعم الفني.</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Headphones className="w-7 h-7 text-indigo-300" /> محطة خدمة العملاء والدعم والمتابعة</h1>
+            <p className="text-sm text-white/70 mt-1">الرد على استفسارات العملاء، متابعة طلبات الاستلام، وتنسيق الإشعارات والدعم الفني.</p>
           </div>
           <div className="flex gap-2">
             <Button asChild variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20"><Link to={"/$tenant/customer-care" as any}><MessageSquare className="w-4 h-4 ms-1" /> واتساب والدعم الشامل</Link></Button>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarCheck, CheckCircle2, ClipboardCheck, Loader2, LockKeyhole, Map, PackageCheck, PlayCircle, RefreshCw, Sparkles, Wallet } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { resolveAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/$tenant/daily-operations")({
   head: () => ({ meta: [{ title: "تشغيل اليوم" }] }),
@@ -212,7 +213,7 @@ function Section({ title, icon, steps, running, mark, t }: { title: string; icon
   return <Card className="bg-white/80 backdrop-blur"><CardHeader><CardTitle className="text-base flex items-center gap-2 text-teal-900"><span className="text-teal-600 [&_svg]:w-5 [&_svg]:h-5">{icon}</span>{title}</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-3">
     {steps.map((s) => <div key={s.key} className={`rounded-2xl border p-3 ${s.danger ? "bg-red-50 border-red-200" : s.ok ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
       <div className="flex items-start justify-between gap-2"><div><div className="font-black flex items-center gap-2">{s.ok ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-amber-600" />}{s.title}</div><div className="text-xs text-muted-foreground mt-1">{s.detail}</div></div><Badge variant={s.ok ? "secondary" : s.danger ? "destructive" : "outline"}>{s.ok ? t("dailyOps.status.done") : t("dailyOps.status.todo")}</Badge></div>
-      <div className="flex flex-wrap gap-2 mt-3">{s.href && <Button asChild size="sm" variant="outline"><Link to={s.href as any}>{t("dailyOps.btn.open")}</Link></Button>}{s.action && <Button size="sm" onClick={s.action} disabled={running === s.key}>{running === s.key ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <RefreshCw className="w-3 h-3 ms-1" />}{t("dailyOps.btn.run")}</Button>}<Button size="sm" variant="ghost" onClick={() => mark(s.key, !s.ok)}><ClipboardCheck className="w-3 h-3 ms-1" />{s.ok ? t("dailyOps.btn.undone") : t("dailyOps.btn.done")}</Button></div>
+      <div className="flex flex-wrap gap-2 mt-3">{s.href && <Button asChild size="sm" variant="outline"><Link to={resolveAppUrl(s.href) as any}>{t("dailyOps.btn.open")}</Link></Button>}{s.action && <Button size="sm" onClick={s.action} disabled={running === s.key}>{running === s.key ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : <RefreshCw className="w-3 h-3 ms-1" />}{t("dailyOps.btn.run")}</Button>}<Button size="sm" variant="ghost" onClick={() => mark(s.key, !s.ok)}><ClipboardCheck className="w-3 h-3 ms-1" />{s.ok ? t("dailyOps.btn.undone") : t("dailyOps.btn.done")}</Button></div>
     </div>)}
   </CardContent></Card>;
 }

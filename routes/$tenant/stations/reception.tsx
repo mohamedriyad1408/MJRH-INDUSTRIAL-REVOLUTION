@@ -123,8 +123,8 @@ function ReceptionPage() {
       <div className="rounded-3xl bg-gradient-to-br from-teal-800 via-slate-900 to-indigo-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><PackageOpen className="w-7 h-7 text-teal-300" /> 3. محطة الاستقبال ومطابقة الفواتير (Reception)</h1>
-            <p className="text-sm text-white/70 mt-1">المحطة التشغيلية الثالثة: استقبال عملاء الباب الداخليين (Walk-In)، تسجيل بيانات العميل الجديد أو البحث عن القديم وإصدار الفواتير.</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><PackageOpen className="w-7 h-7 text-teal-300" /> محطة الاستقبال ومطابقة الفواتير</h1>
+            <p className="text-sm text-white/70 mt-1">استقبال عملاء الباب الداخليين (Walk-In)، تسجيل بيانات العميل الجديد أو البحث عن القديم وإصدار الفواتير.</p>
           </div>
           <div className="flex gap-2">
             <Button asChild className="bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"><Link to={"/$tenant/orders/new" as any}><Plus className="w-4 h-4 ms-1" /> ➕ تسجيل عميل داخلي وإنشاء فاتورة</Link></Button>

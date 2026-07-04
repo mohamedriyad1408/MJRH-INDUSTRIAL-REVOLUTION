@@ -12,6 +12,7 @@ import { CalendarCheck, ClipboardList, Map, Wallet, BarChart3, ShieldCheck, Bell
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { useI18n } from "@/lib/i18n";
 import { getSurgeReportData } from "@/lib/scheduling-surge";
+import { resolveAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/$tenant/today")({
   head: () => ({ meta: [{ title: "مركز اليوم" }] }),
@@ -309,7 +310,7 @@ function TodayCenter() {
       <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />{t("today.needsAction")}</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">{t("today.noCritical")}</div>}
-        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={d.href as any}>{row}</Link>; })}
+        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link>; })}
       </CardContent>
     </Card>
 
@@ -320,7 +321,7 @@ function TodayCenter() {
         {latestReports.map((r) => <div key={r.id} className="rounded-xl border p-3 bg-white text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString("ar-EG")}</Badge></div>
           <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground font-sans max-h-32 overflow-auto">{r.body}</pre>
-          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>نسخ</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={r.href as any}>فتح</Link></Button>}</div>
+          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>نسخ</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={resolveAppUrl(r.href) as any}>فتح</Link></Button>}</div>
         </div>)}
       </CardContent>
     </Card>
@@ -385,5 +386,5 @@ function Kpi({ label, value, warn = false }: { label: string; value: any; warn?:
 }
 
 function ActionCard({ title, detail, to, icon, count }: { title: string; detail: string; to: string; icon: React.ReactNode; count?: number }) {
-  return <Link to={to as any}><Card className="hover:shadow-md transition"><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div className="flex gap-2"><div className="text-teal-600 [&_svg]:w-5 [&_svg]:h-5">{icon}</div><div><div className="font-black">{title}</div><div className="text-xs text-muted-foreground mt-1">{detail}</div></div></div>{typeof count === "number" && count > 0 && <Badge variant="destructive">{count}</Badge>}</div></CardContent></Card></Link>;
+  return <Link to={resolveAppUrl(to) as any}><Card className="hover:shadow-md transition"><CardContent className="p-4"><div className="flex items-start justify-between gap-3"><div className="flex gap-2"><div className="text-teal-600 [&_svg]:w-5 [&_svg]:h-5">{icon}</div><div><div className="font-black">{title}</div><div className="text-xs text-muted-foreground mt-1">{detail}</div></div></div>{typeof count === "number" && count > 0 && <Badge variant="destructive">{count}</Badge>}</div></CardContent></Card></Link>;
 }

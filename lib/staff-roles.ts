@@ -1,14 +1,14 @@
 export const WORKFLOW_STATIONS_10 = [
-  { id: "cs", label: "1. خدمة العملاء والدعم (CS Concierge) 🎧", role: "cs_rep", roleLabel: "ممثل خدمة عملاء" },
-  { id: "intake", label: "2. استلام الطلبات والندب الداخلي (Order Intake) 📥", role: "intake_rep", roleLabel: "مسؤول استلام طلبات" },
-  { id: "reception", label: "3. الاستقبال ومطابقة الفواتير (Reception) 🛎️", role: "receptionist", roleLabel: "موظف استقبال" },
-  { id: "sorting", label: "4. الفرز والتصنيف وإصدار المارك (Sorting & Tagging) 🏷️", role: "sorter", roleLabel: "فني فرز وتصنيف" },
-  { id: "cleaning", label: "5. التنظيف والغسيل والمعالجة (Cleaning & Washing) 🫧", role: "cleaning_tech", roleLabel: "فني غسيل وتنظيف" },
-  { id: "drying-assembly", label: "6. التجفيف والتجميع (Drying & Assembly) 🧺", role: "assembly_tech", roleLabel: "فني تجفيف وتجميع" },
-  { id: "ironing", label: "7. الكي بالبخار والمكابس (Ironing & Steaming) 👔", role: "ironing_tech", roleLabel: "فني كي بالبخار" },
-  { id: "packing", label: "8. التغليف النهائي والمطابقة (Final Packing) 📦", role: "packer", roleLabel: "مسؤول تغليف" },
-  { id: "qc", label: "9. فحص الجودة والمطابقة (Quality Assurance QC) 🛡️", role: "qc_tech", roleLabel: "مراقب جودة QC" },
-  { id: "delivery", label: "10. التوصيل والندب الخارجي (External Delivery) 🚚", role: "courier", roleLabel: "مندوب توصيل" },
+  { id: "cs", label: "خدمة العملاء والدعم 🎧", role: "cs_rep", roleLabel: "ممثل خدمة عملاء" },
+  { id: "intake", label: "استلام الطلبات والندب 📥", role: "intake_rep", roleLabel: "مسؤول استلام طلبات" },
+  { id: "reception", label: "الاستقبال ومطابقة الفواتير 🛎️", role: "receptionist", roleLabel: "موظف استقبال" },
+  { id: "sorting", label: "الفرز والتصنيف وإصدار المارك 🏷️", role: "sorter", roleLabel: "فني فرز وتصنيف" },
+  { id: "cleaning", label: "التنظيف والغسيل والمعالجة 🫧", role: "cleaning_tech", roleLabel: "فني غسيل وتنظيف" },
+  { id: "drying-assembly", label: "التجفيف والتجميع والفرز 🧺", role: "assembly_tech", roleLabel: "فني تجفيف وتجميع" },
+  { id: "ironing", label: "الكي بالبخار والمكابس 👔", role: "ironing_tech", roleLabel: "فني كي بالبخار" },
+  { id: "packing", label: "التغليف وتجهيز الشحنات 📦", role: "packer", roleLabel: "مسؤول تغليف" },
+  { id: "qc", label: "فحص الجودة والمطابقة 🛡️", role: "qc_tech", roleLabel: "مراقب جودة QC" },
+  { id: "delivery", label: "التوصيل والندب الخارجي 🚚", role: "courier", roleLabel: "مندوب توصيل" },
 ];
 
 export const MANAGEMENT_ROLES = [

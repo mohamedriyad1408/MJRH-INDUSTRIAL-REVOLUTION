@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { fmtDate } from "@/lib/format";
 
 export const Route = createFileRoute("/$tenant/stations/intake")({
-  head: () => ({ meta: [{ title: "2. استلام الطلبات Intake" }] }),
+  head: () => ({ meta: [{ title: "استلام الطلبات والندب" }] }),
   component: IntakeStationPage,
 });
 
@@ -39,8 +39,8 @@ function IntakeStationPage() {
       <div className="rounded-3xl bg-gradient-to-br from-amber-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><Inbox className="w-7 h-7 text-amber-300" /> 2. محطة استلام الطلبات والندب (Order Intake)</h1>
-            <p className="text-sm text-white/70 mt-1">المحطة التشغيلية الثانية: استقبال الشحنات الواردة مع المناديب، استلام الملابس من العملاء، وإدخال الطلبات.</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Inbox className="w-7 h-7 text-amber-300" /> محطة استلام الطلبات والندب الداخلي</h1>
+            <p className="text-sm text-white/70 mt-1">استقبال الشحنات الواردة مع المناديب، استلام الملابس من العملاء، وإدخال الطلبات.</p>
           </div>
           <div className="flex gap-2">
             <Button asChild className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black"><Link to={"/$tenant/orders/new" as any}><Plus className="w-4 h-4 ms-1" /> إنشاء فاتورة استلام جديدة</Link></Button>

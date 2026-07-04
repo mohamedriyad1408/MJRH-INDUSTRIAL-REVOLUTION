@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CheckCircle2, ClipboardList, Map, PackageCheck, Shirt, Sparkles, Truck, Wand2, Wind } from "lucide-react";
+import { resolveAppUrl } from "@/lib/utils";
 
 type Task = { title: string; detail: string; href: string; count: number; tone?: "red" | "amber" | "teal" | "violet"; icon: React.ReactNode };
 
@@ -79,7 +80,7 @@ export function MobileWorkDock() {
           <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{STATION_AR[station ?? ""] ?? "تشغيل اليوم"}</SheetDescription>
         </SheetHeader>
         <div className="grid gap-3 mt-4">
-          {tasks.map((t) => <Link key={t.href + t.title} to={t.href as any} onClick={() => setOpen(false)}>
+          {tasks.map((t) => <Link key={t.href + t.title} to={resolveAppUrl(t.href) as any} onClick={() => setOpen(false)}>
             <div className={`rounded-3xl border p-4 shadow-sm ${t.tone === "red" ? "bg-red-50 border-red-200" : t.tone === "amber" ? "bg-amber-50 border-amber-200" : t.tone === "violet" ? "bg-violet-50 border-violet-200" : "bg-teal-50 border-teal-200"}`}>
               <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2 font-black">{t.icon}{t.title}</div><Badge variant={t.count ? "destructive" : "secondary"}>{t.count}</Badge></div>
               <div className="text-sm text-muted-foreground mt-1">{t.detail}</div>
