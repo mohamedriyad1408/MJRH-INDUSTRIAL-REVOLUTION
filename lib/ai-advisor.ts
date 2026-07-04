@@ -79,7 +79,8 @@ export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?:
   const equipment = filterByBranch(rawEquipment);
   const inventory = filterByBranch(rawInventory);
 
-  const totalRevenue = orders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
+  const validOrders = orders.filter((o) => o.status !== "cancelled");
+  const totalRevenue = validOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
   const totalExpenses = expenses.reduce((acc, e) => acc + Number(e.amount ?? 0), 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
@@ -105,7 +106,8 @@ export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?:
     const bExpenses = rawExpenses.filter((e) => e.branch_id === b.id);
     const bEmployees = rawEmployees.filter((em) => em.branch_id === b.id);
 
-    const bRev = bOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
+    const validBOrders = bOrders.filter((o) => o.status !== "cancelled");
+    const bRev = validBOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
     const bExp = bExpenses.reduce((acc, e) => acc + Number(e.amount ?? 0), 0);
     const bProf = bRev - bExp;
 

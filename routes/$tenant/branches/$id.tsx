@@ -48,7 +48,8 @@ function BranchDashboardPage() {
     const exps = expRes.data ?? [];
     const cs = cRes.data ?? [];
 
-    const rev = ords.reduce((s: number, x: any) => s + Number(x.total ?? 0), 0);
+    const validOrds = ords.filter((o: any) => o.status !== "cancelled");
+    const rev = validOrds.reduce((s: number, x: any) => s + Number(x.total ?? 0), 0);
     const exp = exps.reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0);
     const cTotal = cs.reduce((s: number, x: any) => s + Number(x.current_balance ?? 0), 0);
     const actOrds = ords.filter((o: any) => !["delivered", "cancelled"].includes(o.status)).length;

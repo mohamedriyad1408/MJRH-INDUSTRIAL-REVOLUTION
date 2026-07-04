@@ -27,10 +27,10 @@ export function DailyDigest() {
     ]).then(([{ data: orders }]) => {
       const os = orders ?? [];
       setData({
-        todayOrders: os.length,
+        todayOrders: os.filter((o: any) => o.status !== "cancelled").length,
         readyUnits: os.filter((o: any) => o.status === "ready").length,
         lateCount: os.filter((o: any) => o.promised_delivery_at && o.promised_delivery_at < new Date().toISOString() && !["delivered","cancelled"].includes(o.status)).length,
-        netToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+        netToday: os.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       });
     });
   }, []);

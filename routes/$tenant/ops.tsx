@@ -39,7 +39,7 @@ function OpsDashboard() {
         supabase.from("orders").select("id", { count: "exact", head: true }).gte("promised_delivery_at", tomorrowStart.toISOString()).lte("promised_delivery_at", tomorrowEnd.toISOString()),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("is_urgent", true).not("status", "in", "(delivered,cancelled)"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "received"),
-        supabase.from("orders").select("total, payment_method").eq("payment_status", "paid").gte("created_at", start.toISOString()),
+        supabase.from("orders").select("total, payment_method").eq("payment_status", "paid").neq("status", "cancelled").gte("created_at", start.toISOString()),
         supabase.from("leave_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("employees").select("id, full_name, job_role").eq("is_active", true).order("full_name").limit(20),
         supabase.from("service_units").select("id,order_id,needs_reclean,current_stage,status"),

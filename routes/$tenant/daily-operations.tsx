@@ -99,8 +99,8 @@ function DailyOperationsPage() {
       readyNoDriver: readyNoDriver.count ?? 0,
       unpaidReady: unpaid.count ?? 0,
       invoiceReview: invoices.count ?? 0,
-      ordersToday: os.length,
-      revenueToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+      ordersToday: os.filter((o: any) => o.status !== "cancelled").length,
+      revenueToday: os.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       cashIn: cs.filter((x: any) => x.direction === "in" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       cashOut: cs.filter((x: any) => x.direction === "out" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
     });

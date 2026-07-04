@@ -135,8 +135,8 @@ function TodayCenter() {
     setDetails(issueDetails.slice(0, 12));
     setLatestReports(reportsRes.data ?? []);
     setData({
-      ordersToday: os.length,
-      revenueToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+      ordersToday: os.filter((o: any) => o.status !== "cancelled").length,
+      revenueToday: os.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       cashIn: cs.filter((x: any) => x.direction === "in" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       cashOut: cs.filter((x: any) => x.direction === "out" && x.source_type !== "cash_transfer").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       activeOrders: os.filter((o: any) => !["delivered", "cancelled"].includes(o.status)).length,

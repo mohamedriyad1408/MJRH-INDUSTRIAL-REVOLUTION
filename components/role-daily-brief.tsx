@@ -58,9 +58,10 @@ export function RoleDailyBrief({ role }: { role: Role }) {
     const orders = ordersRes.data ?? [];
     const expenses = expensesRes.data ?? [];
     const cash = cashRes.data ?? [];
+    const validOrders = orders.filter((o: any) => o.status !== "cancelled");
     setData({
-      ordersToday: orders.length,
-      revenueToday: orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+      ordersToday: validOrders.length,
+      revenueToday: validOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       expensesToday: expenses.reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0),
       cashIn: cash.filter((x: any) => x.direction === "in").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       cashOut: cash.filter((x: any) => x.direction === "out").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),

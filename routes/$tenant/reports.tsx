@@ -91,8 +91,11 @@ function ReportsPage() {
     const activePickups = pickupRes.data ?? [];
     const lateDetails = lateDetailsRes.data ?? [];
 
-    const totalRevenue = orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-    const prevRevenue = prevOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+    const validOrders = orders.filter((o: any) => o.status !== "cancelled");
+    const validPrevOrders = prevOrders.filter((o: any) => o.status !== "cancelled");
+
+    const totalRevenue = validOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+    const prevRevenue = validPrevOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
     const paidExpenses = expenses.filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
     const payableExpenses = expenses.filter((e: any) => e.status === "payable").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
     const payrollAccrual = expenses.filter((e: any) => e.status === "payable" && e.category === "salaries").reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
@@ -101,8 +104,8 @@ function ReportsPage() {
     const delivered = orders.filter((o: any) => o.status === "delivered").length;
     const cancelled = orders.filter((o: any) => o.status === "cancelled").length;
     const urgent = orders.filter((o: any) => o.is_urgent).length;
-    const unpaidValue = orders.filter((o: any) => o.payment_status === "unpaid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
-    const avgOrder = orders.length ? totalRevenue / orders.length : 0;
+    const unpaidValue = validOrders.filter((o: any) => o.payment_status === "unpaid").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+    const avgOrder = validOrders.length ? totalRevenue / validOrders.length : 0;
     const revenueDelta = prevRevenue ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : null;
 
     const stageCounts: Record<string, number> = {};
@@ -176,18 +179,19 @@ function ReportsPage() {
     ]);
     const branchComparison = (branchRows as any[]).map((b: any) => {
       const bo = (cmpOrdRes.data ?? []).filter((o: any) => o.branch_id === b.id);
+      const validBo = bo.filter((o: any) => o.status !== "cancelled");
       const be = (cmpExpRes.data ?? []).filter((e: any) => e.branch_id === b.id);
       const bu = (cmpUnitsRes.data ?? []).filter((u: any) => u.orders?.branch_id === b.id);
       const bc = (cmpCashRes.data ?? []).filter((c: any) => c.branch_id === b.id);
       const cashSafeBalance = bc.reduce((sum: number, c: any) => sum + Number(c.current_balance ?? 0), 0);
       const salaries = be.filter((e: any) => e.category === "salaries").reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
-      const revenue = bo.reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
+      const revenue = validBo.reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
       const paidExpenses = be.filter((e: any) => e.status === "paid").reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
       const payableExpenses = be.filter((e: any) => e.status === "payable").reduce((sum: number, e: any) => sum + Number(e.amount ?? 0), 0);
-      const unpaid = bo.filter((o: any) => o.payment_status !== "paid").reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
+      const unpaid = validBo.filter((o: any) => o.payment_status !== "paid").reduce((sum: number, o: any) => sum + Number(o.total ?? 0), 0);
       const reclean = bu.filter((u: any) => u.needs_reclean).length;
       const qcFailedUnits = bu.filter((u: any) => u.current_stage === "qc_failed").length;
-      return { id: b.id, name: b.name, orders: bo.length, delivered: bo.filter((o: any) => o.status === "delivered").length, revenue, paidExpenses, payableExpenses, salaries, cashSafeBalance, netCash: revenue - paidExpenses, avgOrder: bo.length ? revenue / bo.length : 0, unpaid, urgent: bo.filter((o: any) => o.is_urgent).length, pieces: bu.length, reclean, qcFailed: qcFailedUnits };
+      return { id: b.id, name: b.name, orders: bo.length, delivered: bo.filter((o: any) => o.status === "delivered").length, revenue, paidExpenses, payableExpenses, salaries, cashSafeBalance, netCash: revenue - paidExpenses, avgOrder: validBo.length ? revenue / validBo.length : 0, unpaid, urgent: bo.filter((o: any) => o.is_urgent).length, pieces: bu.length, reclean, qcFailed: qcFailedUnits };
     }).sort((a: any, b: any) => b.revenue - a.revenue);
 
     const insights: Insight[] = [];

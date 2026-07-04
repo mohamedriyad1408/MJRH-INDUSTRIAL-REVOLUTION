@@ -44,10 +44,11 @@ function ManagerHubPage() {
 
     const byStatus = (rows: any[] | null, s: string) => (rows ?? []).filter((r) => r.status === s).length;
 
+    const validOrdersToday = (ordersToday ?? []).filter((r: any) => r.status !== "cancelled");
     setStats({
-      ordersTodayCount: (ordersToday ?? []).length,
-      ordersTodayRevenue: (ordersToday ?? []).reduce((a: number, r: any) => a + Number(r.total ?? 0), 0),
-      urgentToday: (ordersToday ?? []).filter((r: any) => r.is_urgent).length,
+      ordersTodayCount: validOrdersToday.length,
+      ordersTodayRevenue: validOrdersToday.reduce((a: number, r: any) => a + Number(r.total ?? 0), 0),
+      urgentToday: validOrdersToday.filter((r: any) => r.is_urgent).length,
       cleaning: byStatus(stationCounts, "cleaning"),
       ironing: byStatus(stationCounts, "ironing"),
       packing: byStatus(stationCounts, "packing"),
