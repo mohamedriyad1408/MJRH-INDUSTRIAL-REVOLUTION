@@ -33,27 +33,14 @@ const adminGroups: { label: string; items: NavItem[] }[] = [
 
 const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
-    label: "اللوحات",
+    label: "التشغيل اليومي والمحطات",
     items: [
+      { title: "مركز اليوم التشغيلي", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
+      { title: "إنشاء فاتورة طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
+      { title: "كل الطلبات والفواتير", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
+      { title: "خريطة المراقبة والمناديب", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
+      { title: "مرصد التعثرات (Telemetry)", url: "/issues", icon: AlertTriangle, roles: ["owner", "ops_manager", "cs_manager"] },
       { title: "البحث الموحد والنتائج", url: "/search", icon: Search, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
-      { title: "مرصد المشاكل والتعثرات", url: "/issues", icon: AlertTriangle, roles: ["owner", "ops_manager", "cs_manager"] },
-      { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
-      { title: "مركز اليوم", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
-      { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
-      { title: "لوحة المديرين التنفيذيين", url: "/executive", icon: BarChart3, roles: ["owner"] },
-      { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
-      { title: "خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
-      { title: "لوحة المدير", url: "/manager", icon: ShieldCheck, roles: ["cs_manager", "ops_manager", "owner"] },
-      { title: "لوحة السائق", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
-      { title: "خريطة المراقبة الحية", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
-      { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
-    ],
-  },
-  {
-    label: "الطلبات",
-    items: [
-      { title: "كل الطلبات", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
-      { title: "طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
     ],
   },
   {
@@ -69,6 +56,19 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
       { title: "التغليف وتجهيز الشحنات", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee", "packer"] },
       { title: "فحص الجودة والمطابقة", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee", "qc_tech"] },
       { title: "التوصيل والندب الخارجي", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
+    ],
+  },
+  {
+    label: "لوحات الإدارة العليا",
+    items: [
+      { title: "لوحة المالك العامة", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
+      { title: "لوحة المديرين التنفيذيين", url: "/executive", icon: BarChart3, roles: ["owner"] },
+      { title: "لوحة مدير التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
+      { title: "لوحة مدير خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
+      { title: "التقارير والذكاء التشغيلي", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
+      { title: "لوحة السائق الخاصة", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
+      { title: "فحص سلامة النظام (APDO)", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
+      { title: "تشغيل اليوم المفصل", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
     ],
   },
   {
@@ -88,9 +88,9 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "المالية والتشغيل",
     items: [
-      { title: "الحسابات", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
+      { title: "الحسابات العامة", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
-      { title: "القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
+      { title: "دفتر القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
       { title: "فحص النظام", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
       { title: "ذمم العملاء", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
       { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole, roles: ["owner", "ops_manager"] },
@@ -168,7 +168,10 @@ export function AppSidebar() {
             <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0">
-            <div className="font-black text-sm truncate tracking-tight text-slate-900">MJRH</div>
+            <div className="font-black text-sm truncate tracking-tight text-slate-900 flex items-center gap-1">
+              <span>MJRH</span>
+              <span className="text-[10px] bg-teal-600 text-white px-1.5 py-0.5 rounded-md font-mono">v2.6 Hybrid</span>
+            </div>
             <div className="text-xs opacity-70 truncate">{user?.email}</div>
           </div>
         </div>
