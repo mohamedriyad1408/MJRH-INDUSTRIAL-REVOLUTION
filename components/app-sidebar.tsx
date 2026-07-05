@@ -84,17 +84,6 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "مقر الإدارة العليا (C-Suite HQ)",
- items: [
- { title: "ملخص مقر الشركة", url: "/admin", icon: Crown, roles: ["owner"] },
- { title: "خطة العمل واقتصاديات SaaS", url: "/admin/business-plan", icon: TrendingUp, roles: ["owner"] },
- { title: "تطوير الأعمال ومبيعات B2B", url: "/admin/biz-dev", icon: BriefcaseBusiness, roles: ["owner"] },
- { title: "خطة التسويق والنمو GTM", url: "/admin/marketing-plan", icon: Megaphone, roles: ["owner"] },
- { title: "نجاح العملاء ونشر المنشآت", url: "/admin/customer-success", icon: Headphones, roles: ["owner"] },
- { title: "شؤون المستثمرين والتقييم الفني", url: "/admin/investor-relations", icon: ShieldCheck, roles: ["owner"] },
- ],
- },
- {
  label: "الموظفون",
  items: [
  { title: "الحضور والانصراف (Mawared HR)", url: "/staff/attendance", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
