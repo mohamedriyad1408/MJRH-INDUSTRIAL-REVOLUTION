@@ -5,7 +5,7 @@
 **الجمهور المستهدف:** فريق الإنتاج المرئي، مهندسو المبيعات، ومستثمرو جولة Pre-Seed  
 **بيئة التشغيل المعتمدة:** Vercel Production (`https://mjrh.vercel.app/`)  
 **معرف مستأجر Dry Tech:** `c0ea27c7-138e-4d12-b732-6981bddb4c97`  
-**قاعدة بيانات Supabase:** `postgresql://postgres:142536Mjhrf*%23@db.dngjfjrjddigqadlyain.supabase.co:5432/postgres`
+**قاعدة بيانات Supabase:** `[SUPABASE_DATABASE_URL_VIA_ENV_SECRET]`
 
 ---
 
