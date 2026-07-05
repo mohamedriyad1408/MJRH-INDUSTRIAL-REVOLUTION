@@ -11,6 +11,7 @@ import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gaug
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { getSurgeReportData } from "@/lib/scheduling-surge";
+import { ItemSalesAnalyticsTab } from "@/components/item-sales-analytics";
 
 export const Route = createFileRoute("/$tenant/reports")({
   head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
@@ -49,6 +50,7 @@ function ReportsPage() {
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
   const [surgeData, setSurgeData] = useState<any>(null);
+  const [activeReportTab, setActiveReportTab] = useState<"overview" | "item_sales">("item_sales");
 
   async function load() {
     setLoading(true);
@@ -278,10 +280,37 @@ function ReportsPage() {
         </div>
       </div>
 
-      {loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
-        <div className="space-y-6" dir={dir}>
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            <Kpi label={t("finance.revenueTab")} value={fmtMoney(data.totalRevenue, t("common.egp"))} tone="teal" sub={data.revenueDelta === null ? t("reports.noMonth") : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
+      <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
+        <button
+          type="button"
+          onClick={() => setActiveReportTab("item_sales")}
+          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
+            activeReportTab === "item_sales" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>📊 مبيعات وحركة إنتاج الأصناف (أسبوعي / شهري / سنوي)</span>
+          <Badge className={`text-[10px] px-1.5 py-0 ${activeReportTab === "item_sales" ? "bg-white/20 text-white" : "bg-amber-500 text-white font-black"}`}>جديد</Badge>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveReportTab("overview")}
+          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
+            activeReportTab === "overview" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
+          }`}
+        >
+          <Brain className="w-4 h-4" />
+          <span>📈 التقارير المالية والتشغيلية العامة</span>
+        </button>
+      </div>
+
+      {activeReportTab === "item_sales" ? (
+        <ItemSalesAnalyticsTab branchId={branchId} />
+      ) : (
+        loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
+          <div className="space-y-6" dir={dir}>
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+              <Kpi label={t("finance.revenueTab")} value={fmtMoney(data.totalRevenue, t("common.egp"))} tone="teal" sub={data.revenueDelta === null ? t("reports.noMonth") : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
             <Kpi label={t("finance.netProfit")} value={fmtMoney(data.netProfit, t("common.egp"))} tone={data.netProfit >= 0 ? "green" : "red"} />
             <Kpi label={t("accounting.tab.expenses")} value={fmtMoney(data.payableExpenses, t("common.egp"))} tone="amber" sub={`Salaries: ${fmtMoney(data.payrollAccrual, t("common.egp"))}`} />
             <Kpi label={t("station.common.orders")} value={data.totalOrders} tone="blue" sub={`${data.delivered} ${t("reports.del")}`} />
@@ -383,7 +412,7 @@ function ReportsPage() {
             </Panel>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

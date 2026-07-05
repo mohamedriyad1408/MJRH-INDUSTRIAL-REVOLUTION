@@ -7,11 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon, History, MapPin, ShieldCheck, Truck, Shirt } from "lucide-react";
+import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon, History, MapPin, ShieldCheck, Truck, Shirt, Receipt, Clock, Zap } from "lucide-react";
 import { PrintInvoiceButton } from "@/components/print-invoice";
+import { IntakeInvoiceEditorModal } from "@/components/intake-invoice-editor";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
@@ -92,6 +95,11 @@ function OrderDetailPage() {
   const [messageRows, setMessageRows] = useState<any[]>([]);
   const [employeeLedgerRows, setEmployeeLedgerRows] = useState<any[]>([]);
   const [customerReturnRows, setCustomerReturnRows] = useState<any[]>([]);
+  const [openInvoiceEditor, setOpenInvoiceEditor] = useState(false);
+  const [openExpediteModal, setOpenExpediteModal] = useState(false);
+  const [expediteNotes, setExpediteNotes] = useState("");
+  const [customDate, setCustomDate] = useState("");
+  const [customTime, setCustomTime] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -213,6 +221,56 @@ function OrderDetailPage() {
     await supabase.rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: "اعتماد فاتورة", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
     toast.success("تم تأكيد الفاتورة وتجهيز إشعار العميل");
     load();
+  }
+
+  async function handleExpedite(hoursDelta: number | null) {
+    if (!order) return;
+    setLoading(true);
+    try {
+      let newPromised: string | null = null;
+      let isUrgent = true;
+      let noteText = "";
+
+      if (hoursDelta === null) {
+        isUrgent = false;
+        newPromised = new Date(new Date(order.created_at).getTime() + 24 * 3600 * 1000).toISOString();
+        noteText = "إلغاء الاستعجال والعودة للموعد القياسي الطبيعي للتسليم";
+      } else if (hoursDelta === 0) {
+        if (!customDate || !customTime) {
+          setLoading(false);
+          return toast.error("يرجى تحديد اليوم والساعة للتسليم المخصص");
+        }
+        newPromised = new Date(`${customDate}T${customTime}:00`).toISOString();
+        noteText = `تقديم موعد التسليم إلى موعد مخصص: ${new Date(newPromised).toLocaleString("ar-EG")} — السبب: ${expediteNotes || "طلب العميل"}`;
+      } else {
+        const baseTime = order.promised_delivery_at ? new Date(order.promised_delivery_at).getTime() : new Date().getTime() + 24 * 3600 * 1000;
+        newPromised = new Date(baseTime - hoursDelta * 3600 * 1000).toISOString();
+        noteText = `تقديم موعد التسليم بمقدار ${hoursDelta} ساعات ليصبح في ${new Date(newPromised).toLocaleString("ar-EG")} — السبب: ${expediteNotes || "طلب العميل هاتفياً"}`;
+      }
+
+      const { error } = await supabase.from("orders").update({
+        promised_delivery_at: newPromised,
+        is_urgent: isUrgent,
+        notes: (order.notes ? order.notes + "\n" : "") + `[أولوية التسليم]: ${noteText}`
+      }).eq("id", id);
+      if (error) throw error;
+
+      await supabase.from("order_status_history").insert({
+        order_id: id,
+        from_status: order.status,
+        to_status: order.status,
+        changed_by: user?.id,
+        notes: `تعديل أولوية وموعد التسليم: ${noteText}`
+      });
+
+      toast.success("تم تحديث أولوية وموعد التسليم وتوجيه محطة الكي لتشغيله بالأولوية الجديدة");
+      setOpenExpediteModal(false);
+      setExpediteNotes("");
+      load();
+    } catch (e: any) {
+      toast.error("خطأ في تحديث موعد التسليم: " + (e?.message || ""));
+      setLoading(false);
+    }
   }
 
   async function addUnit() {
@@ -406,6 +464,14 @@ function OrderDetailPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setOpenInvoiceEditor(true)} className="border-amber-400 text-amber-900 bg-amber-50 hover:bg-amber-100 font-bold text-xs">
+            <Receipt className="w-4 h-4 ms-1 text-amber-600" />
+            <span>إضافة قطع وتعديل بنود الفاتورة (الكتالوج الكامل)</span>
+          </Button>
+          <Button variant="outline" onClick={() => setOpenExpediteModal(true)} className="border-blue-400 text-blue-900 bg-blue-50 hover:bg-blue-100 font-bold text-xs">
+            <Clock className="w-4 h-4 ms-1 text-blue-600" />
+            <span>تقديم موعد التسليم وأولوية الاستعجال</span>
+          </Button>
           <PrintInvoiceButton order={{ ...order, customers: order.customers, order_items: order.order_items ?? [] }} />
           <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
             {order.payment_status === "paid" ? t("order.paid") : t("order.recordPayment")}
@@ -552,6 +618,73 @@ function OrderDetailPage() {
           )}
         </CardContent>
       </Card>
+      <IntakeInvoiceEditorModal open={openInvoiceEditor} onOpenChange={setOpenInvoiceEditor} orderId={id} customerName={order.customers?.full_name} phone={order.customers?.phone} activeActor={null} onSaved={load} />
+
+      {/* Expedite & Priority Modal */}
+      <Dialog open={openExpediteModal} onOpenChange={setOpenExpediteModal}>
+        <DialogContent className="max-w-md rounded-3xl p-6 space-y-4" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              <span>تقديم موعد التسليم وإعطاء أولوية استعجال قصوى</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3 text-xs">
+            <div className="p-3 rounded-2xl bg-slate-100 border space-y-1">
+              <div className="font-bold text-slate-500">موعد التسليم المقرر حالياً:</div>
+              <div className="text-base font-black font-mono text-slate-900">
+                {order.promised_delivery_at ? new Date(order.promised_delivery_at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "غير محدد (قياسي)"}
+              </div>
+              {order.is_urgent && <Badge className="bg-amber-600 text-white font-black text-[10px] mt-1">طلب مستعجل حالياً</Badge>}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="font-black text-slate-800">1. تقديم الموعد واختيار أولوية استعجال سريعة:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="outline" onClick={() => handleExpedite(2)} className="h-10 rounded-xl font-black bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 text-xs">
+                  <Zap className="w-3.5 h-3.5 ms-1 text-amber-500" /> تقديم 2 ساعة (عاجل جداً)
+                </Button>
+                <Button type="button" variant="outline" onClick={() => handleExpedite(4)} className="h-10 rounded-xl font-black bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 text-xs">
+                  <Zap className="w-3.5 h-3.5 ms-1 text-amber-500" /> تقديم 4 ساعات (عاجل)
+                </Button>
+                <Button type="button" variant="outline" onClick={() => handleExpedite(6)} className="h-10 rounded-xl font-black bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100 text-xs">
+                  <Clock className="w-3.5 h-3.5 ms-1 text-blue-600" /> تقديم 6 ساعات
+                </Button>
+                <Button type="button" variant="outline" onClick={() => handleExpedite(null)} className="h-10 rounded-xl font-bold bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 text-xs">
+                  إلغاء الاستعجال والعودة للطبيعي
+                </Button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t space-y-2">
+              <Label className="font-black text-slate-800">2. أو تحديد تاريخ وتوقيت مخصص للتسليم العاجل:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-[11px] text-slate-500 mb-1 block">تاريخ التسليم:</Label>
+                  <Input type="date" value={customDate} onChange={e => setCustomDate(e.target.value)} className="h-9 rounded-xl font-mono" />
+                </div>
+                <div>
+                  <Label className="text-[11px] text-slate-500 mb-1 block">وقت التسليم:</Label>
+                  <Input type="time" value={customTime} onChange={e => setCustomTime(e.target.value)} className="h-9 rounded-xl font-mono" />
+                </div>
+              </div>
+              <Button type="button" size="sm" onClick={() => handleExpedite(0)} className="w-full h-9 rounded-xl font-black bg-slate-900 hover:bg-slate-800 text-white mt-1">
+                اعتماد التوقيت المخصص العاجل
+              </Button>
+            </div>
+
+            <div className="pt-2 border-t space-y-1">
+              <Label className="font-bold">ملاحظات وسبب استعجال الطلب:</Label>
+              <Input value={expediteNotes} onChange={e => setExpediteNotes(e.target.value)} placeholder="مثال: اتصال العميل لتقديم الموعد..." className="h-9 rounded-xl" />
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2 justify-end pt-2 border-t">
+            <Button variant="outline" onClick={() => setOpenExpediteModal(false)} className="rounded-xl font-bold">إغلاق</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Zap, FileText, Check, Award, Eye, Receipt,
 } from "lucide-react";
 import { BASE_CONTINUOUS_SLOTS, calculateSlotPressure } from "@/lib/scheduling-surge";
+import { PosCategoryTabs, type ServiceTypeFilter } from "@/components/pos-category-tabs";
 
 export const Route = createFileRoute("/customer-portal")({
   head: () => ({ meta: [{ title: "بوابة العميل VIP - MJRH" }] }),
@@ -54,7 +55,7 @@ type Order = {
   order_items?: { name: string; qty: number; unit_price: number; line_total?: number }[];
 };
 
-type ServiceItem = { id: string; name: string; price: number; service_type: string };
+type ServiceItem = { id: string; name: string; price: number; service_type: string; category?: string };
 type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null; notes?: string | null };
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
 
@@ -80,7 +81,8 @@ function CustomerPortal() {
   const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>({});
 
   // VIP Concierge Preferences & Notes State
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "cleaning" | "ironing" | "both">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<ServiceTypeFilter>("all");
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [itemPhotoMap, setItemPhotoMap] = useState<Record<string, string>>({}); // map service_item_id -> img url
   const [prefPackaging, setPrefPackaging] = useState<"hangers" | "folded" | "mixed">("hangers");
@@ -137,8 +139,8 @@ function CustomerPortal() {
   }
 
   async function loadServices() {
-    const { data } = await supabase.rpc("customer_portal_services", { _phone: phone, _slug: tenantSlug });
-    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.price ?? 0), service_type: s.service_type })));
+    const { data } = await supabase.from("service_items").select("id,name,unit_price,service_type,category").eq("is_active", true).order("name");
+    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.unit_price ?? 0), service_type: s.service_type, category: s.category })));
   }
 
   function addPiece(svc: ServiceItem) {
@@ -239,9 +241,12 @@ function CustomerPortal() {
   }
 
   const filteredServices = useMemo(() => {
-    if (categoryFilter === "all") return services;
-    return services.filter((s) => s.service_type === categoryFilter);
-  }, [services, categoryFilter]);
+    return services.filter((s) => {
+      const byCat = categoryFilter === "all" || s.category === categoryFilter || (categoryFilter === "رجالي" && !s.category);
+      const byType = !serviceTypeFilter || serviceTypeFilter === "all" || s.service_type === serviceTypeFilter;
+      return byCat && byType;
+    });
+  }, [services, categoryFilter, serviceTypeFilter]);
 
   const selectedServicesList = useMemo(() => {
     return services.filter((s) => (itemQuantities[s.id] || 0) > 0);
@@ -550,25 +555,7 @@ ${notes.trim() ? `[📝 ملاحظات الطلب الحالي]: ${notes.trim()}
 
               <CardContent className="p-5 space-y-4">
                 {/* Category Filter Pills */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: "all", label: "🌐 الكل" },
-                    { id: "both", label: "✨ تنظيف وكي" },
-                    { id: "ironing", label: "👔 كي فقط" },
-                    { id: "cleaning", label: "🪡 تصليحات وخياطة" },
-                  ].map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setCategoryFilter(f.id as any)}
-                      className={`rounded-2xl p-2.5 text-xs font-black transition border shadow-2xs ${
-                        categoryFilter === f.id ? "bg-teal-600 text-white border-teal-600 shadow-sm" : "bg-slate-50 hover:bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
+                <PosCategoryTabs activeTab={categoryFilter} onSelect={setCategoryFilter} items={services} compact={false} activeServiceType={serviceTypeFilter} onSelectServiceType={setServiceTypeFilter} />
 
                 {/* Service Items Interactive Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pe-1">
