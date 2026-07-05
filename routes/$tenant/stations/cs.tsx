@@ -191,7 +191,7 @@ function CsStationPage() {
  if (!tenantId) return;
  setLoading(true);
  const [oRes, pRes] = await Promise.all([
- supabase.from("orders").select("id,order_number,status,total,created_at,notes,customers(full_name,phone)").eq("tenant_id", tenantId).not("status", "in", "(delivered,cancelled)").order("created_at", { ascending: false }).limit(15),
+ supabase.from("orders").select("id,order_number,status,total,created_at,notes,customers(full_name,phone,vip_preferences,notes,address)").eq("tenant_id", tenantId).not("status", "in", "(delivered,cancelled)").order("created_at", { ascending: false }).limit(15),
  supabase.from("pickup_requests").select("*").eq("tenant_id", tenantId).in("status", ["pending", "assigned"]).order("created_at", { ascending: false }).limit(10),
  ]);
  setOrders(oRes.data ?? []);

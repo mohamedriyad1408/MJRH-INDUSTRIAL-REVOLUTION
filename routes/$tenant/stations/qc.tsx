@@ -44,7 +44,7 @@ function QcStation() {
  setLoading(true);
  const { data, error } = await supabase
  .from("service_units")
- .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,notes,branch_id,customers(full_name,phone))")
+ .select("id,label_code,name,current_stage,needs_reclean,label_status,order_id,orders(id,order_number,status,notes,branch_id,customers(full_name,phone,vip_preferences,notes,address))")
  .in("current_stage", ["cleaning_done", "ironing_done", "packing", "packing_done", "ready", "qc_failed"])
  .order("updated_at", { ascending: false })
  .limit(120);

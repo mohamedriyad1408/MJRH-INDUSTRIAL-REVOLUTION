@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, RotateCcw, ArrowRight, CreditCard, Send, Trash2, Upload, Image as ImageIcon, History, MapPin, ShieldCheck, Truck, Shirt, Receipt, Clock, Zap } from "lucide-react";
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { IntakeInvoiceEditorModal } from "@/components/intake-invoice-editor";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
@@ -104,7 +106,7 @@ function OrderDetailPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [{ data: ord }, { data: su }, { data: svcs }, { data: hist }, { data: pickups }, { data: cancels }, { data: qcs }] = await Promise.all([
-      supabase.from("orders").select("*,customers(full_name,phone),order_items(*)").eq("id", id).single(),
+      supabase.from("orders").select("*,customers(full_name,phone,vip_preferences,notes,address),order_items(*)").eq("id", id).single(),
       supabase
         .from("service_units")
         .select("*,employees:assigned_ironing_employee_id(full_name)")
@@ -489,10 +491,12 @@ function OrderDetailPage() {
           {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>{t("order.overrideClose")}</Button>}
           <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> {t("order.printLabels")}</Button>
           {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? t("order.assigning") : t("order.assignIroning")}</Button>}
+          <SorterReturnDialog orderId={order.id} orderNumber={order.order_number} tenantId={order.tenant_id} onDone={load} />
           <StatusBadge level={statusLevel(order.status)} label={t(`track.step.${order.status}`, order.status)} />
         </div>
       </div>
 
+      <OmnipresentOrderBanner order={order} customer={order.customers} />
       <OrderIssuePanel issues={issueList} />
 
       <div className="grid md:grid-cols-4 gap-3">

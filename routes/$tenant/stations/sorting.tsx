@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Tags, RefreshCw, Shirt, ArrowRight, CheckCircle2, ClipboardCheck, Eye, Camera, ExternalLink, ShieldAlert, Zap, Receipt, Sparkles } from "lucide-react";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 import { IntakeInvoiceEditorModal } from "@/components/intake-invoice-editor";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { fmtDate, fmtMoney } from "@/lib/format";
@@ -33,14 +35,14 @@ function SortingStationPage() {
  const [uRes, oRes] = await Promise.all([
  supabase
  .from("service_units")
- .select("id,label_code,name,service_type,current_stage,label_status,order_id,orders(id,order_number,status,customers(full_name))")
+ .select("id,label_code,name,service_type,current_stage,label_status,order_id,orders(id,order_number,status,customers(full_name,phone,vip_preferences,notes))")
  .eq("tenant_id", tenantId)
  .in("current_stage", ["received", "sorting"])
  .order("unit_number")
  .limit(30),
  supabase
  .from("orders")
- .select("id,order_number,status,total,created_at,notes,order_type,is_urgent,invoice_finalized_at,customers(full_name,phone)")
+ .select("id,order_number,status,total,created_at,notes,order_type,is_urgent,invoice_finalized_at,customers(full_name,phone,vip_preferences,notes,address)")
  .eq("tenant_id", tenantId)
  .in("status", ["received", "sorting"])
  .order("created_at", { ascending: false })
@@ -214,12 +216,10 @@ function SortingStationPage() {
  </Button>
  </>)}
  <Button asChild size="sm" variant="outline" className="rounded-xl font-bold"><Link to={"/$tenant/orders/$id" as any} params={{ id: o.id } as any}><Eye className="w-4 h-4 ms-1" /> فرز وتصوير القطع</Link></Button>
+ <SorterReturnDialog orderId={o.id} orderNumber={o.order_number} tenantId={tenantId} onDone={load} />
  </div>
  </div>
- {o.notes && (<div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-medium flex items-start gap-2">
- <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
- <div><span className="font-black">ملاحظات وتعليمات العميل: </span>{o.notes}</div>
- </div>)}
+ <OmnipresentOrderBanner order={o} customer={o.customers} />
  </div>);
  })}
  </CardContent>

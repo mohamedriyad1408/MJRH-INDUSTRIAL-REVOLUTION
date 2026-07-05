@@ -48,7 +48,7 @@ function ReceptionPage() {
  const [ordRes, pickRes] = await Promise.all([
  supabase
  .from("orders")
- .select("id, order_number, status, is_urgent, order_type, created_at, total, notes, customers(full_name, phone)")
+ .select("id, order_number, status, is_urgent, order_type, created_at, total, notes, customers(full_name,phone,vip_preferences,notes,address)")
  .in("status", ["received"])
  .order("is_urgent", { ascending: false })
  .order("created_at"),

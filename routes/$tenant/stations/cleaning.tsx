@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { RotateCcw, CheckCircle2, Sparkles, Package, Shirt, Image as ImageIcon, ArrowLeft } from "lucide-react";
 import { interpolate, useI18n } from "@/lib/i18n";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 
 export const Route = createFileRoute("/$tenant/stations/cleaning")({
  head: () => ({ meta: [{ title: "الغسيل والتنظيف" }] }),
@@ -56,7 +58,7 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
  setLoading(true);
  const { data } = await supabase
  .from("service_units")
- .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,notes,customers(full_name,phone))")
+ .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,notes,customers(full_name,phone,vip_preferences,notes,address))")
  .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
  .in("orders.status", ["cleaning", "ironing", "packing", "ready", "delivered"])
  .order("unit_number");
@@ -199,13 +201,11 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
  {manager ? ` إتمام تنظيف سليم (${g.units.filter(u => !u.needs_reclean && u.current_stage !== "quarantine").length}) نيابة عن الفني` : ` إتمام تنظيف كافة القطع السليمة (${g.units.filter(u => !u.needs_reclean && u.current_stage !== "quarantine").length} قطعة)`}
  </Button>
  {g.order?.id && <Button asChild size="sm" variant="outline" className="text-xs"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.order.id } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
+ {g.order?.id && <SorterReturnDialog orderId={g.orderId} orderNumber={g.order?.order_number || "?"} tenantId={tenantId} onDone={load} />}
  </div>
  </div>
  <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
- {((g.order as any)?.notes || "").includes("[ تفضيلات VIP المميزة]") && (<div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
- <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5"> تعليمات وتفضيلات العميل (VIP Concierge):</div>
- {(g.order as any).notes}
- </div>)}
+ <OmnipresentOrderBanner order={g.order} customer={g.order?.customers} className="mt-2" />
  </CardHeader>
  <CardContent className="p-3 space-y-2">
  {g.units.map((u) => (<div key={u.id} className="grid grid-cols-[58px_1fr] md:grid-cols-[58px_1fr_auto] gap-3 items-center rounded-xl border p-2 bg-card">

@@ -61,7 +61,7 @@ function IroningManagerPage({ activeActor }: { activeActor?: ActiveActor | null 
  const [u, e] = await Promise.all([
  supabase
  .from("service_units")
- .select("id,label_code,name,photo_url,line_value,ironing_base_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,notes,is_urgent,promised_delivery_at,customers(full_name,phone)),employees:assigned_ironing_employee_id(full_name)")
+ .select("id,label_code,name,photo_url,line_value,ironing_base_value,is_shirt_like,needs_reclean,reclean_reason,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,notes,is_urgent,promised_delivery_at,customers(full_name,phone,vip_preferences,notes,address)),employees:assigned_ironing_employee_id(full_name)")
  .in("service_type", ["cleaning", "ironing", "both"])
  .in("current_stage", ["ironing", "ironing_done", "packing", "packing_done", "ready"])
  .in("orders.status", ["ironing", "packing", "ready", "delivered"])
@@ -244,7 +244,7 @@ function IroningWorkerPage({ activeActor }: { activeActor?: ActiveActor | null }
  setLoading(true);
  const { data } = await supabase
  .from("service_units")
- .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,reclean_return_to_employee_id,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,notes,is_urgent,promised_delivery_at,customers(full_name,phone))")
+ .select("id,label_code,name,photo_url,line_value,is_shirt_like,needs_reclean,reclean_reason,reclean_return_to_employee_id,ironing_completed_at,assigned_ironing_employee_id,orders(id,order_number,status,notes,is_urgent,promised_delivery_at,customers(full_name,phone,vip_preferences,notes,address))")
  .eq("assigned_ironing_employee_id", employeeId)
  .eq("needs_reclean", false)
  .in("service_type", ["cleaning", "ironing", "both"])

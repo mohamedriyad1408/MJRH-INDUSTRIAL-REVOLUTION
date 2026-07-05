@@ -92,7 +92,7 @@ function DryingAssemblyStation() {
  const since = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
  const { data: all } = await supabase
  .from("service_units")
- .select("id,label_code,name,photo_url,current_stage,label_status,unit_number,order_id,orders!inner(id,order_number,created_at,branch_id,notes,customers(full_name,phone))")
+ .select("id,label_code,name,photo_url,current_stage,label_status,unit_number,order_id,orders!inner(id,order_number,created_at,branch_id,notes,customers(full_name,phone,vip_preferences,notes,address))")
  .gte("orders.created_at", since)
  .not("photo_url", "is", null)
  .limit(120);

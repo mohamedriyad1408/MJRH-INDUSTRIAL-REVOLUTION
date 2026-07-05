@@ -10,6 +10,8 @@ import { ArrowLeft, CheckCircle2, Image as ImageIcon, Loader2, Package, PackageC
 import { validateOrderMove } from "@/lib/station-workflow";
 import { useI18n } from "@/lib/i18n";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 
 export const Route = createFileRoute("/$tenant/stations/packing")({
  head: () => ({ meta: [{ title: "محطة التغليف" }] }),
@@ -33,7 +35,7 @@ type Unit = {
 type Group = { orderId: string; order: NonNullable<Unit["orders"]>; units: Unit[] };
 
 function PackingStation() {
- const { user, hasRole } = useAuth();
+ const { user, hasRole, tenantId } = useAuth();
  const { t, dir } = useI18n();
  const canMove = hasRole("owner", "ops_manager", "employee");
  const [units, setUnits] = useState<Unit[]>([]);
@@ -45,7 +47,7 @@ function PackingStation() {
  setLoading(true);
  const { data, error } = await supabase
  .from("service_units")
- .select("id,label_code,name,photo_url,service_type,current_stage,needs_reclean,label_status,ironing_completed_at,order_id,orders(id,order_number,status,notes,branch_id,customers(full_name,phone))")
+ .select("id,label_code,name,photo_url,service_type,current_stage,needs_reclean,label_status,ironing_completed_at,order_id,orders(id,order_number,status,notes,branch_id,customers(full_name,phone,vip_preferences,notes,address))")
  .in("orders.status", ["ironing", "packing", "ready", "delivered"])
  .neq("status", "cancelled")
  .order("updated_at", { ascending: true });
@@ -183,11 +185,8 @@ function PackingStation() {
  {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <div className="space-y-3">
  {!groups.length && <Card><CardContent className="p-10 text-center text-muted-foreground">{t("station.packing.noOrders")}</CardContent></Card>}
  {groups.map((g) => { const c = checks(g); return <Card key={g.orderId} className="overflow-hidden bg-white/85 backdrop-blur">
- <CardHeader className="bg-muted/40 pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base flex items-center gap-2"><PackageCheck className="w-4 h-4 text-teal-600" /> {t("order.orderNo", "طلب #{order}").replace("{order}", String(g.order.order_number))}<Badge variant="outline">{g.units.length} {t("station.common.pieces")}</Badge>{!c.okToPack && <Badge variant="destructive">{t("station.packing.notFit")}</Badge>}{c.okToReady && <Badge className="bg-emerald-600">{t("station.packing.readyApproval")}</Badge>}</CardTitle><Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.orderId } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button></div><div className="text-xs text-muted-foreground">{g.order.customers?.full_name ?? "—"} · {g.order.customers?.phone ?? ""}</div>
-{((g.order as any)?.notes || "").includes("[ تفضيلات VIP المميزة]") && (<div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
- <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5"> تعليمات وتفضيلات العميل (VIP Concierge):</div>
- {(g.order as any).notes}
- </div>)}</CardHeader>
+ <CardHeader className="bg-muted/40 pb-3"><div className="flex flex-wrap items-center justify-between gap-2"><CardTitle className="text-base flex items-center gap-2"><PackageCheck className="w-4 h-4 text-teal-600" /> {t("order.orderNo", "طلب #{order}").replace("{order}", String(g.order.order_number))}<Badge variant="outline">{g.units.length} {t("station.common.pieces")}</Badge>{!c.okToPack && <Badge variant="destructive">{t("station.packing.notFit")}</Badge>}{c.okToReady && <Badge className="bg-emerald-600">{t("station.packing.readyApproval")}</Badge>}</CardTitle><div className="flex items-center gap-2"><Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.orderId } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button><SorterReturnDialog orderId={g.orderId} orderNumber={g.order?.order_number || "?"} tenantId={tenantId} onDone={load} /></div></div><div className="text-xs text-muted-foreground">{g.order.customers?.full_name ?? "—"} · {g.order.customers?.phone ?? ""}</div>
+<OmnipresentOrderBanner order={g.order} customer={g.order?.customers} className="mt-2" /></CardHeader>
  <CardContent className="p-3 space-y-3">
  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
  <Check label={t("station.packing.noReturns")} ok={!c.reclean} bad={c.reclean} />

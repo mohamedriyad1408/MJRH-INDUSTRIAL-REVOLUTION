@@ -62,8 +62,8 @@ function NewStaffPage() {
   }
 
   async function submit() {
-    if (!form.full_name.trim() || !form.job_title.trim()) {
-      toast.error("الاسم والوظيفة مطلوبان");
+    if (!form.full_name.trim() || !form.job_title.trim() || !form.phone.trim()) {
+      toast.error("الاسم والوظيفة ورقم الهاتف المعتمد مطلوبون لإرسال تأكيد الحساب");
       return;
     }
     setSaving(true);
@@ -84,7 +84,10 @@ function NewStaffPage() {
     const { data, error } = await supabase.from("employees").insert(payload).select("id").single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم إضافة الموظف");
+    const branchName = branches.find((b) => b.id === form.branch_id)?.name || "الرئيسي";
+    const waText = `مرحباً ${form.full_name.trim()}،\nتم افتتاح المغسلة الرسمية وتسجيل حسابك الوظيفي في منظومة MJRH (فرع ${branchName}).\nرقم الهاتف المعتمد: ${form.phone}\nالوظيفة: ${form.job_title}\nالمحطة: ${form.station === "none" ? "عام" : form.station}\nيرجى الاحتفاظ بهذه الرسالة كإثبات تسجيل وحفظ سرية بيانات الدخول.\n— مالك المغسلة`;
+    window.open(`https://wa.me/20${form.phone.replace(/^0+/, "")}?text=${encodeURIComponent(waText)}`, "_blank");
+    toast.success("تم إضافة الموظف وإرسال رسالة تأكيد الحساب عبر WhatsApp بنجاح");
     nav({ to: "/$tenant/staff/$id", params: { id: data!.id } as any });
   }
 

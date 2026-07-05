@@ -75,6 +75,7 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("employee");
   const [station, setStation] = useState("none");
   const [jobRole, setJobRole] = useState("other");
@@ -91,7 +92,17 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setSaving(true);
-    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0), branchId: branchId || null }); toast.success(t("staffUsers.toastCreated", "تم إنشاء المستخدم وربطه بموظف عند الحاجة")); onDone(); }
+    try {
+      await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0), branchId: branchId || null });
+      if (phone) {
+        await supabase.from("employees").update({ phone }).eq("email", email);
+        const branchName = branches.find((b) => b.id === branchId)?.name || "الرئيسي";
+        const waText = `مرحباً ${fullName.trim()}،\nتم افتتاح المغسلة الرسمية وتسجيل حسابك الوظيفي في منظومة MJRH (فرع ${branchName}).\nرقم الهاتف المعتمد: ${phone}\nالبريد الإلكتروني: ${email}\nالدور الوظيفي: ${role}\nالمحطة: ${station === "none" ? "عام" : station}\nيرجى الاحتفاظ بهذه الرسالة كإثبات تسجيل وحفظ سرية بيانات الدخول.\n— مالك المغسلة`;
+        window.open(`https://wa.me/20${phone.replace(/^0+/, "")}?text=${encodeURIComponent(waText)}`, "_blank");
+      }
+      toast.success("تم إنشاء المستخدم وإرسال رسالة تأكيد الحساب عبر WhatsApp بنجاح");
+      onDone();
+    }
     catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
     finally { setSaving(false); }
   }
@@ -99,6 +110,7 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
   return (
     <form onSubmit={submit} className="space-y-4 py-2">
       <div><Label>{t("staffUsers.labelName", "الاسم الكامل")}</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
+      <div><Label className="font-bold text-teal-400">رقم الهاتف المعتمد (لتأكيد الحساب عبر WhatsApp)</Label><Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="010xxxxxxxx" required /></div>
       <div><Label>{t("staffUsers.labelEmail", "البريد")}</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
       <div><Label>{t("staffUsers.labelPassword", "كلمة المرور")}</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></div>
       <div>
