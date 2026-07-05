@@ -48,6 +48,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  label: "التشغيل اليومي والمحطات",
  items: [
  { title: "مركز اليوم التشغيلي", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "فيديو ديمو النظام (التجمع الخامس)", url: "/demo", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager", "employee"] },
  { title: "إنشاء فاتورة طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
  { title: "كل الطلبات والفواتير", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
  { title: "خريطة المراقبة والمناديب", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
