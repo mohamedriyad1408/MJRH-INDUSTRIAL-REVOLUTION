@@ -12,6 +12,8 @@ import { validateOrderMove } from "@/lib/station-workflow";
 import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft, Loader2, Trophy, Tags } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 
 export const Route = createFileRoute("/$tenant/stations/qc")({
  head: () => ({ meta: [{ title: "محطة الجودة QC" }] }),
@@ -154,13 +156,10 @@ function QcStation() {
  <CardHeader className="bg-muted/40 pb-3">
  {(() => { const c = groupChecks(g.units); return <><div className="flex flex-wrap items-center justify-between gap-2">
  <CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> {t("order.orderNo", "طلب #{order}").replace("{order}", String(g.order?.order_number ?? "?"))}<Badge variant="outline">{g.units.length} {t("station.common.pieces")}</Badge>{c.allPassed && <Badge className="bg-emerald-600">{t("station.qc.allPassed")}</Badge>}{(c.label || c.reclean || c.qcFailed) ? <Badge variant="destructive">{t("station.qc.needsAction")}</Badge> : null}</CardTitle>
- {g.order?.id && <Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.order.id } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
+ {g.order?.id && <div className="flex items-center gap-2"><Button asChild size="sm" variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: g.order.id } as any}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button><SorterReturnDialog orderId={g.orderId} orderNumber={g.order?.order_number || "?"} tenantId={null} onDone={load} /></div>}
  </div>
  <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
- {((g.order as any)?.notes || "").includes("[ تفضيلات VIP المميزة]") && (<div className="mt-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-400 p-2.5 text-xs text-amber-950 font-bold shadow-2xs whitespace-pre-wrap">
- <div className="font-black text-amber-900 flex items-center gap-1 mb-0.5"> تعليمات وتفضيلات العميل (VIP Concierge):</div>
- {(g.order as any).notes}
- </div>)}
+ <OmnipresentOrderBanner order={g.order as any} customer={(g.order as any)?.customers} className="mt-2" />
  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs"><Check label={t("station.packing.markOk")} ok={!c.label} bad={c.label} /><Check label={t("station.packing.noReturns")} ok={!c.reclean} bad={c.reclean} /><Check label={t("station.packing.packedCheck")} ok={!c.notPacked} bad={c.notPacked} /><Check label={t("station.qc.qcApproved")} ok={c.allPassed} bad={g.units.length - c.passed} /><Check label={t("station.qc.issues")} ok={!c.qcFailed} bad={c.qcFailed} /></div>
  <div className="flex flex-wrap justify-end gap-2 mt-3"><Button size="sm" variant="outline" disabled={busy === g.orderId} onClick={() => approveSafeGroup(g)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.qc.approveSafe")}</Button><Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" disabled={busy === g.orderId || !c.allPassed} onClick={() => markReady(g)}><Trophy className="w-4 h-4 ms-1" />{t("station.qc.markReady")}</Button></div></>; })()}
  </CardHeader>

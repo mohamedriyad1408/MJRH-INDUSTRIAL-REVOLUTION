@@ -11,6 +11,8 @@ import { StationBoard } from "@/components/station-board";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { useI18n } from "@/lib/i18n";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
+import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
+import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 
 export const Route = createFileRoute("/$tenant/stations/ironing")({
  head: () => ({ meta: [{ title: "الكي" }] }),
@@ -353,6 +355,7 @@ function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean
       </div>
       {manager && <div className="text-xs text-muted-foreground mt-1">{t("station.ironing.tech")}: <b>{u.employees?.full_name ?? t("station.ironing.unassignedTech")}</b></div>}
       {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">{t("station.common.reason")}: {u.reclean_reason}</div>}
+      <OmnipresentOrderBanner order={u.orders as any} customer={(u.orders as any)?.customers} className="mt-2" />
     </div>
     <div className="col-span-2 md:col-span-1 flex flex-wrap md:flex-col gap-2 justify-end items-stretch">
       {!u.ironing_completed_at && onDone && (
@@ -365,7 +368,8 @@ function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean
           <RotateCcw className="w-3.5 h-3.5 ms-1" /> {manager ? "تسجيل مرتجع نيابة عن الفني" : t("station.common.recleanCleaning")}
         </Button>
       )}
- {manager && u.orders?.id && <Button asChild variant="secondary" size="sm" className="text-xs"><Link to={"/$tenant/orders/$id" as any} params={{ id: u.orders.id } as any}>{t("station.common.openOrder")}</Link></Button>}
+      {u.orders?.id && <SorterReturnDialog orderId={u.orders.id} orderNumber={u.orders.order_number} tenantId={null} onDone={() => window.location.reload()} />}
+      {manager && u.orders?.id && <Button asChild variant="secondary" size="sm" className="text-xs"><Link to={"/$tenant/orders/$id" as any} params={{ id: u.orders.id } as any}>{t("station.common.openOrder")}</Link></Button>}
  </div>
  </div>);
 }
