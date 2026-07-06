@@ -21,32 +21,57 @@ type NavItem = { title: string; url: string; icon: React.ComponentType<{ classNa
 
 const adminGroups: { label: string; items: NavItem[] }[] = [
  {
- label: "المقر الرئيسي وإدارة الشركة",
+ label: "إدارة المالك والتنفيذيين (Vorstand)",
  items: [
  { title: "ملخص مقر الشركة", url: "/admin", icon: Crown },
  { title: "خطة العمل واقتصاديات SaaS", url: "/admin/business-plan", icon: TrendingUp },
- { title: "تطوير الأعمال ومبيعات B2B", url: "/admin/biz-dev", icon: BriefcaseBusiness },
- { title: "خطة التسويق والنمو GTM", url: "/admin/marketing-plan", icon: Megaphone },
- { title: "نجاح العملاء ونشر المنشآت", url: "/admin/customer-success", icon: Headphones },
  { title: "شؤون المستثمرين والتقييم الفني", url: "/admin/investor-relations", icon: ShieldCheck },
+ ],
+ },
+ {
+ label: "إدارة المبيعات وتطوير الأعمال (Vertrieb)",
+ items: [
+ { title: "تطوير الأعمال ومبيعات B2B", url: "/admin/biz-dev", icon: BriefcaseBusiness },
+ { title: "المغاسل والمستأجرون", url: "/admin/tenants", icon: Building2 },
+ ],
+ },
+ {
+ label: "إدارة التسويق والتحليل (Marketing)",
+ items: [
+ { title: "خطة التسويق والنمو GTM", url: "/admin/marketing-plan", icon: Megaphone },
+ ],
+ },
+ {
+ label: "إدارة خدمة ورعاية العملاء (Kundenservice)",
+ items: [
+ { title: "نجاح العملاء ونشر المنشآت", url: "/admin/customer-success", icon: Headphones },
+ ],
+ },
+ {
+ label: "الشؤون القانونية والمنازعات (Rechtsabteilung)",
+ items: [
  { title: "الشؤون القانونية والعقود", url: "/admin/legal", icon: ShieldCheck },
  ],
  },
  {
- label: "إدارة البنية التحتية والمستأجرين",
+ label: "الموظفون (Personalwesen)",
  items: [
- { title: "المغاسل والمستأجرون", url: "/admin/tenants", icon: Building2 },
- { title: "مرصد المشاكل والتعثرات", url: "/admin/telemetry", icon: AlertTriangle },
  { title: "كل المستخدمين والصلاحيات", url: "/admin/users", icon: Users },
+ ],
+ },
+ {
+ label: "المالية والتشغيل (Finanzwesen)",
+ items: [
  { title: "رسوم تشغيل المنصة", url: "/admin/platform-fees", icon: Banknote },
  { title: "فواتير SaaS والاشتراكات", url: "/admin/billing", icon: ReceiptText },
+ { title: "مرصد المشاكل والتعثرات", url: "/admin/telemetry", icon: AlertTriangle },
  ],
  },
 ];
 
 const tenantGroups: { label: string; items: NavItem[] }[] = [
  {
- label: "1. مكتب المالك والإدارة العليا (Vorstand)",
+ label: "إدارة المالك والتنفيذيين (Vorstand)",
  items: [
  { title: "لوحة المالك العامة", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
  { title: "لوحة المديرين التنفيذيين CEO", url: "/executive", icon: BarChart3, roles: ["owner"] },
@@ -54,7 +79,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "2. إدارة التشغيل والمحطات (Betriebsleitung)",
+ label: "التشغيل اليومي والمحطات (Betriebsleitung)",
  items: [
  { title: "لوحة مدير التشغيل COO", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
  { title: "مركز اليوم التشغيلي", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
@@ -71,7 +96,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "3. إدارة المبيعات وتطوير الأعمال (Vertrieb)",
+ label: "إدارة المبيعات وتطوير الأعمال (Vertrieb)",
  items: [
  { title: "إنشاء فاتورة طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
  { title: "كل الطلبات والفواتير", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
@@ -81,7 +106,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "4. إدارة التسويق والتحليل (Marketing)",
+ label: "إدارة التسويق والتحليل (Marketing)",
  items: [
  { title: "البيانات التسويقية وأوقات الذروة", url: "/marketing", icon: TrendingUp, roles: ["owner", "ops_manager", "cs_manager"] },
  { title: "التقارير والذكاء التشغيلي", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
@@ -89,7 +114,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "5. إدارة خدمة ورعاية العملاء (Kundenservice)",
+ label: "إدارة خدمة ورعاية العملاء (Kundenservice)",
  items: [
  { title: "لوحة مدير خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
  { title: "خدمة العملاء والدعم", url: "/stations/cs", icon: Headphones, roles: ["cs_manager", "ops_manager", "owner", "employee", "cs_rep"] },
@@ -98,7 +123,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "6. إدارة حركة النقل والأسطول (Logistik)",
+ label: "إدارة حركة النقل والأسطول (Logistik)",
  items: [
  { title: "خريطة المراقبة والمناديب", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
  { title: "لوحة السائق الخاصة", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
@@ -106,20 +131,20 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "7. إدارة المخازن والمخزون (Lager)",
+ label: "إدارة المخازن والمخزون (Lager)",
  items: [
  { title: "المخزون والمعدات والخامات", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
  { title: "إدارة الفروع ونقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
  ],
  },
  {
- label: "8. الشؤون القانونية والعقود (Rechtsabteilung)",
+ label: "الشؤون القانونية والمنازعات (Rechtsabteilung)",
  items: [
  { title: "الشؤون القانونية والعقود", url: "/legal", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
  ],
  },
  {
- label: "9. إدارة الموارد البشرية (Personalwesen)",
+ label: "الموظفون (Personalwesen)",
  items: [
  { title: "الحضور والانصراف (Mawared HR)", url: "/staff/attendance", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
  { title: "تقييم الأداء واستمارة 6 (Scorecard)", url: "/staff/scorecard", icon: Target, roles: ["cs_manager", "ops_manager", "owner"] },
@@ -133,7 +158,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
  {
- label: "10. إدارة المالية والخزائن (Finanzwesen)",
+ label: "المالية والتشغيل (Finanzwesen)",
  items: [
  { title: "الحسابات العامة", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
  { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
@@ -147,7 +172,6 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  ],
  },
 ];
-
 export function AppSidebar() {
  const path = useRouterState({ select: (r) => r.location.pathname });
  const { roles, hasRole, user, signOut, isSuperAdmin } = useAuth();
