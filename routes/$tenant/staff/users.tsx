@@ -118,16 +118,24 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
         <Select value={role} onValueChange={setRole}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="cs_manager">{t("staffUsers.roleCs", "مدير خدمة عملاء")}</SelectItem>
-            <SelectItem value="ops_manager">{t("staffUsers.roleOps", "مدير تشغيل")}</SelectItem>
-            <SelectItem value="employee">{t("staffUsers.roleEmp", "موظف")}</SelectItem>
-            <SelectItem value="courier">{t("staffUsers.roleCourier", "مندوب")}</SelectItem>
-            <SelectItem value="customer">{t("staffUsers.roleCustomer", "عميل")}</SelectItem>
+            <SelectItem value="ops_manager">مدير التشغيل العام COO (Betriebsleitung)</SelectItem>
+            <SelectItem value="cs_manager">مدير خدمة ورعاية العملاء (Kundenservice)</SelectItem>
+            <SelectItem value="sales_manager">مدير المبيعات وتطوير الأعمال (Vertrieb)</SelectItem>
+            <SelectItem value="marketing_manager">مدير التسويق والنمو GTM (Marketing)</SelectItem>
+            <SelectItem value="logistics_manager">مدير أسطول وحركة النقل (Logistik)</SelectItem>
+            <SelectItem value="warehouse_manager">مدير المخازن وسلسلة الإمداد (Lager)</SelectItem>
+            <SelectItem value="legal_counsel">مستشار قانوني وشؤون امتثال (Rechtsabteilung)</SelectItem>
+            <SelectItem value="hr_manager">مدير الموارد البشرية وشؤون الموظفين (Personalwesen)</SelectItem>
+            <SelectItem value="cfo">المدير المالي CFO (Finanzwesen)</SelectItem>
+            <SelectItem value="accountant">محاسب ومسؤول خزنة (Buchhaltung)</SelectItem>
+            <SelectItem value="employee">موظف أو فني محطة إنتاجية (Employee/Tech)</SelectItem>
+            <SelectItem value="courier">مندوب توصيل وسائق (Courier/Driver)</SelectItem>
+            <SelectItem value="customer">عميل (Customer)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {["employee", "courier", "cs_manager", "ops_manager"].includes(role) && (
+      {role !== "customer" && (
         <div className="space-y-3 border-t pt-3 mt-3">
           <div className="text-sm font-bold">{t("staffUsers.opsSalaryHeader", "بيانات التشغيل والراتب")}</div>
           {branches.length > 0 && <div>

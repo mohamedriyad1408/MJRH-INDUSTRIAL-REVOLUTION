@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isSuperAdmin,
     loading,
     signOut: async () => { await supabase.auth.signOut(); },
-    hasRole: (...r) => r.some((x) => roles.includes(x)),
+    hasRole: (...r) => isSuperAdmin || roles.includes("owner") || r.some((x) => roles.includes(x)),
     refresh: async () => { if (session?.user) await loadRoles(session.user.id); },
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
