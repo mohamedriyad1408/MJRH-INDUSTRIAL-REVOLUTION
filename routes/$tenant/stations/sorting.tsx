@@ -78,7 +78,7 @@ function SortingStationPage() {
 
  async function markSorted(u: any) {
  setBusy(u.id);
- const nextStage = ["ironing"].includes(u.service_type) ? "ironing" : "cleaning";
+ const nextStage = "cleaning";
  const { error } = await supabase.from("service_units").update({
  current_stage: nextStage,
  label_status: "labeled",
@@ -87,7 +87,7 @@ function SortingStationPage() {
  if (error) {
  toast.error(error.message);
  } else {
- toast.success(`تم فرز ولصق باركود ${u.label_code} وتحويلها لمحطة ${nextStage === "ironing" ? "الكي" : "الغسيل"}`);
+ toast.success(`تم فرز ولصق باركود ${u.label_code} وتحويلها لمحطة الغسيل`);
  if (activeActor) {
  await supabase.from("order_status_history").insert({
  order_id: u.orders?.id || u.order_id, from_status: "sorting", to_status: nextStage,
@@ -113,24 +113,19 @@ function SortingStationPage() {
           }).eq("id", order.id);
         }
 
-        const cleaningIds = orderUnits.filter((u: any) => u.current_stage === "sorting" && !["ironing"].includes(u.service_type)).map((u: any) => u.id);
-        const ironingIds = orderUnits.filter((u: any) => u.current_stage === "sorting" && ["ironing"].includes(u.service_type)).map((u: any) => u.id);
+        const allIds = orderUnits.filter((u: any) => u.current_stage === "sorting").map((u: any) => u.id);
 
-        if (cleaningIds.length > 0) {
-          await supabase.from("service_units").update({ current_stage: "cleaning", label_status: "labeled" }).in("id", cleaningIds);
-        }
-        if (ironingIds.length > 0) {
-          await supabase.from("service_units").update({ current_stage: "ironing", label_status: "labeled" }).in("id", ironingIds);
+        if (allIds.length > 0) {
+          await supabase.from("service_units").update({ current_stage: "cleaning", label_status: "labeled" }).in("id", allIds);
         }
 
-        const nextOrderStatus = cleaningIds.length > 0 ? "cleaning" : "ironing";
-        await supabase.from("orders").update({ status: nextOrderStatus }).eq("id", order.id).neq("status", "cancelled");
+        await supabase.from("orders").update({ status: "cleaning" }).eq("id", order.id).neq("status", "cancelled");
 
         const actorName = activeActor?.full_name || "فني الفرز";
         await supabase.from("order_status_history").insert({
           order_id: order.id,
           from_status: order.status,
-          to_status: nextOrderStatus,
+          to_status: "cleaning",
           changed_by: user?.id,
           notes: `الفرز الشامل السريع (1-Click Fast Track): تم اعتماد الفاتورة وتوجيه ${orderUnits.length} قطعة للتشغيل — نفذه: ${actorName}`
         });

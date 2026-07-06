@@ -58,9 +58,9 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
  setLoading(true);
  const { data } = await supabase
  .from("service_units")
- .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,notes,customers(full_name,phone,vip_preferences,notes,address))")
- .or("service_type.eq.both,service_type.eq.cleaning,needs_reclean.eq.true")
- .in("orders.status", ["cleaning", "ironing", "packing", "ready", "delivered"])
+      .select("id,label_code,name,service_type,photo_url,needs_reclean,reclean_reason,reclean_return_to_employee_id,current_stage,order_id,orders(id,order_number,status,notes,customers(full_name,phone,vip_preferences,notes,address))")
+      .in("service_type", ["cleaning", "ironing", "both"])
+      .in("orders.status", ["cleaning", "ironing", "packing", "ready", "delivered"])
  .order("unit_number");
  setUnits((data ?? []).filter((x: any) => x.orders && (x.orders.status !== "delivered" || x.status === "customer_return" || x.needs_reclean || ["customer_return_cleaning", "recleaning", "quarantine"].includes(x.current_stage))) as Unit[]);
  setLoading(false);
