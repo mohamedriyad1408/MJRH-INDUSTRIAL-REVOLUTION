@@ -122,7 +122,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "رعاية العملاء والتعويضات", url: "/customer-care", icon: HeartHandshake, roles: ["owner", "cs_manager", "ops_manager"] },
  { title: "كتالوج الخدمات", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
  { title: "نقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
- { title: "الشؤون القانونية والعقود", url: "/admin/legal", icon: ShieldCheck, roles: ["owner"] },
+ { title: "الشؤون القانونية والعقود", url: "/legal", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
  { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
  { title: "دليل الاستخدام", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
  ],
