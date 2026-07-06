@@ -29,6 +29,7 @@ import { Route as TenantSearchRouteImport } from './routes/$tenant/search'
 import { Route as TenantReportsRouteImport } from './routes/$tenant/reports'
 import { Route as TenantReceivablesRouteImport } from './routes/$tenant/receivables'
 import { Route as TenantOpsRouteImport } from './routes/$tenant/ops'
+import { Route as TenantMarketingRouteImport } from './routes/$tenant/marketing'
 import { Route as TenantManagerRouteImport } from './routes/$tenant/manager'
 import { Route as TenantLiveMapRouteImport } from './routes/$tenant/live-map'
 import { Route as TenantLedgerRouteImport } from './routes/$tenant/ledger'
@@ -187,6 +188,11 @@ const TenantReceivablesRoute = TenantReceivablesRouteImport.update({
 const TenantOpsRoute = TenantOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
+  getParentRoute: () => TenantRoute,
+} as any)
+const TenantMarketingRoute = TenantMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => TenantRoute,
 } as any)
 const TenantManagerRoute = TenantManagerRouteImport.update({
@@ -525,6 +531,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
+  '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
@@ -606,6 +613,7 @@ export interface FileRoutesByTo {
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
+  '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
@@ -689,6 +697,7 @@ export interface FileRoutesById {
   '/$tenant/ledger': typeof TenantLedgerRoute
   '/$tenant/live-map': typeof TenantLiveMapRoute
   '/$tenant/manager': typeof TenantManagerRoute
+  '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
@@ -772,6 +781,7 @@ export interface FileRouteTypes {
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
+    | '/$tenant/marketing'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
@@ -853,6 +863,7 @@ export interface FileRouteTypes {
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
+    | '/$tenant/marketing'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
@@ -935,6 +946,7 @@ export interface FileRouteTypes {
     | '/$tenant/ledger'
     | '/$tenant/live-map'
     | '/$tenant/manager'
+    | '/$tenant/marketing'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
@@ -1141,6 +1153,13 @@ declare module '@tanstack/react-router' {
       path: '/ops'
       fullPath: '/$tenant/ops'
       preLoaderRoute: typeof TenantOpsRouteImport
+      parentRoute: typeof TenantRoute
+    }
+    '/$tenant/marketing': {
+      id: '/$tenant/marketing'
+      path: '/marketing'
+      fullPath: '/$tenant/marketing'
+      preLoaderRoute: typeof TenantMarketingRouteImport
       parentRoute: typeof TenantRoute
     }
     '/$tenant/manager': {
@@ -1600,6 +1619,7 @@ interface TenantRouteChildren {
   TenantLedgerRoute: typeof TenantLedgerRoute
   TenantLiveMapRoute: typeof TenantLiveMapRoute
   TenantManagerRoute: typeof TenantManagerRoute
+  TenantMarketingRoute: typeof TenantMarketingRoute
   TenantOpsRoute: typeof TenantOpsRoute
   TenantReceivablesRoute: typeof TenantReceivablesRoute
   TenantReportsRoute: typeof TenantReportsRoute
@@ -1658,6 +1678,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantLedgerRoute: TenantLedgerRoute,
   TenantLiveMapRoute: TenantLiveMapRoute,
   TenantManagerRoute: TenantManagerRoute,
+  TenantMarketingRoute: TenantMarketingRoute,
   TenantOpsRoute: TenantOpsRoute,
   TenantReceivablesRoute: TenantReceivablesRoute,
   TenantReportsRoute: TenantReportsRoute,

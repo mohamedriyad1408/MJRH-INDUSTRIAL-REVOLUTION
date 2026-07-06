@@ -79,6 +79,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "لوحة مدير التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
  { title: "لوحة مدير خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
  { title: "التقارير والذكاء التشغيلي", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "البيانات التسويقية وأوقات الذروة", url: "/marketing", icon: TrendingUp, roles: ["owner", "ops_manager", "cs_manager"] },
  { title: "لوحة السائق الخاصة", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
  { title: "فحص سلامة النظام (APDO)", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
  { title: "تشغيل اليوم المفصل", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
