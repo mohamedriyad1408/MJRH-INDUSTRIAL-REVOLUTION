@@ -37,6 +37,9 @@ const CONTRACT_TYPES: Record<string, string> = {
   ip_license: "ترخيص استخدام ملكية فكرية وتطوير",
   commercial_lease: "عقد إيجار تجاري لمقر المغسلة / الفرع",
   municipal_permit: "ترخيص وتصريح امتثال بلدي وبيئي",
+  vehicle_license: "رخصة تسيير مركبة / أسطول النقل والندب",
+  purchase_contract: "عقد شراء وتوريد أصول ومعدات تشغيلية",
+  litigation_dispute: "منازعة قضائية أو مطالبة وتأمين قانوني",
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -44,6 +47,8 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   review: { label: "قيد المراجعة القانونية", color: "bg-amber-600 text-white" },
   draft: { label: "مسودة مبدئية", color: "bg-slate-700 text-slate-200" },
   expired: { label: "منتهي الصلاحية", color: "bg-red-600 text-white" },
+  dispute_open: { label: "نزاع قضائي متداول", color: "bg-red-700 text-white font-black" },
+  dispute_resolved: { label: "نزاع منتهي / تمت التسوية", color: "bg-blue-600 text-white font-bold" },
 };
 
 export function LegalDepartmentView({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
@@ -223,6 +228,8 @@ export function LegalDepartmentView({ isSuperAdmin = false }: { isSuperAdmin?: b
                       <SelectItem value="review" className="text-xs">قيد المراجعة القانونية</SelectItem>
                       <SelectItem value="draft" className="text-xs">مسودة مبدئية</SelectItem>
                       <SelectItem value="expired" className="text-xs">منتهي الصلاحية</SelectItem>
+                      <SelectItem value="dispute_open" className="text-xs font-bold text-red-400">نزاع قضائي متداول</SelectItem>
+                      <SelectItem value="dispute_resolved" className="text-xs font-bold text-blue-400">نزاع منتهي / تمت التسوية</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
