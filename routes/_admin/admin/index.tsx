@@ -316,19 +316,46 @@ function SuperAdminHeadquartersPage() {
  <p className="text-xs text-slate-600 font-bold leading-relaxed">
  تفاصيل التقييم الاستبدالي للأكواد (4.46 مليون جنيه)، تثمين المحركات الـ 5 الاحتكارية، جدول توزيع الحصص وجولة Pre-Seed (15 مليون Pre-Money)، ومستودع تحميل مستندات الطرح الرسمية.
  </p>
- <div className="pt-3 border-t flex items-center justify-between">
- <span className="text-[11px] font-mono font-bold text-purple-800">Pre-Money: 15M EGP (16.7%)</span>
- <Button asChild className="rounded-xl font-black bg-purple-600 hover:bg-purple-700 text-white">
- <Link to={"/admin/investor-relations" as any}>
- <span>دخول غرفة المستثمرين</span>
- <ArrowLeft className="w-4 h-4 ms-1" />
- </Link>
- </Button>
- </div>
- </CardContent>
- </Card>
- </div>
- </div>
+        <div className="pt-3 border-t flex items-center justify-between">
+          <span className="text-[11px] font-mono font-bold text-purple-800">Pre-Money: 15M EGP (16.7%)</span>
+          <Button asChild className="rounded-xl font-black bg-purple-600 hover:bg-purple-700 text-white">
+            <Link to={"/admin/investor-relations" as any}>
+              <span>دخول غرفة المستثمرين</span>
+              <ArrowLeft className="w-4 h-4 ms-1" />
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Department 6: Legal Affairs & Compliance */}
+    <Card className="rounded-3xl border-2 hover:border-cyan-500/50 shadow-md bg-gradient-to-br from-white via-slate-50 to-cyan-50/30 flex flex-col justify-between transition-all duration-200">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-600">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <Badge className="bg-cyan-600 text-white font-black">الشؤون القانونية والعقود</Badge>
+        </div>
+        <CardTitle className="text-xl font-black text-slate-900 mt-3">إدارة الشؤون القانونية والامتثال وتوثيق العقود (Legal Affairs HQ)</CardTitle>
+      </CardHeader>
+      <CardContent className="p-6 pt-0 space-y-4 flex-1 flex flex-col justify-between">
+        <p className="text-xs text-slate-600 font-bold leading-relaxed">
+          إدارة وتوثيق العقود التأسيسية، تراخيص الملكية الفكرية، اتفاقيات الشراكة والتوريد مع الفروع والموردين، ورفع المستندات والشهادات القانونية الحقيقية على قاعدة البيانات.
+        </p>
+        <div className="pt-3 border-t flex items-center justify-between">
+          <span className="text-[11px] font-mono font-bold text-cyan-800">100% DB Document Vault</span>
+          <Button asChild className="rounded-xl font-black bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Link to={"/admin/legal" as any}>
+              <span>دخول الشؤون القانونية</span>
+              <ArrowLeft className="w-4 h-4 ms-1" />
+            </Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</div>
 
  {/* Cloud Infrastructure Quick Links */}
  <div className="space-y-3 pt-4 border-t">

@@ -58,6 +58,7 @@ import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/i
 import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
 import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/admin/marketing-plan'
+import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
 import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
 import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
 import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
@@ -335,6 +336,11 @@ const AdminAdminMarketingPlanRoute = AdminAdminMarketingPlanRouteImport.update({
   path: '/admin/marketing-plan',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminLegalRoute = AdminAdminLegalRouteImport.update({
+  id: '/admin/legal',
+  path: '/admin/legal',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminInvestorRelationsRoute =
   AdminAdminInvestorRelationsRouteImport.update({
     id: '/admin/investor-relations',
@@ -571,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
+  '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -653,6 +660,7 @@ export interface FileRoutesByTo {
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
+  '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -737,6 +745,7 @@ export interface FileRoutesById {
   '/_admin/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/_admin/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
   '/_admin/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
+  '/_admin/admin/legal': typeof AdminAdminLegalRoute
   '/_admin/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
@@ -821,6 +830,7 @@ export interface FileRouteTypes {
     | '/admin/business-plan'
     | '/admin/customer-success'
     | '/admin/investor-relations'
+    | '/admin/legal'
     | '/admin/marketing-plan'
     | '/admin/platform-fees'
     | '/admin/telemetry'
@@ -903,6 +913,7 @@ export interface FileRouteTypes {
     | '/admin/business-plan'
     | '/admin/customer-success'
     | '/admin/investor-relations'
+    | '/admin/legal'
     | '/admin/marketing-plan'
     | '/admin/platform-fees'
     | '/admin/telemetry'
@@ -986,6 +997,7 @@ export interface FileRouteTypes {
     | '/_admin/admin/business-plan'
     | '/_admin/admin/customer-success'
     | '/_admin/admin/investor-relations'
+    | '/_admin/admin/legal'
     | '/_admin/admin/marketing-plan'
     | '/_admin/admin/platform-fees'
     | '/_admin/admin/telemetry'
@@ -1358,6 +1370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminMarketingPlanRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/admin/legal': {
+      id: '/_admin/admin/legal'
+      path: '/admin/legal'
+      fullPath: '/admin/legal'
+      preLoaderRoute: typeof AdminAdminLegalRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/admin/investor-relations': {
       id: '/_admin/admin/investor-relations'
       path: '/admin/investor-relations'
@@ -1724,6 +1743,7 @@ interface AdminRouteChildren {
   AdminAdminBusinessPlanRoute: typeof AdminAdminBusinessPlanRoute
   AdminAdminCustomerSuccessRoute: typeof AdminAdminCustomerSuccessRoute
   AdminAdminInvestorRelationsRoute: typeof AdminAdminInvestorRelationsRoute
+  AdminAdminLegalRoute: typeof AdminAdminLegalRoute
   AdminAdminMarketingPlanRoute: typeof AdminAdminMarketingPlanRoute
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
   AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
@@ -1739,6 +1759,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBusinessPlanRoute: AdminAdminBusinessPlanRoute,
   AdminAdminCustomerSuccessRoute: AdminAdminCustomerSuccessRoute,
   AdminAdminInvestorRelationsRoute: AdminAdminInvestorRelationsRoute,
+  AdminAdminLegalRoute: AdminAdminLegalRoute,
   AdminAdminMarketingPlanRoute: AdminAdminMarketingPlanRoute,
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
   AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,

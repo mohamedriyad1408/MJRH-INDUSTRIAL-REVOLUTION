@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
  Megaphone, Target, TrendingUp, DollarSign, Award, CheckCircle2,
- Sparkles, BarChart3, Presentation, Users, Loader2, Plus, Trash2,
+ Sparkles, BarChart3, Presentation, Users, Loader2, Plus, Trash2, Upload, ExternalLink,
 } from "lucide-react";
 import { fmtMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -32,6 +32,7 @@ type MarketingCampaign = {
  conversions: number;
  status: string;
  notes: string | null;
+ document_url?: string | null;
  created_at: string;
 };
 
@@ -41,6 +42,7 @@ function MarketingPlanDepartmentPage() {
  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
  const [openModal, setOpenModal] = useState(false);
  const [saving, setSaving] = useState(false);
+ const [uploading, setUploading] = useState(false);
  const [form, setForm] = useState({
  campaign_name: "",
  channel: "field_sales",
@@ -49,8 +51,27 @@ function MarketingPlanDepartmentPage() {
  leads_generated: "15",
  conversions: "3",
  status: "active",
- notes: ""
+ notes: "",
+ document_url: ""
  });
+
+ async function handleFileUpload(file: File) {
+ if (!file) return;
+ setUploading(true);
+ try {
+ const ext = file.name.split(".").pop() || "pdf";
+ const path = `campaigns/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+ const { error } = await supabase.storage.from("marketing-assets").upload(path, file, { upsert: true, contentType: file.type });
+ if (error) throw error;
+ const { data } = supabase.storage.from("marketing-assets").getPublicUrl(path);
+ setForm({ ...form, document_url: data.publicUrl });
+ toast.success("تم رفع ملف خطة الحملة بنجاح");
+ } catch (e: any) {
+ toast.error("فشل رفع الملف: " + (e.message || ""));
+ } finally {
+ setUploading(false);
+ }
+ }
 
  const loadAll = useCallback(async () => {
  setLoading(true);
@@ -82,7 +103,8 @@ function MarketingPlanDepartmentPage() {
  leads_generated: Number(form.leads_generated || 0),
  conversions: Number(form.conversions || 0),
  status: form.status,
- notes: form.notes || null
+ notes: form.notes || null,
+ document_url: form.document_url || null
  });
  if (error) throw error;
  toast.success("تم إضافة الحملة التسويقية بنجاح");
@@ -95,7 +117,8 @@ function MarketingPlanDepartmentPage() {
  leads_generated: "15",
  conversions: "3",
  status: "active",
- notes: ""
+ notes: "",
+ document_url: ""
  });
  loadAll();
  } catch (err: any) {
@@ -247,6 +270,7 @@ function MarketingPlanDepartmentPage() {
  <th className="p-3 text-center">الاستعلامات (Leads)</th>
  <th className="p-3 text-center">التعاقدات (Conversions)</th>
  <th className="p-3 text-center">الحالة</th>
+ <th className="p-3 text-center">المستند</th>
  <th className="p-3 text-center">الإجراءات</th>
  </tr>
  </thead>
@@ -265,6 +289,16 @@ function MarketingPlanDepartmentPage() {
  <Badge variant={c.status === "active" ? "default" : "outline"} className={c.status === "active" ? "bg-emerald-600 text-white" : ""}>
  {c.status === "active" ? "نشط" : c.status === "completed" ? "مكتمل" : "مخطط"}
  </Badge>
+ </td>
+ <td className="p-3 text-center">
+ {c.document_url ? (
+ <a href={c.document_url} target="_blank" rel="noopener noreferrer">
+ <Button size="sm" variant="outline" className="text-xs font-bold gap-1 border-amber-500 text-amber-800 bg-amber-50">
+ <ExternalLink className="w-3 h-3" />
+ <span>عرض الملف</span>
+ </Button>
+ </a>
+ ) : <span className="text-slate-400 text-xs">بدون مرفق</span>}
  </td>
  <td className="p-3 text-center">
  <Button size="sm" variant="outline" onClick={() => handleDeleteCampaign(c.id)} className="text-red-600 border-red-200 hover:bg-red-50">
@@ -339,6 +373,21 @@ function MarketingPlanDepartmentPage() {
  <Label className="font-bold">عدد التعاقدات (Conversions):</Label>
  <Input type="number" value={form.conversions} onChange={e => setForm({...form, conversions: e.target.value})} className="h-9 rounded-xl font-mono" />
  </div>
+ </div>
+
+ <div className="space-y-2 bg-slate-100 p-3 rounded-xl border">
+ <Label className="font-bold text-slate-800 block">رفع مستند خطة الحملة أو الإيصال (PDF / صورة):</Label>
+ <div className="flex items-center gap-2">
+ <label className="cursor-pointer">
+ <input type="file" accept=".pdf,image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])} />
+ <span className="inline-flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs">
+ {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+ <span>{uploading ? "جاري الرفع..." : "اختر ملف إيصال"}</span>
+ </span>
+ </label>
+ <Input value={form.document_url} onChange={(e) => setForm({...form, document_url: e.target.value})} placeholder="أو الصق رابط المستند..." className="h-9 rounded-xl text-xs font-mono" />
+ </div>
+ {form.document_url && <div className="text-[11px] text-emerald-600 font-black flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /><span>تم توثيق رابط الملف المرفق</span></div>}
  </div>
 
  <div className="space-y-1">
