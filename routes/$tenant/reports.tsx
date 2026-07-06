@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { getSurgeReportData } from "@/lib/scheduling-surge";
 import { ItemSalesAnalyticsTab } from "@/components/item-sales-analytics";
+import { TenantMarketingAnalyticsTab } from "@/components/tenant-marketing-analytics-tab";
 
 export const Route = createFileRoute("/$tenant/reports")({
   head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
@@ -50,7 +51,7 @@ function ReportsPage() {
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
   const [surgeData, setSurgeData] = useState<any>(null);
-  const [activeReportTab, setActiveReportTab] = useState<"overview" | "item_sales">("item_sales");
+  const [activeReportTab, setActiveReportTab] = useState<"overview" | "item_sales" | "marketing_telemetry">("item_sales");
 
   async function load() {
     setLoading(true);
@@ -302,9 +303,21 @@ function ReportsPage() {
           <Brain className="w-4 h-4" />
           <span>📈 التقارير المالية والتشغيلية العامة</span>
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveReportTab("marketing_telemetry" as any)}
+          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
+            activeReportTab === "marketing_telemetry" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
+          }`}
+        >
+          <span>📊 البيانات التسويقية وأوقات الذروة (Marketing Telemetry)</span>
+          <Badge className="bg-emerald-600 text-white text-[10px] font-black">Live Pulse</Badge>
+        </button>
       </div>
 
-      {activeReportTab === "item_sales" ? (
+      {activeReportTab === "marketing_telemetry" ? (
+        <TenantMarketingAnalyticsTab tenantId={tenantId} />
+      ) : activeReportTab === "item_sales" ? (
         <ItemSalesAnalyticsTab branchId={branchId} />
       ) : (
         loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
