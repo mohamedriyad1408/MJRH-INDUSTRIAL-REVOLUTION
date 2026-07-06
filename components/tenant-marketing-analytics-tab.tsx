@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, TrendingUp, BarChart3, Clock, DollarSign, Package, ShieldCheck, Award, ArrowUpRight, ArrowDownRight, Layers, Users, Zap, Wallet, Calculator, CheckCircle2, RotateCcw, AlertTriangle, Truck } from "lucide-react";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { toast } from "sonner";
+import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 type TimeResolution = "minute" | "daily" | "weekly" | "monthly";
 
@@ -101,7 +102,7 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
   }, [orders, expenses]);
 
   // Hourly Heatmap (08:00 to 22:00) for Peak Intake and Delivery
-  const hourlyHeatmap = useMemo(() => {
+  const { intakeChartData, deliveryChartData, maxIntake, maxDelivery } = useMemo(() => {
     const intakeHours: Record<number, number> = {};
     const deliveryHours: Record<number, number> = {};
     for (let h = 8; h <= 22; h++) { intakeHours[h] = 0; deliveryHours[h] = 0; }
@@ -123,14 +124,23 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
       }
     });
 
-    const maxIntake = Math.max(1, ...Object.values(intakeHours));
-    const maxDelivery = Math.max(1, ...Object.values(deliveryHours));
+    const maxI = Math.max(1, ...Object.values(intakeHours));
+    const maxD = Math.max(1, ...Object.values(deliveryHours));
 
-    return { intakeHours, deliveryHours, maxIntake, maxDelivery };
+    const iData = Object.entries(intakeHours).map(([h, count]) => ({
+      hour: `${h}:00`,
+      count,
+    }));
+    const dData = Object.entries(deliveryHours).map(([h, count]) => ({
+      hour: `${h}:00`,
+      count,
+    }));
+
+    return { intakeChartData: iData, deliveryChartData: dData, maxIntake: maxI, maxDelivery: maxD };
   }, [orders]);
 
   // Time Bucket Distribution (Minute, Daily, Weekly, Monthly)
-  const timeBuckets = useMemo(() => {
+  const chartData = useMemo(() => {
     const buckets: Record<string, { label: string; count: number; gmv: number }> = {};
     const validOrders = orders.filter((o) => o.status !== "cancelled");
 
@@ -139,7 +149,7 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
       let key = "";
       let label = "";
       if (resolution === "minute") {
-        key = d.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+        key = d.toISOString().slice(0, 16);
         label = `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
       } else if (resolution === "daily") {
         key = d.toISOString().slice(0, 10);
@@ -158,7 +168,7 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
       buckets[key].gmv += Number(o.total || 0);
     });
 
-    return Object.values(buckets).slice(0, 12);
+    return Object.values(buckets).slice(0, 15).reverse();
   }, [orders, resolution]);
 
   // Top Items & Categories Breakdown
@@ -207,7 +217,7 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-teal-400" />
             <span>البيانات التسويقية والتحليلية للمغسلة (Marketing & Operational Telemetry)</span>
-            <Badge variant="outline" className="border-teal-500 text-teal-400 text-xs font-mono">Live Pulse</Badge>
+            <Badge variant="outline" className="border-teal-500 text-teal-400 text-xs font-mono">Live Charts</Badge>
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             رصد زمني فوري وأوقات الذروة واقتصاديات الوحدة لتوجيه الحملات التسويقية وخطط التطوير للمنشأة.
@@ -303,108 +313,111 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
         </Card>
       </div>
 
-      {/* Grid: Order Timestamps & Peak Intake Hours */}
+      {/* Grid: Graphical Recharts Section 1 & 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Module 1: Order Creation Timestamps & Volume Distribution */}
+        {/* Module 1: Order Creation Timestamps & Revenue Velocity Area Chart */}
         <Card className="bg-slate-900 border-slate-700 shadow-xl flex flex-col justify-between">
           <CardHeader className="border-b border-slate-800 pb-3">
             <CardTitle className="text-sm md:text-base font-bold text-white flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-teal-400" />
-                <span>1. أوقات الطلب وتدفق الحركات (Order Timestamps & Velocity)</span>
+                <TrendingUp className="w-4 h-4 text-teal-400" />
+                <span>1. شارت تدفق الإيرادات وحركة الطلبات (GMV Revenue & Order Velocity)</span>
               </span>
               <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">{resolution === "minute" ? "بالدقيقة" : resolution === "daily" ? "يومي" : resolution === "weekly" ? "أسبوعي" : "شهري"}</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            <div className="text-xs text-slate-400 mb-2">توزيع إنشاء الطلبات والإيرادات عبر الفترات الزمنية لتحديد أوقات النشاط والركود:</div>
-            <div className="space-y-2.5">
-              {timeBuckets.length === 0 ? <p className="text-center text-xs text-slate-500 py-6 font-bold">لا توجد حركات مسجلة في هذه الفترة</p> : timeBuckets.map((b, idx) => {
-                const maxGMV = Math.max(1, ...timeBuckets.map((x) => x.gmv));
-                const pct = (b.gmv / maxGMV) * 100;
-                return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-white">{b.label}</span>
-                      <span className="text-teal-400 font-mono">{b.count} طلب · {fmtMoney(b.gmv)}</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                      <div className="h-full bg-gradient-to-r from-teal-600 to-emerald-500 rounded-full transition-all duration-500" style={{ width: `${Math.max(8, pct)}%` }}></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <CardContent className="p-4">
+            <div className="text-xs text-slate-400 mb-4">رسم بياني مساحي حي لتتبع نمو الإيرادات اليومية وتدفق الفواتير:</div>
+            {chartData.length === 0 ? (
+              <p className="text-center text-xs text-slate-500 py-12 font-bold">لا توجد حركات مسجلة في هذه الفترة</p>
+            ) : (
+              <div className="w-full h-[260px] text-xs">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gmvGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.85}/>
+                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0.05}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                    <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                    <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} tickFormatter={(v) => `${v}`} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", color: "#f8fafc", fontSize: "12px", textAlign: "right" }}
+                      formatter={(val: any, name: any) => [name === "gmv" ? `${fmtMoney(val)}` : `${val} طلب`, name === "gmv" ? "الإيرادات (GMV)" : "عدد الطلبات"]}
+                    />
+                    <Area type="monotone" dataKey="gmv" name="gmv" stroke="#2dd4bf" strokeWidth={2.5} fillOpacity={1} fill="url(#gmvGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Module 2: Peak Intake / Pickup Hours Heatmap */}
+        {/* Module 2: Peak Intake / Pickup Hours Recharts Bar Chart */}
         <Card className="bg-slate-900 border-slate-700 shadow-xl flex flex-col justify-between">
           <CardHeader className="border-b border-slate-800 pb-3">
             <CardTitle className="text-sm md:text-base font-bold text-white flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-amber-400" />
-                <span>2. أوقات الذروة للاستلام والدخول (Peak Intake / Pickup Hours)</span>
+                <BarChart3 className="w-4 h-4 text-amber-400" />
+                <span>2. شارت أوقات الذروة للاستلام والدخول (Peak Intake Hours Chart)</span>
               </span>
               <Badge variant="outline" className="text-xs border-amber-600 text-amber-300">08:00 - 22:00</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            <div className="text-xs text-slate-400 mb-2">خريطة حرارية لتوافد العملاء واستلام الملابس حسب ساعة اليوم لتوجيه عروض الخصم في ساعات الركود:</div>
-            <div className="grid grid-cols-5 gap-2">
-              {Object.entries(hourlyHeatmap.intakeHours).map(([hour, count]) => {
-                const intensity = count / hourlyHeatmap.maxIntake;
-                let bgCol = "bg-slate-950 border-slate-800 text-slate-400";
-                if (intensity > 0.7) bgCol = "bg-amber-600/30 border-amber-500 text-amber-300 font-black shadow-md";
-                else if (intensity > 0.3) bgCol = "bg-teal-900/40 border-teal-600/50 text-teal-200 font-bold";
-                else if (count > 0) bgCol = "bg-slate-800/80 border-slate-700 text-white font-semibold";
-
-                return (
-                  <div key={hour} className={`p-2 rounded-xl border text-center transition flex flex-col justify-center ${bgCol}`}>
-                    <div className="text-[10px] opacity-80">{hour}:00</div>
-                    <div className="text-xs md:text-sm font-black font-mono mt-0.5">{count} طلب</div>
-                  </div>
-                );
-              })}
+            <div className="text-xs text-slate-400 mb-2">رسم بياني بالأعمدة لتوزيع توافد العملاء واستلام الملابس حسب ساعة اليوم لتوجيه عروض التسويق:</div>
+            <div className="w-full h-[220px] text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={intakeChartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.4} />
+                  <XAxis dataKey="hour" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", color: "#f8fafc", fontSize: "12px", textAlign: "right" }}
+                    formatter={(val: any) => [`${val} طلب استلام`, "حجم التوافد"]}
+                  />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
               <span>🔥 ساعة الذروة القصوى للاستلام: <strong className="text-amber-400 font-mono">10:00 - 12:00 ظهراً</strong></span>
-              <span>❄️ ساعة الركود المقترحة לעروض التسويق: <strong className="text-teal-400 font-mono">14:00 - 16:00 عصراً</strong></span>
+              <span>❄️ ساعة الركود المقترحة لعروض التسويق: <strong className="text-teal-400 font-mono">14:00 - 16:00 عصراً</strong></span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Grid: Peak Delivery Hours & Top Items Catalog Analytics */}
+      {/* Grid: Graphical Recharts Section 3 & 4 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Module 3: Peak Delivery / Handover Hours Heatmap */}
+        {/* Module 3: Peak Delivery / Handover Hours Recharts Bar Chart */}
         <Card className="bg-slate-900 border-slate-700 shadow-xl flex flex-col justify-between">
           <CardHeader className="border-b border-slate-800 pb-3">
             <CardTitle className="text-sm md:text-base font-bold text-white flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-emerald-400" />
-                <span>3. أوقات الذروة للتسليم والخروج (Peak Handover / Delivery Hours)</span>
+                <span>3. شارت أوقات الذروة للتسليم والخروج (Peak Delivery Hours Chart)</span>
               </span>
               <Badge variant="outline" className="text-xs border-emerald-600 text-emerald-300">08:00 - 22:00</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            <div className="text-xs text-slate-400 mb-2">توزيع خروج الملابس المنجزة وتسليم المناديب للعملاء لتخطيط أسطول التوصيل وجداول المسائي:</div>
-            <div className="grid grid-cols-5 gap-2">
-              {Object.entries(hourlyHeatmap.deliveryHours).map(([hour, count]) => {
-                const intensity = count / hourlyHeatmap.maxDelivery;
-                let bgCol = "bg-slate-950 border-slate-800 text-slate-400";
-                if (intensity > 0.7) bgCol = "bg-emerald-600/30 border-emerald-500 text-emerald-300 font-black shadow-md";
-                else if (intensity > 0.3) bgCol = "bg-blue-900/40 border-blue-600/50 text-blue-200 font-bold";
-                else if (count > 0) bgCol = "bg-slate-800/80 border-slate-700 text-white font-semibold";
-
-                return (
-                  <div key={hour} className={`p-2 rounded-xl border text-center transition flex flex-col justify-center ${bgCol}`}>
-                    <div className="text-[10px] opacity-80">{hour}:00</div>
-                    <div className="text-xs md:text-sm font-black font-mono mt-0.5">{count} طلب</div>
-                  </div>
-                );
-              })}
+            <div className="text-xs text-slate-400 mb-2">رسم بياني لتوزيع خروج الملابس المنجزة وتسليم المناديب لتخطيط أسطول التوصيل وجداول المسائي:</div>
+            <div className="w-full h-[220px] text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={deliveryChartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.4} />
+                  <XAxis dataKey="hour" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", color: "#f8fafc", fontSize: "12px", textAlign: "right" }}
+                    formatter={(val: any) => [`${val} طلب تسليم`, "حجم التوصيل"]}
+                  />
+                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
               <span>🚚 ذروة خروج شحنات التوصيل: <strong className="text-emerald-400 font-mono">17:00 - 20:00 مساءً</strong></span>
@@ -413,31 +426,32 @@ export function TenantMarketingAnalyticsTab({ tenantId }: { tenantId?: string | 
           </CardContent>
         </Card>
 
-        {/* Module 4: Top Items & POS 7 Categories breakdown */}
+        {/* Module 4: Top Items & POS 7 Categories Recharts Bar Chart */}
         <Card className="bg-slate-900 border-slate-700 shadow-xl flex flex-col justify-between">
           <CardHeader className="border-b border-slate-800 pb-3">
             <CardTitle className="text-sm md:text-base font-bold text-white flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-blue-400" />
-                <span>4. تحليل الأصناف والفئات (Top Items & POS Categories)</span>
+                <span>4. شارت تحليل الإيرادات حسب الفئة (Top Categories GMV Chart)</span>
               </span>
               <Badge variant="outline" className="text-xs border-blue-600 text-blue-300">6 فئات نشطة</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            <div className="text-xs text-slate-400 mb-2">توزيع الإيرادات وحجم الإنتاج على فئات الكتالوج الموحد لتوجيه عروض باقات التنظيف:</div>
-            <div className="space-y-2.5">
-              {categoryStats.map((cat, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold">
-                    <span className="text-white">{cat.name}</span>
-                    <span className="text-blue-300 font-mono">{cat.count} قطعة · {fmtMoney(cat.gmv)} ({cat.sharePct.toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                    <div className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${Math.max(5, cat.sharePct)}%` }}></div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-xs text-slate-400 mb-2">رسم بياني أفقي لتوزيع الإيرادات على فئات الكتالوج الموحد لتوجيه عروض باقات التنظيف:</div>
+            <div className="w-full h-[220px] text-xs">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={categoryStats} margin={{ top: 5, right: 20, left: 35, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.4} />
+                  <XAxis type="number" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} width={80} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", borderRadius: "8px", color: "#f8fafc", fontSize: "12px", textAlign: "right" }}
+                    formatter={(val: any, name: any, props: any) => [`${fmtMoney(val)} (${props.payload.count} قطعة)`, "إجمالي الإيراد"]}
+                  />
+                  <Bar dataKey="gmv" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
