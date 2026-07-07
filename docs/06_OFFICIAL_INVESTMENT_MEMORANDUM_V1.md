@@ -209,7 +209,7 @@ MJRH Industrial Revolution is a cloud-native Operational Intelligence Platform e
 2. **Governance Framework & RBAC:** Role-based permissions, operational accountability, auditability, financial integrity, traceable decision history, and multi-branch readiness supporting 10 distinct application roles (`super_admin` down to `courier`).
 3. **QR Traceability Engine:** End-to-end visibility via unique garment identification, production tracking, operational scanning, quality verification, packaging validation, and delivery confirmation.
 4. **Financial Integrity Engine:** Double-entry accounting ledgers (`accounting`, `cash_accounts`), revenue validation, cash reconciliation, transaction traceability, strict exclusion of cancelled orders from revenue/profit calculations, and automated daily safe closing (`/cash-closing`).
-5. **Quality Management & Telemetry:** Inspection checkpoints, operational exception handling categorized into 4 taxonomy buckets (Technical 🛠️, Operational ⚙️, Financial 💰, Customer 👑), rework management, and stain remediation quarantine alerting.
+5. **Quality Management & Telemetry:** Inspection checkpoints, operational exception handling categorized into 4 taxonomy buckets (Technical , Operational , Financial , Customer ), rework management, and stain remediation quarantine alerting.
 6. **Communication & AI Foundation:** Integrated SMS/WhatsApp notifications, real-time dispatch ETA GPS tracking (`/live-map`), and structured operational data foundation engineered for future predictive maintenance, capacity forecasting, and automated decision recommendations.
 
 ---

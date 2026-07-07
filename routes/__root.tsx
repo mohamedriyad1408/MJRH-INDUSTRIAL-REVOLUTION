@@ -45,7 +45,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 text-white" dir="rtl">
       <div className="max-w-md w-full p-8 text-center rounded-3xl bg-slate-800 border border-teal-500/30 shadow-2xl space-y-4">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center text-3xl font-black">
-          🚀
+
         </div>
         <h1 className="text-xl font-black text-white">
           {isChunkError ? "جاري تحديث وتشغيل الإصدار الجديد" : "حدث خطأ غير متوقع في التشغيل"}

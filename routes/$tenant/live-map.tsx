@@ -78,7 +78,7 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
     validPins.forEach((pin) => {
       const isSelected = selectedIds.has(pin.id);
       const color = pin.type === "driver" ? "#8b5cf6" : pin.type === "pickup" ? "#f59e0b" : "#10b981";
-      const emoji = pin.type === "driver" ? "🚗" : pin.type === "pickup" ? "📦" : "🏠";
+      const emoji = pin.type === "driver" ? "" : pin.type === "pickup" ? "" : "";
       const sz = isSelected ? 46 : 36;
       const icon = L.divIcon({
         html: `<div style="width:${sz}px;height:${sz}px;background:${color};border:${isSelected ? "3px" : "2px"} solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${isSelected ? "20px" : "16px"};box-shadow:${isSelected ? `0 0 0 4px ${color}44,` : ""}0 2px 8px rgba(0,0,0,.25);cursor:pointer">${emoji}</div>`,
@@ -86,7 +86,7 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
       });
       const marker = L.marker([pin.lat!, pin.lng!], { icon })
         .addTo(mapRef.current)
-        .bindPopup(`<div dir="rtl" style="font-family:sans-serif;min-width:160px"><b style="font-size:13px">${pin.label}</b>${pin.orderNumber ? `<div style="color:#666;font-size:11px">طلب #${pin.orderNumber}</div>` : ""}<div style="color:#888;font-size:11px;margin-top:4px">${pin.sublabel}</div><div style="color:#888;font-size:10px">📍 ${pin.address.slice(0, 45)}</div>${pin.status ? `<div style="margin-top:5px"><span style="background:${pin.late ? "#ef4444" : color};color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">${pin.status}</span></div>` : ""}${pin.dueLabel ? `<div style="margin-top:4px;color:${pin.late ? "#dc2626" : "#666"};font-size:11px">⏱ ${pin.dueLabel}</div>` : ""}${pin.pieces ? `<div style="color:#666;font-size:10px">قطع: ${pin.pieces}</div>` : ""}</div>`);
+        .bindPopup(`<div dir="rtl" style="font-family:sans-serif;min-width:160px"><b style="font-size:13px">${pin.label}</b>${pin.orderNumber ? `<div style="color:#666;font-size:11px">طلب #${pin.orderNumber}</div>` : ""}<div style="color:#888;font-size:11px;margin-top:4px">${pin.sublabel}</div><div style="color:#888;font-size:10px">${pin.address.slice(0, 45)}</div>${pin.status ? `<div style="margin-top:5px"><span style="background:${pin.late ? "#ef4444" : color};color:#fff;padding:1px 7px;border-radius:8px;font-size:10px">${pin.status}</span></div>` : ""}${pin.dueLabel ? `<div style="margin-top:4px;color:${pin.late ? "#dc2626" : "#666"};font-size:11px">${pin.dueLabel}</div>` : ""}${pin.pieces ? `<div style="color:#666;font-size:10px">قطع: ${pin.pieces}</div>` : ""}</div>`);
       marker.on("click", () => onSelect(pin.id));
       markersRef.current[pin.id] = marker;
     });
@@ -270,7 +270,7 @@ function LiveMapPage() {
           <p className="text-xs text-muted-foreground">{geocoding ? t("map.geocoding") : t("map.autoRefresh")}</p>
         </div>
         <div className="flex items-center gap-3 text-xs">
-          {[["amber", `📦 ${t("map.pickup")} (${stats.pickups})`], ["green", `🏠 ${t("map.delivery")} (${stats.deliveries})`], ["purple", `🚗 ${t("map.drivers")} (${stats.drivers})`]].map(([c, l]) => (
+          {[["amber", `${t("map.pickup")} (${stats.pickups})`], ["green", `${t("map.delivery")} (${stats.deliveries})`], ["purple", `${t("map.drivers")} (${stats.drivers})`]].map(([c, l]) => (
             <span key={c} className="flex items-center gap-1"><span className={`w-2.5 h-2.5 rounded-full bg-${c}-500 inline-block`} />{l}</span>
           ))}
         </div>
@@ -335,7 +335,7 @@ function LiveMapPage() {
                     <div className="font-bold truncate">{pin.label}</div>
                     {pin.orderNumber && <div className="text-muted-foreground">#{pin.orderNumber}</div>}
                     <div className="text-muted-foreground truncate">{pin.address.slice(0, 30)}</div>
-                    {pin.dueLabel && <div className={pin.late ? "text-red-600 font-bold" : "text-muted-foreground"}>⏱ {pin.dueLabel}</div>}
+                    {pin.dueLabel && <div className={pin.late ? "text-red-600 font-bold" : "text-muted-foreground"}>{pin.dueLabel}</div>}
                     {pin.pieces && <div className="text-muted-foreground">{t("map.pieces")}: {pin.pieces}</div>}
                     {!pin.lat && <div className="text-amber-500 mt-0.5">{t("map.unknownLocation")}</div>}
                     {selectedIds.has(pin.id) && <div className="text-teal-600 font-bold flex items-center gap-1 mt-1"><CheckSquare className="w-3 h-3" />{t("map.selectedNumber")} {[...selectedIds].indexOf(pin.id) + 1}</div>}

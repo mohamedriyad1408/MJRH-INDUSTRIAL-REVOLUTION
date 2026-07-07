@@ -11,18 +11,18 @@
 ## DATA ROOM TABLE OF CONTENTS
 
 ```
-[SECTION 01] ── CORPORATE INFORMATION
-[SECTION 02] ── MARKET OPPORTUNITY
-[SECTION 03] ── PRODUCT
-[SECTION 04] ── TECHNOLOGY
-[SECTION 05] ── INTELLECTUAL PROPERTY
-[SECTION 06] ── COMMERCIAL STRATEGY
-[SECTION 07] ── FINANCIAL INFORMATION
-[SECTION 08] ── INVESTMENT INFORMATION
-[SECTION 09] ── OPERATIONS
-[SECTION 10] ── LEGAL & COMPLIANCE
-[SECTION 11] ── DUE DILIGENCE
-[SECTION 12] ── APPENDICES
+[SECTION 01]  CORPORATE INFORMATION
+[SECTION 02]  MARKET OPPORTUNITY
+[SECTION 03]  PRODUCT
+[SECTION 04]  TECHNOLOGY
+[SECTION 05]  INTELLECTUAL PROPERTY
+[SECTION 06]  COMMERCIAL STRATEGY
+[SECTION 07]  FINANCIAL INFORMATION
+[SECTION 08]  INVESTMENT INFORMATION
+[SECTION 09]  OPERATIONS
+[SECTION 10]  LEGAL & COMPLIANCE
+[SECTION 11]  DUE DILIGENCE
+[SECTION 12]  APPENDICES
 ```
 
 ---
@@ -90,7 +90,7 @@ MJRH creates and dominates the **Operational Intelligence Platform (OIP)** categ
 
 ### 3.1 Platform Overview & Core Capabilities
 MJRH is built on a modern, high-performance technology stack: React 18, Vite 6, TypeScript 5, Tailwind CSS 3, Radix UI, TanStack Router 1, and Supabase PostgreSQL. It operates via 10 specialized rotational workstations:
-`CS Support` ➔ `Intake` ➔ `Reception` ➔ `Sorting` ➔ `Cleaning` ➔ `Drying/Assembly` ➔ `Ironing` ➔ `Packing` ➔ `QC` ➔ `Delivery Dispatch`
+`CS Support`  `Intake`  `Reception`  `Sorting`  `Cleaning`  `Drying/Assembly`  `Ironing`  `Packing`  `QC`  `Delivery Dispatch`
 
 ### 3.2 Industry Pack Strategy & Operational Framework
 * **POS Touch 7 Categories:** `All` | `Men's (رجالي)` | `Women's (حريمي)` | `Kids (أطفال)` | `Household` | `Carpets (سجاد)` | `Delivery`. (Restaurant roll category strictly removed per executive command).
@@ -102,7 +102,7 @@ MJRH is built on a modern, high-performance technology stack: React 18, Vite 6, 
 * **Backend & Database:** Supabase PostgreSQL with Row Level Security (RLS), custom PL/pgSQL RPC engines, and automated cloud storage buckets (`legal-documents`, `marketing-assets`, `unit-media`).
 
 ### 3.4 Operational Intelligence Framework (APDO Engine)
-Every system action is processed through the **APDO (Actor ➔ Process ➔ Data ➔ Output)** accountability engine:
+Every system action is processed through the **APDO (Actor  Process  Data  Output)** accountability engine:
 * **Actor:** Verified employee or customer identity.
 * **Process:** Explicit operational function (`order_created`, `sorting_completed`, `payroll_posted`, `payment_recorded`).
 * **Data:** Payload parameters (timestamps, garment codes, EGP values).

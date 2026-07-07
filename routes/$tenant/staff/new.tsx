@@ -62,8 +62,8 @@ function NewStaffPage() {
   }
 
   async function submit() {
-    if (!form.full_name.trim() || !form.job_title.trim() || !form.phone.trim()) {
-      toast.error("الاسم والوظيفة ورقم الهاتف المعتمد مطلوبون لإرسال تأكيد الحساب");
+    if (!form.full_name.trim() || !form.job_title.trim()) {
+      toast.error("الاسم والوظيفة مطلوبان");
       return;
     }
     setSaving(true);
@@ -84,10 +84,7 @@ function NewStaffPage() {
     const { data, error } = await supabase.from("employees").insert(payload).select("id").single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    const branchName = branches.find((b) => b.id === form.branch_id)?.name || "الرئيسي";
-    const waText = `مرحباً ${form.full_name.trim()}،\nتم افتتاح المغسلة الرسمية وتسجيل حسابك الوظيفي في منظومة MJRH (فرع ${branchName}).\nرقم الهاتف المعتمد: ${form.phone}\nالوظيفة: ${form.job_title}\nالمحطة: ${form.station === "none" ? "عام" : form.station}\nيرجى الاحتفاظ بهذه الرسالة كإثبات تسجيل وحفظ سرية بيانات الدخول.\n— مالك المغسلة`;
-    window.open(`https://wa.me/20${form.phone.replace(/^0+/, "")}?text=${encodeURIComponent(waText)}`, "_blank");
-    toast.success("تم إضافة الموظف وإرسال رسالة تأكيد الحساب عبر WhatsApp بنجاح");
+    toast.success("تم إضافة الموظف");
     nav({ to: "/$tenant/staff/$id", params: { id: data!.id } as any });
   }
 
@@ -127,9 +124,9 @@ function NewStaffPage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t("common.noRole")}</SelectItem>
-                <SelectItem value="cs_manager">مدير خدمة عملاء 📞</SelectItem>
-                <SelectItem value="ops_manager">مدير تشغيل ⚙️</SelectItem>
-                <SelectItem value="owner">مالك المغسلة 👑</SelectItem>
+                <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
+                <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
+                <SelectItem value="owner">مالك المغسلة</SelectItem>
                 {WORKFLOW_STATIONS_10.map((ws) => (
                   <SelectItem key={ws.role} value={ws.role}>{ws.roleLabel} ({ws.id})</SelectItem>
                 ))}
@@ -137,7 +134,7 @@ function NewStaffPage() {
             </Select>
           </Field>
           <div className="md:col-span-2 space-y-2 pt-2 border-t">
-            <Label className="text-sm font-bold block">🔄 المحطات والأدوار التشغيلية الـ 10 (10 Rotational Workstations):</Label>
+            <Label className="text-sm font-bold block">المحطات والأدوار التشغيلية الـ 10 (10 Rotational Workstations):</Label>
             <p className="text-xs text-muted-foreground">تحديد محطة أو دور تشغيلي للموظف حسب ترتيب خط سير العمل (من الاستقبال حتى التوصيل) لتمكينه من التبديل واختيار اسمه (Actor) في شاشات المحطات.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {WORKFLOW_STATIONS_10.map((st) => {
@@ -155,7 +152,7 @@ function NewStaffPage() {
                     }`}
                   >
                     <span>{st.label}</span>
-                    <span>{checked ? "✓ مفعّل" : "+ إضافة"}</span>
+                    <span>{checked ? "مفعّل" : "+ إضافة"}</span>
                   </button>
                 );
               })}

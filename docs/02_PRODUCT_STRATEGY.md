@@ -176,8 +176,8 @@ Per external CTO feedback:
 
 | Context | Use | Avoid |
 |---|---|---|
-| **Architecture Documentation / Technical Specs / Design Decisions** | ✅ This document style — factual, verifiable, “What Exists / What Doesn’t” | |
-| **Pricing / Competitive Analysis / Investor Positioning** | ⚠️ Review every word — avoid absolutes | “Best in the world”, “Revolutionary”, “Superior to everyone” without operational data |
+| **Architecture Documentation / Technical Specs / Design Decisions** |  This document style — factual, verifiable, “What Exists / What Doesn’t” | |
+| **Pricing / Competitive Analysis / Investor Positioning** |  Review every word — avoid absolutes | “Best in the world”, “Revolutionary”, “Superior to everyone” without operational data |
 | **AI claims** | “Operational Advisor — Rule-based Live Simulation” | “AI Engine”, “ML forecasting”, “AI prediction” — until Phase 4 data + model exists |
 | **Financial claims** | Mark as **Assumption** with source | “Payback in 3 months”, “88% margin” as fact |
 
@@ -213,9 +213,9 @@ Per external CTO feedback:
 - **Tenant:** Dry Tech — 1 active — since 2026-06-21
 - **Orders:** 24 total / 19 delivered / 11 last 7d — GMV **12,549 EGP** — Delivered **11,339 EGP** — AOV **522.88 EGP**
 - **Workflow validation — CTO praised:**
-  - Wash-only bypass ironing — ✅ `lib/station-workflow.ts`
-  - Rework Orders `#1025-R1` — independent linked records — zero billing impact — ✅
-  - Overpayment split Invoice • Driver Tip — ✅ automatic ledger split
+  - Wash-only bypass ironing —  `lib/station-workflow.ts`
+  - Rework Orders `#1025-R1` — independent linked records — zero billing impact — 
+  - Overpayment split Invoice • Driver Tip —  automatic ledger split
 - **Operational Advisor:** inputs = orders+service_units+employees+inventory+equipment+cash — **rule-based Live Simulation — NO ML**
 - **Branch filter need:** فرع البنفسج = **0 orders / 0 safes** — P0 code / P2 operationally — defer UI globalization until ≥5 orders/day
 

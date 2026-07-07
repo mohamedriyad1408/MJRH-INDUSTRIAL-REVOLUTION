@@ -14,10 +14,10 @@ type Props = {
 };
 
 const SERVICE_TYPE_OPTIONS: Array<{ id: ServiceTypeFilter; label: string; icon: any; color: string }> = [
-  { id: "all", label: "🌐 كافة الخدمات", icon: Globe, color: "from-slate-700 to-slate-800" },
-  { id: "both", label: "✨ تنظيف وغسيل (Dry Clean)", icon: Sparkles, color: "from-blue-600 to-indigo-700" },
-  { id: "ironing", label: "👔 كي فقط بالبخار (Steam Iron)", icon: Shirt, color: "from-purple-600 to-violet-800" },
-  { id: "cleaning", label: "🪡 تصليحات ورَفْو (Alterations)", icon: Scissors, color: "from-amber-600 to-orange-700" },
+  { id: "all", label: "كافة الخدمات", icon: Globe, color: "from-slate-700 to-slate-800" },
+  { id: "both", label: "تنظيف وغسيل (Dry Clean)", icon: Sparkles, color: "from-blue-600 to-indigo-700" },
+  { id: "ironing", label: "كي فقط بالبخار (Steam Iron)", icon: Shirt, color: "from-purple-600 to-violet-800" },
+  { id: "cleaning", label: "تصليحات ورَفْو (Alterations)", icon: Scissors, color: "from-amber-600 to-orange-700" },
 ];
 
 export function PosCategoryTabs({
@@ -89,7 +89,7 @@ export function PosCategoryTabs({
       {onSelectServiceType && (
         <div className="rounded-2xl bg-slate-950/90 p-2.5 border border-teal-500/40 shadow-lg flex flex-wrap items-center justify-between gap-2.5">
           <div className="text-xs font-black text-teal-300 px-2 flex items-center gap-1.5">
-            <span>⚡ تصنيف فرعي داخل ({POS_CATEGORY_TABS.find((t) => t.id === activeTab)?.label || "الفئة"}):</span>
+            <span>تصنيف فرعي داخل ({POS_CATEGORY_TABS.find((t) => t.id === activeTab)?.label || "الفئة"}):</span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 flex-1 justify-end">
             {SERVICE_TYPE_OPTIONS.map((typeOption) => {

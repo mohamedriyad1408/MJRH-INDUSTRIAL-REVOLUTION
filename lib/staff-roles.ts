@@ -7,24 +7,15 @@ export const WORKFLOW_STATIONS_10 = [
   { id: "drying-assembly", label: "التجفيف والتجميع والفرز", role: "assembly_tech", roleLabel: "فني تجفيف وتجميع" },
   { id: "ironing", label: "الكي بالبخار والمكابس", role: "ironing_tech", roleLabel: "فني كي بالبخار" },
   { id: "packing", label: "التغليف وتجهيز الشحنات", role: "packer", roleLabel: "مسؤول تغليف" },
-  { id: "qc", label: "فحص الجودة والمطابقة QC", role: "qc_tech", roleLabel: "مراقب جودة QC" },
+  { id: "qc", label: "فحص الجودة والمطابقة", role: "qc_tech", roleLabel: "مراقب جودة QC" },
   { id: "delivery", label: "التوصيل والندب الخارجي", role: "courier", roleLabel: "مندوب توصيل" },
 ];
 
 export const MANAGEMENT_ROLES = [
-  { id: "owner", label: "المالك والمدير العام (Inhaber & Vorstand)" },
-  { id: "ceo", label: "المدير التنفيذي CEO (Vorstand)" },
-  { id: "ops_manager", label: "مدير التشغيل العام COO (Betriebsleitung)" },
-  { id: "cs_manager", label: "مدير خدمة ورعاية العملاء (Kundenservice)" },
-  { id: "sales_manager", label: "مدير المبيعات وتطوير الأعمال (Vertrieb)" },
-  { id: "marketing_manager", label: "مدير التسويق والنمو GTM (Marketing)" },
-  { id: "logistics_manager", label: "مدير أسطول وحركة النقل (Logistik & Fuhrpark)" },
-  { id: "warehouse_manager", label: "مدير المخازن وسلسلة الإمداد (Lager & Lieferkette)" },
-  { id: "legal_counsel", label: "مستشار قانوني وشؤون امتثال (Rechtsabteilung)" },
-  { id: "hr_manager", label: "مدير الموارد البشرية وشؤون الموظفين (Personalwesen)" },
-  { id: "cfo", label: "المدير المالي CFO (Finanzwesen)" },
-  { id: "accountant", label: "محاسب ومسؤول خزنة (Buchhaltung)" },
-  { id: "supervisor", label: "مشرف وردية عام (Schichtleiter)" },
+  { id: "owner", label: "المالك والمدير العام" },
+  { id: "ops_manager", label: "مدير التشغيل العام" },
+  { id: "cs_manager", label: "مدير خدمة العملاء" },
+  { id: "supervisor", label: "مشرف وردية عام‍" },
 ];
 
 export function getStationLabel(stationId?: string | null): string {

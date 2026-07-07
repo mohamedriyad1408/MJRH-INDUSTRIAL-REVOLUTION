@@ -101,25 +101,25 @@ Pricing tiers are structurally aligned with customer operational complexity and 
 ## 4. Pricing Justification — FACTS vs ASSUMPTIONS vs ASPIRATIONS
 
 ### FACTS (verifiable today)
-- ✅ 9-language i18n shipped — `lib/i18n-internal.ts`, tested in CI (`i18n-critical.test.ts`)
-- ✅ Double-entry ledger shipped — `journal_entries` / `journal_lines`, `sync_order_financials` trigger
-- ✅ Customer portal shipped — `routes/customer-portal.tsx`, InstaPay OCR proof upload live
-- ✅ 7 physical workstations routed — `routes/_app/stations/*`, `lib/station-workflow.ts`
-- ✅ Type safety: **zero `as any`** in `lib/` and `routes/` — CI enforced
-- ✅ Production live: https://mjrh.vercel.app — health check 200 OK
-- ✅ Bundle initial load: **~285KB gzip / ~245KB brotli** — verified 2026-06-30
-- ✅ CI: typecheck 0 errors, vitest 28/28, build 13.04s
+-  9-language i18n shipped — `lib/i18n-internal.ts`, tested in CI (`i18n-critical.test.ts`)
+-  Double-entry ledger shipped — `journal_entries` / `journal_lines`, `sync_order_financials` trigger
+-  Customer portal shipped — `routes/customer-portal.tsx`, InstaPay OCR proof upload live
+-  7 physical workstations routed — `routes/_app/stations/*`, `lib/station-workflow.ts`
+-  Type safety: **zero `as any`** in `lib/` and `routes/` — CI enforced
+-  Production live: https://mjrh.vercel.app — health check 200 OK
+-  Bundle initial load: **~285KB gzip / ~245KB brotli** — verified 2026-06-30
+-  CI: typecheck 0 errors, vitest 28/28, build 13.04s
 
 ### ASSUMPTIONS (must be labeled as such — per CTO review)
 > **Previous v1 presented these as facts — they are NOT facts yet. They are financial models awaiting real customer data.**
 
 | Assumption (v1 claim) | Status | Required evidence |
 |---|---|---|
-| **CAC = $1,200 avg B2B** | ❌ ASSUMPTION — no paid campaigns yet | Need: actual ad spend / leads / closed-won funnel — at least 20 paying customers |
-| **Payback in 3 Months** ($399/mo → $4,788 ACV / $1,200 CAC) | ❌ FINANCIAL ASSUMPTION — do NOT present as fact | Need: real CAC + real churn cohort |
-| **88% Gross Margin** | ❌ PROJECTION — not audited P&L | Need full COGS: Supabase Pro ($25-599), Vercel Pro ($20), OCR.space API ($…/1k calls), Email, WhatsApp WABA future, Support FTE allocation, future AI compute |
-| **“Payback in 3 Months” headline** | ❌ REMOVE from investor deck until data-backed | Replace with: “Target payback <6 months — pending first 20 paid customers cohort” |
-| **Competitor “lack native accounting” absolute** | ⚠️ RISKY — softened in §1 above | Replace with differentiated positioning map + verifiable schema link |
+| **CAC = $1,200 avg B2B** |  ASSUMPTION — no paid campaigns yet | Need: actual ad spend / leads / closed-won funnel — at least 20 paying customers |
+| **Payback in 3 Months** ($399/mo → $4,788 ACV / $1,200 CAC) |  FINANCIAL ASSUMPTION — do NOT present as fact | Need: real CAC + real churn cohort |
+| **88% Gross Margin** |  PROJECTION — not audited P&L | Need full COGS: Supabase Pro ($25-599), Vercel Pro ($20), OCR.space API ($…/1k calls), Email, WhatsApp WABA future, Support FTE allocation, future AI compute |
+| **“Payback in 3 Months” headline** |  REMOVE from investor deck until data-backed | Replace with: “Target payback <6 months — pending first 20 paid customers cohort” |
+| **Competitor “lack native accounting” absolute** |  RISKY — softened in §1 above | Replace with differentiated positioning map + verifiable schema link |
 
 **Revised pricing justification language (investor-safe):**
 
@@ -241,12 +241,12 @@ SELECT SUM(total_amount_cents)/100.0 FROM orders WHERE status = 'delivered';
 ### Business Assumptions
 | Assumption | v1 Claim | Reality 2026-06-30 |
 |---|---|---|
-| **CAC** | $1,200 | ❌ **ASSUMPTION — $0 paid to date** |
-| **NRR** | implied >100% | ❌ **NO DATA** |
-| **Gross Margin** | 88%+ | ❌ **PROJECTION — pending COGS audit** |
-| **Payback** | 3 months | ❌ **FINANCIAL MODEL — NOT validated** |
-| **MRR $199/$399** | implied paying | ❌ **0 verified invoices — PRE-REVENUE** |
-| **AI / ML forecasting** | “AI Laundry Advisor” | ❌ **ASPIRATIONAL — Phase 4 2027 — today rule-based Live Simulation** |
+| **CAC** | $1,200 |  **ASSUMPTION — $0 paid to date** |
+| **NRR** | implied >100% |  **NO DATA** |
+| **Gross Margin** | 88%+ |  **PROJECTION — pending COGS audit** |
+| **Payback** | 3 months |  **FINANCIAL MODEL — NOT validated** |
+| **MRR $199/$399** | implied paying |  **0 verified invoices — PRE-REVENUE** |
+| **AI / ML forecasting** | “AI Laundry Advisor” |  **ASPIRATIONAL — Phase 4 2027 — today rule-based Live Simulation** |
 | **Market Analysis score** | — | **5.5/10 CTO — needs real TAM/SAM/SOM + customer interviews** |
 | **Pricing Justification** | — | **4/10 CTO → FIXED v2.1 with explicit Assumption labels** |
 

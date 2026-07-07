@@ -635,7 +635,7 @@ function SearchResultsPage() {
 
                         {c.address && (
                           <div className="text-xs text-slate-500 truncate" title={c.address}>
-                            📍 {c.address}
+                            {c.address}
                           </div>
                         )}
                       </div>
@@ -744,7 +744,7 @@ function SearchResultsPage() {
                         </div>
                         {f.customers?.full_name && (
                           <div className="text-xs text-slate-600 font-semibold truncate">
-                            👤 {f.customers.full_name} ({f.customers.phone})
+                            {f.customers.full_name} ({f.customers.phone})
                           </div>
                         )}
                         <div className="text-[11px] text-slate-400 font-medium">

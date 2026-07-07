@@ -74,7 +74,7 @@ function HomeDirectory() {
         <div className="flex gap-2 items-center">
           <LanguageSwitcher compact />
           <Button asChild variant="outline" size="sm" className="font-bold border-slate-300 hover:bg-slate-100 text-slate-800">
-            <Link to="/login"><LogIn className="w-4 h-4 ms-1 text-teal-600" /> {t("home.platformLogin", "🛡️ إدارة وموظفو المنصة")}</Link>
+            <Link to="/login"><LogIn className="w-4 h-4 ms-1 text-teal-600" /> {t("home.platformLogin", "إدارة وموظفو المنصة")}</Link>
           </Button>
         </div>
       </header>

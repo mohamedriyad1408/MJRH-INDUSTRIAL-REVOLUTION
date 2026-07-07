@@ -19,28 +19,28 @@
 
 ```
 [ Browser / React 18 + Vite ]
-              │
-              ▼
+              
+              
 [TanStack Router — file routes /routes/* → routeTree.gen.ts]
-              │
-              ▼
+              
+              
 [TanStack Query — Unified Query Layer: lib/query-layer.ts]
-              │
-              ▼
+              
+              
 [Supabase JS Client — integrations/supabase/client.ts]
-              │
-      ┌───────┴────────┐
-      ▼                ▼
+              
+      
+                      
 [Supabase REST / PostgREST]   [Supabase Edge Functions — Deno]
-      │                         admin-actions / ocr-payment-proof / whatsapp-send
-      ▼
+                               admin-actions / ocr-payment-proof / whatsapp-send
+      
 [PostgreSQL 15 — RLS enforced]
-      │
-      ├─ triggers: sync_order_financials, cash_closing_checks
-      ├─ RPC: seed_tenant_defaults, cancel_order_with_reason
-      └─ views: ledger, profit_loss
-              │
-              ▼
+      
+       triggers: sync_order_financials, cash_closing_checks
+       RPC: seed_tenant_defaults, cancel_order_with_reason
+       views: ledger, profit_loss
+              
+              
 [Double-Entry Ledger: journal_entries → journal_lines]
 ```
 
@@ -104,20 +104,20 @@ Conclusion: the “<90KB” claim in v1 referred to **raw main entry**, not gzip
 
 | NFR | Target | Current Measurement | Status |
 |---|---|---|---|
-| **Performance – TTFB (Vercel Edge, Cairo)** | < 300ms | ~180-260ms (prod:health) | ✅ |
-| **Performance – Initial JS (gzip)** | < 300KB | 285 KB | ✅ |
-| **Performance – LCP (3G Fast)** | < 2.5s | ~2.1s (Lighthouse local) | ✅ |
-| **Availability – Frontend** | 99.9% (Vercel SLA) | Vercel managed | ✅ inherited |
-| **Availability – Database** | 99.95% (Supabase Pro) | Supabase managed | ✅ inherited |
-| **Backup – Postgres PITR** | 7-day point-in-time | Supabase PITR enabled | ✅ |
-| **Disaster Recovery – RTO** | < 4h | DB restore + `npx supabase db push` + Vercel redeploy tested | ⚠️ manual runbook exists (`docs/OPERATIONS_RUNBOOK.md`) |
-| **Disaster Recovery – RPO** | < 15 min | WAL archiving via Supabase | ✅ |
-| **Security – Auth** | JWT + RLS | Supabase Auth, RLS policies on all tenant tables | ✅ |
-| **Security – Audit Logs** | append-only | `system_events`, `journal_entries`, `cash_movements` immutable | ✅ |
-| **Security – Secret handling** | no client secrets | `scripts/repo-guard.mjs` blocks `sbp_`, `ghp_`, `SERVICE_ROLE` in repo | ✅ |
-| **Scalability – concurrent users** | 100 concurrent / tenant | load test not yet run — theoretical limit: Supabase 200 conn pool | ⚠️ needs k6 |
+| **Performance – TTFB (Vercel Edge, Cairo)** | < 300ms | ~180-260ms (prod:health) |  |
+| **Performance – Initial JS (gzip)** | < 300KB | 285 KB |  |
+| **Performance – LCP (3G Fast)** | < 2.5s | ~2.1s (Lighthouse local) |  |
+| **Availability – Frontend** | 99.9% (Vercel SLA) | Vercel managed |  inherited |
+| **Availability – Database** | 99.95% (Supabase Pro) | Supabase managed |  inherited |
+| **Backup – Postgres PITR** | 7-day point-in-time | Supabase PITR enabled |  |
+| **Disaster Recovery – RTO** | < 4h | DB restore + `npx supabase db push` + Vercel redeploy tested |  manual runbook exists (`docs/OPERATIONS_RUNBOOK.md`) |
+| **Disaster Recovery – RPO** | < 15 min | WAL archiving via Supabase |  |
+| **Security – Auth** | JWT + RLS | Supabase Auth, RLS policies on all tenant tables |  |
+| **Security – Audit Logs** | append-only | `system_events`, `journal_entries`, `cash_movements` immutable |  |
+| **Security – Secret handling** | no client secrets | `scripts/repo-guard.mjs` blocks `sbp_`, `ghp_`, `SERVICE_ROLE` in repo |  |
+| **Scalability – concurrent users** | 100 concurrent / tenant | load test not yet run — theoretical limit: Supabase 200 conn pool |  needs k6 |
 | **Scalability – orders** | 1M orders / tenant / year | schema indexed (`orders(tenant_id, branch_id, created_at)`) | design-validated, not load-tested |
-| **Observability** | client error capture | `lib/client-error-reporting.ts` + `/system-health` | ✅ |
+| **Observability** | client error capture | `lib/client-error-reporting.ts` + `/system-health` |  |
 
 ---
 

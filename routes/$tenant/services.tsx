@@ -12,39 +12,29 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, Save, Tags, Sparkles } from "lucide-react";
+import { Loader2, Plus, Trash2, Save, Tags } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { DRY_TECH_CATALOG_SEED, ensureDryTechCatalogSeeded } from "@/lib/dry-tech-catalog";
-import { PosCategoryTabs, type ServiceTypeFilter } from "@/components/pos-category-tabs";
 
 export const Route = createFileRoute("/$tenant/services")({
   head: () => ({ meta: [{ title: "كتالوج الخدمات" }] }),
   component: ServicesPage,
 });
 
-type Item = { id?: string; name: string; service_type: string; unit_price: number; is_active: boolean; category?: string };
+type Item = { id?: string; name: string; service_type: string; unit_price: number; is_active: boolean };
 
 function ServicesPage() {
   const { t, dir } = useI18n();
   const { hasRole, tenantId } = useAuth();
-  const canEdit = true; // متاح العرض والاستيراد لكافة المشرفين والمديرين والإدارة
+  const canEdit = hasRole("owner", "ops_manager");
   const [list, setList] = useState<Item[]>([]);
-  const [activeTab, setActiveTab] = useState("all");
-  const [serviceType, setServiceType] = useState<ServiceTypeFilter>("all");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Item | null>(null);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const filteredList = list.filter((item) => {
-    const matchesCat = activeTab === "all" || item.category === activeTab || (activeTab === "رجالي" && !item.category);
-    const matchesType = !serviceType || serviceType === "all" || item.service_type === serviceType;
-    return matchesCat && matchesType;
-  });
-
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase.from("service_items").select("*").eq("is_active", true).order("name");
+    const { data, error } = await supabase.from("service_items").select("*").order("name");
     if (error) toast.error(error.message);
     setList((data ?? []) as Item[]);
     setLoading(false);
@@ -52,15 +42,6 @@ function ServicesPage() {
   useEffect(() => { load(); }, []);
 
   function newItem() { setEditing({ name: "", service_type: "cleaning", unit_price: 10, is_active: true }); setOpen(true); }
-
-  async function seedDryTechCatalog() {
-    if (!tenantId) return;
-    setSaving(true);
-    const added = await ensureDryTechCatalogSeeded(tenantId);
-    setSaving(false);
-    toast.success(`✅ تم مزامنة واستيراد ${added} صنف جديد من كتالوج Dry Tech الرسمي بنجاح (${DRY_TECH_CATALOG_SEED.length} صنف إجمالاً)`);
-    load();
-  }
 
   async function save() {
     if (!editing?.name || !tenantId) return;
@@ -85,23 +66,13 @@ function ServicesPage() {
 
   return (
     <div className="space-y-4 max-w-4xl" dir={dir}>
-      <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="flex justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">{t("services.pageTitle", "كتالوج الخدمات")}</h1>
           <p className="text-sm text-muted-foreground">{list.length} {t("services.subtitle", "خدمة")}</p>
         </div>
-        {canEdit && (
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={seedDryTechCatalog} disabled={saving} className="border-teal-300 text-teal-800 bg-teal-50 hover:bg-teal-100 font-bold">
-              <Sparkles className="w-4 h-4 ms-1 text-teal-600" />
-              <span>⚡ استيراد كتالوج Dry Tech الرسمي ({DRY_TECH_CATALOG_SEED.length} صنف)</span>
-            </Button>
-            <Button onClick={newItem}><Plus className="w-4 h-4 ms-1" /> {t("services.btnNew", "خدمة جديدة")}</Button>
-          </div>
-        )}
+        {canEdit && <Button onClick={newItem}><Plus className="w-4 h-4 ms-1" /> {t("services.btnNew", "خدمة جديدة")}</Button>}
       </div>
-
-      <PosCategoryTabs activeTab={activeTab} onSelect={setActiveTab} items={list} compact={false} activeServiceType={serviceType} onSelectServiceType={setServiceType} />
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <Card>
@@ -110,7 +81,6 @@ function ServicesPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-start p-3">{t("services.colName", "الاسم")}</th>
-                  <th className="text-start p-3">المبوبة</th>
                   <th className="text-start p-3">{t("services.colType", "النوع")}</th>
                   <th className="text-start p-3">{t("services.colPrice", "السعر")}</th>
                   <th className="text-start p-3">{t("services.colStatus", "الحالة")}</th>
@@ -118,11 +88,10 @@ function ServicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredList.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">{t("services.empty", "لا توجد خدمات تطابق البحث أو التصنيف")}</td></tr>}
-                {filteredList.map((s) => (
+                {list.length === 0 && <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">{t("services.empty", "لا توجد خدمات")}</td></tr>}
+                {list.map((s) => (
                   <tr key={s.id} className="border-t">
                     <td className="p-3 font-bold">{s.name}</td>
-                    <td className="p-3"><Badge className="bg-slate-800 text-white font-mono text-[11px]">{s.category || "رجالي"}</Badge></td>
                     <td className="p-3"><Badge variant="secondary">{typeLabel(s.service_type)}</Badge></td>
                     <td className="p-3">{fmtMoney(s.unit_price, curr)}</td>
                     <td className="p-3">{s.is_active ? <Badge className="bg-emerald-600">{t("services.active", "نشطة")}</Badge> : <Badge variant="outline">{t("services.inactive", "موقوفة")}</Badge>}</td>

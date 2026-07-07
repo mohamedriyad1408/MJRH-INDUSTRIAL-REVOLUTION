@@ -12,8 +12,6 @@ import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { interpolate, useI18n } from "@/lib/i18n";
 import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
-import { OmnipresentOrderBanner } from "@/components/omnipresent-order-banner";
-import { SorterReturnDialog } from "@/components/sorter-return-dialog";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 type Station = string;
@@ -45,7 +43,7 @@ export function StationPage({
     const statuses = incoming ? [incoming, current] : [current];
     const { data } = await supabase
       .from("orders")
-      .select("id, order_number, status, is_urgent, created_at, total, notes, customers(full_name, phone, vip_preferences, notes, address)")
+      .select("id, order_number, status, is_urgent, created_at, total, notes, customers(full_name, phone)")
       .in("status", statuses)
       .order("is_urgent", { ascending: false })
       .order("created_at");
@@ -60,7 +58,7 @@ export function StationPage({
     const { error } = await supabase.from("orders").update({ status: to }).eq("id", id);
     if (error) return toast.error(error.message);
     await supabase.from("order_status_history").insert({
-      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `👤 محطة: ${title} — نفذه: ${activeActor?.full_name ?? "موظف المحطة"}`,
+      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `محطة: ${title} — نفذه: ${activeActor?.full_name ?? "موظف المحطة"}`,
     });
     if (to === "ironing") {
       try {
@@ -138,12 +136,9 @@ function Column({ title, list, action }: { title: string; list: Order[]; action:
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
             </div>
-            <div className="text-sm font-bold text-teal-400">{o.customers?.full_name ?? "—"}</div>
-            <OmnipresentOrderBanner order={o} customer={o.customers} className="my-1.5" />
-            <div className="flex flex-wrap justify-end items-center gap-1.5 pt-1 border-t border-slate-800">
-              <SorterReturnDialog orderId={o.id} orderNumber={o.order_number} tenantId={null} onDone={() => window.location.reload()} />
-              {action(o)}
-            </div>
+            <div className="text-sm">{o.customers?.full_name ?? "—"}</div>
+            {o.notes && <div className="text-xs text-muted-foreground">{o.notes}</div>}
+            <div className="flex justify-end pt-1">{action(o)}</div>
           </div>
         ))}
       </CardContent>

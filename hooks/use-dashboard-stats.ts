@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// ✅ Phase 3: Shared hook — used by Dashboard, Ops, CS, Manager
+// Phase 3: Shared hook — used by Dashboard, Ops, CS, Manager
 export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],

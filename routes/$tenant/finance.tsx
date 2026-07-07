@@ -32,7 +32,7 @@ const EXPENSE_CATEGORIES = [
 ];
 
 type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string; status?: string; source_type?: string | null; employee_id?: string | null };
-// ✅ Phase 2: Use employees instead of technicians
+// Phase 2: Use employees instead of technicians
 type AdvanceRequest = { id: string; employee_id: string | null; employee_name: string; amount: number; reason: string | null; status: "pending"|"approved"|"rejected"; created_at: string; decided_at: string | null };
 type Employee = { id: string; full_name: string; monthly_salary?: number; commission_percent?: number };
 
@@ -44,7 +44,7 @@ function FinancePage() {
   const [revenue, setRevenue] = useState({ total: 0, paid: 0, unpaid: 0, count: 0 });
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [advances, setAdvances] = useState<AdvanceRequest[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]); // ✅ was: techs/technicians
+  const [employees, setEmployees] = useState<Employee[]>([]); // was: techs/technicians
   const [payrollSync, setPayrollSync] = useState<any>(null);
   const [syncingPayroll, setSyncingPayroll] = useState(false);
   const [range, setRange] = useState<"7d"|"30d"|"all">("30d");
