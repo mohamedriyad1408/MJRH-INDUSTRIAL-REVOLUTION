@@ -169,7 +169,7 @@ Controls external dispatch, delivery routing, and courier operations. Governs li
 Manages physical capital assets, consumables, and multi-branch infrastructure. Governs equipment maintenance logs, consumable chemical and spare part inventory (Consumables & Asset Governance Module), branch enterprise configurations (Multi-Branch Configuration Dashboard), and unit media storage buckets (Encrypted Operational Media Vault). Lager officers establish automated reorder triggers for cleaning solvents and garment hangers, preventing production halts caused by stockouts.
 
 #### 8. Rechtsabteilung (Legal Affairs, Contract Vault & Dispute Litigation)
-Safeguards corporate legal integrity and regulatory compliance. Governs the standalone legal department view (Branch Legal Affairs & Contract Interface and Corporate Legal Vault Interface), persisting interactive records directly to `public.legal_contracts` and Supabase Storage (Secure Legal Contract Repository). Manages Master Services Agreements (MSAs), vehicle operating licenses (`vehicle_license`), procurement contracts (`purchase_contract`), and active litigation claims (`litigation_dispute`).
+Safeguards corporate legal integrity and regulatory compliance. Governs the standalone legal department view (Branch Legal Affairs & Contract Interface and Corporate Legal Vault Interface), persisting interactive records directly to Corporate Legal Contract Schema and Supabase Storage (Secure Legal Contract Repository). Manages Master Services Agreements (MSAs), vehicle operating licenses (`vehicle_license`), procurement contracts (`purchase_contract`), and active litigation claims (`litigation_dispute`).
 
 #### 9. Personalwesen (Human Resources & Workforce Governance)
 Manages employee lifecycle, payroll, and productivity verification. Governs Mawared HR time & attendance (Mawared HR Time & Attendance Portal), Form 6 performance scorecards (Form 6 Employee Performance Scorecard), employee management with mandatory phone numbers and automated 1-click WhatsApp verification (Workforce Identity & Verification Module, Workforce Onboarding & Allocation Module), daily shift schedules (Shift Rotation & Scheduling Module), leave requests, daily wages, and specialized ironing piece-rate payroll (Ironing Technician Piece-Rate Module).
@@ -227,7 +227,7 @@ To maintain enterprise reliability across remote branch laundries without on-sit
 
 ## SECTION 5: VERIFIED CODEBASE VALUATION & ASSET APPRAISAL REPORT
 
-**Institutional Asset Floor Methodology:** In institutional software due diligence, valuing an early-stage SaaS enterprise requires establishing a rigorous, defensible asset floor independent of speculative revenue multiples. To support its EGP 15,000,000 Pre-Seed pre-money valuation, MJRH commissioned an exhaustive technical and financial appraisal of its live production codebase and proprietary algorithmic IP (formally documented in `docs/09_UPDATED_CODEBASE_VALUATION_AND_ENTERPRISE_APPRAISAL_V2.6.md`). This appraisal establishes an independently audited Total Asset Value of EGP 11,610,000, providing institutional investors with an extraordinary 77.4% tangible and intangible asset coverage floor.
+**Institutional Asset Floor Methodology:** In institutional software due diligence, valuing an early-stage SaaS enterprise requires establishing a rigorous, defensible asset floor independent of speculative revenue multiples. To support its EGP 15,000,000 Pre-Seed pre-money valuation, MJRH commissioned an exhaustive technical and financial appraisal of its live production codebase and proprietary algorithmic IP (formally documented in Official Codebase & Asset Appraisal Report). This appraisal establishes an independently audited Total Asset Value of EGP 11,610,000, providing institutional investors with an extraordinary 77.4% tangible and intangible asset coverage floor.
 
 ### 5.1 Replacement Engineering Cost Analysis (EGP 5,610,000)
 
@@ -239,7 +239,7 @@ To maintain enterprise reliability across remote branch laundries without on-sit
 | **2. Cloud DB & Storage Architects** | Supabase PostgreSQL schemas (Corporate Legal Contract Schema, double-entry journals), RLS policies, & 4 storage buckets. | 700 | 1,200 | **840,000** |
 | **3. SaaS Telemetry & BI Engineers** | Recharts telemetry (Marketing Telemetry & BI Dashboard), GDPR PII masking, ROAS, Churn %, NRR %, and Rule of 40 engines. | 650 | 1,200 | **780,000** |
 | **4. Hyper-Automation & Workflow Devs** | 1-Click fast track sorting (1-Click Fast Track Sorting Protocol), packing automation, and algorithmic GPS courier dispatch. | 750 | 1,000 | **750,000** |
-| **5. Senior Frontend & UI/UX Engineers** | 10 workstation screens, invoice editor, OmnipresentOrderBanner, SorterReturnDialog, zero-emoji UI. | 850 | 900 | **765,000** |
+| **5. Senior Frontend & UI/UX Engineers** | 10 workstation screens, invoice editor, Omnipresent Client Preference Banner, Structured Discrepancy Exception Vault, zero-emoji UI. | 850 | 900 | **765,000** |
 | **6. QA Automation & Playwright SDETs** | 28 Vitest unit tests, Playwright E2E smoke & i18n suites, zero-emoji verification, & CI/CD repo guard. | 600 | 900 | **540,000** |
 | **7. API & Telemetry Specialists** | WhatsApp automated invoice/verification messaging engine without external API fees, InstaPay integration. | 500 | 800 | **400,000** |
 | **8. DevSecOps & Cloud Release Eng.** | Vercel production deployment pipelines, SSL/DNS routing, edge functions, and security hardening. | 400 | 850 | **340,000** |
@@ -390,7 +390,7 @@ Unlocks global horizontal scale by licensing the 6 core algorithmic IP engines a
 
 ## SECTION 10: INSTITUTIONAL DUE DILIGENCE INDEX & DATA ROOM CROSS-REFERENCE
 
-**12-Section Institutional Data Room Index:** To facilitate rapid, verifiable institutional due diligence by venture capital analysts and deal advisory teams, every claim, table, and architectural engine presented in this Executive Summary is cross-referenced against the official MJRH Investment Data Room (`docs/10_MJRH_INVESTMENT_DATA_ROOM_MASTER_INDEX.md`). The Data Room is structured into 12 comprehensive sections:
+**12-Section Institutional Data Room Index:** To facilitate rapid, verifiable institutional due diligence by venture capital analysts and deal advisory teams, every claim, table, and architectural engine presented in this Executive Summary is cross-referenced against the official MJRH Investment Data Room (Official Institutional Data Room Master Index). The Data Room is structured into 12 comprehensive sections:
 
 | Data Room Section | Primary Verification Document / File | Verified Technical / Financial Parameter |
 | :--- | :--- | :--- |
@@ -401,7 +401,7 @@ Unlocks global horizontal scale by licensing the 6 core algorithmic IP engines a
 | **Section 05: Intellectual Property** | `docs/05_CODEBASE_VALUATION...` & IP Engine Specs | 6 Algorithmic engines (APDO, Surge, RBAC, Telemetry). |
 | **Section 06: Commercial Strategy** | GTM Execution Plan & B2B Pipeline Vault | B2B Enterprise Pipeline Schema table; automated onboarding tools. |
 | **Section 07: Financial Information** | `docs/04_INVESTOR_TECHNICAL_FINANCIAL_PROSPECTUS...` | 5-Year Pro Forma (2026–2030); double-entry accounting ledgers. |
-| **Section 08: Investment Information** | `docs/06_OFFICIAL_INVESTMENT_MEMORANDUM_V1.md` | Pre-Seed EGP 3M raise; EGP 15M Pre-Money Val.; 16.67% equity. |
+| **Section 08: Investment Information** | Official Institutional Investment Memorandum | Pre-Seed EGP 3M raise; EGP 15M Pre-Money Val.; 16.67% equity. |
 | **Section 09: Operations** | `docs/09_UPDATED_CODEBASE_VALUATION...` | EGP 5.61M replacement cost + EGP 6.00M IP = EGP 11.61M floor. |
 | **Section 10: Legal & Compliance** | Rechtsabteilung Legal Vault (Branch Legal Affairs & Contract Interface) & Storage | Corporate Legal Contract Schema table; MSA contracts; GDPR PII masking. |
 | **Section 11: Due Diligence** | Live Production Case Study Verification Ledger | VIP Order `#ORD-2026-995` (Dr. Sherif Al-Alfy); InstaPay tip split. |
@@ -418,7 +418,7 @@ Unlocks global horizontal scale by licensing the 6 core algorithmic IP engines a
 | Due Diligence Verification Item | Repository Source / Database Schema | Verified Production Parameter | Institutional Audit Status |
 | :--- | :--- | :--- | :---: |
 | **1. German Hybrid Model (10 Depts)** | Corporate Navigation & Hierarchy Engine & Sovereign Role-Based Access Control (RBAC) Module | 10 Synchronized departments; Sovereign Owner RBAC. | **VERIFIED IN PROD ✅** |
-| **2. Zero-Emoji UI Design** | All `.tsx` components in Rotational Workstation Interfaces | 100% clean Lucide icons; zero visual emoji clutter. | **VERIFIED IN PROD ✅** |
+| **2. Zero-Emoji UI Design** | All Workstation UI Components across Plant Interfaces | 100% clean Lucide icons; zero visual emoji clutter. | **VERIFIED IN PROD ✅** |
 | **3. Touch Hyper-Automation** | Workstation Sorting Module (1-Click Fast Track Sorting Protocol) & Workstation Packing Module | 1-Click fast track execution without barcode scanning. | **VERIFIED IN PROD ✅** |
 | **4. APDO Operational Model** | APDO State Machine Kernel Rules & APDO Cryptographic Audit Schema | 4-Stage state machine enforcing kernel data integrity. | **VERIFIED IN PROD ✅** |
 | **5. Double-Entry Ledger & Tip Split** | Double-Entry Accounting Journal Schema & InstaPay webhook | Automated debit/credit journals; EGP 50 tip liability split. | **VERIFIED IN PROD ✅** |
@@ -518,10 +518,10 @@ Executes real browser automation across Chromium desktop and mobile viewports. T
 | User Role & Workstation | Arabic Operational Protocol | English Operational Protocol |
 | :--- | :--- | :--- |
 | **Receptionist (`/reception`)** | استلام الطلب من العميل، مراجعة الأصناف، وتأكيد الدفع عبر InstaPay أو النقد، وإصدار المارك. | Receive customer order, verify item count, confirm InstaPay or cash payment, and issue touch label. |
-| **Sorter (`/sorting`)** | الضغط على زر الفرز السريع (fastTrackSortAll) لتوجيه القطع تلقائياً لمحطات الغسيل أو الكي. | Click 1-Click Fast Track Sort (1-Click Fast Track Sorting Protocol) to algorithmically route pieces to cleaning or ironing. |
-| **Cleaning Tech (`/cleaning`)** | معالجة الغسيل وإزالة البقع. في حال وجود مرتجع، يتم تسجيل السبب عبر نافذة SorterReturnDialog. | Process washing and stain removal. If reclean is needed, log structured reason via Structured Discrepancy Exception Vault. |
+| **Sorter (`/sorting`)** | الضغط على زر الفرز السريع (1-Click Fast Track Sorting Protocol) لتوجيه القطع تلقائياً لمحطات الغسيل أو الكي. | Click 1-Click Fast Track Sort (1-Click Fast Track Sorting Protocol) to algorithmically route pieces to cleaning or ironing. |
+| **Cleaning Tech (`/cleaning`)** | معالجة الغسيل وإزالة البقع. في حال وجود مرتجع، يتم تسجيل السبب عبر نافذة Structured Discrepancy Exception Vault. | Process washing and stain removal. If reclean is needed, log structured reason via Structured Discrepancy Exception Vault. |
 | **Ironing Tech (`/ironing`)** | كي القطع المخصصة للفني دون تجزئة الطلب (مبدأ وحدة الطلب)، وتأكيد الإنهاء لترحيل المستحقات. | Press assigned garments without splitting orders (single-actor rule), confirm completion to credit piece wage. |
-| **Packer & QC (`/packing`)** | فحص الجودة والمطابقة النهائية، ثم الضغط على التغليف السريع (fastTrackPackAndReady) لتجهيز الشحنة. | Perform final QC inspection, then click Fast Track Pack (1-Click Fast Track Packing Protocol) to stage for delivery. |
+| **Packer & QC (`/packing`)** | فحص الجودة والمطابقة النهائية، ثم الضغط على التغليف السريع (1-Click Fast Track Packing Protocol) لتجهيز الشحنة. | Perform final QC inspection, then click Fast Track Pack (1-Click Fast Track Packing Protocol) to stage for delivery. |
 
 ---
 
