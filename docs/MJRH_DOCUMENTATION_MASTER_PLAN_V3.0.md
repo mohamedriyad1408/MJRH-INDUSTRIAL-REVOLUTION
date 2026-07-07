@@ -470,6 +470,61 @@ Unlocks global horizontal scale by licensing the 6 core algorithmic IP engines a
 
 **100% Test Pass Rate & Zero Compilation Errors:** To satisfy institutional software engineering standards, the MJRH codebase undergoes automated verification before every production deployment. In the latest release cycle, the platform achieved a 100% test pass rate across all 28 Vitest unit tests (covering ironing task distribution, order routing, payment calculations, customer returns, error sanitization, and WhatsApp verification messaging) and 100% pass rate across Playwright E2E smoke and i18n suites. Zero compilation errors or bundle budget violations were recorded, verifying that the EGP 11.61 Million codebase asset floor operates with absolute engineering stability.
 
+## PART VIII: OPERATIONAL RUNBOOKS, DEPLOYMENT GUIDES & TESTING STRATEGY
+
+**Standardized Operating Procedures:** To ensure seamless knowledge transfer across enterprise deployments, institutional due diligence auditors and technical operations teams require exhaustive, standardized operating procedures. This section consolidates the official MJRH Operations Runbook, Deployment Runbook, APDO Operating Model specification, Testing Strategy, and Bilingual User Guide into a single institutional reference.
+
+### 8.1 Plant Operations Runbook & Daily Shift Routines
+
+**Three-Phase Operational Day:** Every commercial laundry plant governed by MJRH follows a strict daily shift routine to prevent bottleneck accumulation and cash discrepancies. The operational day is divided into three synchronized phases: Shift Opening (06:00–08:00 AM), Active Shift Execution (08:00 AM–20:00 PM), and Shift Closing & Safe Reconciliation (20:00–22:00 PM).
+
+#### Phase 1: Shift Opening & System Health Audit (06:00–08:00 AM)
+The Plant Operating Manager (`ops_manager`) authenticates into `/today` and `/system-health`. The manager verifies database connectivity, reviews overnight WhatsApp verification queues, checks consumable chemical inventory levels (`/inventory`), and assigns floor technicians to their respective rotational workstation screens (`/stations/*`).
+
+#### Phase 2: Active Shift Execution & Surge Governance (08:00 AM–20:00 PM)
+During active production, Reception cashiers log incoming customer orders and execute InstaPay digital payment verifications. As peak intake hours (10:00 AM–12:00 PM) approach, the Dynamic Surge Scheduling Engine automatically caps booking slots and activates Express Surcharge pricing. Floor technicians execute 1-Click Fast Track Sorting (`fastTrackSortAll`) and Packing (`fastTrackPackAndReady`). If stain remediation is required, cleaning technicians log structured exception reasons via `SorterReturnDialog`, returning items to washing without breaking order integrity.
+
+#### Phase 3: Shift Closing & One-Movement Safe Closing (20:00–22:00 PM)
+At shift conclusion, the Chief Financial Officer (`cfo`) or Laundry Owner (`owner`) accesses `/cash-closing`. The system displays expected cash safe balances calculated algorithmically from day-long double-entry ledger journals. The manager performs a physical safe count, inputs actual cash figures, and executes a One-Movement Safe Close. Any discrepancy automatically logs an immutable audit alert in `public.accounting_journals`.
+
+### 8.2 Cloud Deployment Runbook & CI/CD Pipeline Governance
+
+**Serverless Cloud Infrastructure & CI/CD:** MJRH is deployed on a highly available, serverless cloud infrastructure combining Vercel Edge Network for frontend asset delivery and Supabase AWS clusters for PostgreSQL database hosting. Production releases are governed by strict CI/CD automation and repository guard validation (`repo:guard` in `scripts/repo-guard.mjs`).
+
+| Infrastructure Component | Production Endpoint / Configuration | Institutional Governance Mandate |
+| :--- | :--- | :--- |
+| **Vercel Production URL** | `https://mjrh.vercel.app/` | Automatic HTTPS/SSL encryption; edge CDN caching across global regions. |
+| **Supabase DB Connection** | `postgresql://postgres...@db...supabase.co:5432` | PostgreSQL 15 kernel; connection pooling enabled; RLS enforced on all tables. |
+| **Git Repository Guard** | `scripts/repo-guard.mjs` & GitHub Actions | Blocks commits with plaintext credentials or non-authorized author emails. |
+| **Bundle Size Budget** | `check-bundle-size.mjs` | Enforces strict JS chunk size budgets (<600KB raw) to ensure rapid mobile loading. |
+| **Zero-Emoji Verification** | Automated UI Linter & Playwright E2E | Verifies 100% absence of visual emoji symbols across all 10 workstation screens. |
+
+---
+
+### 8.3 Quality Assurance & Testing Strategy
+
+**Dual-Layer Automated QA Architecture:** Institutional enterprise software demands rigorous, multi-layered automated testing. MJRH implements a dual-layer QA architecture: Vitest for kernel algorithmic logic and Playwright for cross-browser end-to-end (E2E) UI and internationalization verification.
+
+#### 1. Vitest Kernel Algorithmic Suite (28 Unit Tests)
+Validates business logic in isolation without UI overhead. Dedicated test suites cover: Ironing Task Distribution (`ironing-distribution.test.ts`) ensuring single-actor order ownership and fatigue balancing; Order Routing (`order-routing.test.ts`) verifying stage progression; Double-Entry Accounting (`payment.test.ts`) validating InstaPay tip separation; Customer Returns (`customer-return.test.ts`); WhatsApp Messaging (`whatsapp.test.ts`); and Error Sanitization (`error-sanitizer.test.ts`). All 28 tests execute in under 2.0 seconds with a 100% pass rate.
+
+#### 2. Playwright E2E Smoke & i18n Verification Suite
+Executes real browser automation across Chromium desktop and mobile viewports. The suite verifies authenticated login flows, role-based access gates across all 10 German departments, dynamic surge load linter warnings, and internationalization navigation (`authenticated-i18n.spec.ts`) across Arabic, English, French, Italian, and Spanish without fallback failures or visual emoji clutter.
+
+### 8.4 Bilingual Operational User Guide (Arabic & English)
+
+**Embedded Onboarding Protocol:** To empower commercial laundry plant onboarding, the platform includes embedded operational instructions. Below is the quick-start protocol for plant operators and technicians:
+
+| User Role & Workstation | Arabic Operational Protocol | English Operational Protocol |
+| :--- | :--- | :--- |
+| **Receptionist (`/reception`)** | استلام الطلب من العميل، مراجعة الأصناف، وتأكيد الدفع عبر InstaPay أو النقد، وإصدار المارك. | Receive customer order, verify item count, confirm InstaPay or cash payment, and issue touch label. |
+| **Sorter (`/sorting`)** | الضغط على زر الفرز السريع (fastTrackSortAll) لتوجيه القطع تلقائياً لمحطات الغسيل أو الكي. | Click 1-Click Fast Track Sort (`fastTrackSortAll`) to algorithmically route pieces to cleaning or ironing. |
+| **Cleaning Tech (`/cleaning`)** | معالجة الغسيل وإزالة البقع. في حال وجود مرتجع، يتم تسجيل السبب عبر نافذة SorterReturnDialog. | Process washing and stain removal. If reclean is needed, log structured reason via `SorterReturnDialog`. |
+| **Ironing Tech (`/ironing`)** | كي القطع المخصصة للفني دون تجزئة الطلب (مبدأ وحدة الطلب)، وتأكيد الإنهاء لترحيل المستحقات. | Press assigned garments without splitting orders (single-actor rule), confirm completion to credit piece wage. |
+| **Packer & QC (`/packing`)** | فحص الجودة والمطابقة النهائية، ثم الضغط على التغليف السريع (fastTrackPackAndReady) لتجهيز الشحنة. | Perform final QC inspection, then click Fast Track Pack (`fastTrackPackAndReady`) to stage for delivery. |
+
+---
+
 ## CLOSING STATEMENT & INSTITUTIONAL CONTACT PROTOCOL
 
 **The Institutional Opportunity:** MJRH INDUSTRIAL REVOLUTION represents a rare convergence of Category-Defining Enterprise Software Architecture, Deep Physical Industry Expertise, and Extraordinary Verified Asset Backing. By establishing the Operational Intelligence Platform (OIP) category, enforcing the German Hybrid Governance Architecture, and automating complex physical service workflows without scanning hardware, MJRH is uniquely positioned to dominate the EGP 45 Billion MENA commercial laundry sector and scale globally into industrial service operating systems. We invite institutional investors to review our comprehensive Data Room and schedule a formal investment committee presentation.
