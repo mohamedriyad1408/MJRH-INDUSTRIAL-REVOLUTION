@@ -144,7 +144,7 @@ function computeEuropeanAppraisal(
   let actionRecommendation = "normal";
 
   if (overallScore >= 88) {
-    gridCategory = "Star Talent (قائد مستقبلي وشريك استراتيجي)";
+    gridCategory = "🌟 Star Talent (قائد مستقبلي وشريك استراتيجي)";
     gridBoxColor = "bg-gradient-to-r from-emerald-600 to-teal-600 text-white";
     gridDesc = "أداء استثنائي يتجاوز جميع المعايير الأوروبية في الجودة والالتزام والمبادرة. استحقاق ترقية فورية أو حافز تميز مؤسسي.";
     actionRecommendation = "bonus";
@@ -154,17 +154,17 @@ function computeEuropeanAppraisal(
     gridDesc = "ركيزة أساسية في تشغيل النشاط، يظهر التزاماً عالياً بالجودة ومواعيد العمل بانتظام.";
     actionRecommendation = "bonus";
   } else if (overallScore >= 60) {
-    gridCategory = "Consistent Contributor (أداء مستقر وموثوق)";
+    gridCategory = "🔵 Consistent Contributor (أداء مستقر وموثوق)";
     gridBoxColor = "bg-blue-600 text-white";
     gridDesc = "ينجز المطلوب بكفاءة جيدة، ويحتاج تعزيز في بعض مجالات المبادرة أو الالتزام.";
     actionRecommendation = "normal";
   } else if (overallScore >= 45) {
-    gridCategory = "Underperformer (أداء متذبذب — خطة تحسين PIP)";
+    gridCategory = "⚠️ Underperformer (أداء متذبذب — خطة تحسين PIP)";
     gridBoxColor = "bg-amber-500 text-white";
     gridDesc = "قصور في الالتزام بالمواعيد أو معايير الجودة. يجب وضعه تحت خطة تحسين أداء إلزامية (PIP) لمدة شهر.";
     actionRecommendation = "warning";
   } else {
-    gridCategory = "Exit Candidate (إنذار أحمر / استمارة 6 إنهاء خدمة)";
+    gridCategory = "🚨 Exit Candidate (إنذار أحمر / استمارة 6 إنهاء خدمة)";
     gridBoxColor = "bg-red-600 text-white animate-pulse";
     gridDesc = "فشل في استيفاء الحد الأدنى من معايير العمل المؤسسي الأوروبية. يُنصح باتخاذ إجراءات إنهاء التعاقد (استمارة 6).";
     actionRecommendation = "form6";
@@ -686,7 +686,7 @@ function EuropeanScorecardPage() {
                               <span className="text-xs">{g.title}</span>
                             </div>
                             <Badge variant={g.status === "achieved" ? "default" : "secondary"} className="text-[10px] font-mono shrink-0">
-                              {g.status === "achieved" ? "محقَق" : "قيد التنفيذ"}
+                              {g.status === "achieved" ? "محقَق ✅" : "قيد التنفيذ 🎯"}
                             </Badge>
                           </div>
                         ))}
@@ -867,7 +867,7 @@ function EuropeanScorecardPage() {
               <ul className="list-disc list-inside space-y-1 text-slate-700 font-semibold pe-4">
                 {idpGoals.map((g) => (
                   <li key={g.id}>
-                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? "محقَق" : "قيد التنفيذ"})</span>
+                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? "محقَق ✅" : "قيد التنفيذ 🎯"})</span>
                   </li>
                 ))}
               </ul>
@@ -924,7 +924,7 @@ function EuropeanScorecardPage() {
                 <div>عدد مرات التأخير عن مواعيد العمل: <span className="font-black font-mono text-red-600">{stats?.delayCount} مرات ({stats?.delayMinutes} دقيقة تأخير)</span></div>
               </div>
               <p className="text-xs text-red-800 font-bold bg-red-50 p-3 rounded-xl border border-red-200">
-                تقرر إخطار الموظف بهذا الإنذار النهائي نظراً لتكرار التأخيرات والغياب أو انخفاض الإنتاجية دون تبرير مقبول، ويعتبر هذا المستند إقراراً إدارياً يمهد لإصدار استمارة (6) للتأمينات الاجتماعية وإنهاء الخدمة طبقاً للوائح العمل.
+                ⚠️ تقرر إخطار الموظف بهذا الإنذار النهائي نظراً لتكرار التأخيرات والغياب أو انخفاض الإنتاجية دون تبرير مقبول، ويعتبر هذا المستند إقراراً إدارياً يمهد لإصدار استمارة (6) للتأمينات الاجتماعية وإنهاء الخدمة طبقاً للوائح العمل.
               </p>
             </div>
 

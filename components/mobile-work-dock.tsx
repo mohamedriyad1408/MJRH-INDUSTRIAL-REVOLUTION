@@ -87,7 +87,7 @@ export function MobileWorkDock() {
             </div>
           </Link>)}
         </div>
-        <div className="mt-4 rounded-3xl bg-slate-900 text-white p-4 text-center font-bold">ركز في المهمة الحالية، وكل خطوة بتقربنا من يوم أنجح</div>
+        <div className="mt-4 rounded-3xl bg-slate-900 text-white p-4 text-center font-bold">ركز في المهمة الحالية، وكل خطوة بتقربنا من يوم أنجح ✨</div>
       </SheetContent>
     </Sheet>
   </div>;

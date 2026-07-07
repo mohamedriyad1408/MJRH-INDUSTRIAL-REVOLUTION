@@ -42,7 +42,7 @@ export function DailyDigest() {
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Sun className="w-4 h-4 text-teal-200" />
-          <span className="text-sm font-bold text-teal-100">{greeting}</span>
+          <span className="text-sm font-bold text-teal-100">{greeting} 👋</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-white/10 rounded-lg p-2">

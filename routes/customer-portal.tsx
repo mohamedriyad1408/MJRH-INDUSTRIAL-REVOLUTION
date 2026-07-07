@@ -18,6 +18,7 @@ import {
   Zap, FileText, Check, Award, Eye, Receipt,
 } from "lucide-react";
 import { BASE_CONTINUOUS_SLOTS, calculateSlotPressure } from "@/lib/scheduling-surge";
+import { PosCategoryTabs, type ServiceTypeFilter } from "@/components/pos-category-tabs";
 
 export const Route = createFileRoute("/customer-portal")({
   head: () => ({ meta: [{ title: "بوابة العميل VIP - MJRH" }] }),
@@ -29,9 +30,9 @@ const ORDER_STEPS = [
   { key: "cleaning", label: "تنظيف", icon: Sparkles, color: "#3b82f6" },
   { key: "ironing", label: "كي", icon: Shirt, color: "#8b5cf6" },
   { key: "packing", label: "تغليف", icon: Package, color: "#f59e0b" },
-  { key: "ready", label: "جاهز", icon: CheckCircle2, color: "#10b981" },
+  { key: "ready", label: "جاهز ✅", icon: CheckCircle2, color: "#10b981" },
   { key: "out_for_delivery", label: "خرج للتسليم", icon: Truck, color: "#f97316" },
-  { key: "delivered", label: "تم التسليم", icon: CheckCircle2, color: "#059669" },
+  { key: "delivered", label: "تم التسليم 🎉", icon: CheckCircle2, color: "#059669" },
 ];
 
 type Order = {
@@ -54,7 +55,7 @@ type Order = {
   order_items?: { name: string; qty: number; unit_price: number; line_total?: number }[];
 };
 
-type ServiceItem = { id: string; name: string; price: number; service_type: string };
+type ServiceItem = { id: string; name: string; price: number; service_type: string; category?: string };
 type CustomerInfo = { id: string; full_name: string; address?: string | null; lat?: number | null; lng?: number | null; notes?: string | null };
 type Piece = { key: string; service_item_id: string; name: string; price: number; service_type: string; image_url?: string };
 
@@ -80,7 +81,8 @@ function CustomerPortal() {
   const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>({});
 
   // VIP Concierge Preferences & Notes State
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "cleaning" | "ironing" | "both">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<ServiceTypeFilter>("all");
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
   const [itemPhotoMap, setItemPhotoMap] = useState<Record<string, string>>({}); // map service_item_id -> img url
   const [prefPackaging, setPrefPackaging] = useState<"hangers" | "folded" | "mixed">("hangers");
@@ -111,7 +113,7 @@ function CustomerPortal() {
     if (error) {
       toast.error("حدث خطأ أثناء تحديث موعد التسليم");
     } else {
-      toast.success("تم تأكيد موعد التسليم وتوجيه المندوب للتحرك في الموعد المحدد");
+      toast.success("✅ تم تأكيد موعد التسليم وتوجيه المندوب للتحرك في الموعد المحدد");
       loadOrders();
     }
   }
@@ -137,8 +139,8 @@ function CustomerPortal() {
   }
 
   async function loadServices() {
-    const { data } = await supabase.rpc("customer_portal_services", { _phone: phone, _slug: tenantSlug });
-    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.price ?? 0), service_type: s.service_type })));
+    const { data } = await supabase.from("service_items").select("id,name,unit_price,service_type,category").eq("is_active", true).order("name");
+    setServices(((data ?? []) as any[]).map((s) => ({ id: s.id, name: s.name, price: Number(s.unit_price ?? 0), service_type: s.service_type, category: s.category })));
   }
 
   function addPiece(svc: ServiceItem) {
@@ -161,7 +163,7 @@ function CustomerPortal() {
     const { data } = supabase.storage.from("order-attachments").getPublicUrl(path);
     setItemPhotoMap((prev) => ({ ...prev, [id]: data.publicUrl }));
     setUploadingKey(null);
-    toast.success("تم حفظ صورة القطعة بنجاح لتوثيق الحالة عند الاستلام");
+    toast.success("✅ تم حفظ صورة القطعة بنجاح لتوثيق الحالة عند الاستلام");
   }
 
   async function uploadPieceImage(pieceKey: string, file: File) {
@@ -173,7 +175,7 @@ function CustomerPortal() {
     const { data } = supabase.storage.from("order-attachments").getPublicUrl(path);
     setPieces((prev) => prev.map((p) => p.key === pieceKey ? { ...p, image_url: data.publicUrl } : p));
     setUploadingKey(null);
-    toast.success("تم توثيق وحفظ صورة القطعة");
+    toast.success("✅ تم توثيق وحفظ صورة القطعة");
   }
 
   function downloadInvoice(order: Order) {
@@ -231,7 +233,7 @@ function CustomerPortal() {
         setLiveVerifyStep(3);
         setTimeout(() => {
           setLiveVerifyingOrderId(null);
-          toast.success(t("customer.paymentConfirmedLive", "تم تأكيد عملية الدفع بنجاح لحظياً"));
+          toast.success(t("customer.paymentConfirmedLive", "تم تأكيد عملية الدفع بنجاح لحظياً ✅"));
           loadOrders();
         }, 2000);
       }, 2500);
@@ -239,9 +241,12 @@ function CustomerPortal() {
   }
 
   const filteredServices = useMemo(() => {
-    if (categoryFilter === "all") return services;
-    return services.filter((s) => s.service_type === categoryFilter);
-  }, [services, categoryFilter]);
+    return services.filter((s) => {
+      const byCat = categoryFilter === "all" || s.category === categoryFilter || (categoryFilter === "رجالي" && !s.category);
+      const byType = !serviceTypeFilter || serviceTypeFilter === "all" || s.service_type === serviceTypeFilter;
+      return byCat && byType;
+    });
+  }, [services, categoryFilter, serviceTypeFilter]);
 
   const selectedServicesList = useMemo(() => {
     return services.filter((s) => (itemQuantities[s.id] || 0) > 0);
@@ -319,18 +324,18 @@ function CustomerPortal() {
     }
     setPlacing(true);
 
-    const vipNotes = `[تفضيلات VIP المميزة]: التغليف: ${
+    const vipNotes = `[👑 تفضيلات VIP المميزة]: 👔 التغليف: ${
       prefPackaging === "hangers" ? "شماعات معلقة" : prefPackaging === "folded" ? "مطوي ومنسق" : "تغليف فاخر مختلط"
-    } • أكياس فردية: ${prefIndividualBags ? `نعم (+${individualBagsFee} ج.م)` : "لا"} • توصيل مجزأ: ${
+    } • 🛍️ أكياس فردية: ${prefIndividualBags ? `نعم (+${individualBagsFee} ج.م)` : "لا"} • 🚚 توصيل مجزأ: ${
       prefSplitDelivery ? `نعم (+${splitDeliveryFee} ج.م)` : "لا"
-    }${isBlanketCarpetSplit ? ` • شحنة البطانيات والسجاد: ${prefCombineBlanketsCarpets ? "تجميع في شحنة واحدة" : `شحن مجزأ منفصل (+${blanketCarpetSplitFee} ج.م)`}` : ""}
-[سرعة التشغيل والاستعجال]: الغسيل: ${
+    }${isBlanketCarpetSplit ? ` • 📦 شحنة البطانيات والسجاد: ${prefCombineBlanketsCarpets ? "تجميع في شحنة واحدة" : `شحن مجزأ منفصل (+${blanketCarpetSplitFee} ج.م)`}` : ""}
+[⚡ سرعة التشغيل والاستعجال]: 🫧 الغسيل: ${
       urgentCleaningTier === "standard" ? "قياسي" : urgentCleaningTier === "express_24h" ? "سريع 24 ساعة (+50%)" : "عاجل جداً أقل من 6 ساعات (+100%)"
-    } • الكي: ${
+    } • 👔 الكي: ${
       urgentIroningTier === "standard" ? "قياسي" : urgentIroningTier === "express_6h" ? "سريع 6 ساعات (+50%)" : "صاروخي ساعتين (+100%)"
     }
-${customIroningNotes.trim() ? `[تعليمات وتفضيلات الكي المخصصة]: ${customIroningNotes.trim()}\n` : ""}${permanentNotes.trim() ? `[الملاحظات الدائمة للعميل]: ${permanentNotes.trim()}\n` : ""}[جدولة مواعيد المندوب]: 🟢 استلام الغسيل: ${pickupSlot} • تسليم الغسيل: (يتم تحديده لاحقاً فور جهوزية الطلب)
-${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : ""}`.trim();
+${customIroningNotes.trim() ? `[✂️ تعليمات وتفضيلات الكي المخصصة]: ${customIroningNotes.trim()}\n` : ""}${permanentNotes.trim() ? `[📌 الملاحظات الدائمة للعميل]: ${permanentNotes.trim()}\n` : ""}[📅 جدولة مواعيد المندوب]: 🟢 استلام الغسيل: ${pickupSlot} • 🔵 تسليم الغسيل: (يتم تحديده لاحقاً فور جهوزية الطلب ✅)
+${notes.trim() ? `[📝 ملاحظات الطلب الحالي]: ${notes.trim()}` : ""}`.trim();
 
     const combinedItems = [
       ...selectedServicesList.map((s) => ({
@@ -452,9 +457,9 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                   <Crown className="w-3 h-3 text-amber-300" />
                   <span>VIP CONCIERGE MEMBER</span>
                 </div>
-                <h1 className="text-xl font-black truncate text-white">{t("customer.welcome", "أهلاً بك")}، {customerName}</h1>
+                <h1 className="text-xl font-black truncate text-white">{t("customer.welcome", "أهلاً بك")}، {customerName} 👋</h1>
                 <p className="text-xs text-teal-200 font-mono font-bold mt-0.5">{phone}</p>
-                {customerInfo?.address && <p className="text-xs text-teal-100/80 mt-1 truncate">{customerInfo.address}</p>}
+                {customerInfo?.address && <p className="text-xs text-teal-100/80 mt-1 truncate">📍 {customerInfo.address}</p>}
               </div>
             </div>
             <Button size="sm" variant="secondary" onClick={() => { setVerified(false); setPhone(""); }} className="font-bold rounded-xl shrink-0">
@@ -466,8 +471,8 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
         {/* Navigation Tabs */}
         <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm sticky top-2 z-20 border border-slate-200/80">
           {[
-            ["orders", `${t("customer.myOrders", "طلباتي ومسار المندوب")} (${activeOrders.length})`],
-            ["new", `${t("customer.newOrder", "طلب غسيل ملكي جديد")} +`],
+            ["orders", `📦 ${t("customer.myOrders", "طلباتي ومسار المندوب")} (${activeOrders.length})`],
+            ["new", `✨ ${t("customer.newOrder", "طلب غسيل ملكي جديد")} +`],
           ].map(([k, l]) => (
             <button
               key={k}
@@ -550,25 +555,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
 
               <CardContent className="p-5 space-y-4">
                 {/* Category Filter Pills */}
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: "all", label: "الكل" },
-                    { id: "both", label: "تنظيف وكي" },
-                    { id: "ironing", label: "كي فقط" },
-                    { id: "cleaning", label: "تصليحات وخياطة" },
-                  ].map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setCategoryFilter(f.id as any)}
-                      className={`rounded-2xl p-2.5 text-xs font-black transition border shadow-2xs ${
-                        categoryFilter === f.id ? "bg-teal-600 text-white border-teal-600 shadow-sm" : "bg-slate-50 hover:bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
+                <PosCategoryTabs activeTab={categoryFilter} onSelect={setCategoryFilter} items={services} compact={false} activeServiceType={serviceTypeFilter} onSelectServiceType={setServiceTypeFilter} />
 
                 {/* Service Items Interactive Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pe-1">
@@ -586,7 +573,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                           <div className="font-black text-sm text-slate-900 truncate">{svc.name}</div>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className="text-[10px] font-bold bg-white">
-                              {svc.service_type === "both" ? "تنظيف وكي" : svc.service_type === "ironing" ? "كي فقط" : "تصليح وخياطة"}
+                              {svc.service_type === "both" ? "✨ تنظيف وكي" : svc.service_type === "ironing" ? "👔 كي فقط" : "🪡 تصليح وخياطة"}
                             </Badge>
                             <span className="text-xs text-teal-700 font-mono font-black">{svc.price} ج.م</span>
                           </div>
@@ -639,9 +626,9 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                   </label>
                   <div className="grid grid-cols-3 gap-2.5">
                     {[
-                      { id: "hangers", label: "شماعات معلقة", desc: "كوي وتعليق جاهز" },
-                      { id: "folded", label: "مطوي ومنسق", desc: "تطبيق لسهولة التخزين" },
-                      { id: "mixed", label: "تغليف مختلط", desc: "القمصان شماعة والقطنيات طي" },
+                      { id: "hangers", label: "👔 شماعات معلقة", desc: "كوي وتعليق جاهز" },
+                      { id: "folded", label: "📦 مطوي ومنسق", desc: "تطبيق لسهولة التخزين" },
+                      { id: "mixed", label: "🛍️ تغليف مختلط", desc: "القمصان شماعة والقطنيات طي" },
                     ].map((p) => (
                       <button
                         key={p.id}
@@ -671,8 +658,8 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                       prefIndividualBags ? "bg-teal-600 text-white border-teal-600 shadow-2xs" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    <span>تغليف كل قطعة في كيس حفظ وحماية منفصل على حدة (+5 ج.م لكل قطعة في الطلب)</span>
-                    <span>{prefIndividualBags ? `مفعّل (+${individualBagsFee} ج.م)` : "إيقاف"}</span>
+                    <span>🛍️ تغليف كل قطعة في كيس حفظ وحماية منفصل على حدة (+5 ج.م لكل قطعة في الطلب)</span>
+                    <span>{prefIndividualBags ? `مفعّل (+${individualBagsFee} ج.م) ✓` : "إيقاف"}</span>
                   </button>
                 </div>
 
@@ -689,7 +676,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     placeholder="اكتب تفضيلاتك الخاصة بالكي هنا بكلماتك: (مثال: كي البنطلون بكسرة كلاسيكية حادة، نشا خفيف للياقات، عدم ضغط الأزرار الحساسة، طي القمصان بدون دبابيس)..."
                     className="rounded-2xl font-bold text-xs bg-white border-2 border-slate-300 focus:border-indigo-600 shadow-2xs"
                   />
-                  <p className="text-[11px] text-slate-500 font-semibold">تظهر هذه التعليمات مباشرة في شاشة فنيي الكي لضمان الالتزام الفائق بها.</p>
+                  <p className="text-[11px] text-slate-500 font-semibold">💡 تظهر هذه التعليمات مباشرة في شاشة فنيي الكي لضمان الالتزام الفائق بها.</p>
                 </div>
 
                 {/* 4. Split Delivery Option for Washing + Ironing */}
@@ -717,7 +704,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     <div className="p-3 rounded-2xl bg-amber-600 text-white text-xs font-bold flex items-center gap-2.5 shadow-sm animate-pulse">
                       <AlertTriangle className="w-5 h-5 shrink-0 text-amber-200" />
                       <span>
-                        تنبيه التوصيل المجزأ: سيتم إرسال مندوب التوصيل فور انتهاء ملابس الكي لتسلمها أولاً بأسرع وقت، وسيتم إضافة رسوم توصيل إضافية لرحلة الكي المجزأة تساوي نصف رسوم التوصيل الكلية (+{splitDeliveryFee} ج.م مضافة للفاتورة).
+                        ⚠️ تنبيه التوصيل المجزأ: سيتم إرسال مندوب التوصيل فور انتهاء ملابس الكي لتسلمها أولاً بأسرع وقت، وسيتم إضافة رسوم توصيل إضافية لرحلة الكي المجزأة تساوي نصف رسوم التوصيل الكلية (+{splitDeliveryFee} ج.م مضافة للفاتورة).
                       </span>
                     </div>
                   )}
@@ -727,7 +714,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-yellow-500/20 border-2 border-orange-500/80 space-y-3">
                       <div className="flex items-center gap-2 font-black text-orange-950 text-sm">
                         <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0" />
-                        <span>ℹتنبيه تشغيلي هاه: شحنات البطانيات والسجاد (شحن مجزأ فني)</span>
+                        <span>ℹ️ تنبيه تشغيلي هاه: شحنات البطانيات والسجاد (شحن مجزأ فني)</span>
                       </div>
                       <p className="text-xs text-slate-800 font-medium leading-relaxed">
                         نظراً لاختلاف دورات الغسيل الفني والتجفيف والتعقيم بين البطانيات والسجاد، يتم فصل الطلبين وشحن وتسليم البطانيات منفصلة عن السجاد لضمان أعلى معايير الجودة، مما يضيف نصف قيمة التوصيل كرسوم شحن مجزأ (+{Math.round(50 * 0.5)} ج.م).
@@ -740,7 +727,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                           className="mt-0.5 w-5 h-5 rounded border-orange-500 text-orange-600 focus:ring-orange-500 cursor-pointer"
                         />
                         <span className="text-xs font-black text-orange-950 leading-relaxed">
-                          تجميع الطلب وتأجيل تسليم البطانيات لتستلمها مع السجاد في شحنة واحدة (إلغاء رسوم الشحن المجزأ وتوفير الرسوم الإضافية)
+                          🔄 تجميع الطلب وتأجيل تسليم البطانيات لتستلمها مع السجاد في شحنة واحدة (إلغاء رسوم الشحن المجزأ وتوفير الرسوم الإضافية)
                         </span>
                       </label>
                     </div>
@@ -772,7 +759,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     {[
                       { id: "standard", label: "🟢 تنظيف قياسي (48-72 ساعة)", badge: "السعر المعتاد (0%)", border: "border-slate-200 bg-white" },
                       { id: "express_24h", label: "🟡 تنظيف سريع (خلال 24 ساعة)", badge: "إضافة +50% على التنظيف", border: "border-amber-400 bg-amber-50/50" },
-                      { id: "super_urgent_6h", label: "تنظيف صاروخي (أقل من 6 ساعات)", badge: "إضافة +100% على التنظيف", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
+                      { id: "super_urgent_6h", label: "🔴 تنظيف صاروخي (أقل من 6 ساعات)", badge: "إضافة +100% على التنظيف", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
                     ].map((tr) => (
                       <button
                         key={tr.id}
@@ -799,7 +786,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     {[
                       { id: "standard", label: "🟢 كي قياسي (خلال 24 ساعة)", badge: "السعر المعتاد (0%)", border: "border-slate-200 bg-white" },
                       { id: "express_6h", label: "🟡 كي سريع (خلال 6 ساعات)", badge: "إضافة +50% على الكي", border: "border-amber-400 bg-amber-50/50" },
-                      { id: "super_urgent_2h", label: "كي صاروخي (خلال ساعتين فقط)", badge: "إضافة +100% على الكي", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
+                      { id: "super_urgent_2h", label: "🔴 كي صاروخي (خلال ساعتين فقط)", badge: "إضافة +100% على الكي", border: "border-red-500 bg-red-50/60 font-black text-red-950" },
                     ].map((tr) => (
                       <button
                         key={tr.id}
@@ -836,7 +823,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                   <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold shadow-md space-y-1">
                     <div className="font-black text-sm flex items-center gap-1.5 text-amber-100">
                       <AlertTriangle className="w-5 h-5 text-amber-200 shrink-0" />
-                      <span>تنبيه الذروة والكثافة التشغيلية (Surge Notice):</span>
+                      <span>⚠️ تنبيه الذروة والكثافة التشغيلية (Surge Notice):</span>
                     </div>
                     <p className="leading-6 text-amber-50 font-semibold">
                       الموعد المختار ({pickupSlot}) يشهد حالياً كثافة عالية وطلب متزايد للاستلام والتسليم في نفس الوقت، مما قد يسبب تأخيراً طفيفاً لخط سير المندوب. ننصحك باختيار موعد بديل أقل ازدحاماً إذا كنت تفضل استلاماً أسرع وأكثر انسيابية!
@@ -886,7 +873,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-slate-800 text-xs leading-relaxed font-medium space-y-1.5">
                   <div className="font-black text-sm flex items-center gap-1.5 text-blue-900">
                     <Clock className="w-4 h-4 text-blue-600 shrink-0" />
-                    <span>ℹنظام جدولة مواعيد التسليم المرن (Deferred Delivery Scheduling):</span>
+                    <span>ℹ️ نظام جدولة مواعيد التسليم المرن (Deferred Delivery Scheduling):</span>
                   </div>
                   <p>
                     وفقاً لإجراءات التشغيل القياسية في المغسلة، لا يتم تحديد موعد تسليم الملابس للعميل عند إنشاء الطلب المبدئي، بل يتم ذلك بعد انتهاء فحص وجودة الغسيل والكي. فور جهوزية طلبك للتسليم، سيصلك إشعار تلقائي للدخول إلى البوابة هنا وتحديد الوقت المناسب لك لاستلام ملابسك بكل راحة وانسيابية.
@@ -901,7 +888,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-900 block flex items-center gap-1.5">
                     <Crown className="w-4 h-4 text-amber-600" />
-                    <span>الملاحظات الدائمة لحسابك (Permanent Profile Notes):</span>
+                    <span>📌 الملاحظات الدائمة لحسابك (Permanent Profile Notes):</span>
                   </label>
                   <Textarea
                     value={permanentNotes}
@@ -910,13 +897,13 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                     placeholder="ملاحظات تظهر دائماً في كل طلباتك المستقبلية (مثال: حساسية من بعض المنظفات، عنوان الباب خلف العمارة، الاتصال قبل الوصول بـ 10 دقائق)..."
                     className="rounded-2xl font-semibold text-xs bg-amber-50/30 border-amber-200 focus:border-amber-600"
                   />
-                  <p className="text-[10px] text-slate-500 font-semibold">يتم حفظ هذه الملاحظات دائماً في ملفك الشخصي لتراها المغسلة في كل طلباتك.</p>
+                  <p className="text-[10px] text-slate-500 font-semibold">💡 يتم حفظ هذه الملاحظات دائماً في ملفك الشخصي لتراها المغسلة في كل طلباتك.</p>
                 </div>
 
                 <div className="space-y-2 pt-3 border-t border-slate-200/80">
                   <label className="text-xs font-black text-slate-900 block flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-teal-600" />
-                    <span>ملاحظات خاصة بهذا الطلب الحالي فقط (Current Order Notes):</span>
+                    <span>📝 ملاحظات خاصة بهذا الطلب الحالي فقط (Current Order Notes):</span>
                   </label>
                   <Textarea
                     value={notes}
@@ -953,7 +940,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                         <th className="p-3 text-center">الكمية</th>
                         <th className="p-3 text-end">السعر</th>
                         <th className="p-3 text-end">الإجمالي</th>
-                        <th className="p-3 text-center">تأمين بالتصوير</th>
+                        <th className="p-3 text-center">تأمين بالتصوير 📷</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
@@ -971,7 +958,7 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                               <tr key={svc.id} className="hover:bg-slate-50/70">
                                 <td className="p-3 font-bold text-slate-900">
                                   <div>{svc.name}</div>
-                                  <Badge variant="outline" className="text-[9px] mt-0.5">{svc.service_type === "both" ? "تنظيف وكي" : svc.service_type === "ironing" ? "كي فقط" : "تصليح وخياطة"}</Badge>
+                                  <Badge variant="outline" className="text-[9px] mt-0.5">{svc.service_type === "both" ? "✨ تنظيف وكي" : svc.service_type === "ironing" ? "👔 كي فقط" : "🪡 تصليح وخياطة"}</Badge>
                                 </td>
                                 <td className="p-3 text-center font-mono font-black text-sm">{qty}</td>
                                 <td className="p-3 text-end font-mono text-slate-600">{svc.price} ج.م</td>
@@ -1019,25 +1006,25 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
                   </div>
                   {urgentSurcharge > 0 && (
                     <div className="flex justify-between text-indigo-700">
-                      <span>إضافة الاستعجال الاستثنائي (Express Surcharge):</span>
+                      <span>⚡ إضافة الاستعجال الاستثنائي (Express Surcharge):</span>
                       <span className="font-mono font-black">+{urgentSurcharge} ج.م</span>
                     </div>
                   )}
                   {individualBagsFee > 0 && (
                     <div className="flex justify-between text-teal-700">
-                      <span>رسوم الأكياس الفردية الواقية (5 ج.م × {totalItemCount} قطعة):</span>
+                      <span>🛍️ رسوم الأكياس الفردية الواقية (5 ج.م × {totalItemCount} قطعة):</span>
                       <span className="font-mono font-black">+{individualBagsFee} ج.م</span>
                     </div>
                   )}
                   {splitDeliveryFee > 0 && (
                     <div className="flex justify-between text-amber-700">
-                      <span>رسوم التوصيل المجزأ لقطع الكي أولاً (+50% من قيمة التوصيل):</span>
+                      <span>🚚 رسوم التوصيل المجزأ لقطع الكي أولاً (+50% من قيمة التوصيل):</span>
                       <span className="font-mono font-black">+{splitDeliveryFee} ج.م</span>
                     </div>
                   )}
                   {blanketCarpetSplitFee > 0 && (
                     <div className="flex justify-between text-orange-700">
-                      <span>رسوم الشحن المجزأ لفصل البطانيات عن السجاد (+50% من قيمة التوصيل):</span>
+                      <span>🚚 رسوم الشحن المجزأ لفصل البطانيات عن السجاد (+50% من قيمة التوصيل):</span>
                       <span className="font-mono font-black">+{blanketCarpetSplitFee} ج.م</span>
                     </div>
                   )}
@@ -1093,17 +1080,17 @@ ${notes.trim() ? `[ملاحظات الطلب الحالي]: ${notes.trim()}` : "
         <Dialog open={!!confirmedOrderNum} onOpenChange={(o) => !o && setConfirmedOrderNum(null)}>
           <DialogContent className="max-w-md rounded-3xl text-center p-6 space-y-4" dir={dir}>
             <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white flex items-center justify-center text-4xl shadow-xl animate-bounce">
-
+              🎉
             </div>
             <DialogTitle className="text-2xl font-black text-slate-900">
               تم استلام طلبك بنجاح برقم #{confirmedOrderNum}!
             </DialogTitle>
             <div className="p-4 rounded-2xl bg-teal-50 border border-teal-200 text-teal-950 text-xs font-bold leading-6 text-start space-y-2">
               <p>
-                <span className="font-black text-teal-900">رسالة تأكيد وتوثيق:</span> سيتم مراجعة وفرز القطع والتصنيف بعناية فائقة فور وصول الطلب إلى محطة الاستلام داخل المغسلة.
+                ✨ <span className="font-black text-teal-900">رسالة تأكيد وتوثيق:</span> سيتم مراجعة وفرز القطع والتصنيف بعناية فائقة فور وصول الطلب إلى محطة الاستلام داخل المغسلة.
               </p>
               <p>
-                عند التأكيد النهائي والمطابقة مع صور التوثيق المرفقة، سيتم إرسال الفاتورة النهائية المعتمدة إليك عبر البوابة لبدء التشغيل الفوري. شكرًا لثقتك بنا!
+                📷 عند التأكيد النهائي والمطابقة مع صور التوثيق المرفقة، سيتم إرسال الفاتورة النهائية المعتمدة إليك عبر البوابة لبدء التشغيل الفوري. شكرًا لثقتك بنا!
               </p>
             </div>
             <DialogFooter>
@@ -1155,7 +1142,7 @@ function OrderCard({ order, orders, onDownloadInvoice, onUploadProof, onSelectDe
         <CustomerOrderHint order={order} />
 
         {/* Display VIP Preferences Banner if attached */}
-        {order.notes && order.notes.includes("[تفضيلات VIP المميزة]") && (
+        {order.notes && order.notes.includes("[👑 تفضيلات VIP المميزة]") && (
           <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 text-amber-950 text-xs font-bold space-y-1 shadow-2xs">
             <div className="font-black text-amber-900 flex items-center gap-1.5">
               <Crown className="w-4 h-4 text-amber-600" />
@@ -1170,7 +1157,7 @@ function OrderCard({ order, orders, onDownloadInvoice, onUploadProof, onSelectDe
           <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-500 text-emerald-950 text-xs font-bold space-y-3 shadow-md animate-in fade-in">
             <div className="flex items-center gap-2 font-black text-sm text-emerald-900">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-              <span>طلبك جاهز للتسليم الآن! يرجى تحديد الوقت المناسب لاستلام ملابسك من المندوب:</span>
+              <span>🎉 طلبك جاهز للتسليم الآن! يرجى تحديد الوقت المناسب لاستلام ملابسك من المندوب:</span>
             </div>
             <p className="text-xs text-emerald-800 font-medium leading-relaxed">
               تم الانتهاء من غسيل وكي وتغليف ملابسك وفقاً لأعلى معايير الجودة. يرجى اختيار الموعد المناسب لكي يقوم المندوب بالتوجه إليك اليوم أو غداً:
@@ -1178,7 +1165,7 @@ function OrderCard({ order, orders, onDownloadInvoice, onUploadProof, onSelectDe
             {(order as any).delivery_slot || order.promised_delivery_at ? (
               <div className="p-3 rounded-xl bg-white border border-emerald-300 flex items-center justify-between shadow-2xs">
                 <span className="text-xs font-black text-emerald-900">
-                  موعد التسليم المؤكد: {(order as any).delivery_slot || new Date(order.promised_delivery_at!).toLocaleString("ar-EG")}
+                  🚚 موعد التسليم المؤكد: {(order as any).delivery_slot || new Date(order.promised_delivery_at!).toLocaleString("ar-EG")}
                 </span>
                 <Badge className="bg-emerald-600 text-white font-black text-[10px]">مؤكد ومجدول</Badge>
               </div>
@@ -1250,7 +1237,7 @@ function OrderCard({ order, orders, onDownloadInvoice, onUploadProof, onSelectDe
               </div>
               <div className={`flex items-center gap-2.5 text-xs font-bold transition ${liveStep! >= 3 ? "text-emerald-400" : "text-slate-500"}`}>
                 <CheckCircle2 className={`w-4 h-4 ${liveStep! >= 3 ? "text-emerald-400" : "text-slate-600"}`} />
-                <span>3. إصدار إيصال الدفع الإلكتروني وتحديث الفاتورة</span>
+                <span>3. إصدار إيصال الدفع الإلكتروني وتحديث الفاتورة ✅</span>
               </div>
             </div>
           </div>
@@ -1319,17 +1306,17 @@ function CustomerOrderHint({ order }: { order: Order }) {
         <div className="flex items-center justify-between gap-2 border-b border-white/20 pb-2">
           <div className="font-black text-sm flex items-center gap-2">
             <Truck className="w-5 h-5 text-amber-200 animate-bounce" />
-            <span>{order.pickup_status === "assigned" ? "مندوب الاستلام في الطريق إليك الآن" : "بانتظار تحرك مندوب الاستلام من الفرع"}</span>
+            <span>{order.pickup_status === "assigned" ? "مندوب الاستلام في الطريق إليك الآن 🚗" : "بانتظار تحرك مندوب الاستلام من الفرع ⏳"}</span>
           </div>
           <Badge className="bg-white/20 text-white font-mono text-xs font-black animate-pulse">تحديث حي</Badge>
         </div>
         <div className="space-y-1.5 text-xs text-amber-50 font-semibold leading-relaxed">
           <div className="flex items-center justify-between bg-black/20 p-2 rounded-xl">
-            <span>الموعد التقريبي المحدث للوصول:</span>
+            <span>⏱️ الموعد التقريبي المحدث للوصول:</span>
             <span className="font-mono font-black text-amber-300 text-sm">{etaTime} (بعد ~{estMins} دقيقة)</span>
           </div>
           <p className="text-[11px] text-amber-100/90 leading-5">
-            <span className="font-bold">تحليل حركة المندوب:</span> ينطلق من الفرع ويقوم بخدمة (1) طلب سابق في خط سيره (معدل توقف 5 دقائق) + مسافة الطريق (12 دقيقة). يتم التحديث آلياً بالربط مع خرائط الـ GPS لمنع أي تأخير أو توتر.
+            🗺️ <span className="font-bold">تحليل حركة المندوب:</span> ينطلق من الفرع ويقوم بخدمة (1) طلب سابق في خط سيره (معدل توقف 5 دقائق) + مسافة الطريق (12 دقيقة). يتم التحديث آلياً بالربط مع خرائط الـ GPS لمنع أي تأخير أو توتر.
           </p>
         </div>
       </div>
@@ -1342,17 +1329,17 @@ function CustomerOrderHint({ order }: { order: Order }) {
         <div className="flex items-center justify-between gap-2 border-b border-white/20 pb-2">
           <div className="font-black text-sm flex items-center gap-2">
             <Truck className="w-5 h-5 text-indigo-200 animate-bounce" />
-            <span>{order.status === "out_for_delivery" ? "مندوب التسليم في طريق العودة لباب بيتك" : "طلبك جاهز بالمغسلة وبانتظار تحرك المندوب"}</span>
+            <span>{order.status === "out_for_delivery" ? "مندوب التسليم في طريق العودة لباب بيتك 🎁" : "طلبك جاهز بالمغسلة وبانتظار تحرك المندوب 🚀"}</span>
           </div>
           <Badge className="bg-white/20 text-white font-mono text-xs font-black animate-pulse">تحديث حي</Badge>
         </div>
         <div className="space-y-1.5 text-xs text-indigo-50 font-semibold leading-relaxed">
           <div className="flex items-center justify-between bg-black/20 p-2 rounded-xl">
-            <span>وقت التسليم التقريبي المتوقع:</span>
+            <span>⏱️ وقت التسليم التقريبي المتوقع:</span>
             <span className="font-mono font-black text-emerald-300 text-sm">{etaTime} (بعد ~{estMins} دقيقة)</span>
           </div>
           <p className="text-[11px] text-indigo-100/90 leading-5">
-            <span className="font-bold">تتبع خط السير:</span> المندوب في منطقتك حالياً، سيصل إليك فور تسليم وجهة قريبة (توقف 4 دقائق). نضمن لك استلام ملابسك بأعلى معايير الدقة والعناية.
+            📦 <span className="font-bold">تتبع خط السير:</span> المندوب في منطقتك حالياً، سيصل إليك فور تسليم وجهة قريبة (توقف 4 دقائق). نضمن لك استلام ملابسك بأعلى معايير الدقة والعناية.
           </p>
         </div>
       </div>
@@ -1364,7 +1351,7 @@ function CustomerOrderHint({ order }: { order: Order }) {
       <div className="rounded-2xl bg-slate-100 border border-slate-200 p-3.5 space-y-1.5 text-xs text-slate-700 font-semibold">
         <div className="font-black text-slate-900 flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-teal-600" />
-          <span>ملابسك تخضع الآن لأدق مراحل العناية والتشغيل الذكي</span>
+          <span>ملابسك تخضع الآن لأدق مراحل العناية والتشغيل الذكي ✨</span>
         </div>
         <p className="text-[11px] text-slate-500 leading-relaxed">
           يتم غسيل وكي وتغليف القطع وفقاً لتفضيلاتك المحددة (VIP Concierge). سيتم اعتماد الفاتورة وإخطارك فور جهوزيتها للتسليم.

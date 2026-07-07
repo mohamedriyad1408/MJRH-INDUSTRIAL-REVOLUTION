@@ -55,11 +55,11 @@ function TenantIssuesPage() {
           .from("client_error_logs")
           .update({
             resolved_at: new Date().toISOString(),
-            resolution_notes: "تم رصد التعافي الذاتي للنظام وحل العائق التقني والبرمجي آلياً بعد التحقق من استقرار التشغيل",
+            resolution_notes: "🤖 تم رصد التعافي الذاتي للنظام وحل العائق التقني والبرمجي آلياً بعد التحقق من استقرار التشغيل",
           })
           .in("id", ids);
 
-        toast.success(`إشعار التعافي الذاتي: قام النظام برصد معالجة واستقرار (${ids.length}) مشكلة تقنية في مشروعك وإغلاقها آلياً!`);
+        toast.success(`🤖 إشعار التعافي الذاتي: قام النظام برصد معالجة واستقرار (${ids.length}) مشكلة تقنية في مشروعك وإغلاقها آلياً!`);
       }
     } catch {
       // Silent catch
@@ -219,24 +219,24 @@ function TenantIssuesPage() {
           <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-3">
             <div className="flex items-center gap-2 font-black text-base text-teal-300">
               <Users className="w-5 h-5 text-teal-400" />
-              <span>‍المراقبة اللحظية لقوى الفروع والمحطات العاملة الآن (Live HR Station Staffing)</span>
+              <span>🧑‍🔧 المراقبة اللحظية لقوى الفروع والمحطات العاملة الآن (Live HR Station Staffing)</span>
             </div>
             <Badge className="bg-emerald-600 text-white font-black text-xs">🟢 إجمالي الحاضرين الآن: {activeStaff.length} موظف</Badge>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
             {[
-              { id: "reception", label: "الاستقبال والفرز", count: activeStaff.filter(x => ["reception", "sorting", "intake", "cs"].includes(String(x.employees?.station))).length },
-              { id: "cleaning", label: "الغسيل والتنظيف", count: activeStaff.filter(x => x.employees?.station === "cleaning" || x.employees?.role === "cleaning_tech").length },
-              { id: "drying-assembly", label: "التجفيف والتجميع", count: activeStaff.filter(x => x.employees?.station === "drying-assembly" || x.employees?.role === "assembly_tech").length },
-              { id: "ironing", label: "الكي بالبخار", count: activeStaff.filter(x => x.employees?.station === "ironing" || x.employees?.role === "ironing_tech").length },
-              { id: "packing", label: "التغليف والجودة", count: activeStaff.filter(x => ["packing", "qc"].includes(String(x.employees?.station))).length },
-              { id: "delivery", label: "الندب والتوصيل", count: activeStaff.filter(x => x.employees?.station === "delivery" || x.employees?.role === "courier").length },
+              { id: "reception", label: "الاستقبال والفرز 🛎️", count: activeStaff.filter(x => ["reception", "sorting", "intake", "cs"].includes(String(x.employees?.station))).length },
+              { id: "cleaning", label: "الغسيل والتنظيف 🫧", count: activeStaff.filter(x => x.employees?.station === "cleaning" || x.employees?.role === "cleaning_tech").length },
+              { id: "drying-assembly", label: "التجفيف والتجميع 🧺", count: activeStaff.filter(x => x.employees?.station === "drying-assembly" || x.employees?.role === "assembly_tech").length },
+              { id: "ironing", label: "الكي بالبخار 👔", count: activeStaff.filter(x => x.employees?.station === "ironing" || x.employees?.role === "ironing_tech").length },
+              { id: "packing", label: "التغليف والجودة 📦", count: activeStaff.filter(x => ["packing", "qc"].includes(String(x.employees?.station))).length },
+              { id: "delivery", label: "الندب والتوصيل 🚚", count: activeStaff.filter(x => x.employees?.station === "delivery" || x.employees?.role === "courier").length },
             ].map((st) => (
               <div key={st.id} className="p-3 rounded-2xl bg-white/10 border border-white/15 flex flex-col justify-between gap-1">
                 <span className="text-xs font-bold text-white/90 truncate">{st.label}</span>
                 <div className="flex items-center justify-between mt-1">
                   <span className="font-mono font-black text-lg text-teal-300">{st.count} حاضر</span>
-                  {st.count === 0 && <span className="text-[9px] bg-red-500/80 text-white px-1.5 py-0.5 rounded font-bold">شاغر</span>}
+                  {st.count === 0 && <span className="text-[9px] bg-red-500/80 text-white px-1.5 py-0.5 rounded font-bold">شاغر ⚠️</span>}
                 </div>
               </div>
             ))}
@@ -247,11 +247,11 @@ function TenantIssuesPage() {
       {/* Exception Taxonomy Tabs */}
       <div className="flex flex-wrap gap-2 items-center bg-slate-100 p-1.5 rounded-2xl border">
         {[
-          { id: "all", label: "كافة التعثرات", count: issues.length },
-          { id: "operational", label: "تشغيلي (Operational)", count: issues.filter(x => x.type === "operational").length },
-          { id: "technical", label: "فني (Technical)", count: issues.filter(x => x.type === "technical").length },
-          { id: "financial", label: "مالي (Financial)", count: issues.filter(x => x.type === "financial").length },
-          { id: "customer", label: "عميل (Customer)", count: issues.filter(x => x.type === "customer").length },
+          { id: "all", label: "🌐 كافة التعثرات", count: issues.length },
+          { id: "operational", label: "⚙️ تشغيلي (Operational)", count: issues.filter(x => x.type === "operational").length },
+          { id: "technical", label: "🛠️ فني (Technical)", count: issues.filter(x => x.type === "technical").length },
+          { id: "financial", label: "💰 مالي (Financial)", count: issues.filter(x => x.type === "financial").length },
+          { id: "customer", label: "👑 عميل (Customer)", count: issues.filter(x => x.type === "customer").length },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -284,7 +284,7 @@ function TenantIssuesPage() {
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Badge className={inc.severity === "error" ? "bg-red-600 text-white" : "bg-amber-500 text-white"}>
-                      {inc.type === "technical" ? "فني" : inc.type === "financial" ? "مالي" : inc.type === "customer" ? "عميل" : "تشغيلي"}
+                      {inc.type === "technical" ? "فني 🛠️" : inc.type === "financial" ? "مالي 💰" : inc.type === "customer" ? "عميل 👑" : "تشغيلي ⚙️"}
                     </Badge>
                     <span className="text-xs text-slate-500 font-mono font-bold">{fmtDate(inc.createdAt)}</span>
                   </div>

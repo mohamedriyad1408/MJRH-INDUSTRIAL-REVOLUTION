@@ -96,7 +96,7 @@ function Dashboard() {
         </CardContent></Card>
       </div>
 
-      {/* Phase 4: Station breakdown — BI */}
+      {/* ✅ Phase 4: Station breakdown — BI */}
       <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2">
           <Activity className="w-4 h-4 text-teal-600" /> {t("dashboard.stationDistribution")}
@@ -137,10 +137,10 @@ function Dashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { to: "/$tenant/budgets" as any, label: t("nav./budgets"), icon: "" },
-          { to: "/$tenant/finance" as any, label: t("nav./finance"), icon: "" },
-          { to: "/$tenant/staff" as any, label: t("nav./staff"), icon: "" },
-          { to: "/$tenant/customers" as any, label: t("nav./customers"), icon: "" },
+          { to: "/$tenant/budgets" as any, label: t("nav./budgets"), icon: "💰" },
+          { to: "/$tenant/finance" as any, label: t("nav./finance"), icon: "📊" },
+          { to: "/$tenant/staff" as any, label: t("nav./staff"), icon: "👥" },
+          { to: "/$tenant/customers" as any, label: t("nav./customers"), icon: "👤" },
         ].map((l) => (
           <Link key={l.to} to={l.to} className="flex items-center gap-2 border rounded-xl p-3 bg-white hover:shadow-md transition text-sm font-bold">
             <span className="text-xl">{l.icon}</span>{l.label}

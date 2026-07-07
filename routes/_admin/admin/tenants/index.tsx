@@ -413,28 +413,28 @@ function SuperAdminCommandCenter() {
                           <span>حالة نواة التشغيل والـ APDO:</span>
                         </span>
                         <span className={isReady ? "text-emerald-700" : "text-amber-700"}>
-                          {isReady ? "🟢 نواة تشغيل مكتملة 100%" : "نواة غير مكتملة الإعداد"}
+                          {isReady ? "🟢 نواة تشغيل مكتملة 100%" : "⚠️ نواة غير مكتملة الإعداد"}
                         </span>
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_settings ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_settings ? "الإعدادات" : "الإعدادات"}
+                          {h?.has_settings ? "✓ الإعدادات" : "✗ الإعدادات"}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_branch ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_branch ? "فروع" : "فروع"}
+                          {h?.has_branch ? "✓ فروع" : "✗ فروع"}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_cash_account ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_cash_account ? "خزنة" : "خزنة"}
+                          {h?.has_cash_account ? "✓ خزنة" : "✗ خزنة"}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_chart_accounts ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_chart_accounts ? "شجرة حسابات" : "شجرة حسابات"}
+                          {h?.has_chart_accounts ? "✓ شجرة حسابات" : "✗ شجرة حسابات"}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_catalog ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_catalog ? "كتالوج خدمات" : "كتالوج خدمات"}
+                          {h?.has_catalog ? "✓ كتالوج خدمات" : "✗ كتالوج خدمات"}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] font-bold ${h?.has_employee ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-red-50 border-red-300 text-red-700"}`}>
-                          {h?.has_employee ? "حساب المالك" : "حساب المالك"}
+                          {h?.has_employee ? "✓ حساب المالك" : "✗ حساب المالك"}
                         </Badge>
                       </div>
                     </div>
@@ -634,7 +634,7 @@ function NewTenantForm({ onDone }: { onDone: () => void }) {
             <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" minLength={6} className="bg-white rounded-xl font-mono font-black" />
           </div>
         </div>
-        <p className="text-[11px] text-indigo-800 font-semibold">تنبيه: تجنب وضع إيميل السوبر أدمن هنا ليحتفظ المشروع بمالك مستقل برمجياً.</p>
+        <p className="text-[11px] text-indigo-800 font-semibold">💡 تنبيه: تجنب وضع إيميل السوبر أدمن هنا ليحتفظ المشروع بمالك مستقل برمجياً.</p>
       </div>
 
       {/* Section 3: Geofencing & Location */}

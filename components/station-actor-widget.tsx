@@ -75,7 +75,7 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
           </div>
           <div className="min-w-0">
             <div className="text-[11px] text-teal-200 uppercase font-mono font-bold tracking-wider flex items-center gap-1.5">
-              <span>الموظف الفاعل حالياً (Actor attribution)</span>
+              <span>👤 الموظف الفاعل حالياً (Actor attribution)</span>
               <Badge variant="outline" className="text-[9px] bg-white/10 text-white border-white/20">{stationLabel}</Badge>
             </div>
             <div className="text-sm font-black text-white truncate mt-0.5">
@@ -90,7 +90,7 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
           className="bg-teal-500 hover:bg-teal-600 text-slate-950 font-black rounded-xl text-xs h-9 px-3.5 shadow-sm shrink-0"
         >
           <RefreshCw className="w-3.5 h-3.5 ms-1" />
-          <span>تبديل الموظف (Shift Rotation)</span>
+          <span>🔄 تبديل الموظف (Shift Rotation)</span>
         </Button>
       </div>
 
@@ -127,7 +127,7 @@ export function StationActorWidget({ stationId, stationLabel, onActorChange }: P
                       <div className="text-sm">{emp.full_name}</div>
                       <div className="text-[10px] text-slate-500 font-normal">{emp.job_title || getRoleLabel(emp.role) || "موظف محطة"}</div>
                     </div>
-                    {isSelected && <Badge className="bg-teal-600 text-white font-black text-[10px]">محدد حالياً</Badge>}
+                    {isSelected && <Badge className="bg-teal-600 text-white font-black text-[10px]">محدد حالياً ✓</Badge>}
                   </button>
                 );
               })

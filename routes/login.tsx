@@ -118,12 +118,12 @@ function LoginPage() {
           )}
           {tenantSlug ? (
             <div className="mb-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
-              <span>دخول مشروع:</span>
+              <span>📁 دخول مشروع:</span>
               <span className="font-mono text-teal-900 font-black uppercase">{tenantSlug}</span>
             </div>
           ) : (
             <div className="mb-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-900 text-xs font-extrabold flex items-center gap-1.5 shadow-xs">
-              <span>دخول إدارة وموظفو منصة MJRH</span>
+              <span>🛡️ دخول إدارة وموظفو منصة MJRH</span>
             </div>
           )}
           <h1 className="mt-1 text-2xl font-black text-slate-900">{tenantSlug ? t("login.tenantHeading", "دخول الموظفين والمالك") : t("login.heading")}</h1>
@@ -175,7 +175,7 @@ function LoginPage() {
         </p>
         {!tenantSlug && (
           <div className="mt-4 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-center text-slate-700 font-bold shadow-2xs">
-            هل تعمل في أحد المشاريع؟ <Link to="/" className="text-teal-700 font-black hover:underline block mt-0.5">اختر مشروعك من قائمة المشاريع الرئيسية</Link>
+            هل تعمل في أحد المشاريع؟ <Link to="/" className="text-teal-700 font-black hover:underline block mt-0.5">اختر مشروعك من قائمة المشاريع الرئيسية ⮐</Link>
           </div>
         )}
         <div className="mt-4 text-center">

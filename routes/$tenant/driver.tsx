@@ -23,7 +23,7 @@ export const Route = createFileRoute("/$tenant/driver")({
 
 import { DriverNextAction, PickupsList, DeliveriesList, type Pickup, type Delivery } from "@/components/driver-components";
 
-/* main component */
+/* ─── main component ─── */
 function DriverPage() {
   const { user, hasRole } = useAuth();
   const { t, dir } = useI18n();
@@ -38,7 +38,7 @@ function DriverPage() {
   const [acting, setActing] = useState<string | null>(null);
   const [myLoc, setMyLoc] = useState<LatLng | null>(null);
 
-  /* employee id for this user */
+  /* ── employee id for this user ── */
   const [empId, setEmpId] = useState<string | null>(null);
   useEffect(() => {
     if (!user) return;
@@ -119,7 +119,7 @@ function DriverPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empId]);
 
-  /* PICKUP: assign self */
+  /* ─── PICKUP: assign self ─── */
   async function assignSelf(p: Pickup) {
     if (!empId) return toast.error("لم يتم ربط حسابك بموظف — تواصل مع المدير");
     setActing(p.id);
@@ -133,7 +133,7 @@ function DriverPage() {
     load();
   }
 
-  /* PICKUP: confirm + auto-create order */
+  /* ─── PICKUP: confirm + auto-create order ─── */
   async function confirmPickup(p: Pickup) {
     setActing(p.id);
 
@@ -149,7 +149,7 @@ function DriverPage() {
       await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString() }).eq("id", p.id);
       await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: `تم استلام الطلب من العميل بواسطة المندوب` });
       setActing(null);
-      toast.success(`تم استلام طلب #${ord.order_number} من العميل`);
+      toast.success(`✅ تم استلام طلب #${ord.order_number} من العميل`);
       load();
       return;
     }
@@ -168,11 +168,11 @@ function DriverPage() {
     await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
     await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
     setActing(null);
-    toast.success(`تم الاستلام! طلب #${ord.order_number} أُنشئ تلقائياً`);
+    toast.success(`✅ تم الاستلام! طلب #${ord.order_number} أُنشئ تلقائياً`);
     load();
   }
 
-  /* DELIVERY: start out_for_delivery */
+  /* ─── DELIVERY: start out_for_delivery ─── */
   async function startDelivery(d: Delivery) {
     if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
     const issue = deliveryIssues[d.id];
@@ -198,7 +198,7 @@ function DriverPage() {
     load();
   }
 
-  /* DELIVERY: confirm delivered with phone code */
+  /* ─── DELIVERY: confirm delivered with phone code ─── */
   async function confirmDelivery(d: Delivery) {
     const code = confirmCode[d.id] ?? "";
     const phone = d.customers?.phone ?? "";
@@ -228,7 +228,7 @@ function DriverPage() {
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? "تأكيد تسليم مع تحصيل" : "تأكيد تسليم", _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
     const extra = Number(res?.overpayment ?? 0);
-    toast.success(extra > 0 ? `تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "تم التسليم بنجاح!");
+    toast.success(extra > 0 ? `🎉 تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "🎉 تم التسليم بنجاح!");
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });
     load();
   }

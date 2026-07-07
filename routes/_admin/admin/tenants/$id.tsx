@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, ArrowRight, Building2 } from "lucide-react";
+import { Loader2, ArrowRight, Building2, BarChart3 } from "lucide-react";
+import { TenantMarketingAnalyticsTab } from "@/components/tenant-marketing-analytics-tab";
 
 export const Route = createFileRoute("/_admin/admin/tenants/$id")({
   head: () => ({ meta: [{ title: "تفاصيل المغسلة" }] }),
@@ -29,6 +30,7 @@ function TenantDetailPage() {
   const { id } = useParams({ from: "/_admin/admin/tenants/$id" });
   const { isSuperAdmin } = useAuth();
   const [t, setT] = useState<Tenant | null>(null);
+  const [tab, setTab] = useState<"settings" | "marketing">("settings");
   const [features, setFeatures] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -68,12 +70,35 @@ function TenantDetailPage() {
   if (loading || !t) return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>;
 
   return (
-    <div className="space-y-4 max-w-3xl">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to={"/admin/tenants" as any}><ArrowRight className="w-4 h-4" /></Link></Button>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="w-6 h-6" /> {t.name}</h1>
+    <div className={`space-y-4 ${tab === "marketing" ? "max-w-7xl" : "max-w-3xl"}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="sm"><Link to={"/admin/tenants" as any}><ArrowRight className="w-4 h-4" /></Link></Button>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Building2 className="w-6 h-6" /> {t.name}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={tab === "settings" ? "default" : "outline"}
+            onClick={() => setTab("settings")}
+            className="font-bold text-xs md:text-sm"
+          >
+            البيانات الأساسية والمميزات
+          </Button>
+          <Button
+            variant={tab === "marketing" ? "default" : "outline"}
+            onClick={() => setTab("marketing")}
+            className={`font-bold text-xs md:text-sm gap-1.5 ${tab === "marketing" ? "bg-teal-600 hover:bg-teal-500 text-white" : "border-teal-500/50 text-teal-400"}`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span>البيانات التسويقية والتحليلية (Marketing Telemetry)</span>
+          </Button>
+        </div>
       </div>
 
+      {tab === "marketing" ? (
+        <TenantMarketingAnalyticsTab tenantId={id} />
+      ) : (
+        <>
       <Card>
         <CardHeader><CardTitle className="text-base">البيانات والهوية البصرية</CardTitle></CardHeader>
         <CardContent className="space-y-3">
@@ -118,6 +143,8 @@ function TenantDetailPage() {
           ))}
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   );
 }

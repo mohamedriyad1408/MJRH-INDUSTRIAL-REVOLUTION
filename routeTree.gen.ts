@@ -40,6 +40,7 @@ import { Route as TenantHelpRouteImport } from './routes/$tenant/help'
 import { Route as TenantFinanceRouteImport } from './routes/$tenant/finance'
 import { Route as TenantExecutiveRouteImport } from './routes/$tenant/executive'
 import { Route as TenantDriverRouteImport } from './routes/$tenant/driver'
+import { Route as TenantDemoRouteImport } from './routes/$tenant/demo'
 import { Route as TenantDashboardRouteImport } from './routes/$tenant/dashboard'
 import { Route as TenantDailyOperationsRouteImport } from './routes/$tenant/daily-operations'
 import { Route as TenantCustomersRouteImport } from './routes/$tenant/customers'
@@ -244,6 +245,11 @@ const TenantExecutiveRoute = TenantExecutiveRouteImport.update({
 const TenantDriverRoute = TenantDriverRouteImport.update({
   id: '/driver',
   path: '/driver',
+  getParentRoute: () => TenantRoute,
+} as any)
+const TenantDemoRoute = TenantDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => TenantRoute,
 } as any)
 const TenantDashboardRoute = TenantDashboardRouteImport.update({
@@ -527,6 +533,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/customers': typeof TenantCustomersRoute
   '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
   '/$tenant/dashboard': typeof TenantDashboardRoute
+  '/$tenant/demo': typeof TenantDemoRoute
   '/$tenant/driver': typeof TenantDriverRoute
   '/$tenant/executive': typeof TenantExecutiveRoute
   '/$tenant/finance': typeof TenantFinanceRoute
@@ -610,6 +617,7 @@ export interface FileRoutesByTo {
   '/$tenant/customers': typeof TenantCustomersRoute
   '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
   '/$tenant/dashboard': typeof TenantDashboardRoute
+  '/$tenant/demo': typeof TenantDemoRoute
   '/$tenant/driver': typeof TenantDriverRoute
   '/$tenant/executive': typeof TenantExecutiveRoute
   '/$tenant/finance': typeof TenantFinanceRoute
@@ -695,6 +703,7 @@ export interface FileRoutesById {
   '/$tenant/customers': typeof TenantCustomersRoute
   '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
   '/$tenant/dashboard': typeof TenantDashboardRoute
+  '/$tenant/demo': typeof TenantDemoRoute
   '/$tenant/driver': typeof TenantDriverRoute
   '/$tenant/executive': typeof TenantExecutiveRoute
   '/$tenant/finance': typeof TenantFinanceRoute
@@ -780,6 +789,7 @@ export interface FileRouteTypes {
     | '/$tenant/customers'
     | '/$tenant/daily-operations'
     | '/$tenant/dashboard'
+    | '/$tenant/demo'
     | '/$tenant/driver'
     | '/$tenant/executive'
     | '/$tenant/finance'
@@ -863,6 +873,7 @@ export interface FileRouteTypes {
     | '/$tenant/customers'
     | '/$tenant/daily-operations'
     | '/$tenant/dashboard'
+    | '/$tenant/demo'
     | '/$tenant/driver'
     | '/$tenant/executive'
     | '/$tenant/finance'
@@ -947,6 +958,7 @@ export interface FileRouteTypes {
     | '/$tenant/customers'
     | '/$tenant/daily-operations'
     | '/$tenant/dashboard'
+    | '/$tenant/demo'
     | '/$tenant/driver'
     | '/$tenant/executive'
     | '/$tenant/finance'
@@ -1242,6 +1254,13 @@ declare module '@tanstack/react-router' {
       path: '/driver'
       fullPath: '/$tenant/driver'
       preLoaderRoute: typeof TenantDriverRouteImport
+      parentRoute: typeof TenantRoute
+    }
+    '/$tenant/demo': {
+      id: '/$tenant/demo'
+      path: '/demo'
+      fullPath: '/$tenant/demo'
+      preLoaderRoute: typeof TenantDemoRouteImport
       parentRoute: typeof TenantRoute
     }
     '/$tenant/dashboard': {
@@ -1628,6 +1647,7 @@ interface TenantRouteChildren {
   TenantCustomersRoute: typeof TenantCustomersRoute
   TenantDailyOperationsRoute: typeof TenantDailyOperationsRoute
   TenantDashboardRoute: typeof TenantDashboardRoute
+  TenantDemoRoute: typeof TenantDemoRoute
   TenantDriverRoute: typeof TenantDriverRoute
   TenantExecutiveRoute: typeof TenantExecutiveRoute
   TenantFinanceRoute: typeof TenantFinanceRoute
@@ -1687,6 +1707,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantCustomersRoute: TenantCustomersRoute,
   TenantDailyOperationsRoute: TenantDailyOperationsRoute,
   TenantDashboardRoute: TenantDashboardRoute,
+  TenantDemoRoute: TenantDemoRoute,
   TenantDriverRoute: TenantDriverRoute,
   TenantExecutiveRoute: TenantExecutiveRoute,
   TenantFinanceRoute: TenantFinanceRoute,

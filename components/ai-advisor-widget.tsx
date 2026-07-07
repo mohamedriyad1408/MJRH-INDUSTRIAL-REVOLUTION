@@ -23,13 +23,13 @@ export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: strin
   });
 
   const categories: { key: AiInsightCategory | "all"; labelKey: string; icon: string }[] = [
-    { key: "all", labelKey: "ai.filter.all", icon: "" },
-    { key: "bottleneck", labelKey: "ai.filter.bottleneck", icon: "" },
-    { key: "sla", labelKey: "ai.filter.sla", icon: "" },
-    { key: "inventory", labelKey: "ai.filter.inventory", icon: "" },
-    { key: "maintenance", labelKey: "ai.filter.maintenance", icon: "" },
-    { key: "workforce", labelKey: "ai.filter.workforce", icon: "" },
-    { key: "finance", labelKey: "ai.filter.finance", icon: "" },
+    { key: "all", labelKey: "ai.filter.all", icon: "🌐" },
+    { key: "bottleneck", labelKey: "ai.filter.bottleneck", icon: "⏳" },
+    { key: "sla", labelKey: "ai.filter.sla", icon: "⚡" },
+    { key: "inventory", labelKey: "ai.filter.inventory", icon: "📦" },
+    { key: "maintenance", labelKey: "ai.filter.maintenance", icon: "🔧" },
+    { key: "workforce", labelKey: "ai.filter.workforce", icon: "👥" },
+    { key: "finance", labelKey: "ai.filter.finance", icon: "💰" },
   ];
 
   const filteredInsights = activeCategory === "all" ? insights : insights.filter((x) => x.category === activeCategory);

@@ -365,13 +365,13 @@ function AttendanceMawaredPage() {
           <CardContent className="p-6 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl shadow-inner shrink-0">
-
+                ⏱️
               </div>
               <div>
                 <div className="text-xs text-teal-200 font-bold uppercase tracking-wider font-mono">سجلك الشخصي اليومي في الموارد البشرية</div>
-                <h3 className="text-xl font-black mt-0.5">أهلاً بك، {currentEmp.full_name}</h3>
+                <h3 className="text-xl font-black mt-0.5">أهلاً بك، {currentEmp.full_name} 👋</h3>
                 <p className="text-xs text-teal-100 font-medium mt-1">
-                  {myOpenShift ? `🟢 أنت حاضر في العمل منذ ${formatTime(myOpenShift.check_in_at)}` : "لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
+                  {myOpenShift ? `🟢 أنت حاضر في العمل منذ ${formatTime(myOpenShift.check_in_at)}` : "⭕ لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
                 </p>
               </div>
             </div>

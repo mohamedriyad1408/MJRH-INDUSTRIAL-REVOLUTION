@@ -332,13 +332,13 @@ function TodayCenter() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
               <Clock className="w-5 h-5 text-teal-600" />
-              <span>مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
+              <span>📊 مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
             </CardTitle>
             <div className="flex flex-wrap gap-1.5">
               <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 عادي: {surgeData.normalCount}</Badge>
               <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 ذروة عادية: {surgeData.normalPeakCount}</Badge>
               <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 ذروة متوسطة: {surgeData.mediumPeakCount}</Badge>
-              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">ذروة شديدة: {surgeData.severePeakCount}</Badge>
+              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">🔴 ذروة شديدة: {surgeData.severePeakCount}</Badge>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
