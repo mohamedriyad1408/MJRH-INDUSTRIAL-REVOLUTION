@@ -171,9 +171,9 @@ function StaffDetailPage() {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">بدون</SelectItem>
-                      <SelectItem value="cs_manager">مدير خدمة عملاء 📞</SelectItem>
-                      <SelectItem value="ops_manager">مدير تشغيل ⚙️</SelectItem>
-                      <SelectItem value="owner">مالك المغسلة 👑</SelectItem>
+                      <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
+                      <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
+                      <SelectItem value="owner">مالك المغسلة</SelectItem>
                       {WORKFLOW_STATIONS_10.map((ws) => (
                         <SelectItem key={ws.role} value={ws.role}>{ws.roleLabel} ({ws.id})</SelectItem>
                       ))}
@@ -194,7 +194,7 @@ function StaffDetailPage() {
               </div>
 
               <div className="space-y-2 pt-2 border-t">
-                <Label className="text-xs font-bold block">🔄 المحطات التشغيلية المخصصة للروتيشن (10 Rotational Stations):</Label>
+                <Label className="text-xs font-bold block">المحطات التشغيلية المخصصة للروتيشن (10 Rotational Stations):</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                   {WORKFLOW_STATIONS_10.map((st) => {
                     const assigned = (emp as any).assigned_stations || (emp.station ? [emp.station] : []);
@@ -213,7 +213,7 @@ function StaffDetailPage() {
                         }`}
                       >
                         <span>{st.label}</span>
-                        <span>{checked ? "✓ مفعّل" : "+ إضافة"}</span>
+                        <span>{checked ? "مفعّل" : "+ إضافة"}</span>
                       </button>
                     );
                   })}

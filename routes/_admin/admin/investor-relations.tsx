@@ -206,8 +206,8 @@ function InvestorRelationsDepartmentPage() {
  الوثيقة الاستثمارية الكاملة (Investment Memorandum) المشتملة على المنفستو، فرص السوق، ميزة المنافسة، ونموذج العمل.
  </p>
  </div>
- <Button onClick={() => openDoc("06_OFFICIAL_INVESTMENT_MEMORANDUM_V1.md", "المنفستو ومستند الطرح الرسمي")} className="w-full rounded-xl font-black bg-purple-600 hover:bg-purple-700 text-white">
- <Download className="w-4 h-4 ms-2" /> عرض وتحميل الوثيقة المعتمدة
+ <Button onClick={() => openDoc("MJRH_DOCUMENTATION_MASTER_PLAN_V3.0.md", "الخطة المرجعية الموحدة (Master Plan v3.0)")} className="w-full rounded-xl font-black bg-purple-600 hover:bg-purple-700 text-white">
+ <Download className="w-4 h-4 ms-2" /> عرض وتحميل الخطة الموحدة
  </Button>
  </div>
 
@@ -216,10 +216,10 @@ function InvestorRelationsDepartmentPage() {
  <Badge className="bg-emerald-600 text-white font-black text-[10px]">وثيقة رقم 2 (Valuation Report)</Badge>
  <div className="font-black text-base text-slate-900">تقرير التثمين الفني والتقييم المالي للأكواد</div>
  <p className="text-xs text-slate-600 font-bold leading-relaxed">
- تقرير التقييم الشامل بقيمة 4.5 مليون ج.م (التكلفة الاستبدالية 4,200 ساعة + تثمين المحركات الـ 5 الاحتكارية).
+ تقرير التقييم الشامل بقيمة 11.61 مليون ج.م (التكلفة الاستبدالية 5,250 ساعة + تثمين المحركات الـ 6 الاحتكارية).
  </p>
  </div>
- <Button onClick={() => openDoc("05_CODEBASE_VALUATION_AND_IP_APPRAISAL_4M.md", "تقرير التثمين الفني للأكواد 4.5M")} className="w-full rounded-xl font-black bg-emerald-600 hover:bg-emerald-700 text-white">
+ <Button onClick={() => openDoc("MJRH_DOCUMENTATION_MASTER_PLAN_V3.0.md", "تقييم الأصول والأكواد (11.61M EGP)")} className="w-full rounded-xl font-black bg-emerald-600 hover:bg-emerald-700 text-white">
  <Download className="w-4 h-4 ms-2" /> عرض وتحميل تقرير التقييم
  </Button>
  </div>
@@ -232,7 +232,7 @@ function InvestorRelationsDepartmentPage() {
  الشرح الهندسي التفصيلي للمحطات العشر المتسلسلة، مبدأ الفاعل، الدفاتر المزدوجة، وحوكمة الأمان السيبراني RLS.
  </p>
  </div>
- <Button onClick={() => openDoc("04_INVESTOR_TECHNICAL_FINANCIAL_PROSPECTUS_V2.6.md", "وثيقة طرح المستثمر الفني والمالي")} className="w-full rounded-xl font-black bg-blue-600 hover:bg-blue-700 text-white">
+ <Button onClick={() => openDoc("MJRH_DOCUMENTATION_MASTER_PLAN_V3.0.md", "وثيقة طرح المستثمر الفني والمالي")} className="w-full rounded-xl font-black bg-blue-600 hover:bg-blue-700 text-white">
  <Download className="w-4 h-4 ms-2" /> عرض وتحميل وثيقة الطرح
  </Button>
  </div>

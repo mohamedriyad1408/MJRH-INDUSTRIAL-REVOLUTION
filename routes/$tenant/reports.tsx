@@ -11,8 +11,6 @@ import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gaug
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { getSurgeReportData } from "@/lib/scheduling-surge";
-import { ItemSalesAnalyticsTab } from "@/components/item-sales-analytics";
-import { TenantMarketingAnalyticsTab } from "@/components/tenant-marketing-analytics-tab";
 
 export const Route = createFileRoute("/$tenant/reports")({
   head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
@@ -51,7 +49,6 @@ function ReportsPage() {
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
   const [surgeData, setSurgeData] = useState<any>(null);
-  const [activeReportTab, setActiveReportTab] = useState<"overview" | "item_sales" | "marketing_telemetry">("item_sales");
 
   async function load() {
     setLoading(true);
@@ -281,49 +278,10 @@ function ReportsPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
-        <button
-          type="button"
-          onClick={() => setActiveReportTab("item_sales")}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
-            activeReportTab === "item_sales" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
-          }`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          <span>📊 مبيعات وحركة إنتاج الأصناف (أسبوعي / شهري / سنوي)</span>
-          <Badge className={`text-[10px] px-1.5 py-0 ${activeReportTab === "item_sales" ? "bg-white/20 text-white" : "bg-amber-500 text-white font-black"}`}>جديد</Badge>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveReportTab("overview")}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
-            activeReportTab === "overview" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
-          }`}
-        >
-          <Brain className="w-4 h-4" />
-          <span>📈 التقارير المالية والتشغيلية العامة</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveReportTab("marketing_telemetry" as any)}
-          className={`px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 ${
-            activeReportTab === "marketing_telemetry" ? "bg-teal-600 text-white shadow-md scale-[1.01]" : "bg-white text-slate-700 hover:bg-slate-200 border"
-          }`}
-        >
-          <span>📊 البيانات التسويقية وأوقات الذروة (Marketing Telemetry)</span>
-          <Badge className="bg-emerald-600 text-white text-[10px] font-black">Live Pulse</Badge>
-        </button>
-      </div>
-
-      {activeReportTab === "marketing_telemetry" ? (
-        <TenantMarketingAnalyticsTab tenantId={tenantId} />
-      ) : activeReportTab === "item_sales" ? (
-        <ItemSalesAnalyticsTab branchId={branchId} />
-      ) : (
-        loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
-          <div className="space-y-6" dir={dir}>
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-              <Kpi label={t("finance.revenueTab")} value={fmtMoney(data.totalRevenue, t("common.egp"))} tone="teal" sub={data.revenueDelta === null ? t("reports.noMonth") : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
+      {loading ? <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div> : data && (
+        <div className="space-y-6" dir={dir}>
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+            <Kpi label={t("finance.revenueTab")} value={fmtMoney(data.totalRevenue, t("common.egp"))} tone="teal" sub={data.revenueDelta === null ? t("reports.noMonth") : `${data.revenueDelta >= 0 ? "+" : ""}${data.revenueDelta.toFixed(1)}%`} />
             <Kpi label={t("finance.netProfit")} value={fmtMoney(data.netProfit, t("common.egp"))} tone={data.netProfit >= 0 ? "green" : "red"} />
             <Kpi label={t("accounting.tab.expenses")} value={fmtMoney(data.payableExpenses, t("common.egp"))} tone="amber" sub={`Salaries: ${fmtMoney(data.payrollAccrual, t("common.egp"))}`} />
             <Kpi label={t("station.common.orders")} value={data.totalOrders} tone="blue" sub={`${data.delivered} ${t("reports.del")}`} />
@@ -344,13 +302,13 @@ function ReportsPage() {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
                     <Clock className="w-5 h-5 text-teal-600" />
-                    <span>📊 مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
+                    <span>مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
                   </CardTitle>
                   <div className="flex flex-wrap gap-1.5">
                     <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 عادي: {surgeData.normalCount}</Badge>
                     <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 ذروة عادية: {surgeData.normalPeakCount}</Badge>
                     <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 ذروة متوسطة: {surgeData.mediumPeakCount}</Badge>
-                    <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">🔴 ذروة شديدة: {surgeData.severePeakCount}</Badge>
+                    <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">ذروة شديدة: {surgeData.severePeakCount}</Badge>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -425,7 +383,7 @@ function ReportsPage() {
             </Panel>
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -446,7 +404,7 @@ function BranchComparison({ rows, t }: { rows: any[]; t: any }) {
 function DelayResponsibility({ data, t }: { data: any; t: any }) {
   const stages = Object.entries(data.lateByStage ?? {}).sort((a: any, b: any) => b[1] - a[1]);
   const employees = data.lateEmployees ?? [];
-  if (!stages.length && !employees.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("system.financialAuditOk")} ✅</CardContent></Card>;
+  if (!stages.length && !employees.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("system.financialAuditOk")}</CardContent></Card>;
   return <div className="grid md:grid-cols-2 gap-4">
     <Card className="border-amber-200 bg-amber-50/40"><CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4" />{t("reports.delayByStage")}</CardTitle></CardHeader><CardContent className="space-y-2">
       {stages.map(([stage, count]: any) => <Row key={stage} left={t("stage." + stage, stage)} mid={t("brief.lateOrders")} right={String(count)} />)}

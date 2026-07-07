@@ -11,8 +11,8 @@ export const SUPPORTED_LANGUAGES: { code: LanguageCode; nativeName: string; engl
   { code: "it", nativeName: "Italiano", englishName: "Italian", dir: "ltr" },
   { code: "es", nativeName: "Español", englishName: "Spanish", dir: "ltr" },
   { code: "de", nativeName: "Deutsch", englishName: "German", dir: "ltr" },
-  { code: "zh", nativeName: "中文", englishName: "Chinese", dir: "ltr" },
-  { code: "ja", nativeName: "日本語", englishName: "Japanese", dir: "ltr" },
+  { code: "zh", nativeName: "", englishName: "Chinese", dir: "ltr" },
+  { code: "ja", nativeName: "", englishName: "Japanese", dir: "ltr" },
   { code: "pt", nativeName: "Português", englishName: "Portuguese", dir: "ltr" },
 ];
 
@@ -124,16 +124,16 @@ const dict: Record<LanguageCode, Record<string, string>> = {
     "home.tagline": "Multi-Projekt-Betriebssystem — Industrial Revolution", "home.staffLogin": "Mitarbeiter-Login", "home.badge": "MJRH-Plattform für den Betrieb von Projekten", "home.heroTitle": "Ein System.. für mehrere Projekte", "home.heroText": "MJRH ist ein SaaS-Betriebssystem für mehrere unabhängige Projekte, jedes mit eigenen Daten, Konten und Mitarbeitern. Wählen Sie Ihr Projekt oder erfahren Sie mehr über das System.", "home.learnMore": "Mehr über das System erfahren", "home.projectsTitle": "Aktive Projekte", "home.projectsText": "Wählen Sie Ihr Projekt für das Kunden- oder Mitarbeiterportal", "home.loadError": "Die Projektliste konnte derzeit nicht geladen werden.", "home.noProjects": "Derzeit keine aktiven Projekte.", "home.wantProject": "Haben Sie ein Projekt, das Sie mit MJRH betreiben möchten?", "home.wantProjectSub": "Kontaktieren Sie uns für eine Live-Demo", "home.requestDemo": "Demo anfordern", "biz.laundry": "Wäscherei", "biz.retail": "Einzelhandel", "biz.manufacturing": "Fertigung", "biz.services": "Dienstleistungen", "biz.generic": "Allgemein"
   },
   zh: {
-    "common.language": "语言", "common.loading": "加载中", "common.save": "保存", "common.open": "打开", "common.back": "返回",
-    "app.tagline": "清晰有序的洗衣运营系统", "app.portal": "客户门户", "app.signOut": "退出",
-    "login.heading": "洗衣店管理系统", "login.signinTitle": "请输入账号继续", "login.signupTitle": "创建账户", "login.forgotTitle": "找回密码", "login.email": "邮箱", "login.password": "密码", "login.fullName": "姓名", "login.signIn": "登录", "login.signUp": "注册", "login.sendLink": "发送链接", "login.forgotPassword": "忘记密码？", "login.noAccount": "没有账户？注册", "login.backToSignin": "返回登录", "login.firstAccountNote": "第一个账户将成为管理员，其他账户需要激活。", "login.backHome": "首页", "waiting.title": "等待激活", "waiting.body": "您的账户需要分配角色后才能访问系统。",
-    "home.tagline": "多项目运营系统 — Industrial Revolution", "home.staffLogin": "员工登录", "home.badge": "MJRH 多项目运营平台", "home.heroTitle": "一个系统.. 运营多个项目", "home.heroText": "MJRH 是一个服务于多个独立项目的 SaaS 运营系统，每个项目都有自己的数据、账户和员工。选择您需要的项目，或了解更多关于系统的信息。", "home.learnMore": "了解系统", "home.projectsTitle": "活跃项目", "home.projectsText": "选择您的项目以进入客户或员工门户", "home.loadError": "暂时无法加载项目列表。", "home.noProjects": "目前没有活跃项目。", "home.wantProject": "有项目想用 MJRH 运营吗？", "home.wantProjectSub": "联系我们开始现场试用", "home.requestDemo": "申请演示", "biz.laundry": "洗衣店", "biz.retail": "零售", "biz.manufacturing": "制造业", "biz.services": "服务", "biz.generic": "通用"
+    "common.language": "", "common.loading": "", "common.save": "", "common.open": "", "common.back": "",
+    "app.tagline": "", "app.portal": "", "app.signOut": "",
+    "login.heading": "", "login.signinTitle": "", "login.signupTitle": "", "login.forgotTitle": "", "login.email": "", "login.password": "", "login.fullName": "", "login.signIn": "", "login.signUp": "", "login.sendLink": "", "login.forgotPassword": "", "login.noAccount": "", "login.backToSignin": "", "login.firstAccountNote": "", "login.backHome": "", "waiting.title": "", "waiting.body": "",
+    "home.tagline": "— Industrial Revolution", "home.staffLogin": "", "home.badge": "MJRH", "home.heroTitle": "..", "home.heroText": "MJRH SaaS", "home.learnMore": "", "home.projectsTitle": "", "home.projectsText": "", "home.loadError": "", "home.noProjects": "", "home.wantProject": "MJRH", "home.wantProjectSub": "", "home.requestDemo": "", "biz.laundry": "", "biz.retail": "", "biz.manufacturing": "", "biz.services": "", "biz.generic": ""
   },
   ja: {
-    "common.language": "言語", "common.loading": "読み込み中", "common.save": "保存", "common.open": "開く", "common.back": "戻る",
-    "app.tagline": "整理されたランドリー運営システム", "app.portal": "顧客ポータル", "app.signOut": "ログアウト",
-    "login.heading": "ランドリー管理システム", "login.signinTitle": "ログイン情報を入力してください", "login.signupTitle": "アカウント作成", "login.forgotTitle": "パスワード再設定", "login.email": "メール", "login.password": "パスワード", "login.fullName": "氏名", "login.signIn": "ログイン", "login.signUp": "作成", "login.sendLink": "リンク送信", "login.forgotPassword": "パスワードを忘れましたか？", "login.noAccount": "アカウントがありませんか？登録", "login.backToSignin": "ログインに戻る", "login.firstAccountNote": "最初のアカウントが管理者になります。他のアカウントは有効化が必要です。", "login.backHome": "ホーム", "waiting.title": "有効化待ち", "waiting.body": "システムにアクセスするには役割の割り当てが必要です。",
-    "home.tagline": "マルチプロジェクト運営システム — Industrial Revolution", "home.staffLogin": "スタッフログイン", "home.badge": "プロジェクト運営のための MJRH プラットフォーム", "home.heroTitle": "1つのシステムで.. 複数のプロジェクトを運営", "home.heroText": "MJRH は複数の独立したプロジェクトにサービスを提供する SaaS 運営システムで、それぞれが独自のデータ、アカウント、スタッフを持っています。必要なプロジェクトを選択するか、システムについて詳しく知ってください。", "home.learnMore": "システムについて詳しく知る", "home.projectsTitle": "アクティブなプロジェクト", "home.projectsText": "顧客またはスタッフポータルにアクセスするプロジェクトを選択してください", "home.loadError": "現在プロジェクトリストを読み込めません。", "home.noProjects": "現在アクティブなプロジェクトはありません。", "home.wantProject": "MJRH で運営したいプロジェクトがありますか？", "home.wantProjectSub": "ライブトライアルを開始するにはお問い合わせください", "home.requestDemo": "デモを申請", "biz.laundry": "ランドリー", "biz.retail": "小売", "biz.manufacturing": "製造業", "biz.services": "サービス", "biz.generic": "一般"
+    "common.language": "", "common.loading": "", "common.save": "", "common.open": "", "common.back": "",
+    "app.tagline": "", "app.portal": "", "app.signOut": "",
+    "login.heading": "", "login.signinTitle": "", "login.signupTitle": "", "login.forgotTitle": "", "login.email": "", "login.password": "", "login.fullName": "", "login.signIn": "", "login.signUp": "", "login.sendLink": "", "login.forgotPassword": "", "login.noAccount": "", "login.backToSignin": "", "login.firstAccountNote": "", "login.backHome": "", "waiting.title": "", "waiting.body": "",
+    "home.tagline": "— Industrial Revolution", "home.staffLogin": "", "home.badge": "MJRH", "home.heroTitle": "1..", "home.heroText": "MJRH SaaS", "home.learnMore": "", "home.projectsTitle": "", "home.projectsText": "", "home.loadError": "", "home.noProjects": "", "home.wantProject": "MJRH", "home.wantProjectSub": "", "home.requestDemo": "", "biz.laundry": "", "biz.retail": "", "biz.manufacturing": "", "biz.services": "", "biz.generic": ""
   },
   pt: {
     "common.language": "Idioma", "common.loading": "Carregando", "common.save": "Salvar", "common.open": "Abrir", "common.back": "Voltar",

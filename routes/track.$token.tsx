@@ -60,7 +60,7 @@ function TrackPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex items-center justify-center p-4" dir={dir}>
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
-          <div className="text-3xl mb-2">👕</div>
+          <div className="text-3xl mb-2"></div>
           <h1 className="text-2xl font-bold text-slate-800">{t("track.title")}</h1>
           <p className="text-sm text-slate-500">{t("track.subtitle")}</p><div className="mt-3 flex justify-center"><LanguageSwitcher compact /></div>
         </div>
@@ -71,7 +71,7 @@ function TrackPage() {
               <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>
             ) : !order ? (
               <div className="text-center py-6">
-                <div className="text-4xl mb-3">🔍</div>
+                <div className="text-4xl mb-3"></div>
                 <p className="font-bold">{t("track.notFound")}</p>
                 <p className="text-sm text-muted-foreground mt-1">{t("track.checkLink")}</p>
               </div>
@@ -106,7 +106,7 @@ function TrackPage() {
                       </div>;
                     })}
                   </div>
-                ) : <div className="text-center py-4"><div className="text-3xl mb-2">❌</div><p className="font-bold text-red-600">{t("track.cancelled")}</p></div>}
+                ) : <div className="text-center py-4"><div className="text-3xl mb-2"></div><p className="font-bold text-red-600">{t("track.cancelled")}</p></div>}
 
                 {items.length > 0 && <div className="rounded-xl border bg-white p-3 space-y-1">
                   <div className="font-black text-sm mb-2">{t("track.items")}</div>
@@ -131,26 +131,12 @@ function TrackPage() {
 
 function CustomerHint({ order }: { order: any }) {
   const { t } = useI18n();
-  const notesStr = (order?.notes || "");
-  const isQuarantined = notesStr.includes("⚠️") || notesStr.includes("عزل") || notesStr.includes("معالجة");
-  
-  return (
-    <div className="space-y-2">
-      {isQuarantined && (
-        <div className="rounded-xl bg-amber-50 border-2 border-amber-400 p-3 text-xs text-amber-900 font-bold shadow-xs">
-          <div className="flex items-center gap-1.5 font-black text-amber-950 text-sm mb-1">
-            <span>🚨 إشعار جودة وعزل من معمل الغسيل:</span>
-          </div>
-          هناك قطعة (أو أكثر) تخضع حالياً للمعالجة الخاصة وإزالة البقع المستعصية لضمان أقصى جودة ونظافة، بينما يتم استكمال تشغيل باقي بنود طلبكم دون تأخير.
-        </div>
-      )}
-      {order.pickup_status === "pending" && <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-700">{t("track.hint.pending")}</div>}
-      {order.pickup_status === "assigned" && <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-700">{t("track.hint.assigned")}</div>}
-      {order.pickup_status === "converted" && order.status === "received" && <div className="rounded-xl bg-teal-50 border border-teal-100 p-3 text-xs text-teal-700">{t("track.hint.converted")}</div>}
-      {["cleaning", "ironing", "packing"].includes(order.status) && <div className="rounded-xl bg-slate-50 border p-3 text-xs text-slate-600">{t("track.hint.processing")}</div>}
-      {order.status === "ready" && <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-700">{t("track.hint.ready")}</div>}
-      {order.status === "out_for_delivery" && <div className="rounded-xl bg-orange-50 border border-orange-100 p-3 text-xs text-orange-700">{t("track.hint.delivery")}</div>}
-      {order.status === "delivered" && <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-700">{t("track.hint.delivered")}</div>}
-    </div>
-  );
+  if (order.pickup_status === "pending") return <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-700">{t("track.hint.pending")}</div>;
+  if (order.pickup_status === "assigned") return <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-xs text-blue-700">{t("track.hint.assigned")}</div>;
+  if (order.pickup_status === "converted" && order.status === "received") return <div className="rounded-xl bg-teal-50 border border-teal-100 p-3 text-xs text-teal-700">{t("track.hint.converted")}</div>;
+  if (["cleaning", "ironing", "packing"].includes(order.status)) return <div className="rounded-xl bg-slate-50 border p-3 text-xs text-slate-600">{t("track.hint.processing")}</div>;
+  if (order.status === "ready") return <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-700">{t("track.hint.ready")}</div>;
+  if (order.status === "out_for_delivery") return <div className="rounded-xl bg-orange-50 border border-orange-100 p-3 text-xs text-orange-700">{t("track.hint.delivery")}</div>;
+  if (order.status === "delivered") return <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-700">{t("track.hint.delivered")}</div>;
+  return null;
 }

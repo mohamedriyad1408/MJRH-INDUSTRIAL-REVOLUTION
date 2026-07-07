@@ -58,7 +58,7 @@ export function StationPage({
     const { error } = await supabase.from("orders").update({ status: to }).eq("id", id);
     if (error) return toast.error(error.message);
     await supabase.from("order_status_history").insert({
-      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `👤 محطة: ${title} — نفذه: ${activeActor?.full_name ?? "موظف المحطة"}`,
+      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `محطة: ${title} — نفذه: ${activeActor?.full_name ?? "موظف المحطة"}`,
     });
     if (to === "ironing") {
       try {

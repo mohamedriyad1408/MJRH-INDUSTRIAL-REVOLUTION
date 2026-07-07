@@ -33,7 +33,7 @@ export type SlotPressureInfo = {
  *  - count <= 3: Normal density (انسيابي)
  *  - count 4 or 5: Normal Peak (ذروة عادية 🟡)
  *  - count 6 or 7: Medium Peak (ذروة متوسطة 🟠)
- *  - count > 7: Severe Peak (ذروة شديدة 🔴 - ممتلئ تماماً، ويتم إغلاق الموعد إجباريًا)
+ *  - count > 7: Severe Peak (ذروة شديدة - ممتلئ تماماً، ويتم إغلاق الموعد إجباريًا)
  */
 export function calculateSlotPressure(orders: any[], slotName: string): SlotPressureInfo {
   // Count real active orders assigned to this slot
@@ -52,7 +52,7 @@ export function calculateSlotPressure(orders: any[], slotName: string): SlotPres
       slot: slotName,
       count: totalLoad,
       level: "severe",
-      label: "🔴 ذروة شديدة - الموعد ممتلئ تماماً (يرجى اختيار موعد آخر)",
+      label: "ذروة شديدة - الموعد ممتلئ تماماً (يرجى اختيار موعد آخر)",
       badge: "ممتلئ (غير متاح)",
       disabled: true,
       colorClass: "text-red-700 font-black",

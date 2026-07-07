@@ -61,7 +61,7 @@ function CustomerCarePage() {
     setCompSubmitting(true);
     try {
       await recordAuditLog(user?.id ?? "manager", `grant_compensation_${compType}`, { customerId: compId }, { amount: Number(compAmount) }, compReason);
-      toast.success(t("care.compSuccess", "تم تسجيل التعويض وإشعار العميل بنجاح ✅"));
+      toast.success(t("care.compSuccess", "تم تسجيل التعويض وإشعار العميل بنجاح"));
       setCompId(""); setCompAmount(""); setCompReason("");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "تعذر تسجيل التعويض");
