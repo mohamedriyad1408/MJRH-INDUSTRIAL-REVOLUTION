@@ -20,18 +20,17 @@ import {
   Loader2, Trash2, ArrowRight, LocateFixed, Search, UserPlus, Sparkles,
   Shirt, Package, Scissors, Truck, Receipt, CreditCard, Zap, Plus, Minus,
 } from "lucide-react";
+import { PosCategoryTabs, type ServiceTypeFilter } from "@/components/pos-category-tabs";
 
 export const Route = createFileRoute("/$tenant/orders/new")({
   head: () => ({ meta: [{ title: "طلب جديد" }] }),
   component: NewOrderPage,
 });
 
-type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean };
+type Service = { id: string; name: string; service_type: string; unit_price: number; is_active: boolean; category?: string };
 type ServiceArea = { id: string; name: string; area_type: string; lat: number | null; lng: number | null; default_delivery_fee: number; aliases?: string[] | null };
 type Customer = { id: string; full_name: string; phone: string; address?: string | null; lat?: number | null; lng?: number | null; location_url?: string | null };
 type LineItem = { service_item_id: string; name: string; service_type: string; qty: number; unit_price: number };
-
-type ServiceFilter = "all" | "cleaning" | "ironing" | "both";
 
 function isShirtLikeName(name: string) {
   return /قميص|بلوز|shirt|blouse/i.test(name);
@@ -48,12 +47,7 @@ function complexityForName(name: string) {
 
 function phoneDigits(v: string) { return (v || "").replace(/\D/g, ""); }
 
-const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "all", label: "الكل", icon: Sparkles },
-  { id: "cleaning", label: "تصليح", icon: Scissors },
-  { id: "ironing", label: "كي", icon: Shirt },
-  { id: "both", label: "غسيل + كي", icon: Package },
-];
+
 
 function NewOrderPage() {
   const { t, dir } = useI18n();
@@ -87,7 +81,8 @@ function NewOrderPage() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [pickupLoc, setPickupLoc] = useState({ lat: "", lng: "" });
   const [deliveryLoc, setDeliveryLoc] = useState({ lat: "", lng: "" });
-  const [filter, setFilter] = useState<ServiceFilter>("all");
+  const [categoryTab, setCategoryTab] = useState<string>("all");
+  const [filter, setFilter] = useState<ServiceTypeFilter>("all");
   const [serviceSearch, setServiceSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -122,11 +117,12 @@ function NewOrderPage() {
   const filteredServices = useMemo(() => {
     const q = serviceSearch.trim().toLowerCase();
     return services.filter((s) => {
-      const byFilter = filter === "all" || s.service_type === filter;
+      const byCat = categoryTab === "all" || s.category === categoryTab || (categoryTab === "رجالي" && !s.category);
+      const byFilter = !filter || filter === "all" || s.service_type === filter;
       const bySearch = !q || s.name.toLowerCase().includes(q);
-      return byFilter && bySearch;
+      return byCat && byFilter && bySearch;
     });
-  }, [services, filter, serviceSearch]);
+  }, [services, categoryTab, filter, serviceSearch]);
 
   if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.</Card>;
 
@@ -459,14 +455,14 @@ function NewOrderPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
-                  {FILTERS.map((f) => {
-                    const Icon = f.icon;
-                    const active = filter === f.id;
-                    const label = f.id === "all" ? t("notif.filter.all") : f.id === "cleaning" ? t("common.repair") : f.id === "ironing" ? t("stage.ironing") : t("stage.cleaning") + " + " + t("stage.ironing");
-                    return <button key={f.id} onClick={() => setFilter(f.id)} className={`rounded-2xl p-3 border text-sm font-black transition ${active ? "bg-teal-600 text-white border-teal-600 shadow-lg" : "bg-slate-50 hover:bg-slate-100"}`}><Icon className="w-4 h-4 mx-auto mb-1" />{label}</button>;
-                  })}
-                </div>
+                <PosCategoryTabs
+                  activeTab={categoryTab}
+                  onSelect={setCategoryTab}
+                  items={services}
+                  compact={false}
+                  activeServiceType={filter}
+                  onSelectServiceType={setFilter}
+                />
 
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                   {filteredServices.map((s) => (
