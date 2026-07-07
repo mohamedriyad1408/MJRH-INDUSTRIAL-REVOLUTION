@@ -73,11 +73,10 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  {
  label: "إدارة المالك والتنفيذيين (Vorstand)",
  items: [
- { title: "لوحة المالك العامة", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
- { title: "لوحة المديرين التنفيذيين CEO", url: "/executive", icon: BarChart3, roles: ["owner"] },
- { title: "فيديو ديمو النظام وعروض البيع", url: "/demo", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager", "employee"] },
- ],
- },
+      { title: "لوحة المالك العامة", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
+      { title: "لوحة المديرين التنفيذيين CEO", url: "/executive", icon: BarChart3, roles: ["owner"] },
+    ],
+  },
  {
  label: "التشغيل اليومي والمحطات (Betriebsleitung)",
  items: [
