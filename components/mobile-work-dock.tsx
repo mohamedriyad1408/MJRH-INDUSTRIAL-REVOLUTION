@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { CheckCircle2, ClipboardList, Map, PackageCheck, Shirt, Sparkles, Truck, Wand2, Wind } from "lucide-react";
 import { resolveAppUrl } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 type Task = { title: string; detail: string; href: string; count: number; tone?: "red" | "amber" | "teal" | "violet"; icon: React.ReactNode };
 
@@ -77,9 +78,14 @@ export function MobileWorkDock() {
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto" dir={dir}>
-        <SheetHeader className="text-start">
-          <SheetTitle className="text-xl font-black">مهامك السريعة</SheetTitle>
-          <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{STATION_AR[station ?? ""] ?? "تشغيل اليوم"}</SheetDescription>
+        <SheetHeader className="text-start space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <SheetTitle className="text-xl font-black">مهامك السريعة</SheetTitle>
+              <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{STATION_AR[station ?? ""] ?? "تشغيل اليوم"}</SheetDescription>
+            </div>
+            <LanguageSwitcher compact />
+          </div>
         </SheetHeader>
         <div className="grid gap-3 mt-4">
           {tasks.map((t) => <Link key={t.href + t.title} to={resolveAppUrl(t.href) as any} onClick={() => setOpen(false)}>
