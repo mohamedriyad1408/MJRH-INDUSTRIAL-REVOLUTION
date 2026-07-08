@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { CheckCircle2, ClipboardList, Map, PackageCheck, Shirt, Sparkles, Truck, Wand2, Wind } from "lucide-react";
 import { resolveAppUrl } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n";
 
 type Task = { title: string; detail: string; href: string; count: number; tone?: "red" | "amber" | "teal" | "violet"; icon: React.ReactNode };
 
@@ -14,6 +15,7 @@ const STATION_AR: Record<string, string> = { reception: "الاستقبال", cl
 
 export function MobileWorkDock() {
   const { user, hasRole, tenantId } = useAuth();
+  const { dir } = useI18n();
   const [open, setOpen] = useState(false);
   const [employee, setEmployee] = useState<any>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -67,15 +69,15 @@ export function MobileWorkDock() {
   const total = tasks.reduce((s, t) => s + Number(t.count || 0), 0);
   if (!user) return null;
 
-  return <div className="md:hidden fixed left-4 z-40 bottom-[calc(env(safe-area-inset-bottom)+1rem)]">
+  return <div className="md:hidden fixed start-4 z-40 bottom-[calc(env(safe-area-inset-bottom)+1rem)]">
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button className="h-14 rounded-full px-5 shadow-2xl bg-gradient-to-l from-violet-700 via-slate-900 to-teal-600 text-white border border-white/20">
           <Wand2 className="w-5 h-5 ms-2 text-teal-200" /> مهامي الآن {total > 0 && <Badge className="me-2 bg-amber-400 text-slate-950">{total}</Badge>}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto" dir="rtl">
-        <SheetHeader className="text-right">
+      <SheetContent side="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto" dir={dir}>
+        <SheetHeader className="text-start">
           <SheetTitle className="text-xl font-black">مهامك السريعة</SheetTitle>
           <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{STATION_AR[station ?? ""] ?? "تشغيل اليوم"}</SheetDescription>
         </SheetHeader>
