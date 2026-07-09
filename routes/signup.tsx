@@ -85,72 +85,24 @@ function SignupPage() {
       const userId = authData.user?.id;
       if (!userId) throw new Error("تعذر إنشاء الحساب");
 
-      // 2. Create tenant + seed defaults via admin-actions
-      // Since we can't call admin-actions without super_admin, we use a simpler approach:
-      // Create tenant directly, then trigger seeding
-      const { data: tenant, error: tErr } = await supabase
-        .from("tenants")
-        .insert({
-          name: businessName.trim(),
-          slug: slug.trim().toLowerCase(),
-          business_type: businessType,
-          is_active: true,
-          industry_profile: { source: "self_signup", currency },
-        })
-        .select("id, slug")
-        .single();
-
-      if (tErr) {
-        if (tErr.message.includes("duplicate") || tErr.message.includes("unique")) {
-          throw new Error("هذا الرابط مستخدم بالفعل، اختر رابطاً آخر");
-        }
-        throw tErr;
-      }
-
-      // 3. Create owner role
-      await supabase.from("user_roles").insert({
-        user_id: userId,
-        role: "owner",
-        tenant_id: tenant.id,
+      // 2. Create tenant via RPC (handles everything: tenant, branch, employee, settings, seeds)
+      const { data: tenantId, error: rpcError } = await supabase.rpc("self_service_create_tenant", {
+        _user_id: userId,
+        _name: businessName.trim(),
+        _slug: slug.trim().toLowerCase(),
+        _business_type: businessType,
+        _currency: currency,
+        _owner_full_name: fullName.trim(),
       });
 
-      // 4. Update tenant owner
-      await supabase.from("tenants").update({ owner_user_id: userId }).eq("id", tenant.id);
+      if (rpcError) {
+        if (rpcError.message.includes("موجود") || rpcError.message.includes("duplicate")) {
+          throw new Error("هذا الرابط مستخدم بالفعل، اختر رابطاً آخر");
+        }
+        throw rpcError;
+      }
 
-      // 5. Create employee record
-      await supabase.from("employees").upsert(
-        {
-          tenant_id: tenant.id,
-          profile_id: userId,
-          full_name: fullName.trim(),
-          email: email.trim(),
-          job_title: "مالك المشروع",
-          role: "owner",
-          job_role: "other",
-          monthly_salary: 0,
-          commission_percent: 0,
-          is_active: true,
-        },
-        { onConflict: "tenant_id,email" }
-      );
-
-      // 6. Create app_settings with currency
-      await supabase.from("app_settings").upsert(
-        {
-          tenant_id: tenant.id,
-          business_name: businessName.trim(),
-          currency: currency,
-        },
-        { onConflict: "tenant_id" }
-      );
-
-      // 7. Try to seed defaults (best-effort)
-      await supabase.rpc("seed_tenant_defaults", { _tenant_id: tenant.id, _tenant_name: businessName.trim() }).then(() => null).catch(() => null);
-      await supabase.rpc("ensure_default_branch_for", { _tenant_id: tenant.id, _tenant_name: "الفرع الرئيسي" }).then(() => null).catch(() => null);
-      await supabase.rpc("ensure_default_cash_account_for", { _tenant_id: tenant.id }).then(() => null).catch(() => null);
-      await supabase.rpc("ensure_default_chart_accounts_for", { _tenant_id: tenant.id }).then(() => null).catch(() => null);
-
-      setResult({ tenantId: tenant.id, slug: tenant.slug });
+      setResult({ tenantId: tenantId as string, slug: slug.trim().toLowerCase() });
       setStep(3);
       toast.success("تم إنشاء مشروعك بنجاح! 🎉");
     } catch (e: any) {

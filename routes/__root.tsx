@@ -3,6 +3,7 @@ import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { AuthProvider } from "@/hooks/use-auth";
+import { CurrencyProvider } from "@/hooks/use-currency";
 import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { reportClientError } from "@/lib/client-error-reporting";
@@ -79,7 +80,9 @@ function RootComponent() {
   return (
     <I18nProvider>
       <AuthProvider>
-        <Outlet />
+        <CurrencyProvider>
+          <Outlet />
+        </CurrencyProvider>
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </I18nProvider>
