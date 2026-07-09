@@ -428,7 +428,7 @@ function SuperAdminTelemetryPage() {
           </div>
 
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}

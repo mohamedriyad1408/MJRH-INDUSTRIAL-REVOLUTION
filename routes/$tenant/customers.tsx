@@ -83,7 +83,7 @@ function CustomersPage() {
       </div>
 
       <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Search className="w-4 h-4 absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder={t("customers.searchPlaceholder", "ابحث بالاسم أو التليفون...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
       </div>
 

@@ -450,7 +450,7 @@ function NewOrderPage() {
                     <div className="text-xs text-slate-500">{t("orders.quickServicesDetail")}</div>
                   </div>
                   <div className="relative w-full md:w-72">
-                    <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search className="w-4 h-4 absolute end-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <Input className="pe-9" placeholder={t("orders.searchService")} value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
                   </div>
                 </div>
