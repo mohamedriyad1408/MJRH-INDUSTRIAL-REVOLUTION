@@ -86,6 +86,7 @@ import { Route as TenantStaffLeavesRouteImport } from './routes/$tenant/staff/le
 import { Route as TenantStaffIroningPayrollRouteImport } from './routes/$tenant/staff/ironing-payroll'
 import { Route as TenantStaffAttendanceRouteImport } from './routes/$tenant/staff/attendance'
 import { Route as TenantStaffIdRouteImport } from './routes/$tenant/staff/$id'
+import { Route as TenantSettingsWorkflowRouteImport } from './routes/$tenant/settings/workflow'
 import { Route as TenantPickupsNewRouteImport } from './routes/$tenant/pickups/new'
 import { Route as TenantOrdersNewRouteImport } from './routes/$tenant/orders/new'
 import { Route as TenantOrdersIdRouteImport } from './routes/$tenant/orders/$id'
@@ -482,6 +483,11 @@ const TenantStaffIdRoute = TenantStaffIdRouteImport.update({
   path: '/staff/$id',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantSettingsWorkflowRoute = TenantSettingsWorkflowRouteImport.update({
+  id: '/workflow',
+  path: '/workflow',
+  getParentRoute: () => TenantSettingsRoute,
+} as any)
 const TenantPickupsNewRoute = TenantPickupsNewRouteImport.update({
   id: '/pickups/new',
   path: '/pickups/new',
@@ -557,7 +563,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRoute
+  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -566,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
@@ -642,7 +649,7 @@ export interface FileRoutesByTo {
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRoute
+  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -651,6 +658,7 @@ export interface FileRoutesByTo {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
@@ -729,7 +737,7 @@ export interface FileRoutesById {
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRoute
+  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -738,6 +746,7 @@ export interface FileRoutesById {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
@@ -825,6 +834,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
     | '/$tenant/staff/ironing-payroll'
@@ -910,6 +920,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
     | '/$tenant/staff/ironing-payroll'
@@ -996,6 +1007,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
     | '/$tenant/staff/ironing-payroll'
@@ -1591,6 +1603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStaffIdRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/settings/workflow': {
+      id: '/$tenant/settings/workflow'
+      path: '/workflow'
+      fullPath: '/$tenant/settings/workflow'
+      preLoaderRoute: typeof TenantSettingsWorkflowRouteImport
+      parentRoute: typeof TenantSettingsRoute
+    }
     '/$tenant/pickups/new': {
       id: '/$tenant/pickups/new'
       path: '/pickups/new'
@@ -1655,6 +1674,18 @@ const TenantBranchesRouteWithChildren = TenantBranchesRoute._addFileChildren(
   TenantBranchesRouteChildren,
 )
 
+interface TenantSettingsRouteChildren {
+  TenantSettingsWorkflowRoute: typeof TenantSettingsWorkflowRoute
+}
+
+const TenantSettingsRouteChildren: TenantSettingsRouteChildren = {
+  TenantSettingsWorkflowRoute: TenantSettingsWorkflowRoute,
+}
+
+const TenantSettingsRouteWithChildren = TenantSettingsRoute._addFileChildren(
+  TenantSettingsRouteChildren,
+)
+
 interface TenantRouteChildren {
   TenantAccountingRoute: typeof TenantAccountingRoute
   TenantBillingRoute: typeof TenantBillingRoute
@@ -1684,7 +1715,7 @@ interface TenantRouteChildren {
   TenantReportsRoute: typeof TenantReportsRoute
   TenantSearchRoute: typeof TenantSearchRoute
   TenantServicesRoute: typeof TenantServicesRoute
-  TenantSettingsRoute: typeof TenantSettingsRoute
+  TenantSettingsRoute: typeof TenantSettingsRouteWithChildren
   TenantSystemHealthRoute: typeof TenantSystemHealthRoute
   TenantTodayRoute: typeof TenantTodayRoute
   TenantOrdersIdRoute: typeof TenantOrdersIdRoute
@@ -1744,7 +1775,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantReportsRoute: TenantReportsRoute,
   TenantSearchRoute: TenantSearchRoute,
   TenantServicesRoute: TenantServicesRoute,
-  TenantSettingsRoute: TenantSettingsRoute,
+  TenantSettingsRoute: TenantSettingsRouteWithChildren,
   TenantSystemHealthRoute: TenantSystemHealthRoute,
   TenantTodayRoute: TenantTodayRoute,
   TenantOrdersIdRoute: TenantOrdersIdRoute,

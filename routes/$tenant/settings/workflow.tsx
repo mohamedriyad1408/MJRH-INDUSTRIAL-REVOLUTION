@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Palette, Check, Settings2, Workflow } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
-export const Route = createFileRoute("/$tenant/settings/workflow" as any)({
+export const Route = createFileRoute("/$tenant/settings/workflow")({
   head: () => ({ meta: [{ title: "إعدادات مراحل العمل — MJRH" }] }),
   component: WorkflowSettingsPage,
 });

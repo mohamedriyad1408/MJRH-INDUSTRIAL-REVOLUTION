@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { CURRENCIES, type CurrencyCode } from "@/lib/format";
 
 export const Route = createFileRoute("/$tenant/settings")({
   head: () => ({ meta: [{ title: "الإعدادات" }] }),
@@ -32,7 +34,6 @@ function SettingsPage() {
     if (data) {
       setS(data as S);
     } else {
-      // إنشاء صف افتراضي لهذه المغسلة
       const def: S = { business_name: "مغسلة", currency: "EGP", urgent_service_fee: 0, default_delivery_fee: 0, tax_percent: 0 };
       await supabase.from("app_settings").insert({ tenant_id: tenantId, ...def });
       setS(def);
@@ -59,17 +60,31 @@ function SettingsPage() {
       <Card>
         <CardHeader><CardTitle className="text-base">{t("settings.infoTitle", "معلومات المغسلة")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <div><Label>{t("settings.bizName", "اسم المغسلة")}</Label><Input value={s.business_name} disabled={!canEdit} onChange={(e) => setS({ ...s, business_name: e.target.value })} /></div>
-          <div><Label>{t("settings.currencyLabel", "العملة")}</Label><Input value={s.currency} disabled={!canEdit} onChange={(e) => setS({ ...s, currency: e.target.value })} /></div>
+          <div><Label>{t("settings.bizName", "اسم المغسلة")}</Label><Input value={s.business_name} disabled={!canEdit} onChange={(e) => setS({ ...s, business_name: e.target.value })} className="mt-1" /></div>
+          <div>
+            <Label>{t("settings.currencyLabel", "العملة")}</Label>
+            {canEdit ? (
+              <Select value={s.currency} onValueChange={(v) => setS({ ...s, currency: v })}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.values(CURRENCIES).map((c) => (
+                    <SelectItem key={c.code} value={c.code}>{c.symbol} {c.labelAr} ({c.code}) — {c.labelEn}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input value={s.currency} disabled className="mt-1" />
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-base">{t("settings.feesTitle", "الرسوم")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-3 gap-4">
-          <div><Label>{t("settings.urgentFee", "رسوم الاستعجال")}</Label><Input type="number" value={s.urgent_service_fee} disabled={!canEdit} onChange={(e) => setS({ ...s, urgent_service_fee: Number(e.target.value) })} /></div>
-          <div><Label>{t("settings.deliveryFee", "مصاريف التوصيل الافتراضية")}</Label><Input type="number" value={s.default_delivery_fee} disabled={!canEdit} onChange={(e) => setS({ ...s, default_delivery_fee: Number(e.target.value) })} /></div>
-          <div><Label>{t("settings.taxPercent", "ضريبة %")}</Label><Input type="number" value={s.tax_percent} disabled={!canEdit} onChange={(e) => setS({ ...s, tax_percent: Number(e.target.value) })} /></div>
+          <div><Label>{t("settings.urgentFee", "رسوم الاستعجال")}</Label><Input type="number" value={s.urgent_service_fee} disabled={!canEdit} onChange={(e) => setS({ ...s, urgent_service_fee: Number(e.target.value) })} className="mt-1" /></div>
+          <div><Label>{t("settings.deliveryFee", "مصاريف التوصيل الافتراضية")}</Label><Input type="number" value={s.default_delivery_fee} disabled={!canEdit} onChange={(e) => setS({ ...s, default_delivery_fee: Number(e.target.value) })} className="mt-1" /></div>
+          <div><Label>{t("settings.taxPercent", "ضريبة %")}</Label><Input type="number" value={s.tax_percent} disabled={!canEdit} onChange={(e) => setS({ ...s, tax_percent: Number(e.target.value) })} className="mt-1" /></div>
         </CardContent>
       </Card>
 

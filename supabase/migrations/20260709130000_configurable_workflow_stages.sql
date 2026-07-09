@@ -28,17 +28,25 @@ CREATE TABLE IF NOT EXISTS public.workflow_stages (
 
 COMMENT ON TABLE public.workflow_stages IS 'Custom workflow stages per tenant. Each business can define its own stations.';
 
--- RLS
+-- RLS - Fixed to use can_access_tenant pattern like rest of codebase
 ALTER TABLE public.workflow_stages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY workflow_stages_tenant_isolation ON public.workflow_stages
-  USING (tenant_id = (SELECT current_setting('app.current_tenant', true)::uuid))
-  WITH CHECK (tenant_id = (SELECT current_setting('app.current_tenant', true)::uuid));
+DROP POLICY IF EXISTS workflow_stages_tenant_isolation ON public.workflow_stages;
+DROP POLICY IF EXISTS workflow_stages_branch_all ON public.workflow_stages;
+
+CREATE POLICY workflow_stages_tenant_all ON public.workflow_stages
+  FOR ALL TO authenticated
+  USING (public.can_access_tenant(tenant_id))
+  WITH CHECK (public.can_access_tenant(tenant_id));
 
 -- Index
 CREATE INDEX IF NOT EXISTS idx_workflow_stages_tenant_order
   ON public.workflow_stages (tenant_id, stage_order)
   WHERE is_active = true;
+
+-- Also allow service_role full access
+GRANT ALL ON public.workflow_stages TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.workflow_stages TO authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 2) Workflow Templates (predefined stage sets for common businesses)
@@ -207,3 +215,75 @@ AS $$
 $$;
 
 GRANT EXECUTE ON FUNCTION public.get_workflow_stages(UUID) TO authenticated;
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 5) RLS for workflow_templates (global, readable by all authenticated)
+-- ═══════════════════════════════════════════════════════════════════════
+
+ALTER TABLE public.workflow_templates ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS workflow_templates_public_read ON public.workflow_templates;
+CREATE POLICY workflow_templates_public_read ON public.workflow_templates
+  FOR SELECT TO authenticated
+  USING (is_active = true);
+
+DROP POLICY IF EXISTS workflow_templates_admin_write ON public.workflow_templates;
+CREATE POLICY workflow_templates_admin_write ON public.workflow_templates
+  FOR ALL TO authenticated
+  USING (public.is_super_admin(auth.uid()))
+  WITH CHECK (public.is_super_admin(auth.uid()));
+
+GRANT SELECT ON public.workflow_templates TO authenticated;
+GRANT ALL ON public.workflow_templates TO service_role;
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 6) Auto-apply laundry template for new tenants if they have no stages
+-- ═══════════════════════════════════════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION public.ensure_default_workflow_for(_tenant_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.workflow_stages WHERE tenant_id = _tenant_id AND is_active = true) THEN
+    PERFORM public.apply_workflow_template(_tenant_id, 'laundry');
+  END IF;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.ensure_default_workflow_for(UUID) TO authenticated;
+
+-- Update seed_tenant_defaults to also apply default workflow
+CREATE OR REPLACE FUNCTION public.seed_tenant_defaults(_tenant_id uuid, _tenant_name text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.app_settings (tenant_id, business_name)
+  VALUES (_tenant_id, COALESCE(_tenant_name, 'مغسلة'))
+  ON CONFLICT (tenant_id) DO NOTHING;
+
+  PERFORM public.ensure_default_branch_for(_tenant_id, _tenant_name);
+  PERFORM public.ensure_default_cash_account_for(_tenant_id);
+  PERFORM public.ensure_default_chart_accounts_for(_tenant_id);
+  PERFORM public.ensure_default_workflow_for(_tenant_id);
+
+  INSERT INTO public.service_items (tenant_id, name, service_type, unit_price, is_active, category_id)
+  SELECT _tenant_id, x.name, x.service_type, x.unit_price, x.is_active, NULL
+  FROM (
+    SELECT DISTINCT ON (name) name, service_type, unit_price, is_active
+    FROM public.service_items
+    WHERE tenant_id IS NOT NULL AND tenant_id <> _tenant_id
+    ORDER BY name, created_at DESC
+  ) x
+  WHERE NOT EXISTS (SELECT 1 FROM public.service_items s WHERE s.tenant_id = _tenant_id AND s.name = x.name);
+END;
+$$;
+
+-- Also update self_service_create_tenant to use new seed function (already calls it)
+-- No need to change, but ensure workflow is seeded
+

@@ -148,29 +148,153 @@ GRANT SELECT ON public.table_row_counts TO authenticated;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 4) Real-time friendly indexes for commonly subscribed tables
+-- NOTE: CONCURRENTLY cannot be used inside migration transaction, use normal index
 -- ═══════════════════════════════════════════════════════════════════════
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_tenant_status
+CREATE INDEX IF NOT EXISTS idx_orders_tenant_status
   ON public.orders (tenant_id, status)
   WHERE status NOT IN ('delivered', 'cancelled');
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_units_tenant_stage
+CREATE INDEX IF NOT EXISTS idx_service_units_tenant_stage
   ON public.service_units (tenant_id, current_stage)
   WHERE current_stage NOT IN ('delivered', 'cancelled');
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_app_notifications_tenant_unread
+CREATE INDEX IF NOT EXISTS idx_app_notifications_tenant_unread
   ON public.app_notifications (tenant_id, audience)
   WHERE read_at IS NULL;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pickup_requests_tenant_status
+CREATE INDEX IF NOT EXISTS idx_pickup_requests_tenant_status
   ON public.pickup_requests (tenant_id, status)
   WHERE status IN ('pending', 'assigned');
 
 -- ═══════════════════════════════════════════════════════════════════════
--- 5) Enable realtime for key tables (Supabase Realtime)
+-- 5) Enable realtime for key tables (Supabase Realtime) - idempotent
 -- ═══════════════════════════════════════════════════════════════════════
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.service_units;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.app_notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.pickup_requests;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'orders') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'service_units') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.service_units;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'app_notifications') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.app_notifications;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'pickup_requests') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.pickup_requests;
+  END IF;
+END $$;
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 6) Security hardening for self-service: limit tenants per user to 3
+-- ═══════════════════════════════════════════════════════════════════════
+
+CREATE OR REPLACE FUNCTION public.self_service_create_tenant(
+  _user_id UUID,
+  _name TEXT,
+  _slug TEXT,
+  _business_type TEXT DEFAULT 'laundry',
+  _currency TEXT DEFAULT 'EGP',
+  _owner_full_name TEXT DEFAULT ''
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _tenant_id UUID;
+  _branch_id UUID;
+  _existing_count INTEGER;
+BEGIN
+  IF _user_id IS NULL OR _name IS NULL OR _slug IS NULL THEN
+    RAISE EXCEPTION 'المدخلات الأساسية ناقصة';
+  END IF;
+
+  IF length(_slug) < 2 OR length(_slug) > 40 THEN
+    RAISE EXCEPTION 'الرابط يجب أن يكون بين 2 و40 حرف';
+  END IF;
+
+  IF _slug !~ '^[a-z0-9-]+$' THEN
+    RAISE EXCEPTION 'الرابط يجب أن يحتوي على أحرف إنجليزية صغيرة وأرقام وشرطات فقط';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.tenants WHERE slug = _slug) THEN
+    RAISE EXCEPTION 'هذا الرابط مستخدم بالفعل';
+  END IF;
+
+  SELECT COUNT(*) INTO _existing_count FROM public.tenants WHERE owner_user_id = _user_id;
+  IF _existing_count >= 3 THEN
+    RAISE EXCEPTION 'لا يمكنك إنشاء أكثر من 3 مشاريع';
+  END IF;
+
+  INSERT INTO public.tenants (name, slug, business_type, owner_user_id, is_active, industry_profile)
+  VALUES (_name, _slug, _business_type, _user_id, true, jsonb_build_object('source', 'self_signup', 'currency', _currency))
+  RETURNING id INTO _tenant_id;
+
+  INSERT INTO public.user_roles (user_id, role, tenant_id)
+  VALUES (_user_id, 'owner', _tenant_id);
+
+  INSERT INTO public.branches (tenant_id, name, is_active)
+  VALUES (_tenant_id, 'الفرع الرئيسي', true)
+  RETURNING id INTO _branch_id;
+
+  INSERT INTO public.employees (
+    tenant_id, branch_id, profile_id, full_name, email,
+    job_title, role, job_role, monthly_salary, commission_percent, is_active
+  ) VALUES (
+    _tenant_id, _branch_id, _user_id, _owner_full_name,
+    (SELECT email FROM auth.users WHERE id = _user_id),
+    'مالك المشروع', 'owner', 'other', 0, 0, true
+  );
+
+  INSERT INTO public.app_settings (tenant_id, business_name, currency)
+  VALUES (_tenant_id, _name, _currency)
+  ON CONFLICT (tenant_id) DO UPDATE SET
+    business_name = EXCLUDED.business_name,
+    currency = EXCLUDED.currency;
+
+  PERFORM public.ensure_default_cash_account_for(_tenant_id);
+  PERFORM public.ensure_default_chart_accounts_for(_tenant_id);
+  PERFORM public.seed_tenant_defaults(_tenant_id, _name);
+
+  PERFORM public.record_operation_event(
+    'tenant_bootstrapped',
+    'تسجيل ذاتي — مشروع جديد',
+    'tenant',
+    _tenant_id,
+    _branch_id,
+    NULL,
+    'admin/onboarding',
+    false,
+    jsonb_build_object('tenant_id', _tenant_id, 'currency', _currency, 'source', 'self_signup'),
+    jsonb_build_object('cash_impact', false, 'journal_required', false, 'appears_in_report', true)
+  );
+
+  RETURN _tenant_id;
+END;
+$$;
+
+-- Make table_row_counts secure as invoker
+DROP VIEW IF EXISTS public.table_row_counts;
+CREATE VIEW public.table_row_counts WITH (security_invoker = true) AS
+SELECT 'tenants' AS table_name, COUNT(*) AS row_count FROM public.tenants
+UNION ALL SELECT 'orders', COUNT(*) FROM public.orders
+UNION ALL SELECT 'order_items', COUNT(*) FROM public.order_items
+UNION ALL SELECT 'service_units', COUNT(*) FROM public.service_units
+UNION ALL SELECT 'customers', COUNT(*) FROM public.customers
+UNION ALL SELECT 'employees', COUNT(*) FROM public.employees
+UNION ALL SELECT 'branches', COUNT(*) FROM public.branches
+UNION ALL SELECT 'cash_accounts', COUNT(*) FROM public.cash_accounts
+UNION ALL SELECT 'cash_transactions', COUNT(*) FROM public.cash_transactions
+UNION ALL SELECT 'journal_entries', COUNT(*) FROM public.journal_entries
+UNION ALL SELECT 'journal_lines', COUNT(*) FROM public.journal_lines
+UNION ALL SELECT 'app_settings', COUNT(*) FROM public.app_settings
+UNION ALL SELECT 'user_roles', COUNT(*) FROM public.user_roles
+UNION ALL SELECT 'service_items', COUNT(*) FROM public.service_items
+UNION ALL SELECT 'app_notifications', COUNT(*) FROM public.app_notifications
+UNION ALL SELECT 'operation_events', COUNT(*) FROM public.operation_events;
+
+GRANT SELECT ON public.table_row_counts TO authenticated;
