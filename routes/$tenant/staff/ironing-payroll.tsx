@@ -74,7 +74,7 @@ function IroningPayrollPage() {
       <div className="flex flex-wrap items-end gap-3 bg-card p-3 rounded-2xl border shadow-sm">
         <div><Label className="text-xs">{t("ironingPayroll.from", "من")}</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><Label className="text-xs">{t("ironingPayroll.to", "إلى")}</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
-        <div className="min-w-56"><Label className="text-xs">{t("ironingPayroll.cashLabel", "الخزنة")}</Label><select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={cashAccountId} onChange={(e) => setCashAccountId(e.target.value)}>{cashAccounts.map((c) => <option key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance, curr)}</option>)}</select></div>
+        <div className="min-w-[160px] sm:min-w-56 flex-1"><Label className="text-xs">{t("ironingPayroll.cashLabel", "الخزنة")}</Label><select className="h-11 md:h-10 w-full rounded-md border bg-background px-3 text-sm" value={cashAccountId} onChange={(e) => setCashAccountId(e.target.value)}>{cashAccounts.map((c) => <option key={c.id} value={c.id}>{c.name} — {fmtMoney(c.current_balance, curr)}</option>)}</select></div>
         {canEdit && <Button onClick={payToday} disabled={paying} className="bg-emerald-600 hover:bg-emerald-700">{paying ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Banknote className="w-4 h-4 ms-1" />} {t("ironingPayroll.payTodayBtn", "صرف يومية تاريخ")} {to}</Button>}
       </div>
     </div>

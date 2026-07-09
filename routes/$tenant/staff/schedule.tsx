@@ -90,14 +90,14 @@ function SchedulePage() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-start p-2 sticky right-0 bg-muted/50 z-10 min-w-[160px]">{t("schedule.colStaff", "الموظف")}</th>
+                  <th className="text-start p-2 sticky end-0 bg-muted/50 z-10 min-w-[160px]">{t("schedule.colStaff", "الموظف")}</th>
                   {DAYS.map((d, i) => <th key={i} className="text-center p-2 min-w-[140px] border-s">{d}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {emps.map((e) => (
                   <tr key={e.id} className="border-t">
-                    <td className="p-3 font-bold sticky right-0 bg-card z-10">{e.full_name}</td>
+                    <td className="p-3 font-bold sticky end-0 bg-card z-10">{e.full_name}</td>
                     {DAYS.map((_, d) => {
                       const cur = sched[e.id]?.[d] || { day_of_week: d, start_time: "09:00", end_time: "17:00", is_off: d === 5 };
                       return (
