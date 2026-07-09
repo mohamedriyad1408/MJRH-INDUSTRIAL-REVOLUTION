@@ -36,7 +36,8 @@ Vercel automatically creates preview deployments for every branch/PR. To use sta
 ```bash
 # Set staging credentials
 export SUPABASE_URL="https://YOUR_STAGING_REF.supabase.co"
-export SUPABASE_SERVICE_ROLE_KEY="YOUR_STAGING_SERVICE_KEY"
+# Get your staging service role key from Supabase Dashboard → Settings → API
+# Then set it as an environment variable before running scripts
 
 # Create a test tenant via the signup page or admin-actions
 # Then seed demo data:
