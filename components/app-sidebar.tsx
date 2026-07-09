@@ -6,7 +6,7 @@ import {
  Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
  BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
  UsersRound, LockKeyhole, HelpCircle, Search, AlertTriangle, ClipboardCheck, Tags,
- Megaphone, TrendingUp,
+ Megaphone, TrendingUp, Workflow,
 } from "lucide-react";
 import {
  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -166,8 +166,9 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "ذمم العملاء", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
  { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole, roles: ["owner", "ops_manager"] },
  { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
- { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },
- { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
+          { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },
+          { title: "مراحل العمل (Workflow)", url: "/settings/workflow", icon: Workflow, roles: ["owner"] },
+          { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
  { title: "دليل الاستخدام", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
  ],
  },
