@@ -145,6 +145,15 @@
   html, body, #root {
     max-width: 100vw;
     overflow-x: hidden;
+    overflow-y: auto;
+  }
+  /* Ensure main scrolling works without needing to hover scrollbar */
+  body {
+    overscroll-behavior-y: auto;
+  }
+  /* Fix for flex layouts: allow scrolling inside app-main */
+  .app-shell, .app-main {
+    min-height: 0;
   }
   /* Respect iOS user's preferred text size (no forced override), keep smooth
      momentum scrolling, and disable iOS tap highlight that overlaps brand
@@ -163,7 +172,7 @@
     /* Enable momentum scrolling inside the webview on iOS Safari and Chrome
        without changing desktop behavior. */
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
   }
 }
 
