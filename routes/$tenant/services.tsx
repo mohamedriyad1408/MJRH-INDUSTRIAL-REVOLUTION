@@ -25,6 +25,8 @@ export const Route = createFileRoute("/$tenant/services")({
   component: ServicesPage,
 });
 
+type Category = { id: string; name: string; slug: string; icon?: string; color?: string };
+
 type Item = {
   id?: string;
   name: string;
@@ -32,6 +34,8 @@ type Item = {
   unit_price: number;
   is_active: boolean;
   category?: string;
+  category_id?: string | null;
+  custom_fields?: any;
 };
 
 function ServicesPage() {
@@ -39,6 +43,7 @@ function ServicesPage() {
   const { hasRole, tenantId } = useAuth();
   const canEdit = hasRole("owner", "ops_manager");
   const [list, setList] = useState<Item[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Item | null>(null);
   const [open, setOpen] = useState(false);
@@ -57,9 +62,14 @@ function ServicesPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase.from("service_items").select("*").order("name");
-    if (error) toast.error(error.message);
-    setList((data ?? []) as Item[]);
+    const [itemsRes, catsRes] = await Promise.all([
+      supabase.from("service_items").select("*").order("name"),
+      supabase.from("service_categories").select("*").eq("is_active", true).order("sort_order"),
+    ]);
+    if (itemsRes.error) toast.error(itemsRes.error.message);
+    if (catsRes.data) setCategories(catsRes.data as Category[]);
+    else setCategories([]);
+    setList((itemsRes.data ?? []) as Item[]);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
@@ -286,11 +296,12 @@ function ServicesPage() {
         </Card>
       </div>
 
-      {/* POS Category Tabs & Service Type Filter */}
+      {/* POS Category Tabs & Service Type Filter - now dynamic from service_categories */}
       <PosCategoryTabs
         activeTab={categoryTab}
         onSelect={setCategoryTab}
         items={list}
+        categories={categories}
         compact={false}
         activeServiceType={serviceType}
         onSelectServiceType={setServiceType}
@@ -569,19 +580,25 @@ function ServicesPage() {
                 <div className="space-y-1.5">
                   <Label className="font-bold text-slate-700">المبوبة / الفئة (Category)</Label>
                   <Select
-                    value={editing.category || "رجالي"}
+                    value={editing.category || (categories[0]?.name ?? "عام")}
                     onValueChange={(v) => setEditing({ ...editing, category: v })}
                   >
                     <SelectTrigger className="h-10 rounded-xl font-bold text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="رجالي" className="text-xs font-bold">رجالي</SelectItem>
-                      <SelectItem value="حريمي" className="text-xs font-bold">حريمي</SelectItem>
-                      <SelectItem value="أطفال" className="text-xs font-bold">أطفال</SelectItem>
-                      <SelectItem value="تنظيف المفروشات" className="text-xs font-bold">مفروشات</SelectItem>
-                      <SelectItem value="سجاد وموكيت" className="text-xs font-bold">سجاد</SelectItem>
-                      <SelectItem value="توصيل وخدمات" className="text-xs font-bold">توصيل وخدمات</SelectItem>
+                      {categories.length > 0 ? categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.name} className="text-xs font-bold">{cat.name}</SelectItem>
+                      )) : (
+                        <>
+                          <SelectItem value="عام" className="text-xs font-bold">عام</SelectItem>
+                          <SelectItem value="رجالي" className="text-xs font-bold">رجالي</SelectItem>
+                          <SelectItem value="حريمي" className="text-xs font-bold">حريمي</SelectItem>
+                          <SelectItem value="أطفال" className="text-xs font-bold">أطفال</SelectItem>
+                          <SelectItem value="تنظيف المفروشات" className="text-xs font-bold">مفروشات</SelectItem>
+                          <SelectItem value="سجاد وموكيت" className="text-xs font-bold">سجاد</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

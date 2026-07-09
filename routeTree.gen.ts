@@ -76,6 +76,7 @@ import { Route as TenantStationsDryingAssemblyRouteImport } from './routes/$tena
 import { Route as TenantStationsDeliveryRouteImport } from './routes/$tenant/stations/delivery'
 import { Route as TenantStationsCsRouteImport } from './routes/$tenant/stations/cs'
 import { Route as TenantStationsCleaningRouteImport } from './routes/$tenant/stations/cleaning'
+import { Route as TenantStationsStageRouteImport } from './routes/$tenant/stations/$stage'
 import { Route as TenantStaffUsersRouteImport } from './routes/$tenant/staff/users'
 import { Route as TenantStaffScorecardRouteImport } from './routes/$tenant/staff/scorecard'
 import { Route as TenantStaffScheduleRouteImport } from './routes/$tenant/staff/schedule'
@@ -432,6 +433,11 @@ const TenantStationsCleaningRoute = TenantStationsCleaningRouteImport.update({
   path: '/stations/cleaning',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantStationsStageRoute = TenantStationsStageRouteImport.update({
+  id: '/stations/$stage',
+  path: '/stations/$stage',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantStaffUsersRoute = TenantStaffUsersRouteImport.update({
   id: '/staff/users',
   path: '/staff/users',
@@ -583,6 +589,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
+  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
   '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
@@ -669,6 +676,7 @@ export interface FileRoutesByTo {
   '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
+  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
   '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
@@ -757,6 +765,7 @@ export interface FileRoutesById {
   '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
   '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
   '/$tenant/staff/users': typeof TenantStaffUsersRoute
+  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
   '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
   '/$tenant/stations/cs': typeof TenantStationsCsRoute
   '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
@@ -845,6 +854,7 @@ export interface FileRouteTypes {
     | '/$tenant/staff/schedule'
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
+    | '/$tenant/stations/$stage'
     | '/$tenant/stations/cleaning'
     | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
@@ -931,6 +941,7 @@ export interface FileRouteTypes {
     | '/$tenant/staff/schedule'
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
+    | '/$tenant/stations/$stage'
     | '/$tenant/stations/cleaning'
     | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
@@ -1018,6 +1029,7 @@ export interface FileRouteTypes {
     | '/$tenant/staff/schedule'
     | '/$tenant/staff/scorecard'
     | '/$tenant/staff/users'
+    | '/$tenant/stations/$stage'
     | '/$tenant/stations/cleaning'
     | '/$tenant/stations/cs'
     | '/$tenant/stations/delivery'
@@ -1533,6 +1545,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStationsCleaningRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/stations/$stage': {
+      id: '/$tenant/stations/$stage'
+      path: '/stations/$stage'
+      fullPath: '/$tenant/stations/$stage'
+      preLoaderRoute: typeof TenantStationsStageRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/staff/users': {
       id: '/$tenant/staff/users'
       path: '/staff/users'
@@ -1731,6 +1750,7 @@ interface TenantRouteChildren {
   TenantStaffScheduleRoute: typeof TenantStaffScheduleRoute
   TenantStaffScorecardRoute: typeof TenantStaffScorecardRoute
   TenantStaffUsersRoute: typeof TenantStaffUsersRoute
+  TenantStationsStageRoute: typeof TenantStationsStageRoute
   TenantStationsCleaningRoute: typeof TenantStationsCleaningRoute
   TenantStationsCsRoute: typeof TenantStationsCsRoute
   TenantStationsDeliveryRoute: typeof TenantStationsDeliveryRoute
@@ -1791,6 +1811,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantStaffScheduleRoute: TenantStaffScheduleRoute,
   TenantStaffScorecardRoute: TenantStaffScorecardRoute,
   TenantStaffUsersRoute: TenantStaffUsersRoute,
+  TenantStationsStageRoute: TenantStationsStageRoute,
   TenantStationsCleaningRoute: TenantStationsCleaningRoute,
   TenantStationsCsRoute: TenantStationsCsRoute,
   TenantStationsDeliveryRoute: TenantStationsDeliveryRoute,

@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { ArrowLeft, BarChart3, Calculator, CheckCircle2, ClipboardList, Map, ShieldCheck, Shirt, Sparkles, Truck, Users, WalletCards } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
-  head: () => ({ meta: [{ title: "MJRH — نظام تشغيل المغاسل" }] }),
+  head: () => ({ meta: [{ title: "MJRH — منظومة تشغيل المشاريع" }] }),
   component: LandingPage,
 });
 
@@ -34,7 +34,7 @@ function LandingPage() {
           </div>
           <div>
             <div className="font-black text-xl text-slate-900 tracking-tight">MJRH</div>
-            <div className="text-xs text-slate-500 font-semibold">Industrial Revolution for Laundry Operations</div>
+            <div className="text-xs text-slate-500 font-semibold">Industrial Revolution — Project Operations Platform</div>
           </div>
         </div>
         <div className="flex gap-2 items-center">

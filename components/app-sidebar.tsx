@@ -21,165 +21,113 @@ type NavItem = { title: string; url: string; icon: React.ComponentType<{ classNa
 
 const adminGroups: { label: string; items: NavItem[] }[] = [
  {
- label: "إدارة المالك والتنفيذيين (Vorstand)",
+ label: "نظرة عامة",
  items: [
- { title: "ملخص مقر الشركة", url: "/admin", icon: Crown },
- { title: "خطة العمل واقتصاديات SaaS", url: "/admin/business-plan", icon: TrendingUp },
- { title: "شؤون المستثمرين والتقييم الفني", url: "/admin/investor-relations", icon: ShieldCheck },
+ { title: "لوحة المنصة", url: "/admin", icon: Crown },
+ { title: "المشاريع والمستأجرون", url: "/admin/tenants", icon: Building2 },
+ { title: "المستخدمون", url: "/admin/users", icon: Users },
  ],
  },
  {
- label: "إدارة المبيعات وتطوير الأعمال (Vertrieb)",
+ label: "النمو والتشغيل",
  items: [
- { title: "تطوير الأعمال ومبيعات B2B", url: "/admin/biz-dev", icon: BriefcaseBusiness },
- { title: "المغاسل والمستأجرون", url: "/admin/tenants", icon: Building2 },
+ { title: "خطة العمل SaaS", url: "/admin/business-plan", icon: TrendingUp },
+ { title: "تطوير الأعمال", url: "/admin/biz-dev", icon: BriefcaseBusiness },
+ { title: "التسويق GTM", url: "/admin/marketing-plan", icon: Megaphone },
+ { title: "نجاح العملاء", url: "/admin/customer-success", icon: Headphones },
+ { title: "المستثمرون", url: "/admin/investor-relations", icon: ShieldCheck },
  ],
  },
  {
- label: "إدارة التسويق والتحليل (Marketing)",
+ label: "المالية والمراقبة",
  items: [
- { title: "خطة التسويق والنمو GTM", url: "/admin/marketing-plan", icon: Megaphone },
- ],
- },
- {
- label: "إدارة خدمة ورعاية العملاء (Kundenservice)",
- items: [
- { title: "نجاح العملاء ونشر المنشآت", url: "/admin/customer-success", icon: Headphones },
- ],
- },
- {
- label: "الشؤون القانونية والمنازعات (Rechtsabteilung)",
- items: [
- { title: "الشؤون القانونية والعقود", url: "/admin/legal", icon: ShieldCheck },
- ],
- },
- {
- label: "الموظفون (Personalwesen)",
- items: [
- { title: "كل المستخدمين والصلاحيات", url: "/admin/users", icon: Users },
- ],
- },
- {
- label: "المالية والتشغيل (Finanzwesen)",
- items: [
- { title: "رسوم تشغيل المنصة", url: "/admin/platform-fees", icon: Banknote },
- { title: "فواتير SaaS والاشتراكات", url: "/admin/billing", icon: ReceiptText },
- { title: "مرصد المشاكل والتعثرات", url: "/admin/telemetry", icon: AlertTriangle },
+ { title: "رسوم المنصة", url: "/admin/platform-fees", icon: Banknote },
+ { title: "فواتير SaaS", url: "/admin/billing", icon: ReceiptText },
+ { title: "مرصد التعثرات", url: "/admin/telemetry", icon: AlertTriangle },
+ { title: "الشؤون القانونية", url: "/admin/legal", icon: ShieldCheck },
  ],
  },
 ];
 
 const tenantGroups: { label: string; items: NavItem[] }[] = [
  {
- label: "إدارة المالك والتنفيذيين (Vorstand)",
+ label: "الرئيسية",
  items: [
- { title: "لوحة المالك العامة", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
- { title: "لوحة المديرين التنفيذيين CEO", url: "/executive", icon: BarChart3, roles: ["owner"] },
- { title: "فيديو ديمو النظام وعروض البيع", url: "/demo", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager", "employee"] },
+ { title: "مركز اليوم", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard, roles: ["owner"] },
+ { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
+ { title: "لوحة التنفيذيين", url: "/executive", icon: BarChart3, roles: ["owner"] },
+ { title: "البحث الموحد", url: "/search", icon: Search, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
+ { title: "الخريطة والفريق", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
+ { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "الديمو", url: "/demo", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager", "employee"] },
  ],
  },
  {
- label: "التشغيل اليومي والمحطات (Betriebsleitung)",
+ label: "التشغيل والمحطات",
  items: [
- { title: "لوحة مدير التشغيل COO", url: "/ops", icon: ShieldCheck, roles: ["ops_manager", "owner"] },
- { title: "مركز اليوم التشغيلي", url: "/today", icon: CalendarCheck, roles: ["owner", "ops_manager", "cs_manager"] },
- { title: "تشغيل اليوم المفصل", url: "/daily-operations", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager"] },
- { title: "الاستقبال ومطابقة الفواتير", url: "/stations/reception", icon: ClipboardCheck, roles: ["cs_manager", "ops_manager", "owner", "employee", "receptionist"] },
- { title: "الفرز والتصنيف وإصدار المارك", url: "/stations/sorting", icon: Tags, roles: ["ops_manager", "owner", "employee", "sorter"] },
- { title: "التنظيف والغسيل والمعالجة", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee", "cleaning_tech"] },
- { title: "التجفيف والتجميع والفرز", url: "/stations/drying-assembly", icon: Wind, roles: ["ops_manager", "owner", "employee", "assembly_tech"] },
- { title: "الكي بالبخار والمكابس", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee", "ironing_tech"] },
- { title: "التغليف وتجهيز الشحنات", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee", "packer"] },
- { title: "فحص الجودة والمطابقة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee", "qc_tech"] },
- { title: "فحص سلامة النظام (APDO)", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
- { title: "مرصد التعثرات (Telemetry)", url: "/issues", icon: AlertTriangle, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "الاستقبال", url: "/stations/reception", icon: ClipboardCheck, roles: ["cs_manager", "ops_manager", "owner", "employee", "receptionist"] },
+ { title: "الفرز والتصنيف", url: "/stations/sorting", icon: Tags, roles: ["ops_manager", "owner", "employee", "sorter"] },
+ { title: "التشغيل والغسيل", url: "/stations/cleaning", icon: Sparkles, roles: ["ops_manager", "owner", "employee", "cleaning_tech"] },
+ { title: "التجفيف والتجميع", url: "/stations/drying-assembly", icon: Wind, roles: ["ops_manager", "owner", "employee", "assembly_tech"] },
+ { title: "الكي والمكابس", url: "/stations/ironing", icon: Shirt, roles: ["ops_manager", "owner", "employee", "ironing_tech"] },
+ { title: "التغليف والشحن", url: "/stations/packing", icon: Package, roles: ["ops_manager", "owner", "employee", "packer"] },
+ { title: "الجودة QC", url: "/stations/qc", icon: ShieldCheck, roles: ["ops_manager", "owner", "employee", "qc_tech"] },
+ { title: "خدمة العملاء", url: "/stations/cs", icon: Headphones, roles: ["cs_manager", "ops_manager", "owner", "employee", "cs_rep"] },
+ { title: "الاستلام", url: "/stations/intake", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee", "intake_rep"] },
+ { title: "التوصيل", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
+ { title: "السائق", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
+ { title: "سلامة النظام APDO", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
+ { title: "التعثرات", url: "/issues", icon: AlertTriangle, roles: ["owner", "ops_manager", "cs_manager"] },
  ],
  },
  {
- label: "إدارة المبيعات وتطوير الأعمال (Vertrieb)",
+ label: "العملاء والمبيعات",
  items: [
- { title: "إنشاء فاتورة طلب جديد", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
- { title: "كل الطلبات والفواتير", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "البحث الموحد والنتائج", url: "/search", icon: Search, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
+ { title: "عملية جديدة", url: "/orders/new", icon: PlusCircle, roles: ["cs_manager", "owner"] },
+ { title: "كل العمليات", url: "/orders", icon: ListOrdered, roles: ["cs_manager", "ops_manager", "owner"] },
  { title: "العملاء", url: "/customers", icon: Users, roles: ["cs_manager", "owner"] },
  { title: "CRM والولاء", url: "/crm", icon: HeartHandshake, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "رعاية العملاء", url: "/customer-care", icon: HeartHandshake, roles: ["owner", "cs_manager", "ops_manager"] },
+ { title: "التسويق", url: "/marketing", icon: TrendingUp, roles: ["owner", "ops_manager", "cs_manager"] },
+ { title: "كتالوج الخدمات", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
+ { title: "المواقع والفروع", url: "/branches", icon: Building2, roles: ["owner"] },
+ { title: "المخزون", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
  ],
  },
  {
- label: "إدارة التسويق والتحليل (Marketing)",
+ label: "المالية والإدارة",
  items: [
- { title: "البيانات التسويقية وأوقات الذروة", url: "/marketing", icon: TrendingUp, roles: ["owner", "ops_manager", "cs_manager"] },
- { title: "التقارير والذكاء التشغيلي", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
- { title: "كتالوج الخدمات والأصناف", url: "/services", icon: Tag, roles: ["cs_manager", "owner"] },
- ],
- },
- {
- label: "إدارة خدمة ورعاية العملاء (Kundenservice)",
- items: [
- { title: "لوحة مدير خدمة العملاء", url: "/cs", icon: Headphones, roles: ["cs_manager", "owner"] },
- { title: "خدمة العملاء والدعم", url: "/stations/cs", icon: Headphones, roles: ["cs_manager", "ops_manager", "owner", "employee", "cs_rep"] },
- { title: "استلام الطلبات والندب", url: "/stations/intake", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner", "employee", "intake_rep"] },
- { title: "رعاية العملاء والتعويضات", url: "/customer-care", icon: HeartHandshake, roles: ["owner", "cs_manager", "ops_manager"] },
- ],
- },
- {
- label: "إدارة حركة النقل والأسطول (Logistik)",
- items: [
- { title: "خريطة المراقبة والمناديب", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
- { title: "لوحة السائق الخاصة", url: "/driver", icon: Truck, roles: ["courier", "owner", "ops_manager"] },
- { title: "التوصيل والندب الخارجي", url: "/stations/delivery", icon: Truck, roles: ["ops_manager", "owner", "employee", "courier"] },
- ],
- },
- {
- label: "إدارة المخازن والمخزون (Lager)",
- items: [
- { title: "المخزون والمعدات والخامات", url: "/inventory", icon: Boxes, roles: ["owner", "ops_manager"] },
- { title: "إدارة الفروع ونقاط التشغيل", url: "/branches", icon: Building2, roles: ["owner"] },
- ],
- },
- {
- label: "الشؤون القانونية والمنازعات (Rechtsabteilung)",
- items: [
- { title: "الشؤون القانونية والعقود", url: "/legal", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
- ],
- },
- {
- label: "الموظفون (Personalwesen)",
- items: [
- { title: "الحضور والانصراف (Mawared HR)", url: "/staff/attendance", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "تقييم الأداء واستمارة 6 (Scorecard)", url: "/staff/scorecard", icon: Target, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "إدارة المستخدمين وتأكيد WhatsApp", url: "/staff/users", icon: Crown, roles: ["owner"] },
- { title: "كل الموظفين", url: "/staff", icon: BriefcaseBusiness, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "جدول العمل", url: "/staff/schedule", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "الإجازات والعطلات", url: "/staff/leaves", icon: CalendarDays, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "الطلبات والسلف", url: "/staff/requests", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner"] },
- { title: "الرواتب اليومية", url: "/staff/salaries", icon: Banknote, roles: ["owner"] },
- { title: "رواتب فنيي الكي", url: "/staff/ironing-payroll", icon: Shirt, roles: ["owner"] },
- ],
- },
- {
- label: "المالية والتشغيل (Finanzwesen)",
- items: [
- { title: "الحسابات العامة", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
+ { title: "المالية", url: "/finance", icon: Wallet, roles: ["owner", "cs_manager", "ops_manager"] },
  { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator, roles: ["owner", "ops_manager"] },
- { title: "دفتر القيود والتقارير", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
- { title: "ذمم العملاء", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
+ { title: "القيود", url: "/ledger", icon: BookOpenCheck, roles: ["owner"] },
+ { title: "الذمم", url: "/receivables", icon: UsersRound, roles: ["owner", "cs_manager", "ops_manager"] },
  { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole, roles: ["owner", "ops_manager"] },
  { title: "الميزانيات", url: "/budgets", icon: Target, roles: ["owner"] },
-          { title: "اشتراك المنصة", url: "/billing", icon: ReceiptText, roles: ["owner"] },
-          { title: "مراحل العمل (Workflow)", url: "/settings/workflow", icon: Workflow, roles: ["owner"] },
-          { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
- { title: "دليل الاستخدام", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
+ { title: "الموظفون", url: "/staff", icon: BriefcaseBusiness, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "الحضور", url: "/staff/attendance", icon: Clock, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "الأداء", url: "/staff/scorecard", icon: Target, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "الطلبات والسلف", url: "/staff/requests", icon: Inbox, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "الرواتب", url: "/staff/salaries", icon: Banknote, roles: ["owner"] },
+ { title: "رواتب الكي", url: "/staff/ironing-payroll", icon: Shirt, roles: ["owner"] },
+ { title: "الجدول والإجازات", url: "/staff/schedule", icon: CalendarDays, roles: ["cs_manager", "ops_manager", "owner"] },
+ { title: "المستخدمون", url: "/staff/users", icon: Crown, roles: ["owner"] },
+ { title: "الاشتراك والفواتير", url: "/billing", icon: ReceiptText, roles: ["owner"] },
+ { title: "مراحل العمل", url: "/settings/workflow", icon: Workflow, roles: ["owner"] },
+ { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
+ { title: "الدليل", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
  ],
  },
 ];
 export function AppSidebar() {
  const path = useRouterState({ select: (r) => r.location.pathname });
- const { roles, hasRole, user, signOut, isSuperAdmin } = useAuth();
+ const { roles, hasRole, user, signOut, isSuperAdmin, tenantId } = useAuth();
  const { dir, t } = useI18n();
  const { setOpenMobile } = useSidebar();
  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
  const [employeeJobRole, setEmployeeJobRole] = useState<string | null>(null);
+ const [dynamicStages, setDynamicStages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number }[]>([]);
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -198,7 +146,38 @@ export function AppSidebar() {
  }
  });
  }, [user]);
- const groups = isSuperAdmin ? adminGroups : tenantGroups;
+
+ // Fetch dynamic workflow stages for tenant (generic platform)
+ useEffect(() => {
+   if (!tenantId) return;
+   supabase.rpc("get_workflow_stages", { _tenant_id: tenantId }).then(({ data }: any) => {
+     if (data && Array.isArray(data)) {
+       setDynamicStages(data);
+     }
+   });
+ }, [tenantId]);
+
+ const baseGroups = isSuperAdmin ? adminGroups : tenantGroups;
+ // Inject dynamic stages into التشغيل والمحطات group if available
+ const groups = (() => {
+   if (isSuperAdmin || dynamicStages.length === 0) return baseGroups;
+   // Find التشغيل والمحطات group and add dynamic items after static ones for any custom stages not already covered
+   const staticSlugs = new Set(["reception","sorting","cleaning","drying-assembly","ironing","packing","qc","cs","intake","delivery"]);
+   const customStages = dynamicStages.filter(s => !staticSlugs.has(s.slug));
+   if (customStages.length === 0) return baseGroups;
+   const dynamicItems: NavItem[] = customStages.map(s => ({
+     title: s.name,
+     url: `/stations/${s.slug}`,
+     icon: Workflow,
+     roles: ["owner","ops_manager","cs_manager","employee"]
+   }));
+   return baseGroups.map(g => {
+     if (g.label === "التشغيل والمحطات") {
+       return { ...g, items: [...g.items, ...dynamicItems] };
+     }
+     return g;
+   });
+ })();
  const isManager = hasRole("owner", "ops_manager", "cs_manager");
  const stationUrl = employeeStation === "drying_assembly" ? "/stations/drying-assembly" : employeeStation ? `/stations/${employeeStation}` : null;
 

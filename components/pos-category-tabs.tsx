@@ -4,20 +4,23 @@ import { Sparkles, Shirt, Scissors, Globe } from "lucide-react";
 
 export type ServiceTypeFilter = "all" | "both" | "ironing" | "cleaning";
 
+type CategoryOpt = { id: string; name: string; slug?: string; label?: string; icon?: string };
+
 type Props = {
   activeTab: string;
   onSelect: (id: string) => void;
-  items: Array<{ category?: string; service_type?: string }>;
+  items: Array<{ category?: string; service_type?: string; category_id?: string | null }>;
   compact?: boolean;
   activeServiceType?: ServiceTypeFilter;
   onSelectServiceType?: (type: ServiceTypeFilter) => void;
+  categories?: CategoryOpt[];
 };
 
 const SERVICE_TYPE_OPTIONS: Array<{ id: ServiceTypeFilter; label: string; icon: any; color: string }> = [
   { id: "all", label: "كافة الخدمات", icon: Globe, color: "from-slate-700 to-slate-800" },
-  { id: "both", label: "تنظيف وغسيل (Dry Clean)", icon: Sparkles, color: "from-blue-600 to-indigo-700" },
-  { id: "ironing", label: "كي فقط بالبخار (Steam Iron)", icon: Shirt, color: "from-purple-600 to-violet-800" },
-  { id: "cleaning", label: "تصليحات ورَفْو (Alterations)", icon: Scissors, color: "from-amber-600 to-orange-700" },
+  { id: "both", label: "خدمة كاملة", icon: Sparkles, color: "from-blue-600 to-indigo-700" },
+  { id: "ironing", label: "خدمة جزئية", icon: Shirt, color: "from-purple-600 to-violet-800" },
+  { id: "cleaning", label: "إصلاحات / إضافات", icon: Scissors, color: "from-amber-600 to-orange-700" },
 ];
 
 export function PosCategoryTabs({
@@ -27,23 +30,25 @@ export function PosCategoryTabs({
   compact = false,
   activeServiceType,
   onSelectServiceType,
+  categories,
 }: Props) {
-  // First, filter items by the selected main POS category
+  const tabs = categories && categories.length > 0
+    ? [{ id: "all", label: "الكل", icon: "" }, ...categories.map(c => ({ id: c.name, label: c.name, icon: c.icon || "" }))]
+    : POS_CATEGORY_TABS;
+
   const categoryFilteredItems = items.filter(
     (s) => activeTab === "all" || s.category === activeTab || (activeTab === "رجالي" && !s.category)
   );
 
   return (
     <div className="space-y-2.5">
-      {/* Tier 1: Main POS Categories (Men's, Women's, Kids, Furnishings, Carpets, Delivery) */}
       <div
         className={`rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-3 shadow-xl border border-white/10 ${
           compact ? "flex flex-wrap gap-1.5" : "grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2"
         }`}
       >
-        {POS_CATEGORY_TABS.map((tab) => {
+        {tabs.map((tab: any) => {
           const active = activeTab === tab.id;
-          // Count items matching this tab AND matching the active service type filter (if set)
           const count = items.filter((s) => {
             const matchesCat = tab.id === "all" || s.category === tab.id || (tab.id === "رجالي" && !s.category);
             const matchesType = !activeServiceType || activeServiceType === "all" || s.service_type === activeServiceType;
@@ -85,11 +90,10 @@ export function PosCategoryTabs({
         })}
       </div>
 
-      {/* Tier 2: Sub-filter between Cleaning (Dry Clean), Ironing Only, and Alterations */}
       {onSelectServiceType && (
         <div className="rounded-2xl bg-slate-950/90 p-2.5 border border-teal-500/40 shadow-lg flex flex-wrap items-center justify-between gap-2.5">
           <div className="text-xs font-black text-teal-300 px-2 flex items-center gap-1.5">
-            <span>تصنيف فرعي داخل ({POS_CATEGORY_TABS.find((t) => t.id === activeTab)?.label || "الفئة"}):</span>
+            <span>تصنيف فرعي داخل ({(tabs as any).find((t: any) => t.id === activeTab)?.label || "الفئة"}):</span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5 flex-1 justify-end">
             {SERVICE_TYPE_OPTIONS.map((typeOption) => {
