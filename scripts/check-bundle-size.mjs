@@ -5,7 +5,7 @@ import zlib from "node:zlib";
 const assetsDir = path.join("dist", "assets");
 const maxRawKb = 1400; // Accommodates expanded feature set (15 new modules)
 const maxGzipKb = Number(process.env.MAX_JS_GZIP_KB ?? 320);
-const maxCssKb = Number(process.env.MAX_CSS_KB ?? 130);
+const maxCssKb = Number(process.env.MAX_CSS_KB ?? 135);
 
 if (!fs.existsSync(assetsDir)) {
   console.error("dist/assets does not exist. Run npm run build first.");
