@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/png" href="/mjrh-logo.png" />
     <link rel="apple-touch-icon" href="/mjrh-logo.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0d9488" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MJRH" />
     <title>MJRH — منظومة تشغيل المشاريع وإدارة المغاسل السحابية</title>
     <meta name="description" content="MJRH هو نظام تشغيل SaaS متكامل متعدد المشاريع لإدارة وتشغيل المغاسل الذكية والمشاريع التجارية والصناعية والمتابعة الفورية للطلبات والعملاء والمراحل." />
     <meta name="keywords" content="مغسلة, إدارة مغاسل, نظام تشغيل, MJRH, Dry Tech, زمزم, دراي تك, برنامج غسيل, تتبع طلبات, SaaS, POS, ERP" />
@@ -21,5 +26,13 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/main.tsx"></script>
+    <script>
+      // Register PWA Service Worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
