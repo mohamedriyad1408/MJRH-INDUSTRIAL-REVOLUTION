@@ -12,7 +12,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 import { CURRENCIES, type CurrencyCode } from "@/lib/format";
 
-export const Route = createFileRoute("/signup" as any)({
+export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "إنشاء مشروع جديد — MJRH" }] }),
   component: SignupPage,
 });
