@@ -210,7 +210,7 @@ export function NotificationCenter() {
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative h-9 w-9 shrink-0">
           <Bell className="w-4 h-4" />
-          {count > 0 && <span className={`absolute -top-1 -left-1 h-5 min-w-5 rounded-full text-[10px] flex items-center justify-center px-1 text-white ${urgent ? "bg-red-600" : "bg-amber-500"}`}>{count}</span>}
+          {count > 0 && <span className={`absolute -top-1 -end-1 h-5 min-w-5 rounded-full text-[10px] flex items-center justify-center px-1 text-white ${urgent ? "bg-red-600" : "bg-amber-500"}`}>{count}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="center" sideOffset={8} collisionPadding={16} className="w-[calc(100vw-32px)] sm:w-96 md:w-[420px] p-0 shadow-2xl rounded-3xl border-2 border-slate-200/80 z-50 max-h-[85vh] overflow-hidden flex flex-col bg-white" dir={dir}>

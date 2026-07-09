@@ -153,9 +153,8 @@ function AppLayout() {
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-9 w-9 md:h-11 md:w-11 rounded-2xl bg-white p-0.5 shadow-sm shrink-0 border border-slate-200 overflow-hidden">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-xl object-cover" /> : <img src="/mjrh-logo.png" alt="MJRH" className="h-full w-full rounded-xl object-contain" />}</div><div className="min-w-0 hidden sm:block"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("app.tagline")}</div></div></div>
             <div className="hidden md:block min-w-0"><UnifiedSearch /></div>
-            <div className="md:hidden shrink-0"><LanguageSwitcher compact /></div>
-            <div className="hidden md:block"><LanguageSwitcher compact /></div>
-            <div className="hidden sm:block"><NotificationCenter /></div>
+            <div className="shrink-0"><LanguageSwitcher compact /></div>
+            <div className="shrink-0"><NotificationCenter /></div>
             <div className="hidden md:block"><AttendanceWidget /></div>
           </header>
           <main className="app-main flex-1 p-4 md:p-7">
