@@ -566,11 +566,15 @@ const SidebarMenuButton = React.forwardRef<
       };
     }
 
+    // RTL-aware tooltip: when sidebar is on right (RTL), tooltip should appear on left
+    const isRTL = typeof document !== "undefined" ? document.documentElement.dir === "rtl" || document.documentElement.getAttribute("dir") === "rtl" || document.querySelector("[dir='rtl']") !== null : false;
+    const tooltipSide = isRTL ? "left" : "right";
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent
-          side="right"
+          side={tooltipSide as any}
           align="center"
           hidden={state !== "collapsed" || isMobile}
           {...tooltip}

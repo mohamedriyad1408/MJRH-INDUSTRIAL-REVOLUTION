@@ -245,14 +245,13 @@
     transform: translateY(-1px);
   }
 
-  /* Enforce stable centering for all dialogs and modals, preventing any hover drift or corner sliding on mobile */
-  [role="dialog"], [role="alertdialog"], .radix-dialog-content {
-    transform: translate(-50%, -50%) !important;
+  /* Fix: Only target true Dialog modals (radix-dialog-content), not Sheet (sidebar/tasks) which also has role="dialog" */
+  .radix-dialog-content {
     max-height: 90vh;
     overflow-y: auto;
   }
   @media (max-width: 640px) {
-    [role="dialog"], [role="alertdialog"] {
+    .radix-dialog-content {
       width: calc(100vw - 28px) !important;
       max-width: calc(100vw - 28px) !important;
       left: 50% !important;
