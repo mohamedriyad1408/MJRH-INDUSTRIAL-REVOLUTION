@@ -102,7 +102,7 @@ function OrdersPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-[160px] sm:min-w-[200px]">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder={t("orders.searchPlaceholder", "رقم طلب / اسم / تليفون...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>

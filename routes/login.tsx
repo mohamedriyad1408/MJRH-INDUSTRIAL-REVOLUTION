@@ -82,7 +82,7 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sidebar to-background px-4 py-8" dir={dir}>
-      <Card className="w-full max-w-md p-8 shadow-xl relative"><div className="absolute top-3 left-3"><LanguageSwitcher compact /></div>
+      <Card className="w-full max-w-md p-6 sm:p-8 shadow-xl relative"><div className="absolute top-3 start-3"><LanguageSwitcher compact /></div>
         {!tenantSlug && session && (
           <div className="mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-950 text-xs space-y-2.5 shadow-2xs">
             <div className="font-black flex items-center gap-1.5 text-indigo-900">
@@ -148,7 +148,7 @@ function LoginPage() {
             </div>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+            {loading && <Loader2 className="w-4 h-4 animate-spin ms-2" />}
             {mode === "signin" ? t("login.signIn") : mode === "signup" ? t("login.signUp") : t("login.sendLink")}
           </Button>
         </form>
