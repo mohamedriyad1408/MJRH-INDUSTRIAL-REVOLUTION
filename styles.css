@@ -245,20 +245,14 @@
     transform: translateY(-1px);
   }
 
-  /* Enforce stable centering for regular dialogs and modals.
-     IMPORTANT: We EXCLUDE Sheet-based dialogs (data-sidebar, data-mobile,
-     and [data-state] side panels) so that the Sidebar mobile drawer,
-     MobileWorkDock bottom sheet, and other Sheet components keep their
-     intended side/bottom positioning on mobile. */
-  [role="dialog"]:not([data-sidebar]):not([data-mobile]),
-  [role="alertdialog"]:not([data-sidebar]):not([data-mobile]),
-  .radix-dialog-content:not([data-sidebar]):not([data-mobile]) {
+  /* Enforce stable centering for all dialogs and modals, preventing any hover drift or corner sliding on mobile */
+  [role="dialog"], [role="alertdialog"], .radix-dialog-content {
+    transform: translate(-50%, -50%) !important;
     max-height: 90vh;
     overflow-y: auto;
   }
   @media (max-width: 640px) {
-    [role="dialog"]:not([data-sidebar]):not([data-mobile]):not([data-sheet-content]),
-    [role="alertdialog"]:not([data-sidebar]):not([data-mobile]) {
+    [role="dialog"], [role="alertdialog"] {
       width: calc(100vw - 28px) !important;
       max-width: calc(100vw - 28px) !important;
       left: 50% !important;

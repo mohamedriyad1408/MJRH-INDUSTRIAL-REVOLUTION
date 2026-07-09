@@ -77,7 +77,7 @@ export function MobileWorkDock() {
           <Wand2 className="w-5 h-5 ms-2 text-teal-200" /> مهامي الآن {total > 0 && <Badge className="me-2 bg-amber-400 text-slate-950">{total}</Badge>}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" data-sheet-content="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto w-full" dir={dir}>
+      <SheetContent side="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto" dir={dir}>
         <SheetHeader className="text-start space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
