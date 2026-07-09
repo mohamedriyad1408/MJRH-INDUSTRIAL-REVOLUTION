@@ -306,7 +306,7 @@ function ServicesPage() {
                 placeholder="ابحث باسم الصنف..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pr-9 h-10 rounded-xl bg-slate-50 border-slate-200 font-bold text-sm"
+                className="pe-9 h-10 rounded-xl bg-slate-50 border-slate-200 font-bold text-sm"
               />
             </div>
 

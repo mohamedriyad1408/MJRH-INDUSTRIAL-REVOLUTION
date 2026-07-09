@@ -106,9 +106,9 @@ function CsPickupNotebook({ tenantId, activeActor, onSuccess }: { tenantId: stri
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 placeholder="01xxxxxxxxx"
-                className="font-mono font-black text-sm pr-8 bg-white border-2 border-indigo-200 focus:border-indigo-600 rounded-xl"
+                className="font-mono font-black text-sm pe-8 bg-white border-2 border-indigo-200 focus:border-indigo-600 rounded-xl"
               />
-              {searching && <Loader2 className="w-4 h-4 animate-spin text-indigo-600 absolute left-2.5 top-2.5" />}
+              {searching && <Loader2 className="w-4 h-4 animate-spin text-indigo-600 absolute start-2.5 top-2.5" />}
             </div>
             {existingCustomer ? (
               <Badge className="bg-emerald-600 text-white font-bold text-[10px] mt-1.5 w-full justify-center">🟢 عميل قديم مسجل بالمغسلة</Badge>

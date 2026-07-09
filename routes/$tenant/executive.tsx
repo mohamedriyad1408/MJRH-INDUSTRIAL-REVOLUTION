@@ -313,7 +313,7 @@ function ExecutiveDashboardPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-600">
                 <tr>
-                  <th className="text-start p-3.5 sticky right-0 bg-slate-50 z-10">{t("executive.benchmark.colBranch", "الفرع")}</th>
+                  <th className="text-start p-3.5 sticky end-0 bg-slate-50 z-10">{t("executive.benchmark.colBranch", "الفرع")}</th>
                   <th className="text-center p-3.5 border-s border-slate-100">{t("executive.benchmark.colRevenue", "الإيرادات")}</th>
                   <th className="text-center p-3.5 border-s border-slate-100">{t("executive.benchmark.colExpenses", "النفقات")}</th>
                   <th className="text-center p-3.5 border-s border-slate-100">{t("executive.benchmark.colProfit", "صافي الربح")}</th>
@@ -326,7 +326,7 @@ function ExecutiveDashboardPage() {
               <tbody className="divide-y divide-slate-100">
                 {(metrics?.branches ?? []).map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50/50 transition">
-                    <td className="p-3.5 font-bold text-slate-900 sticky right-0 bg-white z-10">{b.name}</td>
+                    <td className="p-3.5 font-bold text-slate-900 sticky end-0 bg-white z-10">{b.name}</td>
                     <td className="p-3.5 text-center font-bold text-teal-700 border-s border-slate-100">{fmtMoney(b.revenue, t("common.egp", "ج.م"))}</td>
                     <td className="p-3.5 text-center font-semibold text-slate-600 border-s border-slate-100">{fmtMoney(b.expenses, t("common.egp", "ج.م"))}</td>
                     <td className={`p-3.5 text-center font-black border-s border-slate-100 ${b.profit >= 0 ? "text-emerald-700" : "text-red-700"}`}>
