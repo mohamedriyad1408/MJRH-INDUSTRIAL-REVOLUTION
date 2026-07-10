@@ -18,7 +18,7 @@ function LandingPage() {
   const [templates, setTemplates] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from("workflow_templates").select("*").eq("is_active", true).eq("is_featured", true).limit(6).then(({ data }) => {
+    supabase.from("workflow_templates").select("*").eq("is_active", true).eq("is_featured", true).limit(6).then(({ data }: any) => {
       if (data) setTemplates(data);
     });
   }, []);
