@@ -47,18 +47,31 @@ function LandingPage() {
       <main className="mx-auto max-w-7xl px-4 pb-16">
         <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-center py-8 md:py-14">
           <div className="space-y-6">
-            <div className="mb-4">
-              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-44 sm:h-56 md:h-64 object-contain drop-shadow-2xl hover:scale-[1.03] transition-transform duration-500" />
+            <div className="mb-4 flex items-center gap-4">
+              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-20 object-contain drop-shadow-xl" />
+              <img src="/hero-workflow.png" alt="Industrial Workflow" className="h-20 object-contain hidden sm:block opacity-80" />
             </div>
             <Badge className="bg-teal-600 text-white px-3 py-1 font-bold shadow-xs">{t("landing.badge")}</Badge>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">🏨 فنادق 7 نجوم</Badge>
+              <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">🏥 مستشفيات كبرى</Badge>
+              <Badge variant="outline" className="bg-violet-50 text-violet-800 border-violet-200">🍽️ سلاسل +50 فرع</Badge>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200">🏢 شركات متعددة المواقع</Badge>
+            </div>
             <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-950 leading-tight">
               {t("landing.heroTitle")}
             </h1>
             <p className="text-lg text-slate-600 leading-8 max-w-2xl">
               {t("landing.heroText")}
             </p>
+            <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-teal-900 text-white p-4 flex items-center gap-3">
+              <div className="text-2xl">🏗️</div>
+              <div className="text-sm leading-6">
+                <span className="font-black text-teal-200">نواة الشركات (Enterprise Core):</span> نظام متعدد الشركات والفروع، كل شركة لها فروعها، خزنها، موظفوها، وقابلية للتخصيص الكامل حسب احتياجات العميل — من مغسلة واحدة إلى سلسلة 50+ فرع.
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg"><a href="https://wa.me/201130804784?text=عايز%20تجربة%20MJRH" target="_blank" rel="noreferrer">{t("landing.ctaDemo")} <ArrowLeft className="w-4 h-4" /></a></Button>
+              <Button asChild size="lg"><a href="https://wa.me/201130804784?text=عايز%20تجربة%20MJRH%20Enterprise" target="_blank" rel="noreferrer">{t("landing.ctaDemo")} <ArrowLeft className="w-4 h-4" /></a></Button>
               <Button asChild size="lg" variant="outline"><a href="/customer-portal?tenant=dry-tech">{t("landing.ctaPortal")}</a></Button>
             </div>
             <div className="flex flex-wrap gap-2 text-sm text-slate-600">
@@ -93,10 +106,39 @@ function LandingPage() {
           </div>
         </section>
 
-        <section className="py-8 grid lg:grid-cols-3 gap-4">
-          <Plan title="Pilot" price={t("landing.planPilot")} popularLabel={t("landing.popular")} lines={["One laundry", "Live operation", "Initial training", "Direct support"]} />
-          <Plan title="Growth" price={t("landing.planGrowth")} popularLabel={t("landing.popular")} highlight lines={["Multiple branches", `${t("landing.cash")} + ${t("landing.reports")}`, t("landing.customerPortal"), "Daily operations"]} />
-          <Plan title="Enterprise" price={t("landing.planEnterprise")} popularLabel={t("landing.popular")} lines={["Customization", "Integrations", "Advanced training", "Priority support"]} />
+        <section className="py-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-black">جاهز من مغسلة واحدة إلى مؤسسة 50+ فرع</h2>
+            <p className="text-slate-600 mt-2">نفس المنصة، نفس الكود — من مشروع صغير إلى تشغيل فنادق 7 نجوم ومستشفيات كبرى</p>
+          </div>
+          <div className="grid lg:grid-cols-3 gap-4">
+            <Plan title="Pilot" price={t("landing.planPilot")} popularLabel={t("landing.popular")} lines={["مشروع واحد، فرع واحد", "500 عملية/شهر", "تشغيل مباشر", "تدريب أولي"]} />
+            <Plan title="Growth" price={t("landing.planGrowth")} popularLabel={t("landing.popular")} highlight lines={["حتى 10 فروع", "3000 عملية/شهر", `${t("landing.cash")} + ${t("landing.reports")}`, "بوابة عملاء + خريطة"]} />
+            <Plan title="Enterprise" price={t("landing.planEnterprise")} popularLabel={t("landing.popular")} lines={["50+ فرع، شركات متعددة", "فنادق 7 نجوم ومستشفيات", "سلاسل مطاعم + API", "تخصيص كامل حسب العميل"]} />
+          </div>
+        </section>
+
+        <section className="py-8">
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white overflow-hidden">
+            <CardContent className="p-6 grid md:grid-cols-2 gap-6 items-center">
+              <div>
+                <h3 className="text-xl font-black mb-2">🏗️ نواة الشركات — قابلة للتطور والتفصيل</h3>
+                <p className="text-sm text-white/70 leading-6">
+                  عندنا نواة شركات (Enterprise Core) تدعم: شركة أم → فروع متعددة → خزن منفصلة → موظفين بصلاحيات مختلفة → تقارير مجمعة للمالك فقط. كل عميل كبير (فندق، مستشفى، سلسلة مطاعم) نقدر نفصّل له الـ Workflow والحقول والتقارير حسب احتياجاته بدون ما نكسر المنصة.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Badge className="bg-white/10 text-teal-200 border-white/20">Multi-Company</Badge>
+                  <Badge className="bg-white/10 text-violet-200 border-white/20">50+ Branches</Badge>
+                  <Badge className="bg-white/10 text-amber-200 border-white/20">Custom Fields</Badge>
+                  <Badge className="bg-white/10 text-blue-200 border-white/20">Custom Workflow</Badge>
+                  <Badge className="bg-white/10 text-emerald-200 border-white/20">Central Reports</Badge>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl p-4">
+                <img src="/hero-workflow.png" alt="Enterprise Workflow" className="w-full object-contain" />
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         <footer className="py-8 text-center text-sm text-slate-500 space-y-2 font-medium">
