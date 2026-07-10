@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
-import { Loader2, Shirt, ArrowLeft, Building2, LogIn, ShieldCheck, Boxes, Sparkles } from "lucide-react";
+import { Loader2, Building2, LogIn, ShieldCheck, Layers, Hotel, Hospital, Utensils, Factory, Globe, ArrowLeft, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "MJRH — نظام تشغيل المشاريع" }] }),
+  head: () => ({ meta: [{ title: "MJRH — منظومة تشغيل المشاريع | Industrial Revolution" }] }),
   component: HomeDirectory,
 });
 
@@ -36,8 +37,7 @@ function businessTypeLabel(t: (k: string, f?: string) => string, type: string | 
 
 function HomeDirectory() {
   const { t, dir } = useI18n();
-  const { session, loading: authLoading, isSuperAdmin, hasRole } = useAuth();
-  const nav = useNavigate();
+  const { session, loading: authLoading, isSuperAdmin } = useAuth();
   const [tenants, setTenants] = useState<ActiveTenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [errored, setErrored] = useState(false);
@@ -57,164 +57,216 @@ function HomeDirectory() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-[radial-gradient(circle_at_top_right,#99f6e4,transparent_28rem),radial-gradient(circle_at_bottom_left,#ddd6fe,transparent_30rem),linear-gradient(135deg,#f8fafc,#eef2ff)]"
-      dir={dir}
-    >
-      <header className="mx-auto max-w-5xl px-4 py-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-white p-0.5 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/mjrh-logo.png" alt="MJRH Logo" className="h-full w-full object-contain" />
+    <div className="min-h-screen bg-slate-50" dir={dir}>
+      {/* Header - Enterprise Grade */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-slate-200 shadow-sm">
+        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-slate-900 p-2 shadow-md flex items-center justify-center overflow-hidden">
+              <img src="/icon-512.png" alt="MJRH" className="h-full w-full object-contain" />
+            </div>
+            <div>
+              <div className="font-black text-lg leading-none tracking-tight">MJRH</div>
+              <div className="text-[10px] font-bold tracking-widest text-slate-500">INDUSTRIAL REVOLUTION</div>
+            </div>
+            <Badge className="hidden sm:flex ml-2 bg-slate-900 text-white">Enterprise OS</Badge>
           </div>
-          <div>
-            <div className="font-black text-2xl text-slate-900 tracking-tight">MJRH</div>
-            <div className="text-xs text-slate-500 font-semibold">{t("home.tagline", "منظومة تشغيل المشاريع — Industrial Revolution")}</div>
+          <div className="flex items-center gap-2">
+            <a href="tel:+201130804784" className="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-teal-700">
+              <Phone className="w-3.5 h-3.5" /> +20 113 080 4784
+            </a>
+            <LanguageSwitcher compact />
+            <Button asChild variant="outline" size="sm" className="font-bold">
+              <Link to="/landing">المنصة</Link>
+            </Button>
+            <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 font-black">
+              <Link to="/login"><LogIn className="w-4 h-4 me-1" /> دخول</Link>
+            </Button>
           </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          <LanguageSwitcher compact />
-          <Button asChild variant="outline" size="sm" className="font-bold border-slate-300 hover:bg-slate-100 text-slate-800">
-            <Link to="/login"><LogIn className="w-4 h-4 ms-1 text-teal-600" /> {t("home.platformLogin", "إدارة وموظفو المنصة")}</Link>
-          </Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pb-16">
+      <main className="mx-auto max-w-6xl px-4 pb-16">
         {session && (
-          <div className="mb-6 p-4 rounded-3xl bg-slate-900 text-white shadow-xl flex flex-wrap items-center justify-between gap-4 border border-teal-500/30">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center font-bold shrink-0">
-                🟢
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs text-teal-300 font-bold uppercase tracking-wider">أنت مسجل الدخول حالياً في المنظومة</div>
-                <div className="font-black text-sm truncate text-white">{session.user.email}</div>
+          <div className="mt-6 p-4 rounded-2xl bg-slate-900 text-white shadow-xl flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center font-bold">🟢</div>
+              <div>
+                <div className="text-xs text-teal-300 font-bold uppercase">مسجل دخول</div>
+                <div className="font-bold text-sm truncate">{session.user.email}</div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {isSuperAdmin ? (
-                <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl">
-                  <Link to={"/admin/tenants" as any}>لوحة إدارة المنصة (Super Admin) &larr;</Link>
-                </Button>
-              ) : (
-                <a href="#active-projects-list" className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl px-4 py-2 text-xs transition inline-block">
-                  اختر مغسلتك من القائمة أدناه &larr;
-                </a>
-              )}
-            </div>
+            {isSuperAdmin && (
+              <Button asChild size="sm" className="bg-teal-600 hover:bg-teal-700">
+                <Link to="/admin/tenants">إدارة المنصة ←</Link>
+              </Button>
+            )}
           </div>
         )}
 
-        <section className="text-center py-6 md:py-10 space-y-6">
-          <div className="flex justify-center py-4 md:py-6">
-            <div className="relative w-full max-w-lg md:max-w-xl lg:max-w-2xl flex items-center justify-center">
-              <div className="absolute -inset-6 bg-gradient-to-r from-teal-400/25 via-cyan-500/25 to-indigo-500/25 rounded-full blur-3xl opacity-80 pointer-events-none" />
-              
-              <img
-                src="/mjrh-logo.png"
-                alt="MJRH INDUSTRIAL REVOLUTION"
-                className="relative w-full h-auto max-h-[320px] sm:max-h-[400px] md:max-h-[460px] object-contain drop-shadow-[0_20px_40px_rgba(13,148,136,0.3)] hover:scale-[1.03] transition-all duration-500"
-              />
+        {/* HERO - Enterprise, not بضاعة بلدي */}
+        <section className="py-10 md:py-16 grid lg:grid-cols-2 gap-8 items-center">
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2">
+              <Badge className="bg-slate-900 text-white">Built for Scale</Badge>
+              <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">🏨 فنادق 7 نجوم</Badge>
+              <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">🏥 مستشفيات</Badge>
+              <Badge variant="outline" className="bg-violet-50 text-violet-800 border-violet-200">🍽️ 50+ فرع</Badge>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] text-slate-900">
+              منظومة تشغيل
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-violet-600">مؤسسية بمعايير Oracle</span>
+            </h1>
+
+            <p className="text-lg text-slate-600 leading-8 font-medium max-w-xl">
+              MJRH منظومة تشغيل <span className="font-black text-slate-900">مصممة من الأساس</span> للمؤسسات الكبرى — فندق 7 نجوم، مستشفى، سلسلة مطاعم 50 فرع، مصنع. نفس النواة، نفس الأمان، قابلية تخصيص كاملة لكل عميل بدون إعادة بناء.
+            </p>
+
+            <div className="grid grid-cols-3 gap-3 max-w-lg">
+              <div className="rounded-2xl bg-white border shadow-sm p-3 text-center">
+                <div className="text-xl font-black text-slate-900">50+</div>
+                <div className="text-[10px] font-bold text-slate-500">فرع لكل مؤسسة</div>
+              </div>
+              <div className="rounded-2xl bg-white border shadow-sm p-3 text-center">
+                <div className="text-xl font-black text-teal-600">Multi</div>
+                <div className="text-[10px] font-bold text-slate-500">شركات متعددة</div>
+              </div>
+              <div className="rounded-2xl bg-white border shadow-sm p-3 text-center">
+                <div className="text-xl font-black text-violet-600">∞</div>
+                <div className="text-[10px] font-bold text-slate-500">تخصيص كامل</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg" className="bg-slate-900 hover:bg-slate-800 h-12 px-8 font-black">
+                <Link to="/landing">استكشف المنصة <ArrowLeft className="w-4 h-4 ms-2" /></Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="h-12">
+                <a href="https://wa.me/201130804784" target="_blank" rel="noreferrer" className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" /> +20 113 080 4784
+                </a>
+              </Button>
             </div>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border bg-white/90 px-4 py-1.5 text-xs font-bold text-teal-800 shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-teal-600" /> {t("home.badge", "منصة MJRH لتشغيل المشاريع")}
-          </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-950 leading-tight">
-            {t("home.heroTitle", "نظام واحد.. يشغّل أكثر من مشروع")}
-          </h1>
-          <p className="text-base md:text-lg text-slate-600 leading-8 max-w-2xl mx-auto">
-            {t(
-              "home.heroText",
-              "MJRH منظومة تشغيل SaaS تخدم عدة مشاريع مستقلة، كل مشروع له بياناته وحساباته وموظفوه الخاصون. اختر المشروع اللي محتاج تدخله من القائمة، أو تعرّف أكتر على النظام."
-            )}
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <Button asChild size="lg">
-              <Link to="/landing">
-                {t("home.learnMore", "تعرّف على النظام")} <ArrowLeft className="w-4 h-4" />
-              </Link>
-            </Button>
+
+          <div className="relative">
+            <div className="absolute -inset-6 bg-gradient-to-r from-teal-400/20 via-violet-400/20 to-amber-400/20 rounded-[2rem] blur-2xl" />
+            <Card className="relative border-0 shadow-2xl overflow-hidden">
+              <div className="bg-white p-6">
+                <img src="/hero-workflow.png" alt="MJRH Enterprise Workflow - Factory to Delivery" className="w-full object-contain" />
+              </div>
+              <CardContent className="p-4 bg-slate-50 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-slate-600">Enterprise Core — نواة الشركات</div>
+                  <Badge className="bg-slate-900 text-white text-[10px]">Oracle-like Power</Badge>
+                </div>
+                <div className="mt-2 text-xs text-slate-500 leading-5">شركة قابضة → مشاريع → فروع بمناطق → خزن منفصلة → تقارير مجمعة. كل عميل كبير يُفصّل له Workflow وحقول وتقارير.</div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
-        <section className="py-6 scroll-mt-24" id="active-projects-list">
-          <div className="text-center mb-6 space-y-3">
-            <h2 className="text-2xl font-black flex items-center justify-center gap-2">
-              <Boxes className="w-5 h-5 text-teal-700" /> {t("home.projectsTitle", "المشاريع النشطة")}
-            </h2>
-            <p className="text-slate-600 text-sm font-medium">{t("home.projectsText", "اختر مشروعك للدخول على بوابة العملاء أو الموظفين")}</p>
-            <div className="max-w-2xl mx-auto p-3 rounded-2xl bg-teal-50/90 border border-teal-200 text-teal-900 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 text-center shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0" />
-              <span>{t("home.tenantNotice", "تنويه مهم: عملاء وموظفو المشاريع يرجى النقر على بطاقة مشروعكم أدناه للدخول إلى بوابة العميل أو لوحة التحكم الخاصة بالمشروع.")}</span>
+        {/* TRUSTED BY */}
+        <section className="py-6">
+          <Card className="bg-white border shadow-sm">
+            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+              <span className="text-xs font-black text-slate-500">مصمم خصيصاً لـ:</span>
+              <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-700">
+                <span className="flex items-center gap-1.5"><Hotel className="w-4 h-4 text-amber-600" /> فنادق 7 نجوم</span>
+                <span className="flex items-center gap-1.5"><Hospital className="w-4 h-4 text-blue-600" /> مستشفيات كبرى</span>
+                <span className="flex items-center gap-1.5"><Utensils className="w-4 h-4 text-violet-600" /> سلاسل مطاعم 50+ فرع</span>
+                <span className="flex items-center gap-1.5"><Factory className="w-4 h-4" /> مصانع وورش</span>
+                <span className="flex items-center gap-1.5"><Globe className="w-4 h-4 text-teal-600" /> شركات متعددة الدول</span>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* ACTIVE PROJECTS - Professional */}
+        <section className="py-8" id="active-projects-list">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black flex items-center gap-2">المشاريع النشطة على المنصة</h2>
+              <p className="text-sm text-slate-600 mt-1">اختر مشروعك للدخول — كل مشروع له بياناته وصلاحياته المنفصلة</p>
             </div>
+            <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">{tenants.length} مشروع نشط</Badge>
           </div>
 
           {loading ? (
             <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>
           ) : errored ? (
-            <Card className="max-w-md mx-auto"><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("home.loadError", "تعذر تحميل قائمة المشاريع حاليًا.")}</CardContent></Card>
+            <Card className="max-w-md mx-auto"><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("home.loadError")}</CardContent></Card>
           ) : !tenants.length ? (
-            <Card className="max-w-md mx-auto"><CardContent className="p-8 text-center text-sm text-muted-foreground">{t("home.noProjects", "لا توجد مشاريع نشطة حاليًا.")}</CardContent></Card>
+            <Card className="max-w-md mx-auto"><CardContent className="p-8 text-center text-sm text-muted-foreground">{t("home.noProjects")}</CardContent></Card>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
-              {tenants.map((tn) => {
-                const color = tn.brand_color || "#0d9488";
-                return (
-                  <Link key={tn.slug} to="/$slug" params={{ slug: tn.slug }} className="block">
-                    <Card className="h-full border-0 shadow-lg hover:shadow-2xl transition-shadow overflow-hidden">
-                      <div className="p-5 flex items-center gap-4">
-                        <div
-                          className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0 overflow-hidden shadow-md"
-                          style={{ background: `linear-gradient(135deg, ${color}, #0f172a)` }}
-                        >
-                          {tn.logo_url ? (
-                            <img src={tn.logo_url} className="w-full h-full object-cover" />
-                          ) : (
-                            <Shirt className="w-6 h-6" />
-                          )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tenants.map((tn) => (
+                <Link key={tn.slug} to="/$slug" params={{ slug: tn.slug }} className="block group">
+                  <Card className="h-full border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden">
+                    <div className="h-2 w-full" style={{ background: tn.brand_color || "#0d9488" }} />
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 overflow-hidden">
+                          {tn.logo_url ? <img src={tn.logo_url} className="w-full h-full object-cover" /> : <Building2 className="w-5 h-5" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-black text-lg truncate">{tn.name}</div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Building2 className="w-3 h-3" /> {businessTypeLabel(t, tn.business_type)}
+                          <div className="font-black truncate group-hover:text-teal-700 transition">{tn.name}</div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {businessTypeLabel(t, tn.business_type)} • نشط
                           </div>
                         </div>
-                        <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" />
                       </div>
-                    </Card>
-                  </Link>
-                );
-              })}
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
           )}
         </section>
 
+        {/* CTA ENTERPRISE */}
         <section className="py-6">
-          <Card className="max-w-3xl mx-auto border-0 bg-slate-950 text-white shadow-2xl">
-            <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center"><Sparkles className="w-5 h-5 text-teal-300" /></div>
+          <Card className="border-0 bg-slate-900 text-white shadow-2xl overflow-hidden">
+            <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center"><Layers className="w-6 h-6 text-teal-300" /></div>
                 <div>
-                  <div className="font-black">{t("home.wantProject", "عندك مشروع وعايز تشغله بنظام MJRH؟")}</div>
-                  <div className="text-xs text-white/60">{t("home.wantProjectSub", "تواصل معنا لبدء تجربة مباشرة")}</div>
+                  <div className="font-black text-lg">عندك سلسلة فنادق أو مستشفى أو 50 فرع؟</div>
+                  <div className="text-sm text-white/60">نفس المنصة، مع تخصيص كامل حسب احتياجاتك — بدون إعادة بناء</div>
                 </div>
               </div>
-              <Button asChild className="bg-teal-600 hover:bg-teal-700 shrink-0">
-                <a href="https://wa.me/201130804784?text=عايز%20تجربة%20MJRH" target="_blank" rel="noreferrer">
-                  {t("home.requestDemo", "اطلب تجربة")}
-                </a>
-              </Button>
+              <div className="flex gap-2">
+                <Button asChild variant="secondary" className="bg-white text-slate-900 hover:bg-slate-100 font-black">
+                  <a href="https://wa.me/201130804784?text=عرض%20Enterprise%20للفنادق%207%20نجوم" target="_blank" rel="noreferrer">
+                    <Phone className="w-4 h-4 me-2" /> +20 113 080 4784 - عرض Enterprise
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </section>
 
-        <footer className="py-6 text-center text-xs text-slate-500 space-y-2 font-medium">
-          <div>© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION — BY MUHAMMAD RIYAD</div>
-          <div className="flex justify-center gap-4">
-            <Link to="/privacy" className="hover:underline">{t("legal.privacyTitle", "الخصوصية")}</Link>
-            <Link to="/terms" className="hover:underline">{t("legal.termsTitle", "الشروط")}</Link>
-            <Link to="/login" className="hover:underline font-bold text-slate-700">{t("home.platformLogin", "دخول إدارة وموظفي المنصة")}</Link>
+        <footer className="py-8 border-t mt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-slate-900 p-2 flex items-center justify-center">
+                <img src="/icon-512.png" alt="MJRH" className="h-full w-full object-contain" />
+              </div>
+              <div>
+                <div className="font-black text-sm">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</div>
+                <div className="text-xs text-slate-500">BY MUHAMMAD RIYAD — Enterprise OS for Hotels, Hospitals, 50+ Chains</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-xs">
+              <a href="tel:+201130804784" className="flex items-center gap-1.5 font-bold text-slate-700 hover:text-teal-700">
+                <Phone className="w-3.5 h-3.5" /> +20 113 080 4784
+              </a>
+              <span className="text-slate-300">|</span>
+              <Link to="/privacy" className="hover:underline">الخصوصية</Link>
+              <Link to="/terms" className="hover:underline">الشروط</Link>
+              <Link to="/landing" className="hover:underline font-bold">المنصة</Link>
+            </div>
           </div>
         </footer>
       </main>
