@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Palette, Check, Settings2, Workflow } from "lucide-react";
+import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Palette, Check, Settings2, Workflow, Download, Upload, FileJson } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/settings/workflow")({
@@ -119,6 +119,42 @@ function WorkflowSettingsPage() {
     toast.success("تم تحديث الترتيب");
   }
 
+  async function exportWorkflow() {
+    if (!tenantId) return;
+    setSaving(true);
+    const { data, error } = await supabase.rpc("export_workflow_template", { _tenant_id: tenantId });
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `workflow-${tenantId}-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("تم تصدير Workflow كـ JSON");
+    }
+  }
+
+  async function importWorkflow(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !tenantId) return;
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      setSaving(true);
+      const { data, error } = await supabase.rpc("import_workflow_template", { _tenant_id: tenantId, _payload: json });
+      setSaving(false);
+      if (error) throw error;
+      toast.success(`تم استيراد ${data} مراحل`);
+      load();
+    } catch (err: any) {
+      setSaving(false);
+      toast.error(err.message || "فشل الاستيراد");
+    }
+  }
+
   if (!canEdit) return <Card><CardContent className="p-10 text-center text-muted-foreground">إعدادات مراحل العمل للمالك فقط.</CardContent></Card>;
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>;
 
@@ -130,7 +166,12 @@ function WorkflowSettingsPage() {
           <h1 className="text-2xl font-black flex items-center gap-2"><Workflow className="w-7 h-7 text-teal-600" /> إعدادات مراحل العمل</h1>
           <p className="text-sm text-muted-foreground">عرّف محطات العمل حسب نشاطك. كل مشروع له workflow مختلف.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={exportWorkflow} disabled={saving}><Download className="w-4 h-4 me-1" /> تصدير JSON</Button>
+          <label className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
+            <Upload className="w-4 h-4 me-1" /> استيراد JSON
+            <input type="file" accept=".json" className="hidden" onChange={importWorkflow} />
+          </label>
           <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
             <DialogTrigger asChild>
               <Button variant="outline"><Settings2 className="w-4 h-4 ms-1" /> استخدام قالب جاهز</Button>
