@@ -44,10 +44,10 @@ function AdminLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen h-screen flex w-full overflow-hidden" dir={dir}>
+      <div className="min-h-screen flex w-full" dir={dir}>
         <AppSidebar />
-        <div className="app-shell flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30 shrink-0">
+        <div className="app-shell flex-1 flex flex-col min-w-0">
+          <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="h-10 w-10 rounded-xl bg-white p-0.5 shadow-sm shrink-0 border border-slate-200 overflow-hidden">
@@ -66,7 +66,7 @@ function AdminLayout() {
             </Button>
             <LanguageSwitcher compact />
           </header>
-          <main className="app-main flex-1 p-4 md:p-7 overflow-y-auto min-h-0 overscroll-contain">
+          <main className="app-main flex-1 p-4 md:p-7">
             <Outlet />
             <footer className="app-footer mt-8 mb-6 rounded-3xl border backdrop-blur p-4 text-center text-xs text-slate-600 flex flex-col items-center gap-1.5" dir="ltr">
               <div className="flex items-center justify-center gap-2">

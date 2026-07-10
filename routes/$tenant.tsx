@@ -146,10 +146,10 @@ function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen h-screen flex w-full overflow-hidden" dir={dir}>
+      <div className="min-h-screen flex w-full" dir={dir}>
         <AppSidebar />
-        <div className="app-shell flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          <header className="app-topbar flex items-center px-3 md:px-6 gap-2 md:gap-3 sticky top-0 z-30 min-w-0 shrink-0">
+        <div className="app-shell flex-1 flex flex-col min-w-0">
+          <header className="app-topbar flex items-center px-3 md:px-6 gap-2 md:gap-3 sticky top-0 z-30 min-w-0">
             <SidebarTrigger />
             <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-9 w-9 md:h-11 md:w-11 rounded-2xl bg-white p-0.5 shadow-sm shrink-0 border border-slate-200 overflow-hidden">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-xl object-cover" /> : <img src="/mjrh-logo.png" alt="MJRH" className="h-full w-full rounded-xl object-contain" />}</div><div className="min-w-0 hidden sm:block"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("app.tagline")}</div></div></div>
             <div className="hidden md:block min-w-0"><UnifiedSearch /></div>
@@ -157,7 +157,7 @@ function AppLayout() {
             <div className="shrink-0"><NotificationCenter /></div>
             <div className="hidden md:block"><AttendanceWidget /></div>
           </header>
-          <main className="app-main flex-1 p-4 md:p-7 overflow-y-auto min-h-0 overscroll-contain">
+          <main className="app-main flex-1 p-4 md:p-7">
             <Outlet />
             <footer className="app-footer mt-8 mb-24 md:mb-0 rounded-3xl border backdrop-blur p-4 text-center text-xs text-slate-600 flex flex-col items-center gap-1.5" dir="ltr">
               <div className="flex items-center justify-center gap-2">
