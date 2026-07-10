@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
-import { ArrowLeft, Check, Building2, Factory, Hotel, Hospital, Utensils, Boxes, Shield, Zap, Layers, Globe } from "lucide-react";
+import { ArrowLeft, Check, Building2, Factory, Hotel, Hospital, Utensils, Boxes, Shield, Zap, Layers, Globe, Users } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
   head: () => ({ meta: [{ title: "MJRH — Industrial Revolution" }] }),
