@@ -162,20 +162,26 @@ function LandingPage() {
           </div>
         </section>
 
-        <footer className="py-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-              <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain" />
+        <footer className="py-10 border-t border-slate-100">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
+                <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain" />
+              </div>
+              <div>
+                <div className="font-black">MJRH INDUSTRIAL REVOLUTION</div>
+                <div className="text-xs text-slate-500">© {new Date().getFullYear()} BY MUHAMMAD RIYAD</div>
+              </div>
             </div>
-            <div>
-              <div className="font-black">MJRH INDUSTRIAL REVOLUTION</div>
-              <div className="text-xs text-slate-500">© {new Date().getFullYear()} BY MUHAMMAD RIYAD</div>
+            <div className="flex items-center gap-6 text-slate-500">
+              <Link to="/privacy" className="hover:text-slate-900">الخصوصية</Link>
+              <Link to="/terms" className="hover:text-slate-900">الشروط</Link>
+              <Link to="/login" className="hover:text-slate-900 font-bold">دخول</Link>
             </div>
           </div>
-          <div className="flex items-center gap-6 text-slate-500">
-            <Link to="/privacy" className="hover:text-slate-900">الخصوصية</Link>
-            <Link to="/terms" className="hover:text-slate-900">الشروط</Link>
-            <a href="https://wa.me/201130804784" className="hover:text-slate-900">تواصل</a>
+          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+            <div>Enterprise OS for Hotels, Hospitals, 50+ Chains</div>
+            <a href="tel:+201130804784" className="font-bold hover:text-slate-900">+20 113 080 4784</a>
           </div>
         </footer>
       </main>
