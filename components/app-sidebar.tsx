@@ -203,7 +203,7 @@ export function AppSidebar() {
  <SidebarHeader className="border-b border-sidebar-border p-4">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-xs border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
- <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />
+ <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain logo-animated" />
  </div>
  <div className="min-w-0">
  <div className="font-black text-sm truncate tracking-tight text-slate-900 flex items-center gap-1">

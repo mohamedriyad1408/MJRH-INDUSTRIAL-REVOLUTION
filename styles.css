@@ -245,6 +245,25 @@
     transform: translateY(-1px);
   }
 
+  /* INDUSTRIAL LOGO ANIMATIONS */
+  @keyframes logo-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-4px) scale(1.02); }
+  }
+  @keyframes logo-glow {
+    0%, 100% { filter: drop-shadow(0 8px 20px rgba(13,148,136,0.2)); }
+    50% { filter: drop-shadow(0 12px 28px rgba(13,148,136,0.35)); }
+  }
+
+  .logo-animated {
+    animation: logo-float 4s ease-in-out infinite, logo-glow 4s ease-in-out infinite;
+    transition: transform 0.3s ease;
+  }
+  .logo-animated:hover {
+    animation-play-state: paused;
+    transform: scale(1.05) !important;
+  }
+
   /* Fix: Only target true Dialog modals (radix-dialog-content), not Sheet (sidebar/tasks) which also has role="dialog" */
   .radix-dialog-content {
     max-height: 90vh;

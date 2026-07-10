@@ -63,7 +63,7 @@ function HomeDirectory() {
         <div className="mx-auto max-w-6xl px-6 h-[64px] flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-              <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain" />
+              <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain logo-animated" />
             </div>
             <div className="font-black tracking-tight">MJRH</div>
           </Link>
@@ -96,7 +96,7 @@ function HomeDirectory() {
         <section className="py-8">
           <Card className="border shadow-xl rounded-[1.5rem] overflow-hidden max-w-4xl mx-auto">
             <div className="bg-slate-50 p-6 md:p-10">
-              <img src="/hero-workflow.png" alt="Workflow" className="w-full object-contain max-h-[360px]" />
+              <img src="/hero-workflow.png" alt="Workflow" className="w-full object-contain max-h-[360px] logo-animated" />
             </div>
             <div className="grid grid-cols-3 divide-x border-t bg-white text-center">
               <div className="p-4"><div className="text-xl font-black">50+</div><div className="text-xs text-slate-500">فرع</div></div>
@@ -164,7 +164,7 @@ function HomeDirectory() {
         <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-              <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain" />
+              <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain logo-animated" />
             </div>
             <div>
               <div className="font-black text-sm">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</div>

@@ -22,7 +22,7 @@ function LandingPage() {
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden">
-                <img src="/icon-512.png" alt="MJRH" className="h-6 w-6 object-contain" />
+                <img src="/icon-512.png" alt="MJRH" className="h-6 w-6 object-contain logo-animated" />
               </div>
               <div>
                 <div className="font-black text-[15px] tracking-tight">MJRH</div>
@@ -84,7 +84,7 @@ function LandingPage() {
             <div className="absolute -inset-4 bg-gradient-to-br from-teal-100 via-violet-100 to-amber-100 rounded-[2rem] blur-2xl opacity-60" />
             <Card className="relative shadow-2xl border-0 rounded-[1.5rem] overflow-hidden bg-white">
               <div className="p-2">
-                <img src="/hero-workflow.png" alt="MJRH Workflow" className="w-full rounded-[1rem] object-contain bg-slate-50" />
+                <img src="/hero-workflow.png" alt="MJRH Workflow" className="w-full rounded-[1rem] object-contain bg-slate-50 logo-animated" />
               </div>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-                <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain" />
+                <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain logo-animated" />
               </div>
               <div>
                 <div className="font-black">MJRH INDUSTRIAL REVOLUTION</div>
