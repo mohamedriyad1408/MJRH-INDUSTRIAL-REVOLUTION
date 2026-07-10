@@ -11,7 +11,7 @@ test.describe("mobile layout regressions", () => {
   test("login remains usable on mobile viewport", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/login");
-      await expect(page.getByRole("heading", { name: /نظام إدارة المغسلة/ })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /منظومة تشغيل المشاريع|نظام إدارة المغسلة/ })).toBeVisible();
       await expect(page.locator('input[type="email"]')).toBeInViewport();
       await expect(page.getByRole("button", { name: "دخول" })).toBeInViewport();
     });

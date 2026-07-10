@@ -144,6 +144,13 @@ const dict: Record<LanguageCode, Record<string, string>> = {
 };
 
 const navArabic: Record<string, string> = {
+  "navGroup.الرئيسية": "Main",
+  "navGroup.التشغيل والمحطات": "Operations & Stations",
+  "navGroup.العملاء والمبيعات": "Customers & Sales",
+  "navGroup.المالية والإدارة": "Finance & Management",
+  "navGroup.نظرة عامة": "Overview",
+  "navGroup.النمو والتشغيل": "Growth & Operations",
+  "navGroup.المالية والمراقبة": "Finance & Monitoring",
   "navGroup.اللوحات": "Dashboards",
   "nav./search": "Unified Search & Results",
   "nav./issues": "Project Issues & Telemetry",
