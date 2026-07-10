@@ -62,7 +62,6 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "البحث الموحد", url: "/search", icon: Search, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
  { title: "الخريطة والفريق", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
  { title: "التقارير والذكاء", url: "/reports", icon: BarChart3, roles: ["owner", "ops_manager", "cs_manager"] },
- { title: "الديمو", url: "/demo", icon: PlayCircle, roles: ["owner", "ops_manager", "cs_manager", "employee"] },
  ],
  },
  {

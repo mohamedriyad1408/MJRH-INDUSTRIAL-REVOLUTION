@@ -4,7 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
-import { ArrowLeft, Check, Building2, Factory, Hotel, Hospital, Utensils, Boxes, Shield, Zap, Layers, Globe, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft, Check, Building2, Factory, Hotel, Hospital, Utensils, Boxes, Shield, Zap, Layers, Globe, Users, Store, Download } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
   head: () => ({ meta: [{ title: "MJRH — Industrial Revolution" }] }),
@@ -13,6 +15,13 @@ export const Route = createFileRoute("/landing")({
 
 function LandingPage() {
   const { t, dir } = useI18n();
+  const [templates, setTemplates] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from("workflow_templates").select("*").eq("is_active", true).eq("is_featured", true).limit(6).then(({ data }) => {
+      if (data) setTemplates(data);
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-slate-900" dir={dir}>
@@ -111,6 +120,38 @@ function LandingPage() {
               <span className="flex items-center gap-2"><Utensils className="w-4 h-4" /> سلاسل مطاعم</span>
               <span className="flex items-center gap-2"><Boxes className="w-4 h-4" /> مصانع وورش</span>
             </div>
+          </div>
+        </section>
+
+        {/* MARKETPLACE PREVIEW - Public Templates visible on landing */}
+        <section className="py-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black flex items-center gap-2"><Store className="w-5 h-5" /> قوالب جاهزة — ابدأ في دقائق</h2>
+              <p className="text-sm text-slate-600 mt-1">اختر قالب نشاطك الجاهز — مغسلة، ورشة، غسيل سيارات، مطعم — وطبقه بضغطة</p>
+            </div>
+            <Button asChild variant="outline" size="sm" className="rounded-full"><Link to="/marketplace">عرض السوق <ArrowLeft className="w-3 h-3 ms-1" /></Link></Button>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {templates.map((tpl: any) => (
+              <Card key={tpl.id} className="hover:shadow-lg transition-all border">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl">{tpl.icon}</div>
+                    <div>
+                      <div className="font-bold text-sm">{tpl.name}</div>
+                      <div className="text-[11px] text-slate-500">{tpl.category} • {tpl.stages?.length} مراحل</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-3 line-clamp-2">{tpl.description}</p>
+                  <div className="mt-3 flex gap-1 flex-wrap">
+                    {tpl.stages?.slice(0,3).map((s:any,i:number) => (
+                      <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-slate-100 border">{s.icon} {s.name}</span>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
 

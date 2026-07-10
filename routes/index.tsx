@@ -39,6 +39,7 @@ function HomeDirectory() {
   const { t, dir } = useI18n();
   const { session, loading: authLoading, isSuperAdmin } = useAuth();
   const [tenants, setTenants] = useState<ActiveTenant[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [errored, setErrored] = useState(false);
 
@@ -50,6 +51,11 @@ function HomeDirectory() {
         setTenants((data ?? []) as ActiveTenant[]);
       })
       .finally(() => setLoading(false));
+
+    // Load featured templates for marketplace preview on home
+    supabase.from("workflow_templates").select("*").eq("is_active", true).eq("is_featured", true).limit(6).then(({ data }: any) => {
+      if (data) setTemplates(data);
+    });
   }, []);
 
   if (authLoading) {
@@ -146,6 +152,34 @@ function HomeDirectory() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* MARKETPLACE PREVIEW */}
+        <section className="py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black">🛒 سوق القوالب الجاهزة</h2>
+              <p className="text-sm text-slate-600 mt-1">نفس القوالب في /marketplace (عام - مميز) و /$tenant/marketplace (كل النشط) و /admin/templates (الكل)</p>
+            </div>
+            <a href="/marketplace" className="text-sm font-bold text-teal-700 hover:underline">عرض السوق →</a>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {templates.map((tpl: any) => (
+              <div key={tpl.slug} className="rounded-2xl border bg-white p-4 hover:shadow-md transition">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl">{tpl.icon}</div>
+                  <div>
+                    <div className="font-bold text-sm">{tpl.name}</div>
+                    <div className="text-[11px] text-slate-500">{tpl.category} • {tpl.stages?.length} مراحل</div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 mt-3 line-clamp-2">{tpl.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+            <b>الفرق:</b> <code>/marketplace</code> (عام - مميز فقط - للزوار) ≠ <code>/$tenant/marketplace</code> (كل النشط - للمالك) ≠ <code>/_admin/admin/templates</code> (الكل - للسوبر أدمن) ≠ <code>/signup</code> (أنواع أساسية فقط)
+          </div>
         </section>
 
         {/* Simple CTA */}
