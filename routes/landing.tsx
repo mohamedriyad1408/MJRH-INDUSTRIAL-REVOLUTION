@@ -64,12 +64,11 @@ function LandingPage() {
             </div>
 
             <h1 className="text-[40px] md:text-[56px] font-black tracking-[-0.03em] leading-[0.95]">
-              نظام واحد
-              <span className="block text-slate-400">يشغّل كل فروعك</span>
+              {t("landing.heroTitle")}
             </h1>
 
             <p className="text-[17px] leading-8 text-slate-600 max-w-[48ch]">
-              MJRH مصممة للمؤسسات الكبرى. فندق 7 نجوم، مستشفى، سلسلة مطاعم 50 فرع — نفس المنصة، تقارير مجمعة، تخصيص كامل لكل فرع بدون كود.
+              {t("landing.heroText")}
             </p>
 
             <div className="flex flex-wrap gap-3">
