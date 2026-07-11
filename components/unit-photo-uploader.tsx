@@ -3,7 +3,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Camera, Loader2, Image as ImageIcon } from "lucide-react";
-import imageCompression from "browser-image-compression";
+
+// Zero-cost client-side compression using Canvas (no paid lib, no external API)
+async function compressImage(file: File, maxWidth = 1024, quality = 0.6): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxWidth || height > maxWidth) {
+        if (width > height) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        } else {
+          width = (width * maxWidth) / height;
+          height = maxWidth;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not supported"));
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Compression failed"));
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => reject(new Error("Image load failed"));
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 type Props = {
   serviceUnitId: string;
@@ -22,20 +56,24 @@ export function UnitPhotoUploader({ serviceUnitId, type, existingUrl, onUploaded
 
     setUploading(true);
     try {
-      // Client-side compression — zero-cost, free lib
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 0.3,
-        maxWidthOrHeight: 1024,
-        useWebWorker: true,
-      });
+      let blob: Blob = file;
+      // Compress if > 300KB
+      if (file.size > 300 * 1024) {
+        try {
+          blob = await compressImage(file, 1024, 0.65);
+        } catch {
+          // fallback to original if compression fails
+          blob = file;
+        }
+      }
 
-      const ext = compressed.name.split(".").pop() || "jpg";
+      const ext = "jpg";
       const path = `${serviceUnitId}/${type}_${Date.now()}.${ext}`;
 
-      const { error: uploadErr } = await supabase.storage.from("unit-media").upload(path, compressed, {
+      const { error: uploadErr } = await supabase.storage.from("unit-media").upload(path, blob, {
         cacheControl: "3600",
         upsert: true,
-        contentType: compressed.type,
+        contentType: "image/jpeg",
       });
       if (uploadErr) throw uploadErr;
 
@@ -53,6 +91,8 @@ export function UnitPhotoUploader({ serviceUnitId, type, existingUrl, onUploaded
       toast.error(err.message || "فشل الرفع");
     } finally {
       setUploading(false);
+      // reset input
+      e.target.value = "";
     }
   }
 
