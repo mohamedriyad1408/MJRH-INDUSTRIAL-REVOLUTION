@@ -242,3 +242,4 @@ function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; 
 function Li({ children }: { children: React.ReactNode }) {
   return <li className="flex gap-2"><Check className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />{children}</li>;
 }
+// trigger redeploy Sat Jul 11 06:11:53 UTC 2026
