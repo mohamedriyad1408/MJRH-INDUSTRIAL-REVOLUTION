@@ -23,6 +23,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
+import { Route as TenantWorkOrdersRouteImport } from './routes/$tenant/work-orders'
 import { Route as TenantTodayRouteImport } from './routes/$tenant/today'
 import { Route as TenantSystemHealthRouteImport } from './routes/$tenant/system-health'
 import { Route as TenantSubscriptionsRouteImport } from './routes/$tenant/subscriptions'
@@ -61,6 +62,7 @@ import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index
 import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
 import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
 import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
+import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
 import { Route as AdminAdminTemplatesRouteImport } from './routes/_admin/admin/templates'
 import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
@@ -171,6 +173,11 @@ const JoinSlugRoute = JoinSlugRouteImport.update({
   id: '/join/$slug',
   path: '/join/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TenantWorkOrdersRoute = TenantWorkOrdersRouteImport.update({
+  id: '/work-orders',
+  path: '/work-orders',
+  getParentRoute: () => TenantRoute,
 } as any)
 const TenantTodayRoute = TenantTodayRouteImport.update({
   id: '/today',
@@ -362,6 +369,12 @@ const TenantOrdersIndexRoute = TenantOrdersIndexRouteImport.update({
   path: '/orders/',
   getParentRoute: () => TenantRoute,
 } as any)
+const AdminAdminWorkflowBuilderRoute =
+  AdminAdminWorkflowBuilderRouteImport.update({
+    id: '/admin/workflow-builder',
+    path: '/admin/workflow-builder',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminAdminTemplatesRoute = AdminAdminTemplatesRouteImport.update({
   id: '/admin/templates',
   path: '/admin/templates',
@@ -618,6 +631,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
+  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/$tenant/branches/$id': typeof TenantBranchesIdRoute
@@ -658,6 +672,7 @@ export interface FileRoutesByFullPath {
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
+  '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
@@ -712,6 +727,7 @@ export interface FileRoutesByTo {
   '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
+  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/$tenant/branches/$id': typeof TenantBranchesIdRoute
@@ -752,6 +768,7 @@ export interface FileRoutesByTo {
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
+  '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders': typeof TenantOrdersIndexRoute
   '/$tenant/pickups': typeof TenantPickupsIndexRoute
   '/$tenant/staff': typeof TenantStaffIndexRoute
@@ -808,6 +825,7 @@ export interface FileRoutesById {
   '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
+  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
   '/$tenant/branches/$id': typeof TenantBranchesIdRoute
@@ -848,6 +866,7 @@ export interface FileRoutesById {
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
   '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/_admin/admin/templates': typeof AdminAdminTemplatesRoute
+  '/_admin/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
@@ -904,6 +923,7 @@ export interface FileRouteTypes {
     | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
+    | '/$tenant/work-orders'
     | '/join/$slug'
     | '/track/$token'
     | '/$tenant/branches/$id'
@@ -944,6 +964,7 @@ export interface FileRouteTypes {
     | '/admin/platform-fees'
     | '/admin/telemetry'
     | '/admin/templates'
+    | '/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
@@ -998,6 +1019,7 @@ export interface FileRouteTypes {
     | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
+    | '/$tenant/work-orders'
     | '/join/$slug'
     | '/track/$token'
     | '/$tenant/branches/$id'
@@ -1038,6 +1060,7 @@ export interface FileRouteTypes {
     | '/admin/platform-fees'
     | '/admin/telemetry'
     | '/admin/templates'
+    | '/admin/workflow-builder'
     | '/$tenant/orders'
     | '/$tenant/pickups'
     | '/$tenant/staff'
@@ -1093,6 +1116,7 @@ export interface FileRouteTypes {
     | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
+    | '/$tenant/work-orders'
     | '/join/$slug'
     | '/track/$token'
     | '/$tenant/branches/$id'
@@ -1133,6 +1157,7 @@ export interface FileRouteTypes {
     | '/_admin/admin/platform-fees'
     | '/_admin/admin/telemetry'
     | '/_admin/admin/templates'
+    | '/_admin/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
     | '/$tenant/staff/'
@@ -1258,6 +1283,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/join/$slug'
       preLoaderRoute: typeof JoinSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/$tenant/work-orders': {
+      id: '/$tenant/work-orders'
+      path: '/work-orders'
+      fullPath: '/$tenant/work-orders'
+      preLoaderRoute: typeof TenantWorkOrdersRouteImport
+      parentRoute: typeof TenantRoute
     }
     '/$tenant/today': {
       id: '/$tenant/today'
@@ -1524,6 +1556,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$tenant/orders/'
       preLoaderRoute: typeof TenantOrdersIndexRouteImport
       parentRoute: typeof TenantRoute
+    }
+    '/_admin/admin/workflow-builder': {
+      id: '/_admin/admin/workflow-builder'
+      path: '/admin/workflow-builder'
+      fullPath: '/admin/workflow-builder'
+      preLoaderRoute: typeof AdminAdminWorkflowBuilderRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_admin/admin/templates': {
       id: '/_admin/admin/templates'
@@ -1876,6 +1915,7 @@ interface TenantRouteChildren {
   TenantSubscriptionsRoute: typeof TenantSubscriptionsRoute
   TenantSystemHealthRoute: typeof TenantSystemHealthRoute
   TenantTodayRoute: typeof TenantTodayRoute
+  TenantWorkOrdersRoute: typeof TenantWorkOrdersRoute
   TenantOrdersIdRoute: typeof TenantOrdersIdRoute
   TenantOrdersNewRoute: typeof TenantOrdersNewRoute
   TenantPickupsNewRoute: typeof TenantPickupsNewRoute
@@ -1941,6 +1981,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantSubscriptionsRoute: TenantSubscriptionsRoute,
   TenantSystemHealthRoute: TenantSystemHealthRoute,
   TenantTodayRoute: TenantTodayRoute,
+  TenantWorkOrdersRoute: TenantWorkOrdersRoute,
   TenantOrdersIdRoute: TenantOrdersIdRoute,
   TenantOrdersNewRoute: TenantOrdersNewRoute,
   TenantPickupsNewRoute: TenantPickupsNewRoute,
@@ -1985,6 +2026,7 @@ interface AdminRouteChildren {
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
   AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
   AdminAdminTemplatesRoute: typeof AdminAdminTemplatesRoute
+  AdminAdminWorkflowBuilderRoute: typeof AdminAdminWorkflowBuilderRoute
   AdminAdminIndexRoute: typeof AdminAdminIndexRoute
   AdminAdminTenantsIdRoute: typeof AdminAdminTenantsIdRoute
   AdminAdminTenantsIndexRoute: typeof AdminAdminTenantsIndexRoute
@@ -2002,6 +2044,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
   AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,
   AdminAdminTemplatesRoute: AdminAdminTemplatesRoute,
+  AdminAdminWorkflowBuilderRoute: AdminAdminWorkflowBuilderRoute,
   AdminAdminIndexRoute: AdminAdminIndexRoute,
   AdminAdminTenantsIdRoute: AdminAdminTenantsIdRoute,
   AdminAdminTenantsIndexRoute: AdminAdminTenantsIndexRoute,
