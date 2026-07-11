@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useI18n } from "@/lib/i18n";
-import { Store, Star, Download, ArrowLeft, Building2, Wrench, Car, Home, Utensils, Shirt } from "lucide-react";
+import { useI18n, interpolate } from "@/lib/i18n";
+import { Store, Star, ArrowLeft, Building2, Wrench, Car, Home, Utensils, Shirt } from "lucide-react";
 
 export const Route = createFileRoute("/marketplace")({
-  head: () => ({ meta: [{ title: "سوق القوالب — MJRH Marketplace" }] }),
+  head: () => ({ meta: [{ title: "MJRH Marketplace" }] }),
   component: PublicMarketplacePage,
 });
 
@@ -34,16 +34,6 @@ const categoryIcons: Record<string, any> = {
   cleaning: Home,
   restaurant: Utensils,
   general: Building2,
-};
-
-const categoryLabels: Record<string, { ar: string; en: string }> = {
-  laundry: { ar: "مغاسل", en: "Laundry" },
-  carpet: { ar: "سجاد ومفروشات", en: "Carpet" },
-  repair: { ar: "ورش تصليح", en: "Repair" },
-  carwash: { ar: "غسيل سيارات", en: "Car Wash" },
-  cleaning: { ar: "تنظيف", en: "Cleaning" },
-  restaurant: { ar: "مطاعم", en: "Restaurant" },
-  general: { ar: "عام", en: "General" },
 };
 
 function PublicMarketplacePage() {
@@ -75,8 +65,8 @@ function PublicMarketplacePage() {
           </Link>
           <div className="flex items-center gap-2">
             <LanguageSwitcher compact />
-            <Button asChild variant="ghost" size="sm"><Link to="/landing">المنصة</Link></Button>
-            <Button asChild size="sm" className="rounded-full bg-slate-900"><Link to="/signup">ابدأ مجاناً</Link></Button>
+            <Button asChild variant="ghost" size="sm"><Link to="/landing">{t("marketplace.platform")}</Link></Button>
+            <Button asChild size="sm" className="rounded-full bg-slate-900"><Link to="/signup">{t("marketplace.startFree")}</Link></Button>
           </div>
         </div>
       </header>
@@ -85,26 +75,25 @@ function PublicMarketplacePage() {
         <div className="max-w-3xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center"><Store className="w-5 h-5" /></div>
-            <Badge className="bg-teal-50 text-teal-700 border-teal-200">قوالب جاهزة</Badge>
-            <Badge variant="outline">{templates.length} قالب</Badge>
+            <Badge className="bg-teal-50 text-teal-700 border-teal-200">{t("marketplace.badge")}</Badge>
+            <Badge variant="outline">{interpolate(t("marketplace.templateCount"), { count: templates.length })}</Badge>
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">
-            اختر قالب نشاطك
-            <span className="block text-slate-400">وابدأ في دقائق</span>
+            {t("marketplace.title")}
+            <span className="block text-slate-400">{t("marketplace.subtitle")}</span>
           </h1>
           <p className="text-slate-600 mt-4 leading-7 max-w-xl">
-            مغسلة، ورشة، غسيل سيارات، تنظيف، مطعم — كل قالب فيه المراحل، الأيقونات، والألوان جاهزة. طبقه في مشروعك بضغطة واحدة وعدّل حسب احتياجك.
+            {t("marketplace.description")}
           </p>
         </div>
 
         <div className="mt-8 flex flex-wrap gap-2">
-          <Button variant={filter === "all" ? "default" : "outline"} size="sm" className="rounded-full" onClick={() => setFilter("all")}>الكل ({templates.length})</Button>
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm" className="rounded-full" onClick={() => setFilter("all")}>{t("marketplace.all")} ({templates.length})</Button>
           {categories.map(cat => {
             const Icon = categoryIcons[cat] || Building2;
-            const label = categoryLabels[cat]?.[language === "en" ? "en" : "ar"] || cat;
             return (
               <Button key={cat} variant={filter === cat ? "default" : "outline"} size="sm" className="rounded-full" onClick={() => setFilter(cat)}>
-                <Icon className="w-3.5 h-3.5 me-1" /> {label}
+                <Icon className="w-3.5 h-3.5 me-1" /> {cat}
               </Button>
             );
           })}
@@ -123,12 +112,12 @@ function PublicMarketplacePage() {
                     </div>
                     <div className="flex gap-1">
                       {tpl.is_featured && <Badge className="bg-amber-500"><Star className="w-3 h-3" /></Badge>}
-                      <Badge variant="secondary" className="text-[10px]">{tpl.downloads} استخدام</Badge>
+                      <Badge variant="secondary" className="text-[10px]">{interpolate(t("marketplace.usage"), { count: tpl.downloads })}</Badge>
                     </div>
                   </div>
                   <CardTitle className="mt-3">
                     <div className="font-black text-lg">{language === "en" && tpl.name_en ? tpl.name_en : tpl.name}</div>
-                    <div className="text-xs font-normal text-slate-500 mt-1 flex items-center gap-1"><Icon className="w-3 h-3" /> {categoryLabels[tpl.category]?.[language === "en" ? "en" : "ar"] || tpl.category} • {tpl.stages?.length} مراحل</div>
+                    <div className="text-xs font-normal text-slate-500 mt-1 flex items-center gap-1"><Icon className="w-3 h-3" /> {tpl.category} • {tpl.stages?.length} stages</div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -143,10 +132,10 @@ function PublicMarketplacePage() {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button asChild size="sm" className="flex-1 rounded-full bg-slate-900 hover:bg-black">
-                      <Link to="/signup">استخدم القالب <ArrowLeft className="w-3 h-3 ms-1" /></Link>
+                      <Link to="/signup">{t("marketplace.useTemplate")} <ArrowLeft className="w-3 h-3 ms-1" /></Link>
                     </Button>
                     <Button asChild size="sm" variant="outline" className="rounded-full">
-                      <Link to="/landing">تفاصيل</Link>
+                      <Link to="/landing">{t("marketplace.details")}</Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -158,10 +147,10 @@ function PublicMarketplacePage() {
         <Card className="mt-12 bg-slate-900 text-white border-0 rounded-[1.5rem] overflow-hidden">
           <CardContent className="p-8 grid md:grid-cols-2 gap-8 items-center">
             <div>
-              <h3 className="text-2xl font-black">عايز قالب مخصص لنشاطك؟</h3>
-              <p className="text-white/60 mt-2 text-sm leading-6">نقدر نصمم لك قالب خاص بفندقك، مستشفاك، أو سلسلة مطاعمك — مع مراحلك وحقولك وتقاريرك الخاصة، بدون كود.</p>
+              <h3 className="text-2xl font-black">{t("marketplace.customTitle")}</h3>
+              <p className="text-white/60 mt-2 text-sm leading-6">{t("marketplace.customDesc")}</p>
               <Button asChild className="mt-4 bg-white text-slate-900 hover:bg-slate-100 rounded-full">
-                <a href="https://wa.me/201130804784?text=عايز%20قالب%20مخصص%20لمشروعي" target="_blank" rel="noreferrer">اطلب قالب مخصص</a>
+                <a href="https://wa.me/201130804784?text=custom%20template" target="_blank" rel="noreferrer">{t("marketplace.requestCustom")}</a>
               </Button>
             </div>
             <div className="bg-white rounded-2xl p-4">
@@ -180,8 +169,8 @@ function PublicMarketplacePage() {
             <div className="font-black">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</div>
           </div>
           <div className="flex items-center gap-4 text-xs text-slate-500">
-            <Link to="/privacy" className="hover:text-slate-900">الخصوصية</Link>
-            <Link to="/terms" className="hover:text-slate-900">الشروط</Link>
+            <Link to="/privacy" className="hover:text-slate-900">{t("landing.footerPrivacy")}</Link>
+            <Link to="/terms" className="hover:text-slate-900">{t("landing.footerTerms")}</Link>
             <a href="tel:+201130804784" className="font-bold hover:text-slate-900">+20 113 080 4784</a>
           </div>
         </div>
