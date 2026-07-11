@@ -151,6 +151,62 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
   const metrics = await fetchExecutiveMetrics(tenantId, selectedBranchId);
   const insights: AiAdvisorInsight[] = [];
 
+  // 0. Extra rules — Busiest day & Late payers (zero-cost SQL aggregation)
+  try {
+    const [busiestRes, lateRes, burnoutRes] = await Promise.all([
+      supabase.from("v_busiest_day").select("*").eq("tenant_id", tenantId).maybeSingle(),
+      supabase.from("v_late_payers").select("*").eq("tenant_id", tenantId).limit(3),
+      supabase.from("v_burnout_risk").select("*").eq("tenant_id", tenantId).limit(3),
+    ]);
+
+    const busiest: any = (busiestRes as any).data;
+    if (busiest && busiest.pct_above_avg > 15) {
+      insights.push({
+        id: "extra-busiest",
+        category: "workforce",
+        severity: busiest.pct_above_avg > 50 ? "warning" : "info",
+        titleKey: "ai.busiestDay.title",
+        descriptionKey: "ai.busiestDay.desc",
+        values: { day: busiest.day_name, pct: busiest.pct_above_avg, count: busiest.cnt },
+        actionLabelKey: "ai.busiestDay.action",
+        actionHref: "/staff/schedule",
+        metricImpact: `${busiest.pct_above_avg}% Peak vs Avg`,
+      } as any);
+    }
+
+    const latePayers: any[] = (lateRes as any).data ?? [];
+    latePayers.forEach((lp, idx) => {
+      insights.push({
+        id: `extra-late-${idx}`,
+        category: "finance",
+        severity: lp.delay_vs_avg > 7 ? "warning" : "info",
+        titleKey: "ai.latePayer.title",
+        descriptionKey: "ai.latePayer.desc",
+        values: { customer: lp.customer_name || "عميل", delay: lp.delay_vs_avg, avg: Math.round(Number(lp.cust_avg_days || 0)) },
+        actionLabelKey: "ai.latePayer.action",
+        actionHref: "/receivables",
+        metricImpact: `${lp.delay_vs_avg}d Late vs Avg`,
+      } as any);
+    });
+
+    const burnout: any[] = (burnoutRes as any).data ?? [];
+    burnout.forEach((br, idx) => {
+      insights.push({
+        id: `extra-burnout-${idx}`,
+        category: "workforce",
+        severity: "warning",
+        titleKey: "ai.burnout.title",
+        descriptionKey: "ai.burnout.desc",
+        values: { employee: br.employee_id.slice(0, 8), days: br.consecutive_days, wli: Number(br.avg_wli).toFixed(2), station: br.station },
+        actionLabelKey: "ai.burnout.action",
+        actionHref: "/staff/fairness",
+        metricImpact: `WLI ${Number(br.avg_wli).toFixed(2)} x3d`,
+      } as any);
+    });
+  } catch (e) {
+    console.warn("extra rules failed", e);
+  }
+
   // 1. Station Bottlenecks
   const maxStationEntry = Object.entries(metrics.stationCounts).reduce((max, cur) => cur[1] > max[1] ? cur : max, ["received", 0]);
   if (maxStationEntry[1] > 5) {

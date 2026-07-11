@@ -25,12 +25,14 @@ import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as TenantTodayRouteImport } from './routes/$tenant/today'
 import { Route as TenantSystemHealthRouteImport } from './routes/$tenant/system-health'
+import { Route as TenantSubscriptionsRouteImport } from './routes/$tenant/subscriptions'
 import { Route as TenantSettingsRouteImport } from './routes/$tenant/settings'
 import { Route as TenantServicesRouteImport } from './routes/$tenant/services'
 import { Route as TenantSearchRouteImport } from './routes/$tenant/search'
 import { Route as TenantReportsRouteImport } from './routes/$tenant/reports'
 import { Route as TenantReceivablesRouteImport } from './routes/$tenant/receivables'
 import { Route as TenantOpsRouteImport } from './routes/$tenant/ops'
+import { Route as TenantOnboardingRouteImport } from './routes/$tenant/onboarding'
 import { Route as TenantMarketplaceRouteImport } from './routes/$tenant/marketplace'
 import { Route as TenantMarketingRouteImport } from './routes/$tenant/marketing'
 import { Route as TenantManagerRouteImport } from './routes/$tenant/manager'
@@ -88,6 +90,7 @@ import { Route as TenantStaffRequestsRouteImport } from './routes/$tenant/staff/
 import { Route as TenantStaffNewRouteImport } from './routes/$tenant/staff/new'
 import { Route as TenantStaffLeavesRouteImport } from './routes/$tenant/staff/leaves'
 import { Route as TenantStaffIroningPayrollRouteImport } from './routes/$tenant/staff/ironing-payroll'
+import { Route as TenantStaffFairnessRouteImport } from './routes/$tenant/staff/fairness'
 import { Route as TenantStaffAttendanceRouteImport } from './routes/$tenant/staff/attendance'
 import { Route as TenantStaffIdRouteImport } from './routes/$tenant/staff/$id'
 import { Route as TenantSettingsWorkflowRouteImport } from './routes/$tenant/settings/workflow'
@@ -179,6 +182,11 @@ const TenantSystemHealthRoute = TenantSystemHealthRouteImport.update({
   path: '/system-health',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantSubscriptionsRoute = TenantSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantSettingsRoute = TenantSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -207,6 +215,11 @@ const TenantReceivablesRoute = TenantReceivablesRouteImport.update({
 const TenantOpsRoute = TenantOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
+  getParentRoute: () => TenantRoute,
+} as any)
+const TenantOnboardingRoute = TenantOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => TenantRoute,
 } as any)
 const TenantMarketplaceRoute = TenantMarketplaceRouteImport.update({
@@ -498,6 +511,11 @@ const TenantStaffIroningPayrollRoute =
     path: '/staff/ironing-payroll',
     getParentRoute: () => TenantRoute,
   } as any)
+const TenantStaffFairnessRoute = TenantStaffFairnessRouteImport.update({
+  id: '/staff/fairness',
+  path: '/staff/fairness',
+  getParentRoute: () => TenantRoute,
+} as any)
 const TenantStaffAttendanceRoute = TenantStaffAttendanceRouteImport.update({
   id: '/staff/attendance',
   path: '/staff/attendance',
@@ -590,12 +608,14 @@ export interface FileRoutesByFullPath {
   '/$tenant/manager': typeof TenantManagerRoute
   '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/marketplace': typeof TenantMarketplaceRoute
+  '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
   '/$tenant/settings': typeof TenantSettingsRouteWithChildren
+  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -608,6 +628,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
+  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
   '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
   '/$tenant/staff/new': typeof TenantStaffNewRoute
@@ -681,12 +702,14 @@ export interface FileRoutesByTo {
   '/$tenant/manager': typeof TenantManagerRoute
   '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/marketplace': typeof TenantMarketplaceRoute
+  '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
   '/$tenant/settings': typeof TenantSettingsRouteWithChildren
+  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -699,6 +722,7 @@ export interface FileRoutesByTo {
   '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
+  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
   '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
   '/$tenant/staff/new': typeof TenantStaffNewRoute
@@ -774,12 +798,14 @@ export interface FileRoutesById {
   '/$tenant/manager': typeof TenantManagerRoute
   '/$tenant/marketing': typeof TenantMarketingRoute
   '/$tenant/marketplace': typeof TenantMarketplaceRoute
+  '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
   '/$tenant/reports': typeof TenantReportsRoute
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
   '/$tenant/settings': typeof TenantSettingsRouteWithChildren
+  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
   '/join/$slug': typeof JoinSlugRoute
@@ -792,6 +818,7 @@ export interface FileRoutesById {
   '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
+  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
   '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
   '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
   '/$tenant/staff/new': typeof TenantStaffNewRoute
@@ -867,12 +894,14 @@ export interface FileRouteTypes {
     | '/$tenant/manager'
     | '/$tenant/marketing'
     | '/$tenant/marketplace'
+    | '/$tenant/onboarding'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
     | '/$tenant/search'
     | '/$tenant/services'
     | '/$tenant/settings'
+    | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
     | '/join/$slug'
@@ -885,6 +914,7 @@ export interface FileRouteTypes {
     | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
+    | '/$tenant/staff/fairness'
     | '/$tenant/staff/ironing-payroll'
     | '/$tenant/staff/leaves'
     | '/$tenant/staff/new'
@@ -958,12 +988,14 @@ export interface FileRouteTypes {
     | '/$tenant/manager'
     | '/$tenant/marketing'
     | '/$tenant/marketplace'
+    | '/$tenant/onboarding'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
     | '/$tenant/search'
     | '/$tenant/services'
     | '/$tenant/settings'
+    | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
     | '/join/$slug'
@@ -976,6 +1008,7 @@ export interface FileRouteTypes {
     | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
+    | '/$tenant/staff/fairness'
     | '/$tenant/staff/ironing-payroll'
     | '/$tenant/staff/leaves'
     | '/$tenant/staff/new'
@@ -1050,12 +1083,14 @@ export interface FileRouteTypes {
     | '/$tenant/manager'
     | '/$tenant/marketing'
     | '/$tenant/marketplace'
+    | '/$tenant/onboarding'
     | '/$tenant/ops'
     | '/$tenant/receivables'
     | '/$tenant/reports'
     | '/$tenant/search'
     | '/$tenant/services'
     | '/$tenant/settings'
+    | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
     | '/join/$slug'
@@ -1068,6 +1103,7 @@ export interface FileRouteTypes {
     | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
+    | '/$tenant/staff/fairness'
     | '/$tenant/staff/ironing-payroll'
     | '/$tenant/staff/leaves'
     | '/$tenant/staff/new'
@@ -1237,6 +1273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantSystemHealthRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/subscriptions': {
+      id: '/$tenant/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/$tenant/subscriptions'
+      preLoaderRoute: typeof TenantSubscriptionsRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/settings': {
       id: '/$tenant/settings'
       path: '/settings'
@@ -1277,6 +1320,13 @@ declare module '@tanstack/react-router' {
       path: '/ops'
       fullPath: '/$tenant/ops'
       preLoaderRoute: typeof TenantOpsRouteImport
+      parentRoute: typeof TenantRoute
+    }
+    '/$tenant/onboarding': {
+      id: '/$tenant/onboarding'
+      path: '/onboarding'
+      fullPath: '/$tenant/onboarding'
+      preLoaderRoute: typeof TenantOnboardingRouteImport
       parentRoute: typeof TenantRoute
     }
     '/$tenant/marketplace': {
@@ -1678,6 +1728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStaffIroningPayrollRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/staff/fairness': {
+      id: '/$tenant/staff/fairness'
+      path: '/staff/fairness'
+      fullPath: '/$tenant/staff/fairness'
+      preLoaderRoute: typeof TenantStaffFairnessRouteImport
+      parentRoute: typeof TenantRoute
+    }
     '/$tenant/staff/attendance': {
       id: '/$tenant/staff/attendance'
       path: '/staff/attendance'
@@ -1809,12 +1866,14 @@ interface TenantRouteChildren {
   TenantManagerRoute: typeof TenantManagerRoute
   TenantMarketingRoute: typeof TenantMarketingRoute
   TenantMarketplaceRoute: typeof TenantMarketplaceRoute
+  TenantOnboardingRoute: typeof TenantOnboardingRoute
   TenantOpsRoute: typeof TenantOpsRoute
   TenantReceivablesRoute: typeof TenantReceivablesRoute
   TenantReportsRoute: typeof TenantReportsRoute
   TenantSearchRoute: typeof TenantSearchRoute
   TenantServicesRoute: typeof TenantServicesRoute
   TenantSettingsRoute: typeof TenantSettingsRouteWithChildren
+  TenantSubscriptionsRoute: typeof TenantSubscriptionsRoute
   TenantSystemHealthRoute: typeof TenantSystemHealthRoute
   TenantTodayRoute: typeof TenantTodayRoute
   TenantOrdersIdRoute: typeof TenantOrdersIdRoute
@@ -1822,6 +1881,7 @@ interface TenantRouteChildren {
   TenantPickupsNewRoute: typeof TenantPickupsNewRoute
   TenantStaffIdRoute: typeof TenantStaffIdRoute
   TenantStaffAttendanceRoute: typeof TenantStaffAttendanceRoute
+  TenantStaffFairnessRoute: typeof TenantStaffFairnessRoute
   TenantStaffIroningPayrollRoute: typeof TenantStaffIroningPayrollRoute
   TenantStaffLeavesRoute: typeof TenantStaffLeavesRoute
   TenantStaffNewRoute: typeof TenantStaffNewRoute
@@ -1871,12 +1931,14 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantManagerRoute: TenantManagerRoute,
   TenantMarketingRoute: TenantMarketingRoute,
   TenantMarketplaceRoute: TenantMarketplaceRoute,
+  TenantOnboardingRoute: TenantOnboardingRoute,
   TenantOpsRoute: TenantOpsRoute,
   TenantReceivablesRoute: TenantReceivablesRoute,
   TenantReportsRoute: TenantReportsRoute,
   TenantSearchRoute: TenantSearchRoute,
   TenantServicesRoute: TenantServicesRoute,
   TenantSettingsRoute: TenantSettingsRouteWithChildren,
+  TenantSubscriptionsRoute: TenantSubscriptionsRoute,
   TenantSystemHealthRoute: TenantSystemHealthRoute,
   TenantTodayRoute: TenantTodayRoute,
   TenantOrdersIdRoute: TenantOrdersIdRoute,
@@ -1884,6 +1946,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantPickupsNewRoute: TenantPickupsNewRoute,
   TenantStaffIdRoute: TenantStaffIdRoute,
   TenantStaffAttendanceRoute: TenantStaffAttendanceRoute,
+  TenantStaffFairnessRoute: TenantStaffFairnessRoute,
   TenantStaffIroningPayrollRoute: TenantStaffIroningPayrollRoute,
   TenantStaffLeavesRoute: TenantStaffLeavesRoute,
   TenantStaffNewRoute: TenantStaffNewRoute,

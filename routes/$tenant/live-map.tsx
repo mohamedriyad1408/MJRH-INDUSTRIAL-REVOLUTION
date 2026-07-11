@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
-import { dueInfo } from "@/lib/geo";
-import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, CheckSquare } from "lucide-react";
+import { dueInfo, distanceKm } from "@/lib/geo";
+import { orderTasksByNearestNeighbor, formatRouteSummary } from "@/lib/route-optimizer";
+import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, CheckSquare, Zap } from "lucide-react";
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/live-map")({
@@ -78,10 +79,9 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
     validPins.forEach((pin) => {
       const isSelected = selectedIds.has(pin.id);
       const color = pin.type === "driver" ? "#8b5cf6" : pin.type === "pickup" ? "#f59e0b" : "#10b981";
-      const emoji = pin.type === "driver" ? "" : pin.type === "pickup" ? "" : "";
       const sz = isSelected ? 46 : 36;
       const icon = L.divIcon({
-        html: `<div style="width:${sz}px;height:${sz}px;background:${color};border:${isSelected ? "3px" : "2px"} solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${isSelected ? "20px" : "16px"};box-shadow:${isSelected ? `0 0 0 4px ${color}44,` : ""}0 2px 8px rgba(0,0,0,.25);cursor:pointer">${emoji}</div>`,
+        html: `<div style="width:${sz}px;height:${sz}px;background:${color};border:${isSelected ? "3px" : "2px"} solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${isSelected ? "20px" : "16px"};box-shadow:${isSelected ? `0 0 0 4px ${color}44,` : ""}0 2px 8px rgba(0,0,0,.25);cursor:pointer"></div>`,
         iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2], className: "",
       });
       const marker = L.marker([pin.lat!, pin.lng!], { icon })
@@ -93,8 +93,11 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
 
     if (routeMode && selectedIds.size >= 2) {
       const sel = validPins.filter((p) => selectedIds.has(p.id));
-      if (sel.length >= 2) {
-        const pl = L.polyline(sel.map((p) => [p.lat!, p.lng!]), { color: "#0d9488", weight: 4, opacity: .85, dashArray: "10,6" }).addTo(mapRef.current);
+      // Maintain order of selection
+      const orderedSel = [...selectedIds].map((id) => sel.find((p) => p.id === id)).filter(Boolean) as MapPin[];
+      const toUse = orderedSel.length >= 2 ? orderedSel : sel;
+      if (toUse.length >= 2) {
+        const pl = L.polyline(toUse.map((p) => [p.lat!, p.lng!]), { color: "#0d9488", weight: 4, opacity: .85, dashArray: "10,6" }).addTo(mapRef.current);
         markersRef.current["__route__"] = pl;
         try { mapRef.current.fitBounds(pl.getBounds(), { padding: [50, 50] }); } catch {}
       }
@@ -121,12 +124,12 @@ function LiveMapPage() {
   const [stats, setStats] = useState({ pickups: 0, deliveries: 0, drivers: 0 });
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
+  const [optimizedInfo, setOptimizedInfo] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
     const raw: MapPin[] = [];
-
     const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
     const [{ data: pickups }, { data: orders }, { data: drivers }, { data: branchRows }] = await Promise.all([
       addBranch(supabase.from("pickup_requests").select("id,branch_id,customer_name,address,phone,status,scheduled_at,lat,lng,estimated_pieces,driver_employee_id,converted_order_id")).in("status", ["pending", "assigned"]),
@@ -135,7 +138,6 @@ function LiveMapPage() {
       tenantId ? supabase.from("branches").select("id,name").eq("tenant_id", tenantId).eq("is_active", true).order("created_at") : Promise.resolve({ data: [] }),
     ]);
     setBranches(branchRows ?? []);
-
     const openPickupOrderIds = new Set((pickups ?? []).map((p: any) => p.converted_order_id).filter(Boolean));
     const orderIds = (orders ?? []).map((o: any) => o.id);
     const pieceMap = new Map<string, number>();
@@ -143,7 +145,6 @@ function LiveMapPage() {
       const { data: pieces } = await supabase.from("service_units").select("order_id,id").in("order_id", orderIds);
       (pieces ?? []).forEach((x: any) => pieceMap.set(x.order_id, (pieceMap.get(x.order_id) ?? 0) + 1));
     }
-
     (pickups ?? []).forEach((p: any) => {
       const due = dueInfo(p.scheduled_at);
       raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id, source: "pickup", sourceId: p.id, coordKind: "pickup" });
@@ -154,14 +155,7 @@ function LiveMapPage() {
       const inPickupPhase = ["received", "cleaning", "ironing", "packing"].includes(o.status);
       const addr = inPickupPhase ? (o.pickup_address || o.delivery_address) : (o.delivery_address || o.pickup_address);
       if (!addr) return;
-      const statusAr: Record<string, string> = {
-        received: "تم الاستلام",
-        cleaning: "في الغسيل",
-        ironing: "في الكي",
-        packing: "في التغليف",
-        ready: "جاهز للتسليم",
-        out_for_delivery: "خرج للتسليم",
-      };
+      const statusAr: Record<string, string> = { received: "تم الاستلام", cleaning: "في الغسيل", ironing: "في الكي", packing: "في التغليف", ready: "جاهز للتسليم", out_for_delivery: "خرج للتسليم" };
       raw.push({
         id: `${inPickupPhase ? "op" : "d"}-${o.id}`,
         type: inPickupPhase ? "pickup" : "delivery",
@@ -179,7 +173,6 @@ function LiveMapPage() {
       });
     });
     (drivers ?? []).forEach((d: any) => raw.push({ id: `dr-${d.id}`, type: "driver", label: d.full_name, sublabel: d.location_updated_at ? `آخر تحديث ${new Date(d.location_updated_at).toLocaleTimeString("ar-EG")}` : (d.phone ?? ""), address: "موقع السائق", lat: d.current_lat ?? undefined, lng: d.current_lng ?? undefined, source: "driver", sourceId: d.id }));
-
     setStats({ pickups: (pickups ?? []).length, deliveries: (orders ?? []).length, drivers: (drivers ?? []).length });
     setGeocoding(true);
     const geocoded = await Promise.all(raw.map(async (pin) => {
@@ -237,7 +230,49 @@ function LiveMapPage() {
       return;
     }
     setRouteMode(true);
+    setOptimizedInfo(null);
     toast.success(`تم رسم خط السير بين ${selectedPins.length} نقاط`);
+  }
+
+  // NEW: Zero-cost route optimization via Haversine nearest-neighbor (no Google Directions API)
+  function optimizeRoute() {
+    if (selectedPins.length < 2) {
+      toast.error("اختر نقطتين على الأقل لترتيب المسار");
+      return;
+    }
+    // Use first driver location as origin if available, else first selected pin
+    const driverPin = pins.find((p) => p.type === "driver" && p.lat && p.lng);
+    const origin = driverPin ? { lat: driverPin.lat!, lng: driverPin.lng! } : { lat: selectedPins[0].lat!, lng: selectedPins[0].lng! };
+
+    const tasks = selectedPins
+      .filter((p) => p.type !== "driver")
+      .map((p) => ({
+        id: p.id,
+        kind: p.type as any,
+        loc: { lat: p.lat!, lng: p.lng! },
+        address: p.address,
+        customer_name: p.label,
+        is_urgent: !!p.late,
+      }));
+
+    if (tasks.length < 2) {
+      toast.error("تحتاج نقطتين توصيل/استلام على الأقل");
+      return;
+    }
+
+    const { ordered, totalDistanceKm } = orderTasksByNearestNeighbor(origin, tasks as any);
+
+    // Reorder selectedIds based on optimized order
+    const newOrder = new Set<string>();
+    // Keep driver pin first if was selected
+    const driverSelected = [...selectedIds].filter((id) => pins.find((p) => p.id === id)?.type === "driver");
+    driverSelected.forEach((id) => newOrder.add(id));
+    ordered.forEach((t) => newOrder.add(t.id));
+
+    setSelectedIds(newOrder);
+    setRouteMode(true);
+    setOptimizedInfo(formatRouteSummary(totalDistanceKm, ordered.length) + " — ترتيب تقريبي Zero-Cost (Haversine nearest-neighbor)، مش routing شوارع حقيقي — الـ Pro هيحتاج Google/Mapbox API مدفوع");
+    toast.success(`تم ترتيب المسار: ${formatRouteSummary(totalDistanceKm, ordered.length)}`);
   }
 
   function openGoogleRoute() {
@@ -256,6 +291,7 @@ function LiveMapPage() {
   function clearRoute() {
     setSelectedIds(new Set());
     setRouteMode(false);
+    setOptimizedInfo(null);
   }
 
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("map.accessDenied")}</CardContent></Card>;
@@ -268,16 +304,20 @@ function LiveMapPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Navigation className="w-5 h-5 text-teal-600" />{t("map.title")}</h1>
           <p className="text-xs text-muted-foreground">{geocoding ? t("map.geocoding") : t("map.autoRefresh")}</p>
+          {optimizedInfo && <p className="text-[11px] text-teal-700 bg-teal-50 border border-teal-200 rounded px-2 py-1 mt-1">{optimizedInfo}</p>}
         </div>
         <div className="flex items-center gap-3 text-xs">
           {[["amber", `${t("map.pickup")} (${stats.pickups})`], ["green", `${t("map.delivery")} (${stats.deliveries})`], ["purple", `${t("map.drivers")} (${stats.drivers})`]].map(([c, l]) => (
             <span key={c} className="flex items-center gap-1"><span className={`w-2.5 h-2.5 rounded-full bg-${c}-500 inline-block`} />{l}</span>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40 h-9"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("map.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
           <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" onClick={drawRoute}>
             <RouteIcon className="w-3.5 h-3.5 ms-1" /> {t("map.drawRoute")} ({selectedPins.length})
+          </Button>
+          <Button size="sm" variant="outline" className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={optimizeRoute}>
+            <Zap className="w-3.5 h-3.5 me-1" /> ترتيب أقرب مسافة (Zero-Cost)
           </Button>
           <Button size="sm" variant="outline" onClick={openGoogleRoute}>Google Maps</Button>
           {selectedIds.size > 0 && <Button size="sm" variant="outline" onClick={clearRoute}><X className="w-3.5 h-3.5" /></Button>}
@@ -289,7 +329,7 @@ function LiveMapPage() {
       {!routeMode && pins.length > 0 && (
         <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-xs text-teal-700 flex items-center gap-2">
           <CheckSquare className="w-3.5 h-3.5 shrink-0" />
-          {t("map.routeHint")}
+          {t("map.routeHint")} — الجديد: زر "ترتيب أقرب مسافة" يستخدم Haversine (رياضيات مجانية، لا Google Directions API) لترتيب نقاط اليوم بأقرب مسافة — تحسين ملموس بتكلفة صفر، والـ routing الحقيقي بمسارات شوارع مؤجل لـ Pro.
         </div>
       )}
 

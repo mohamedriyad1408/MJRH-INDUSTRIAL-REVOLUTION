@@ -6,7 +6,7 @@ import {
  Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
  BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
  UsersRound, LockKeyhole, HelpCircle, Search, AlertTriangle, ClipboardCheck, Tags,
- Megaphone, TrendingUp, Workflow, Store, Shield,
+ Megaphone, TrendingUp, Workflow, Store, Shield, Activity,
 } from "lucide-react";
 import {
  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -114,6 +114,9 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "الجدول والإجازات", url: "/staff/schedule", icon: CalendarDays, roles: ["cs_manager", "ops_manager", "owner"] },
  { title: "المستخدمون", url: "/staff/users", icon: Crown, roles: ["owner"] },
  { title: "الاشتراك والفواتير", url: "/billing", icon: ReceiptText, roles: ["owner"] },
+ { title: "اشتراكات العملاء", url: "/subscriptions", icon: Package, roles: ["owner", "cs_manager", "ops_manager"] },
+ { title: "التوازن التشغيلي", url: "/staff/fairness", icon: Activity, roles: ["owner", "ops_manager"] },
+ { title: "معالج التفعيل", url: "/onboarding", icon: Sparkles, roles: ["owner"] },
  { title: "مراحل العمل", url: "/settings/workflow", icon: Workflow, roles: ["owner"] },
  { title: "سوق القوالب", url: "/marketplace", icon: Store, roles: ["owner"] },
  { title: "الأدوار والصلاحيات", url: "/settings/roles", icon: Shield, roles: ["owner"] },

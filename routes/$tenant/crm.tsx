@@ -57,6 +57,17 @@ function CrmPage() {
     return { vip, points, queued };
   }, [loyalty, messages]);
 
+  async function runWinback() {
+    try {
+      const { data, error } = await supabase.rpc("generate_winback_campaigns");
+      if (error) throw error;
+      toast.success(`تم إنشاء ${data ?? 0} رسالة استرجاع (Win-back) — بدون WhatsApp Business API، نفس queue اليدوي`);
+      load();
+    } catch (e: any) {
+      toast.error(e.message || "فشل Win-back");
+    }
+  }
+
   async function rebuildLoyalty() {
     const { data: orders, error } = await supabase.from("orders").select("customer_id,total,created_at,status").neq("status", "cancelled");
     if (error) return toast.error(error.message);
@@ -116,7 +127,7 @@ function CrmPage() {
   return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h1 className="text-2xl font-black flex items-center gap-2"><HeartHandshake className="w-7 h-7 text-teal-600" />{t("crm.pageTitle", "CRM والولاء والواتساب")}</h1><p className="text-sm text-muted-foreground">{t("crm.subtitle", "نقاط العملاء، شرائح VIP، وتحضير رسائل واتساب. الإرسال الحالي يفتح واتساب يدويًا، والإرسال الآلي يحتاج WhatsApp API.")}</p></div>
-      <div className="flex gap-2"><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button onClick={rebuildLoyalty}><RefreshCw className="w-4 h-4 ms-1" />{t("crm.syncLoyalty", "تحديث الولاء")}</Button></div>
+      <div className="flex gap-2"><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={runWinback} className="border-amber-300 text-amber-700 hover:bg-amber-50">🎯 Win-back (30 يوم)</Button><Button onClick={rebuildLoyalty}><RefreshCw className="w-4 h-4 ms-1" />{t("crm.syncLoyalty", "تحديث الولاء")}</Button></div>
     </div>
 
     <div className="grid md:grid-cols-3 gap-3">
