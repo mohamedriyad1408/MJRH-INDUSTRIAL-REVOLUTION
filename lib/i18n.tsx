@@ -226,9 +226,9 @@ dict.en = { ...dict.en, ...navArabic };
 const publicTranslations: Record<LanguageCode, Record<string, string>> = {
   ar: {
     "landing.metaTitle": "MJRH — منظومة تشغيل المشاريع",
-    "landing.badge": "منصة تشغيل أي مشروع — مغسلة، ورشة، غسيل سيارات، تنظيف، مطعم...",
-    "landing.heroTitle": "أوقف التسريب التشغيلي قبل أن يتحول لخسارة مالية.",
-    "landing.heroText": "منصة الذكاء التشغيلي للمؤسسات الصناعية والتجارية والصحية والخدمية. نحول العمليات المتناثرة إلى نظام واحد يمنع التسريب، يضبط التكلفة، ويحول الجهد إلى ربح.",
+    "landing.badge": "あらゆる運用プロジェクト向けに構築 — ランドリー、ワークショップ、洗車、清掃、レストラン...",
+    "landing.heroTitle": "運用上のリークが財務的損失になる前に止めましょう。",
+    "landing.heroText": "産業、商業、医療、サービス組織向けの運用インテリジェンスプラットフォーム。分散した運用を、リークを止め、コストを管理し、努力を利益に変える単一のシステムに変革します。",
     "landing.ctaDemo": "احجز تجربة مباشرة",
     "landing.ctaPortal": "جرّب بوابة العميل",
     "landing.step1": "أنشئ مشروعك", "landing.step2": "اختر قالب نشاطك", "landing.step3": "أضف فريقك ومواقعك", "landing.step4": "سجل أول عملية", "landing.step5": "شغّل المراحل", "landing.step6": "حصّل وأقفل الخزنة",
