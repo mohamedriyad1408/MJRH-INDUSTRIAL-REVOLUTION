@@ -117,6 +117,7 @@ const tenantGroups: { label: string; items: NavItem[] }[] = [
  { title: "مراحل العمل", url: "/settings/workflow", icon: Workflow, roles: ["owner"] },
  { title: "سوق القوالب", url: "/marketplace", icon: Store, roles: ["owner"] },
  { title: "الأدوار والصلاحيات", url: "/settings/roles", icon: Shield, roles: ["owner"] },
+ { title: "الشؤون القانونية", url: "/legal", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
  { title: "الإعدادات", url: "/settings", icon: Settings, roles: ["owner"] },
  { title: "الدليل", url: "/help", icon: HelpCircle, roles: ["owner", "ops_manager", "cs_manager", "employee", "courier"] },
  ],

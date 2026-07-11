@@ -18,12 +18,14 @@ export const Route = createFileRoute("/signup")({
 });
 
 const BUSINESS_TYPES = [
-  { value: "laundry", label: "مغسلة ملابس", labelEn: "Laundry" },
-  { value: "dry_cleaning", label: "تنظيف جاف", labelEn: "Dry Cleaning" },
-  { value: "linen_service", label: "خدمة مفروشات فندقية", labelEn: "Linen Service" },
-  { value: "carpet_cleaning", label: "تنظيف سجاد", labelEn: "Carpet Cleaning" },
-  { value: "tailoring", label: "تفصيل وتعديل", labelEn: "Tailoring" },
-  { value: "other", label: "نشاط آخر", labelEn: "Other" },
+  { value: "laundry", label: "مغسلة ملابس", labelEn: "Laundry — Clothes & Linen", icon: "🧺" },
+  { value: "carpet", label: "مغسلة سجاد ومفروشات", labelEn: "Carpet & Upholstery Cleaning", icon: "🧹" },
+  { value: "repair", label: "ورشة تصليح", labelEn: "Repair Workshop", icon: "🔧" },
+  { value: "carwash", label: "غسيل سيارات", labelEn: "Car Wash", icon: "🚗" },
+  { value: "cleaning", label: "تنظيف منازل ومكاتب", labelEn: "Home & Office Cleaning", icon: "🏠" },
+  { value: "restaurant", label: "مطعم توصيل", labelEn: "Restaurant Delivery", icon: "🍽️" },
+  { value: "laundry_chain", label: "سلسلة مغاسل", labelEn: "Laundry Chain", icon: "🏭" },
+  { value: "other", label: "نشاط آخر", labelEn: "Other", icon: "📦" },
 ];
 
 function slugify(text: string) {
