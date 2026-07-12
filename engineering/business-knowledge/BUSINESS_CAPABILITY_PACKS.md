@@ -11,9 +11,19 @@ MJRH should not start from industries.
 
 MJRH should start from reusable operating needs.
 
+Capability Packs are selected based on:
+
+```txt
+Business Operating Model
++
+Business DNA
+```
+
 Industry Templates are compositions of Capability Packs.
 
 ```txt
+Business Operating Model
+↓
 Business DNA
 ↓
 Capability Packs
@@ -345,7 +355,27 @@ Laundry pickup/delivery, maintenance, logistics, home services, healthcare visit
 
 ---
 
-## 4. Template Composition Examples
+## 4. Selection Example
+
+```txt
+Business Operating Model
+(Service + Workflow + Inventory)
+↓
+Business DNA
+(Quality Control + Multi Branch)
+↓
+Capability Packs
+↓
+Laundry Template
+```
+
+The industry name is not the primary decision-maker.
+
+The operating model plus DNA selects the packs.
+
+---
+
+## 5. Template Composition Examples
 
 ### Laundry Template
 
@@ -409,7 +439,7 @@ Workflow Management Pack
 
 ---
 
-## 5. Pack Governance Rules
+## 6. Pack Governance Rules
 
 1. Packs must use the Business Knowledge Model.
 2. Packs must not duplicate Core logic.
@@ -422,7 +452,7 @@ Workflow Management Pack
 
 ---
 
-## 6. Future Pack Registry
+## 7. Future Pack Registry
 
 Future implementation should introduce a registry for packs, similar to the Template Registry.
 

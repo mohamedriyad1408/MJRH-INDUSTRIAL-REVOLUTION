@@ -7,29 +7,63 @@
 
 ## 1. Core Idea
 
+Business DNA is now the second layer after the Business Operating Model.
+
 MJRH should not ask only:
 
 ```txt
 What industry is this?
 ```
 
-MJRH should ask:
+MJRH should first understand the Business Operating Model:
 
 ```txt
-What kind of business are you building?
+How does this business fundamentally operate?
+```
+
+Then MJRH identifies the Business DNA of this specific business:
+
+```txt
+What are the characteristics of this business?
 ```
 
 Industry name is a shortcut.
 
-Business DNA is the truth.
+The Business Operating Model describes reusable operating patterns.
+
+Business DNA describes one specific business.
 
 ---
 
 ## 2. Business DNA Definition
 
-Business DNA is the set of operating characteristics that determine which Capability Packs, Templates, workflows, forms, reports, roles, and defaults the platform should propose.
+Business DNA is the set of specific characteristics of one business that determine how the selected Business Operating Model should be configured.
 
-Business DNA answers how the business works.
+Business DNA is derived from the Business Operating Model.
+
+Business DNA helps determine which Capability Packs, Templates, workflows, forms, reports, roles, and defaults the platform should propose.
+
+---
+
+## 2.1 Business Operating Model → Business DNA
+
+The Operating Model identifies fundamental patterns.
+
+Business DNA adds the specific details.
+
+Example:
+
+```txt
+Business Operating Model:
+Service-Based + Workflow/Stage-Based + Inventory-Based + Field Operation
+
+Business DNA:
+2 branches, 09:00–22:00, quality control required, payment on delivery, Arabic/English, WhatsApp updates, medium approval sensitivity
+```
+
+Business DNA should not be used as a replacement for the Business Operating Model.
+
+It refines the Operating Model.
 
 ---
 
@@ -329,11 +363,11 @@ Does the business need formal documents, signatures, compliance records, or audi
 
 ---
 
-## 6. DNA → Template Rule
+## 6. Operating Model + DNA → Template Rule
 
-Industry Template selection should use Business DNA as the primary driver.
+Industry Template selection should use the Business Operating Model plus Business DNA as the primary driver.
 
-Industry name may help choose defaults, but it must not override DNA.
+Industry name may help choose defaults, but it must not override the Operating Model or DNA.
 
 Example:
 
@@ -381,4 +415,4 @@ Based on your answers, we prepared the best starting setup for your business.
 
 ## 8. Final Rule
 
-Business DNA drives template generation more than industry name.
+Business Operating Model + Business DNA drive template generation more than industry name.

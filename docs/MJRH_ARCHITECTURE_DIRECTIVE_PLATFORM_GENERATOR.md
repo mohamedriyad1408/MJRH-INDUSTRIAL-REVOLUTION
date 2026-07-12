@@ -36,7 +36,7 @@ The Core Platform must never depend on Laundry logic.
 
 ## THE NEW ARCHITECTURE
 
-Separate the platform into five logical layers.
+Separate the platform into seven logical layers.
 
 ---
 
@@ -85,7 +85,53 @@ The Core Platform only understands generic concepts:
 
 ---
 
-## Layer 2 — Business Capability Packs
+## Layer 2 — Business Operating Model
+
+Before Business DNA or templates, MJRH understands how the business fundamentally operates.
+
+The Business Operating Model identifies reusable operating characteristics such as:
+
+- service-based operation
+- product-based operation
+- manufacturing/production
+- project-based operation
+- appointment-based operation
+- workflow/stage-based operation
+- field operation
+- inventory-based operation
+- asset-based operation
+- quality-control operation
+- approval-controlled operation
+- compliance/documentation operation
+- recurring operation
+- one-time job operation
+
+Industries are combinations of operating models.
+
+---
+
+## Layer 3 — Business DNA
+
+Business DNA describes the characteristics of one specific business.
+
+It is derived from the Business Operating Model.
+
+Examples:
+
+- number of branches
+- operating hours
+- approvals
+- inventory usage
+- appointments
+- field visits
+- asset tracking
+- payment timing
+- quality control
+- compliance requirements
+
+---
+
+## Layer 4 — Business Capability Packs
 
 Before Industry Templates, MJRH uses Business Capability Packs.
 
@@ -109,6 +155,8 @@ Industry names are presets, not architecture.
 A business should first be understood through its Business DNA, then MJRH selects Capability Packs, then composes an Industry Template.
 
 ```txt
+Business Operating Model
+↓
 Business DNA
 ↓
 Business Capability Packs
@@ -120,7 +168,7 @@ Generated Organizations
 
 ---
 
-## Layer 3 — Industry Templates
+## Layer 5 — Industry Templates
 
 Each industry is only a configuration package composed from Capability Packs.
 
@@ -163,7 +211,7 @@ Templates are replaceable.
 
 ---
 
-## Layer 4 — Demo Organizations
+## Layer 6 — Generated Demo Organizations
 
 Examples:
 
@@ -191,7 +239,7 @@ No Demo Organization should ever become the development environment.
 
 ---
 
-## Layer 5 — Customer Organizations
+## Layer 7 — Customer Organizations
 
 Real customers follow the exact same flow.
 
