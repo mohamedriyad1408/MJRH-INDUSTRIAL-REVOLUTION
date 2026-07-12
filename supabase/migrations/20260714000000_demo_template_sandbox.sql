@@ -159,7 +159,8 @@ BEGIN
     new_workflow_id,
     (SELECT id FROM workflow_stages_v2 WHERE workflow_id = new_workflow_id AND slug = (SELECT slug FROM workflow_stages_v2 WHERE id = wt.from_stage_id)),
     (SELECT id FROM workflow_stages_v2 WHERE workflow_id = new_workflow_id AND slug = (SELECT slug FROM workflow_stages_v2 WHERE id = wt.to_stage_id)),
-    condition_json
+    condition_json,
+    required_role
   FROM workflow_transitions wt WHERE wt.workflow_id = old_workflow_id;
 
   -- Clone field definitions
