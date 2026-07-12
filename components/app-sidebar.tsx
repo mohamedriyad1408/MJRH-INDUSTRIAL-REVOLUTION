@@ -26,7 +26,16 @@ const adminGroups: { label: string; items: NavItem[] }[] = [
  { title: "لوحة المنصة", url: "/admin", icon: Crown },
  { title: "المشاريع والمستأجرون", url: "/admin/tenants", icon: Building2 },
  { title: "قوالب سير العمل", url: "/admin/templates", icon: Store, roles: ["owner"] },
+ { title: "Workflow Builder v2", url: "/admin/workflow-builder", icon: Workflow, roles: ["owner"] },
+ { title: "منصة البناء الموحدة", url: "/admin/platform-builder", icon: Sparkles, roles: ["owner"] },
  { title: "المستخدمون", url: "/admin/users", icon: Users },
+ ],
+ },
+ {
+ label: "بناء المنصة",
+ items: [
+ { title: "Input Builder", url: "/admin/input-builder", icon: Boxes, roles: ["owner"] },
+ { title: "Output Builder", url: "/admin/report-builder", icon: BarChart3, roles: ["owner"] },
  ],
  },
  {

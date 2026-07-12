@@ -65,10 +65,13 @@ import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/i
 import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
 import { Route as AdminAdminTemplatesRouteImport } from './routes/_admin/admin/templates'
 import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
+import { Route as AdminAdminReportBuilderRouteImport } from './routes/_admin/admin/report-builder'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
+import { Route as AdminAdminPlatformBuilderRouteImport } from './routes/_admin/admin/platform-builder'
 import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/admin/marketing-plan'
 import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
 import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
+import { Route as AdminAdminInputBuilderRouteImport } from './routes/_admin/admin/input-builder'
 import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
 import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
 import { Route as AdminAdminBizDevRouteImport } from './routes/_admin/admin/biz-dev'
@@ -385,11 +388,22 @@ const AdminAdminTelemetryRoute = AdminAdminTelemetryRouteImport.update({
   path: '/admin/telemetry',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminReportBuilderRoute = AdminAdminReportBuilderRouteImport.update({
+  id: '/admin/report-builder',
+  path: '/admin/report-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminPlatformFeesRoute = AdminAdminPlatformFeesRouteImport.update({
   id: '/admin/platform-fees',
   path: '/admin/platform-fees',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminPlatformBuilderRoute =
+  AdminAdminPlatformBuilderRouteImport.update({
+    id: '/admin/platform-builder',
+    path: '/admin/platform-builder',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminAdminMarketingPlanRoute = AdminAdminMarketingPlanRouteImport.update({
   id: '/admin/marketing-plan',
   path: '/admin/marketing-plan',
@@ -406,6 +420,11 @@ const AdminAdminInvestorRelationsRoute =
     path: '/admin/investor-relations',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminAdminInputBuilderRoute = AdminAdminInputBuilderRouteImport.update({
+  id: '/admin/input-builder',
+  path: '/admin/input-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminCustomerSuccessRoute =
   AdminAdminCustomerSuccessRouteImport.update({
     id: '/admin/customer-success',
@@ -666,10 +685,13 @@ export interface FileRoutesByFullPath {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
@@ -762,10 +784,13 @@ export interface FileRoutesByTo {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
@@ -860,10 +885,13 @@ export interface FileRoutesById {
   '/_admin/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/_admin/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/_admin/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/_admin/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/_admin/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/_admin/admin/legal': typeof AdminAdminLegalRoute
   '/_admin/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/_admin/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/_admin/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/_admin/admin/templates': typeof AdminAdminTemplatesRoute
   '/_admin/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
@@ -958,10 +986,13 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
     | '/admin/marketing-plan'
+    | '/admin/platform-builder'
     | '/admin/platform-fees'
+    | '/admin/report-builder'
     | '/admin/telemetry'
     | '/admin/templates'
     | '/admin/workflow-builder'
@@ -1054,10 +1085,13 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
     | '/admin/marketing-plan'
+    | '/admin/platform-builder'
     | '/admin/platform-fees'
+    | '/admin/report-builder'
     | '/admin/telemetry'
     | '/admin/templates'
     | '/admin/workflow-builder'
@@ -1151,10 +1185,13 @@ export interface FileRouteTypes {
     | '/_admin/admin/biz-dev'
     | '/_admin/admin/business-plan'
     | '/_admin/admin/customer-success'
+    | '/_admin/admin/input-builder'
     | '/_admin/admin/investor-relations'
     | '/_admin/admin/legal'
     | '/_admin/admin/marketing-plan'
+    | '/_admin/admin/platform-builder'
     | '/_admin/admin/platform-fees'
+    | '/_admin/admin/report-builder'
     | '/_admin/admin/telemetry'
     | '/_admin/admin/templates'
     | '/_admin/admin/workflow-builder'
@@ -1578,11 +1615,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminTelemetryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/admin/report-builder': {
+      id: '/_admin/admin/report-builder'
+      path: '/admin/report-builder'
+      fullPath: '/admin/report-builder'
+      preLoaderRoute: typeof AdminAdminReportBuilderRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/admin/platform-fees': {
       id: '/_admin/admin/platform-fees'
       path: '/admin/platform-fees'
       fullPath: '/admin/platform-fees'
       preLoaderRoute: typeof AdminAdminPlatformFeesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/platform-builder': {
+      id: '/_admin/admin/platform-builder'
+      path: '/admin/platform-builder'
+      fullPath: '/admin/platform-builder'
+      preLoaderRoute: typeof AdminAdminPlatformBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/admin/marketing-plan': {
@@ -1604,6 +1655,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/investor-relations'
       fullPath: '/admin/investor-relations'
       preLoaderRoute: typeof AdminAdminInvestorRelationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/input-builder': {
+      id: '/_admin/admin/input-builder'
+      path: '/admin/input-builder'
+      fullPath: '/admin/input-builder'
+      preLoaderRoute: typeof AdminAdminInputBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/admin/customer-success': {
@@ -2020,10 +2078,13 @@ interface AdminRouteChildren {
   AdminAdminBizDevRoute: typeof AdminAdminBizDevRoute
   AdminAdminBusinessPlanRoute: typeof AdminAdminBusinessPlanRoute
   AdminAdminCustomerSuccessRoute: typeof AdminAdminCustomerSuccessRoute
+  AdminAdminInputBuilderRoute: typeof AdminAdminInputBuilderRoute
   AdminAdminInvestorRelationsRoute: typeof AdminAdminInvestorRelationsRoute
   AdminAdminLegalRoute: typeof AdminAdminLegalRoute
   AdminAdminMarketingPlanRoute: typeof AdminAdminMarketingPlanRoute
+  AdminAdminPlatformBuilderRoute: typeof AdminAdminPlatformBuilderRoute
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
+  AdminAdminReportBuilderRoute: typeof AdminAdminReportBuilderRoute
   AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
   AdminAdminTemplatesRoute: typeof AdminAdminTemplatesRoute
   AdminAdminWorkflowBuilderRoute: typeof AdminAdminWorkflowBuilderRoute
@@ -2038,10 +2099,13 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBizDevRoute: AdminAdminBizDevRoute,
   AdminAdminBusinessPlanRoute: AdminAdminBusinessPlanRoute,
   AdminAdminCustomerSuccessRoute: AdminAdminCustomerSuccessRoute,
+  AdminAdminInputBuilderRoute: AdminAdminInputBuilderRoute,
   AdminAdminInvestorRelationsRoute: AdminAdminInvestorRelationsRoute,
   AdminAdminLegalRoute: AdminAdminLegalRoute,
   AdminAdminMarketingPlanRoute: AdminAdminMarketingPlanRoute,
+  AdminAdminPlatformBuilderRoute: AdminAdminPlatformBuilderRoute,
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
+  AdminAdminReportBuilderRoute: AdminAdminReportBuilderRoute,
   AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,
   AdminAdminTemplatesRoute: AdminAdminTemplatesRoute,
   AdminAdminWorkflowBuilderRoute: AdminAdminWorkflowBuilderRoute,
