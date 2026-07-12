@@ -369,7 +369,7 @@ SET search_path = public
 AS $$
 DECLARE
   wo RECORD;
-  from_stage_id uuid;
+  v_from_stage_id uuid;
   transition RECORD;
   condition jsonb;
   required_fields jsonb;
@@ -381,13 +381,13 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'message', 'Work order not found');
   END IF;
 
-  from_stage_id := wo.current_stage_id;
+  v_from_stage_id := wo.current_stage_id;
 
   -- Find allowed transition
   SELECT * INTO transition
   FROM workflow_transitions
   WHERE workflow_id = wo.workflow_id
-    AND (from_stage_id IS NULL OR from_stage_id = wo.current_stage_id)
+    AND (workflow_transitions.from_stage_id IS NULL OR workflow_transitions.from_stage_id = wo.current_stage_id)
     AND to_stage_id = _to_stage_id
   LIMIT 1;
 
