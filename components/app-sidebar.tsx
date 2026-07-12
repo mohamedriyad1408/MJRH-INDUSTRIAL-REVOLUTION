@@ -19,6 +19,18 @@ import { useI18n } from "@/lib/i18n";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: any[] };
 
+const iconRegistry: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard, CalendarCheck, Search, Settings, HelpCircle, ListOrdered, PlusCircle,
+  Users, HeartHandshake, Tag, Boxes, Building2, Layers, ShieldCheck, PlayCircle,
+  AlertTriangle, Inbox, Truck, Navigation, Wallet, Calculator, BookOpenCheck,
+  UsersRound, LockKeyhole, Target, BarChart3, BriefcaseBusiness, Clock, Banknote,
+  CalendarDays, ClipboardCheck, Sparkles, Wind, Shirt, Package, Headphones,
+};
+
+function iconFor(name?: string | null) {
+  return name && iconRegistry[name] ? iconRegistry[name] : LayoutDashboard;
+}
+
 const adminGroups: { label: string; items: NavItem[] }[] = [
  {
  label: "نظرة عامة",
@@ -170,7 +182,7 @@ export function AppSidebar() {
    if (!tenantId) return;
    supabase
      .from("core_navigation_items")
-     .select("department_key,item_key,label_ar,label_en,route,required_roles,sort_order,is_active")
+     .select("department_key,item_key,label_ar,label_en,route,icon,required_roles,sort_order,is_active,source_asset_id,source_ownership_level")
      .eq("tenant_id", tenantId)
      .eq("is_active", true)
      .order("sort_order")
@@ -213,9 +225,19 @@ export function AppSidebar() {
  const groups = (() => {
    if (!isSuperAdmin && coreNavItems.length > 0) {
      const labels: Record<string, string> = {
+       main: "الرئيسية",
+       commerce: "العمليات والمبيعات",
+       customers: "العملاء والعلاقات",
+       catalog: "الخدمات والأصول",
+       operations: "التشغيل",
+       field: "التوصيل والعمل الميداني",
+       finance: "المالية والإدارة",
+       reports: "التقارير والذكاء",
+       people: "الفريق والموارد",
+       admin: "الإعدادات والدعم",
+       laundry_operations: "تشغيل Laundry Template",
        owner_dashboard: "لوحة المالك",
        customer_service: "خدمة العملاء",
-       operations: "التشغيل",
        accounting: "الحسابات",
        sales: "المبيعات",
        marketing: "التسويق",
@@ -223,7 +245,16 @@ export function AppSidebar() {
        legal: "الشؤون القانونية",
        administration: "الإدارة",
      };
-     const byDepartment = coreNavItems.reduce((acc: Record<string, any[]>, item: any) => {
+     const uniqueCoreNavItems = Array.from(
+       coreNavItems.reduce((acc: Map<string, any>, item: any) => {
+         const key = item.route || item.item_key;
+         const existing = acc.get(key);
+         // Prefer capability/template/core asset-generated records over older compatibility records.
+         if (!existing || (!existing.source_asset_id && item.source_asset_id)) acc.set(key, item);
+         return acc;
+       }, new Map<string, any>()).values()
+     ).sort((a: any, b: any) => (a.sort_order ?? 100) - (b.sort_order ?? 100));
+     const byDepartment = uniqueCoreNavItems.reduce((acc: Record<string, any[]>, item: any) => {
        const key = item.department_key || "core";
        acc[key] = acc[key] || [];
        acc[key].push(item);
@@ -234,7 +265,7 @@ export function AppSidebar() {
        items: items.map((item: any) => ({
          title: item.label_ar || item.label_en || item.item_key,
          url: item.route,
-         icon: LayoutDashboard,
+         icon: iconFor(item.icon),
          roles: item.required_roles || ["owner", "ops_manager", "cs_manager", "employee"],
        })),
      }));
