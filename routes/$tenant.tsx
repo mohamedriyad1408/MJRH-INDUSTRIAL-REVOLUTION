@@ -25,6 +25,7 @@ function AppLayout() {
   const { dir, t } = useI18n();
   const [tenantBrand, setTenantBrand] = useState<any>(null);
   const [setupGate, setSetupGate] = useState<{ loading: boolean; canEnter: boolean }>({ loading: true, canEnter: false });
+  const [routeAccess, setRouteAccess] = useState<{ loading: boolean; allowed: boolean; checkedPath: string | null }>({ loading: true, allowed: true, checkedPath: null });
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { tenant: tenantParam } = Route.useParams() as { tenant?: string };
@@ -99,6 +100,47 @@ function AppLayout() {
     });
   }, [loading, session, tenantBrand?.id, tenantId, path, tenantParam, nav]);
 
+  // Generic route/action permission adoption: if a generated navigation item declares
+  // permissions for the current route, enforce them below UI visibility as well.
+  useEffect(() => {
+    if (loading || !session || !user || isSuperAdmin) {
+      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
+      return;
+    }
+    if (path.includes("/onboarding")) {
+      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
+      return;
+    }
+    const currentTenantId = tenantBrand?.id || tenantId;
+    if (!currentTenantId || !tenantParam) {
+      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
+      return;
+    }
+
+    const routePath = path.startsWith(`/${tenantParam}`) ? path.slice(tenantParam.length + 1) || "/dashboard" : path;
+    setRouteAccess({ loading: true, allowed: true, checkedPath: path });
+
+    supabase
+      .from("core_navigation_items")
+      .select("route,required_permissions,is_active")
+      .eq("tenant_id", currentTenantId)
+      .eq("is_active", true)
+      .then(async ({ data }: any) => {
+        const items = Array.isArray(data) ? data : [];
+        const match = items
+          .filter((item: any) => item.route && (routePath === item.route || routePath.startsWith(`${item.route}/`)))
+          .sort((a: any, b: any) => String(b.route).length - String(a.route).length)[0];
+        const required = match?.required_permissions || [];
+        if (!required.length) {
+          setRouteAccess({ loading: false, allowed: true, checkedPath: path });
+          return;
+        }
+        const { data: perms } = await supabase.rpc("get_actor_permissions", { _tenant_id: currentTenantId, _actor_user_id: user.id });
+        const owned = new Set((Array.isArray(perms) ? perms : []).map((p: any) => p.permission_key).filter(Boolean));
+        setRouteAccess({ loading: false, allowed: required.every((p: string) => owned.has(p)), checkedPath: path });
+      });
+  }, [loading, session, user, isSuperAdmin, path, tenantBrand?.id, tenantId, tenantParam]);
+
   // Guard employee/courier deep links: non-managers should only access their operational page.
   useEffect(() => {
     if (loading || !session || !roles.length || isSuperAdmin) return;
@@ -171,6 +213,25 @@ function AppLayout() {
             لا يمكن دخول المنصة قبل انتهاء معالج إعداد MJRH Core Platform. كل شيء يجب أن يولد من configuration أولاً.
           </p>
           <Button className="w-full font-bold" onClick={() => tenantParam && nav({ to: `/${tenantParam}/onboarding` as any, replace: true })}>فتح معالج الإعداد</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!path.includes("/onboarding") && setupGate.canEnter && routeAccess.loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
+
+  if (!path.includes("/onboarding") && setupGate.canEnter && !routeAccess.allowed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
+        <Card className="max-w-md w-full p-8 text-center space-y-4 border-red-200 bg-red-50/40 shadow-lg">
+          <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
+            <LogOut className="w-7 h-7 text-red-600" />
+          </div>
+          <h1 className="text-xl font-extrabold text-red-950">غير مصرح بالدخول</h1>
+          <p className="text-sm text-red-900 font-medium">هذه الصفحة تتطلب صلاحية غير مفعّلة لحسابك داخل هذه المنظمة.</p>
+          <Button variant="outline" className="w-full font-bold" onClick={() => tenantParam && nav({ to: `/${tenantParam}/dashboard` as any, replace: true })}>العودة للوحة القيادة</Button>
         </Card>
       </div>
     );
