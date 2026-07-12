@@ -292,3 +292,308 @@ Source verification confirms that Dry Tech business intelligence is still largel
 The next sprint must not copy these sources back into runtime as-is.
 
 The next sprint should extract or rebuild the verified business knowledge into the correct architecture layer.
+
+---
+
+# 12. Percentage Calculation Methodology
+
+This section explains exactly how the recovery percentages in this report were calculated.
+
+The percentages are not based on database record counts.
+
+They are based on the primary business behavior/source areas listed in the **Final Verification Table**.
+
+---
+
+## 12.1 Total Population
+
+The calculation population is:
+
+```txt
+Total primary recovery items = 25
+```
+
+These 25 items are the source areas listed in the Recovery Decision Matrix / Final Verification Table:
+
+1. Role-aware navigation
+2. Navigation asset model
+3. Order list/new/detail flow
+4. Customer/CRM flow
+5. Reports and dashboard routes
+6. Permission role mapping
+7. Work Order bridge
+8. Generic station renderer
+9. Laundry station definitions
+10. Dry Tech service catalog data pack
+11. Curated Laundry service defaults
+12. Accounting behavior
+13. Financial transaction abstraction
+14. Notification templates / notification behavior
+15. Customer portal generalized behavior
+16. Field service / delivery
+17. Pickup flow
+18. HR / staff operations
+19. Document templates
+20. Form / checklist model
+21. First Success Dashboard
+22. Legacy bootstrap
+23. Laundry Workflow V1 runtime
+24. Direct station redirects
+25. Static sidebar source of truth
+
+---
+
+## 12.2 Physical Existence — 92%
+
+### Definition
+
+Physical existence answers:
+
+```txt
+Does some source, evidence, or implementation artifact still physically exist in the current repository or database for this business behavior?
+```
+
+This does **not** mean the source is safe to reuse.
+
+It only means the source exists as evidence.
+
+### Formula
+
+```txt
+Physically existing items / Total items
+= 23 / 25
+= 92%
+```
+
+### Physically Existing Items — 23
+
+1. Role-aware navigation — source exists in `components/app-sidebar.tsx` and `core_navigation_items`.
+2. Navigation asset model — partially exists through `core_navigation_items` and sidebar hybrid logic.
+3. Order list/new/detail flow — source exists in order routes/components.
+4. Customer/CRM flow — source exists in customer/CRM routes.
+5. Reports and dashboard routes — source exists in reports/dashboard routes.
+6. Permission role mapping — source exists partially through `user_roles`, `core_roles`, and route guards.
+7. Work Order bridge — partial evidence exists through `work_orders`, task tables, and order/work-order accounting migration, but not full bridge behavior.
+8. Generic station renderer — partial source exists via `$stage.tsx`, station components, and workflow v2 helpers.
+9. Laundry station definitions — source exists in station routes, legacy workflow files, and Laundry Template assets.
+10. Dry Tech service catalog data pack — source exists in `service_items`, `lib/dry-tech-catalog.ts`, and services route.
+11. Curated Laundry service defaults — source exists partially in template assets and Dry Tech catalog.
+12. Accounting behavior — source exists in finance routes, payment rules, journal/cash tables, and views.
+13. Financial transaction abstraction — partial evidence exists in Core financial event types and work order accounting snapshot, but not complete abstraction.
+14. Notification templates / notification behavior — source exists in notification center, customer messages, WhatsApp helper.
+15. Customer portal generalized behavior — source exists in customer portal, join, and track routes.
+16. Field service / delivery — source exists in driver route/components and route/location helpers.
+17. Pickup flow — source exists in pickup routes, customer portal, pickup tables.
+18. HR / staff operations — source exists in staff routes and staff helper modules.
+19. Document templates — partial source exists in print invoice and generated core documents.
+20. Form / checklist model — partial source exists in generated core forms and form builders.
+21. Legacy bootstrap — source exists in historical migrations/functions.
+22. Laundry Workflow V1 runtime — source exists in `lib/legacy/laundry-workflow-v1.ts`.
+23. Direct station redirects — source exists in layout/employee station routing behavior.
+
+### Not Physically Existing as Prior Source — 2
+
+1. First Success Dashboard — new product requirement; no old Dry Tech source exists.
+2. Full future Capability Pack registry for navigation/actions — only partial evidence exists; no complete prior source exists as a standalone system.
+
+> Note: The second item is counted as non-existing for percentage purposes because the current source provides evidence of need, but not a true standalone implementation of the future registry.
+
+---
+
+## 12.3 Recoverable as Evidence or Source Material — 76%
+
+### Definition
+
+Recoverable means:
+
+```txt
+The existing source can materially help restore the capability through extraction, generalization, or as reliable business behavior evidence.
+```
+
+Recoverable does **not** mean direct copy/paste.
+
+It means the source is useful for rebuilding the correct V3 behavior.
+
+### Formula
+
+```txt
+Recoverable items / Total items
+= 19 / 25
+= 76%
+```
+
+### Recoverable Items — 19
+
+1. Role-aware navigation — recoverable as evidence for generated navigation model.
+2. Navigation asset model — partially recoverable from sidebar/core navigation behavior.
+3. Order list/new/detail flow — recoverable into Order/Workflow Capability Pack.
+4. Customer/CRM flow — recoverable into CRM Capability Pack.
+5. Reports and dashboard routes — recoverable into Reporting Pack.
+6. Permission role mapping — recoverable as evidence for Core permission model.
+7. Generic station renderer — partially recoverable from `$stage.tsx` and station components.
+8. Laundry station definitions — recoverable into Laundry Template assets.
+9. Dry Tech service catalog data pack — recoverable from service rows/catalog helpers.
+10. Curated Laundry service defaults — recoverable after curation, not direct copy.
+11. Accounting behavior — recoverable into Accounting Pack with caution.
+12. Notification behavior — recoverable into Notification Pack.
+13. Customer portal behavior — recoverable into Customer Experience/CRM Pack.
+14. Field service / delivery — recoverable into Field Service Pack.
+15. Pickup flow — recoverable into Field Service Pack.
+16. HR / staff operations — recoverable into HR Capability Pack.
+17. Document templates — recoverable into Document Pack.
+18. Form / checklist model — partially recoverable into Form/Document Pack.
+19. Financial transaction abstraction — partially recoverable as evidence from existing accounting behavior and Core financial event types.
+
+### Not Counted as Recoverable — 6
+
+1. Work Order bridge — insufficient safe source; must be rebuilt from Business Knowledge Model.
+2. First Success Dashboard — new requirement; must be built from UX Blueprint.
+3. Legacy bootstrap — exists but should not be recovered.
+4. Laundry Workflow V1 runtime — exists but should not return as runtime behavior.
+5. Direct station redirects — exists but should not be recovered as primary routing.
+6. Static sidebar as source of truth — exists but should not be recovered as source of truth.
+
+---
+
+## 12.4 Rebuild Required — 36%
+
+### Definition
+
+Rebuild Required means:
+
+```txt
+Existing source is missing, unsafe, incomplete, or too coupled to old assumptions to serve as the V3 implementation.
+```
+
+Some items can be both:
+
+- physically existing, and
+- still require rebuild.
+
+This is why percentages may overlap.
+
+### Formula
+
+```txt
+Rebuild-required items / Total items
+= 9 / 25
+= 36%
+```
+
+### Rebuild Required Items — 9
+
+1. Work Order bridge
+   - Reason: old Dry Tech is order/station/service-unit centric; V3 requires Order → Work Order → Task.
+
+2. Capability Pack registry for navigation/actions
+   - Reason: old sidebar is static UI, not a reusable pack registry.
+
+3. Permission unification
+   - Reason: `user_roles` and `core_roles` are parallel models; no unified V3 permission source yet.
+
+4. Generic station/work-area renderer
+   - Reason: current station screens are duplicated and Laundry-shaped.
+
+5. First Success Dashboard
+   - Reason: new product requirement with no legacy equivalent.
+
+6. Generic Financial Transaction mapping
+   - Reason: existing finance behavior is order-specific.
+
+7. Template-driven dashboard widgets
+   - Reason: dashboards are component-coded, not asset-driven.
+
+8. Automation rules registry
+   - Reason: existing automations are embedded in triggers/functions.
+
+9. Safe replacement for legacy bootstrap
+   - Reason: old bootstrap causes hidden mutations and must be replaced with template-aware generation.
+
+---
+
+## 12.5 Obsolete / Retire — 12%
+
+### Definition
+
+Obsolete means:
+
+```txt
+The source exists but should not become a runtime dependency again.
+```
+
+### Formula
+
+```txt
+Obsolete items / Total items
+= 3 / 25
+= 12%
+```
+
+### Obsolete Items — 3
+
+1. Legacy bootstrap
+   - Reason: hidden default mutation path; caused service count mutation risk during Dry Tech restoration dry-run.
+
+2. Laundry Workflow V1 runtime
+   - Reason: conflicts with Platform Generator and Work Order/Task architecture.
+
+3. Direct station redirects / static station routing as primary model
+   - Reason: hardcodes Laundry station assumptions into employee experience.
+
+### Related obsolete pattern not counted separately
+
+Static sidebar as source of truth is also obsolete as an architecture pattern, but it is counted under recoverable evidence because its content is valuable for designing generated navigation.
+
+---
+
+## 12.6 Why Percentages Overlap
+
+The categories are analytical, not mutually exclusive.
+
+Example:
+
+```txt
+Generic station renderer
+```
+
+- physically exists partially via `$stage.tsx` and station components
+- contains recoverable evidence
+- still requires rebuild to become V3-compliant
+
+Therefore:
+
+- 92% physical existence
+- 76% recoverable evidence
+- 36% rebuild required
+
+can all be true at the same time.
+
+These percentages measure different things:
+
+| Percentage | Measures |
+|---|---|
+| 92% | Whether source/evidence physically exists. |
+| 76% | Whether source/evidence is useful for recovery. |
+| 36% | Whether V3-safe implementation still requires rebuild. |
+| 12% | Whether source should be retired, not restored. |
+
+---
+
+## 12.7 Summary
+
+Out of 25 primary recovery items:
+
+| Category | Count | Percentage |
+|---|---:|---:|
+| Physically Exists | 23 | 92% |
+| Recoverable as Evidence / Source Material | 19 | 76% |
+| Rebuild Required | 9 | 36% |
+| Obsolete / Retire | 3 | 12% |
+
+Final interpretation:
+
+```txt
+Most of Dry Tech's business intelligence still exists as source material.
+But the most architecturally important parts cannot be copied back directly.
+They must be rebuilt or generalized into the Platform Generator architecture.
+```
