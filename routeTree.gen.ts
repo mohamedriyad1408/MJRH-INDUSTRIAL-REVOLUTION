@@ -60,6 +60,7 @@ import { Route as TenantBillingRouteImport } from './routes/$tenant/billing'
 import { Route as TenantAccountingRouteImport } from './routes/$tenant/accounting'
 import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index'
 import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
+import { Route as TenantSettingsIndexRouteImport } from './routes/$tenant/settings/index'
 import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
 import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
 import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
@@ -107,6 +108,7 @@ import { Route as TenantOrdersIdRouteImport } from './routes/$tenant/orders/$id'
 import { Route as TenantBranchesIdRouteImport } from './routes/$tenant/branches/$id'
 import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin/admin/users/index'
 import { Route as AdminAdminTenantsIndexRouteImport } from './routes/_admin/admin/tenants/index'
+import { Route as TenantSettingsWorkflowIndexRouteImport } from './routes/$tenant/settings/workflow/index'
 import { Route as AdminAdminTenantsIdRouteImport } from './routes/_admin/admin/tenants/$id'
 import { Route as TenantSettingsWorkflowStageIdFieldsRouteImport } from './routes/$tenant/settings/workflow/$stageId/fields'
 
@@ -364,6 +366,11 @@ const TenantStaffIndexRoute = TenantStaffIndexRouteImport.update({
   path: '/staff/',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantSettingsIndexRoute = TenantSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TenantSettingsRoute,
+} as any)
 const TenantPickupsIndexRoute = TenantPickupsIndexRouteImport.update({
   id: '/pickups/',
   path: '/pickups/',
@@ -605,6 +612,12 @@ const AdminAdminTenantsIndexRoute = AdminAdminTenantsIndexRouteImport.update({
   path: '/admin/tenants/',
   getParentRoute: () => AdminRoute,
 } as any)
+const TenantSettingsWorkflowIndexRoute =
+  TenantSettingsWorkflowIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TenantSettingsWorkflowRoute,
+  } as any)
 const AdminAdminTenantsIdRoute = AdminAdminTenantsIdRouteImport.update({
   id: '/admin/tenants/$id',
   path: '/admin/tenants/$id',
@@ -711,9 +724,11 @@ export interface FileRoutesByFullPath {
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
+  '/$tenant/settings/': typeof TenantSettingsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
   '/admin/': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
   '/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/admin/users/': typeof AdminAdminUsersIndexRoute
   '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
@@ -760,7 +775,6 @@ export interface FileRoutesByTo {
   '/$tenant/reports': typeof TenantReportsRouteWithChildren
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
   '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
@@ -773,7 +787,6 @@ export interface FileRoutesByTo {
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
   '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
   '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRouteWithChildren
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
@@ -812,9 +825,11 @@ export interface FileRoutesByTo {
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders': typeof TenantOrdersIndexRoute
   '/$tenant/pickups': typeof TenantPickupsIndexRoute
+  '/$tenant/settings': typeof TenantSettingsIndexRoute
   '/$tenant/staff': typeof TenantStaffIndexRoute
   '/admin': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowIndexRoute
   '/admin/tenants': typeof AdminAdminTenantsIndexRoute
   '/admin/users': typeof AdminAdminUsersIndexRoute
   '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
@@ -915,9 +930,11 @@ export interface FileRoutesById {
   '/_admin/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
+  '/$tenant/settings/': typeof TenantSettingsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
   '/_admin/admin/': typeof AdminAdminIndexRoute
   '/_admin/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
   '/_admin/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
   '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
@@ -1018,9 +1035,11 @@ export interface FileRouteTypes {
     | '/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
+    | '/$tenant/settings/'
     | '/$tenant/staff/'
     | '/admin/'
     | '/admin/tenants/$id'
+    | '/$tenant/settings/workflow/'
     | '/admin/tenants/'
     | '/admin/users/'
     | '/$tenant/settings/workflow/$stageId/fields'
@@ -1067,7 +1086,6 @@ export interface FileRouteTypes {
     | '/$tenant/reports'
     | '/$tenant/search'
     | '/$tenant/services'
-    | '/$tenant/settings'
     | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
@@ -1080,7 +1098,6 @@ export interface FileRouteTypes {
     | '/$tenant/pickups/new'
     | '/$tenant/reports/builder'
     | '/$tenant/settings/roles'
-    | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
     | '/$tenant/staff/fairness'
@@ -1119,9 +1136,11 @@ export interface FileRouteTypes {
     | '/admin/workflow-builder'
     | '/$tenant/orders'
     | '/$tenant/pickups'
+    | '/$tenant/settings'
     | '/$tenant/staff'
     | '/admin'
     | '/admin/tenants/$id'
+    | '/$tenant/settings/workflow'
     | '/admin/tenants'
     | '/admin/users'
     | '/$tenant/settings/workflow/$stageId/fields'
@@ -1221,9 +1240,11 @@ export interface FileRouteTypes {
     | '/_admin/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
+    | '/$tenant/settings/'
     | '/$tenant/staff/'
     | '/_admin/admin/'
     | '/_admin/admin/tenants/$id'
+    | '/$tenant/settings/workflow/'
     | '/_admin/admin/tenants/'
     | '/_admin/admin/users/'
     | '/$tenant/settings/workflow/$stageId/fields'
@@ -1605,6 +1626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStaffIndexRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/settings/': {
+      id: '/$tenant/settings/'
+      path: '/'
+      fullPath: '/$tenant/settings/'
+      preLoaderRoute: typeof TenantSettingsIndexRouteImport
+      parentRoute: typeof TenantSettingsRoute
+    }
     '/$tenant/pickups/': {
       id: '/$tenant/pickups/'
       path: '/pickups'
@@ -1934,6 +1962,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminTenantsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/$tenant/settings/workflow/': {
+      id: '/$tenant/settings/workflow/'
+      path: '/'
+      fullPath: '/$tenant/settings/workflow/'
+      preLoaderRoute: typeof TenantSettingsWorkflowIndexRouteImport
+      parentRoute: typeof TenantSettingsWorkflowRoute
+    }
     '/_admin/admin/tenants/$id': {
       id: '/_admin/admin/tenants/$id'
       path: '/admin/tenants/$id'
@@ -1976,11 +2011,13 @@ const TenantReportsRouteWithChildren = TenantReportsRoute._addFileChildren(
 )
 
 interface TenantSettingsWorkflowRouteChildren {
+  TenantSettingsWorkflowIndexRoute: typeof TenantSettingsWorkflowIndexRoute
   TenantSettingsWorkflowStageIdFieldsRoute: typeof TenantSettingsWorkflowStageIdFieldsRoute
 }
 
 const TenantSettingsWorkflowRouteChildren: TenantSettingsWorkflowRouteChildren =
   {
+    TenantSettingsWorkflowIndexRoute: TenantSettingsWorkflowIndexRoute,
     TenantSettingsWorkflowStageIdFieldsRoute:
       TenantSettingsWorkflowStageIdFieldsRoute,
   }
@@ -1993,11 +2030,13 @@ const TenantSettingsWorkflowRouteWithChildren =
 interface TenantSettingsRouteChildren {
   TenantSettingsRolesRoute: typeof TenantSettingsRolesRoute
   TenantSettingsWorkflowRoute: typeof TenantSettingsWorkflowRouteWithChildren
+  TenantSettingsIndexRoute: typeof TenantSettingsIndexRoute
 }
 
 const TenantSettingsRouteChildren: TenantSettingsRouteChildren = {
   TenantSettingsRolesRoute: TenantSettingsRolesRoute,
   TenantSettingsWorkflowRoute: TenantSettingsWorkflowRouteWithChildren,
+  TenantSettingsIndexRoute: TenantSettingsIndexRoute,
 }
 
 const TenantSettingsRouteWithChildren = TenantSettingsRoute._addFileChildren(
