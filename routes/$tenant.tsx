@@ -24,6 +24,7 @@ function AppLayout() {
   const { session, user, loading, roles, isSuperAdmin, hasRole, signOut, tenantId } = useAuth();
   const { dir, t } = useI18n();
   const [tenantBrand, setTenantBrand] = useState<any>(null);
+  const [setupGate, setSetupGate] = useState<{ loading: boolean; canEnter: boolean }>({ loading: true, canEnter: false });
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { tenant: tenantParam } = Route.useParams() as { tenant?: string };
@@ -69,11 +70,39 @@ function AppLayout() {
     }
   }, [loading, session, isSuperAdmin, path, nav, tenantParam]);
 
-
+  // MJRH Core Platform Gate:
+  // No user can enter the operating platform before the mandatory setup wizard
+  // finishes generating the configuration-driven OS.
+  useEffect(() => {
+    if (loading || !session) return;
+    const currentTenantId = tenantBrand?.id || tenantId;
+    if (!currentTenantId) {
+      setSetupGate({ loading: false, canEnter: path.includes("/onboarding") });
+      return;
+    }
+    if (path.includes("/onboarding")) {
+      setSetupGate({ loading: false, canEnter: true });
+      return;
+    }
+    setSetupGate({ loading: true, canEnter: false });
+    supabase.rpc("can_enter_platform", { _tenant_id: currentTenantId }).then(async ({ data, error }: any) => {
+      if (error) {
+        const { data: onboarding } = await supabase.from("tenant_onboarding").select("is_completed").eq("tenant_id", currentTenantId).maybeSingle();
+        const canEnter = Boolean(onboarding?.is_completed);
+        setSetupGate({ loading: false, canEnter });
+        if (!canEnter && tenantParam) nav({ to: `/${tenantParam}/onboarding` as any, replace: true });
+        return;
+      }
+      const canEnter = Boolean(data);
+      setSetupGate({ loading: false, canEnter });
+      if (!canEnter && tenantParam) nav({ to: `/${tenantParam}/onboarding` as any, replace: true });
+    });
+  }, [loading, session, tenantBrand?.id, tenantId, path, tenantParam, nav]);
 
   // Guard employee/courier deep links: non-managers should only access their operational page.
   useEffect(() => {
     if (loading || !session || !roles.length || isSuperAdmin) return;
+    if (!path.includes("/onboarding") && !setupGate.canEnter) return;
     const isManager = hasRole("owner", "ops_manager", "cs_manager");
     if (isManager) return;
 
@@ -102,7 +131,7 @@ function AppLayout() {
           if (target && !path.includes(target)) nav({ to: `${tenantParam ? `/${tenantParam}` : ""}${target}` as any });
         });
     }
-  }, [loading, session, roles.length, isSuperAdmin, hasRole, path, nav, user, tenantParam]);
+  }, [loading, session, roles.length, isSuperAdmin, hasRole, path, nav, user, tenantParam, setupGate.canEnter]);
 
   if (loading || !session) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -126,7 +155,28 @@ function AppLayout() {
     );
   }
 
-  // إيقاف تفعيل المغسلة من مدير المنصة (Super Admin)
+  if (!path.includes("/onboarding") && setupGate.loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  }
+
+  if (!path.includes("/onboarding") && !setupGate.canEnter) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
+        <Card className="max-w-md w-full p-8 text-center space-y-4 border-amber-200 bg-amber-50/40 shadow-lg">
+          <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
+            <Hourglass className="w-7 h-7 text-amber-700" />
+          </div>
+          <h1 className="text-xl font-extrabold text-amber-950">Setup Wizard Required</h1>
+          <p className="text-sm text-amber-900 font-medium">
+            لا يمكن دخول المنصة قبل انتهاء معالج إعداد MJRH Core Platform. كل شيء يجب أن يولد من configuration أولاً.
+          </p>
+          <Button className="w-full font-bold" onClick={() => tenantParam && nav({ to: `/${tenantParam}/onboarding` as any, replace: true })}>فتح معالج الإعداد</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // إيقاف تفعيل المنظمة من مدير المنصة (Super Admin)
   if (tenantBrand && tenantBrand.is_active === false && !isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>

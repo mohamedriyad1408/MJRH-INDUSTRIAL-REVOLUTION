@@ -145,6 +145,7 @@ export function AppSidebar() {
  const [dynamicStages, setDynamicStages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number }[]>([]);
   const [workflowVersion, setWorkflowVersion] = useState<string>("v1");
   const [v2Stages, setV2Stages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number; id: string }[]>([]);
+  const [coreNavItems, setCoreNavItems] = useState<any[]>([]);
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -167,6 +168,14 @@ export function AppSidebar() {
  // Fetch dynamic workflow stages for tenant (generic platform) + workflow version
  useEffect(() => {
    if (!tenantId) return;
+   supabase
+     .from("core_navigation_items")
+     .select("department_key,item_key,label_ar,label_en,route,required_roles,sort_order,is_active")
+     .eq("tenant_id", tenantId)
+     .eq("is_active", true)
+     .order("sort_order")
+     .then(({ data }: any) => setCoreNavItems(Array.isArray(data) ? data : []));
+
    // Get tenant workflow version
    supabase.from("tenants").select("workflow_engine_version, business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
      if (data) {
@@ -200,8 +209,37 @@ export function AppSidebar() {
  }, [tenantId]);
 
  const baseGroups = isSuperAdmin ? adminGroups : tenantGroups;
- // Inject dynamic stages — with v2 awareness
+ // Sidebar is generated from Core configuration when the setup wizard has produced it.
  const groups = (() => {
+   if (!isSuperAdmin && coreNavItems.length > 0) {
+     const labels: Record<string, string> = {
+       owner_dashboard: "لوحة المالك",
+       customer_service: "خدمة العملاء",
+       operations: "التشغيل",
+       accounting: "الحسابات",
+       sales: "المبيعات",
+       marketing: "التسويق",
+       hr: "الموارد البشرية",
+       legal: "الشؤون القانونية",
+       administration: "الإدارة",
+     };
+     const byDepartment = coreNavItems.reduce((acc: Record<string, any[]>, item: any) => {
+       const key = item.department_key || "core";
+       acc[key] = acc[key] || [];
+       acc[key].push(item);
+       return acc;
+     }, {});
+     return Object.entries(byDepartment).map(([departmentKey, items]) => ({
+       label: labels[departmentKey] || departmentKey,
+       items: items.map((item: any) => ({
+         title: item.label_ar || item.label_en || item.item_key,
+         url: item.route,
+         icon: LayoutDashboard,
+         roles: item.required_roles || ["owner", "ops_manager", "cs_manager", "employee"],
+       })),
+     }));
+   }
+   // Inject dynamic stages — with v2 awareness
    // For v2 tenants, hide legacy laundry stations and show only work-orders + v2 stages
    if (!isSuperAdmin && workflowVersion === "v2") {
      const v2Items: NavItem[] = v2Stages.length > 0 ? v2Stages.map(s => ({
