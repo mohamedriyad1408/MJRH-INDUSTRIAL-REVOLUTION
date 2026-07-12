@@ -36,7 +36,7 @@ The Core Platform must never depend on Laundry logic.
 
 ## THE NEW ARCHITECTURE
 
-Separate the platform into four logical layers.
+Separate the platform into five logical layers.
 
 ---
 
@@ -85,9 +85,44 @@ The Core Platform only understands generic concepts:
 
 ---
 
-## Layer 2 — Industry Templates
+## Layer 2 — Business Capability Packs
 
-Each industry is only a configuration package.
+Before Industry Templates, MJRH uses Business Capability Packs.
+
+Capability Packs represent reusable operating needs such as:
+
+- Workflow Pack
+- Inventory Pack
+- Appointment Pack
+- Manufacturing Pack
+- Asset Management Pack
+- Healthcare Pack
+- CRM Pack
+- Legal Pack
+- Accounting Pack
+- Field Service Pack
+- Document Pack
+- Approval Pack
+
+Industry names are presets, not architecture.
+
+A business should first be understood through its Business DNA, then MJRH selects Capability Packs, then composes an Industry Template.
+
+```txt
+Business DNA
+↓
+Business Capability Packs
+↓
+Industry Templates
+↓
+Generated Organizations
+```
+
+---
+
+## Layer 3 — Industry Templates
+
+Each industry is only a configuration package composed from Capability Packs.
 
 Examples:
 
@@ -128,7 +163,7 @@ Templates are replaceable.
 
 ---
 
-## Layer 3 — Demo Organizations
+## Layer 4 — Demo Organizations
 
 Examples:
 
@@ -156,7 +191,7 @@ No Demo Organization should ever become the development environment.
 
 ---
 
-## Layer 4 — Customer Organizations
+## Layer 5 — Customer Organizations
 
 Real customers follow the exact same flow.
 

@@ -30,6 +30,8 @@ MJRH should propose intelligent defaults based on:
 - country
 - currency
 - local operating norms
+- Business DNA
+- selected Capability Packs
 - template package
 - business size signals
 - selected service model
@@ -57,6 +59,12 @@ It means MJRH should:
 - reduce uncertainty
 - make the owner feel confident
 - turn operational knowledge into product behavior
+
+The refined operating phrase is:
+
+```txt
+MJRH understands, proposes, explains, then asks for confirmation.
+```
 
 MJRH should become an intelligent operating advisor, not just a management system.
 
@@ -182,7 +190,9 @@ Verify Phone
 ↓
 Create Organization Shell
 ↓
-Choose Business Type and Country
+Answer Business DNA Questions
+↓
+MJRH Selects Capability Packs
 ↓
 MJRH Proposes Starting Plan
 ↓
@@ -205,12 +215,15 @@ The owner should not be asked to make decisions MJRH can safely infer.
 
 Ask:
 
-- What kind of business do you run?
+- What kind of business are you building?
 - Which country do you operate in?
+- Does the work move through stages?
+- Is inventory important?
+- Are appointments important?
+- Are field visits important?
+- Are assets or equipment important?
 - What is your business name?
 - Where do you work from?
-- Do you deliver to customers?
-- Do you want to start with recommended services?
 - How do customers usually pay you?
 
 Avoid asking upfront:
@@ -341,32 +354,38 @@ Do not explain WhatsApp API, OTP provider, or authentication internals.
 
 ---
 
-## Screen 3 — Business Type and Country
+## Screen 3 — Business DNA
 
 **Title:**
 
 ```txt
-What kind of business do you run?
+What kind of business are you building?
 ```
 
 **Fields:**
 
-- Business type
+- Business type or closest example
 - Country
+- Does your work move through steps or stages?
+- Do you keep stock or inventory?
+- Do customers book appointments?
+- Do you visit customers outside your location?
+- Do you manage equipment, rooms, vehicles, or other assets?
+- Does the customer receive a product, a service, or both?
 
-**Required:** Yes
+**Required:** Business type/example and country. Other questions should be answered through simple recommended toggles where possible.
 
 **Help message:**
 
 ```txt
-We use this to prepare the right starting plan: work steps, reports, payments, receipts, and customer messages.
+We use this to understand how your business works, not just what industry name it has. This helps MJRH prepare the right work steps, services, reports, payments, receipts, and customer messages.
 ```
 
 **MJRH behavior:**
 
-After selection, MJRH prepares recommended defaults.
+MJRH converts these answers into a Business DNA profile, then proposes the right Capability Packs and starting plan.
 
-**Owner decision count:** 2
+**Owner decision count:** 2 required; other answers should be suggested when MJRH can infer them.
 
 ---
 
@@ -846,13 +865,14 @@ You do not need to invite your full team now. You can start alone and add them l
 
 Target maximum required decisions before “Build my business”:
 
-1. Business type
+1. Business type or closest example
 2. Country
-3. Business name
-4. Main location confirmation
-5. Recommended plan confirmation
-6. Payment method confirmation
-7. Work steps confirmation
+3. Business DNA confirmation
+4. Business name
+5. Main location confirmation
+6. Recommended plan confirmation
+7. Payment method confirmation
+8. Work steps confirmation
 
 Everything else should be optional, recommended, or editable later.
 

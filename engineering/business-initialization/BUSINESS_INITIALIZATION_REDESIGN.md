@@ -4,7 +4,7 @@
 **Objective:** Replace Setup Version 1 with a business-owner friendly initialization journey that minimizes owner decisions  
 **Target user:** Non-technical business owner  
 **Core rule:** Avoid technical, developer, and ERP terminology  
-**Primary design goal:** MJRH proposes; the owner confirms
+**Primary design goal:** MJRH understands, proposes, explains, then asks for confirmation
 
 ---
 
@@ -19,6 +19,12 @@ The objective is to minimize the number of business decisions required from the 
 MJRH should intelligently propose defaults based on business type, country, template, and local operating norms.
 
 The owner should confirm rather than configure whenever possible.
+
+MJRH should follow this sequence:
+
+```txt
+understand → propose → explain → confirm
+```
 
 The owner should never feel lost.
 
@@ -80,7 +86,9 @@ But these internal names should not appear in the customer experience.
 ```txt
 Welcome
 ↓
-Choose business type
+Understand Business DNA
+↓
+Select Capability Packs
 ↓
 Confirm recommended starting plan
 ↓
@@ -108,6 +116,47 @@ Ready dashboard
 The owner should be able to save progress and return later.
 
 The platform should not open operational screens until initialization is complete.
+
+
+---
+
+## 3.1 Business DNA Before Industry Name
+
+The first business question should be:
+
+```txt
+What kind of business are you building?
+```
+
+The answer should not be reduced to an industry label such as Laundry or Hotel.
+
+MJRH must understand operating characteristics:
+
+- Does work move through stages?
+- Is something manufactured or assembled?
+- Is inventory used?
+- Are appointments needed?
+- Are field visits needed?
+- Are assets or equipment tracked?
+- Does the customer receive a product, a service, or both?
+- Are approvals important?
+- When does money get collected?
+
+These answers form the Business DNA.
+
+Business DNA chooses Capability Packs.
+
+Capability Packs then compose the Industry Template.
+
+```txt
+Business DNA
+↓
+Capability Packs
+↓
+Industry Template
+↓
+Generated Organization
+```
 
 ---
 
@@ -148,17 +197,17 @@ No data fields.
 
 ---
 
-### Screen 2 — What kind of business do you run?
+### Screen 2 — What kind of business are you building?
 
 **Customer-facing title:**
 
 ```txt
-What does your business do?
+What kind of business are you building?
 ```
 
 **Purpose:**
 
-Choose the starting recommendation package.
+Understand the operating characteristics of the business, then choose recommended Capability Packs and a starting plan.
 
 **Field:**
 
@@ -178,12 +227,21 @@ Business type
 - Maintenance service
 - Other
 
-**Required:** Yes
+Additional simple DNA questions:
+
+- Does your work move through stages?
+- Do you use inventory?
+- Do customers book appointments?
+- Do you visit customers in the field?
+- Do you track assets or equipment?
+- Does the customer receive a product, a service, or both?
+
+**Required:** Business type/example and country. Other questions should use smart recommended defaults where possible.
 
 **Help message:**
 
 ```txt
-This gives you a recommended starting setup. You can still edit the details before we build your workspace.
+This helps MJRH understand how your business operates, then suggest the safest starting setup. You can still edit the details before we build your workspace.
 ```
 
 **Validation:**

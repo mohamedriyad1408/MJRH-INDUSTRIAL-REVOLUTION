@@ -119,7 +119,7 @@ The restoration should add the missing Platform Generator compatibility layer ar
 1. No manual table duplication.
 2. No direct copy from `dry-tech-reference` into `dry-tech`.
 3. No development or experiments inside Dry Tech.
-4. Preserve existing Dry Tech IDs and historical records where possible.
+4. Preserve relationships, data integrity, auditability, and historical records. Preserve IDs only when useful; IDs may change if architecture requires it.
 5. Use the Laundry Template and Platform Generator functions to generate missing configuration.
 6. Run every restoration command first in dry-run mode.
 7. Create a database backup/snapshot before applying changes.
@@ -260,7 +260,32 @@ Dry Tech must not be used for:
 
 ---
 
-## 6. Data Recovery Scope
+## 6. Identity and Integrity Rule
+
+Dry Tech restoration should not treat database IDs as the highest priority.
+
+The highest priority is:
+
+```txt
+Preserve relationships and data integrity.
+```
+
+IDs should be preserved when doing so is safe and useful.
+
+IDs may change if there is a valid architectural reason during generation or restoration.
+
+But the following must never break:
+
+- order-to-customer relationships
+- order-to-items relationships
+- work-to-actor relationships
+- accounting-to-source relationships
+- audit trail meaning
+- historical operational continuity
+
+---
+
+## 7. Data Recovery Scope
 
 Dry Tech restoration must preserve or restore:
 
@@ -286,7 +311,7 @@ Therefore the restoration should primarily repair Core Platform initialization s
 
 ---
 
-## 7. Proposed Restoration Script
+## 8. Proposed Restoration Script
 
 Create a dedicated script after approval:
 
@@ -307,7 +332,7 @@ Required behavior:
 
 ---
 
-## 8. Gold Standard Validation Policy
+## 9. Gold Standard Validation Policy
 
 After restoration, every new platform capability must pass validation against Dry Tech before approval.
 
@@ -329,7 +354,7 @@ Dry Tech is a gold standard benchmark, not a sandbox.
 
 ---
 
-## 9. Long-Term Reproducibility Target
+## 10. Long-Term Reproducibility Target
 
 Dry Tech must never become manually maintained.
 
@@ -357,7 +382,7 @@ This requires:
 
 ---
 
-## 10. Risks
+## 11. Risks
 
 ### Risk 1 — Legacy data does not fully match new Core assumptions
 
@@ -392,7 +417,7 @@ Mitigation:
 
 ---
 
-## 9. Recommendation
+## 12. Recommendation
 
 Proceed with a controlled restoration of `dry-tech` in place.
 
