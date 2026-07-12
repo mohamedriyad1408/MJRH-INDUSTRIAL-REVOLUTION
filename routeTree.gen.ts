@@ -73,6 +73,7 @@ import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/adm
 import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
 import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
 import { Route as AdminAdminInputBuilderRouteImport } from './routes/_admin/admin/input-builder'
+import { Route as AdminAdminDemoLibraryRouteImport } from './routes/_admin/admin/demo-library'
 import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
 import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
 import { Route as AdminAdminBizDevRouteImport } from './routes/_admin/admin/biz-dev'
@@ -434,6 +435,11 @@ const AdminAdminInputBuilderRoute = AdminAdminInputBuilderRouteImport.update({
   path: '/admin/input-builder',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminDemoLibraryRoute = AdminAdminDemoLibraryRouteImport.update({
+  id: '/admin/demo-library',
+  path: '/admin/demo-library',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminCustomerSuccessRoute =
   AdminAdminCustomerSuccessRouteImport.update({
     id: '/admin/customer-success',
@@ -712,6 +718,7 @@ export interface FileRoutesByFullPath {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
   '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
@@ -813,6 +820,7 @@ export interface FileRoutesByTo {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
   '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
@@ -918,6 +926,7 @@ export interface FileRoutesById {
   '/_admin/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/_admin/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/_admin/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/_admin/admin/demo-library': typeof AdminAdminDemoLibraryRoute
   '/_admin/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/_admin/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/_admin/admin/legal': typeof AdminAdminLegalRoute
@@ -1023,6 +1032,7 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/demo-library'
     | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
@@ -1124,6 +1134,7 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/demo-library'
     | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
@@ -1228,6 +1239,7 @@ export interface FileRouteTypes {
     | '/_admin/admin/biz-dev'
     | '/_admin/admin/business-plan'
     | '/_admin/admin/customer-success'
+    | '/_admin/admin/demo-library'
     | '/_admin/admin/input-builder'
     | '/_admin/admin/investor-relations'
     | '/_admin/admin/legal'
@@ -1717,6 +1729,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminInputBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/admin/demo-library': {
+      id: '/_admin/admin/demo-library'
+      path: '/admin/demo-library'
+      fullPath: '/admin/demo-library'
+      preLoaderRoute: typeof AdminAdminDemoLibraryRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/admin/customer-success': {
       id: '/_admin/admin/customer-success'
       path: '/admin/customer-success'
@@ -2183,6 +2202,7 @@ interface AdminRouteChildren {
   AdminAdminBizDevRoute: typeof AdminAdminBizDevRoute
   AdminAdminBusinessPlanRoute: typeof AdminAdminBusinessPlanRoute
   AdminAdminCustomerSuccessRoute: typeof AdminAdminCustomerSuccessRoute
+  AdminAdminDemoLibraryRoute: typeof AdminAdminDemoLibraryRoute
   AdminAdminInputBuilderRoute: typeof AdminAdminInputBuilderRoute
   AdminAdminInvestorRelationsRoute: typeof AdminAdminInvestorRelationsRoute
   AdminAdminLegalRoute: typeof AdminAdminLegalRoute
@@ -2204,6 +2224,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBizDevRoute: AdminAdminBizDevRoute,
   AdminAdminBusinessPlanRoute: AdminAdminBusinessPlanRoute,
   AdminAdminCustomerSuccessRoute: AdminAdminCustomerSuccessRoute,
+  AdminAdminDemoLibraryRoute: AdminAdminDemoLibraryRoute,
   AdminAdminInputBuilderRoute: AdminAdminInputBuilderRoute,
   AdminAdminInvestorRelationsRoute: AdminAdminInvestorRelationsRoute,
   AdminAdminLegalRoute: AdminAdminLegalRoute,

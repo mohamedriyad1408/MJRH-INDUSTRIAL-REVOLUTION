@@ -36,6 +36,7 @@ const adminGroups: { label: string; items: NavItem[] }[] = [
  items: [
  { title: "Input Builder", url: "/admin/input-builder", icon: Boxes, roles: ["owner"] },
  { title: "Output Builder", url: "/admin/report-builder", icon: BarChart3, roles: ["owner"] },
+ { title: "Demo Library", url: "/admin/demo-library", icon: Building2, roles: ["owner"] },
  ],
  },
  {
