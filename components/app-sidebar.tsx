@@ -6,7 +6,7 @@ import {
  Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
  BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
  UsersRound, LockKeyhole, HelpCircle, Search, AlertTriangle, ClipboardCheck, Tags,
- Megaphone, TrendingUp, Workflow, Store, Shield, Activity,
+ Megaphone, TrendingUp, Workflow, Store, Shield, Activity, Layers,
 } from "lucide-react";
 import {
  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -143,6 +143,8 @@ export function AppSidebar() {
  const [employeeStation, setEmployeeStation] = useState<string | null>(null);
  const [employeeJobRole, setEmployeeJobRole] = useState<string | null>(null);
  const [dynamicStages, setDynamicStages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number }[]>([]);
+  const [workflowVersion, setWorkflowVersion] = useState<string>("v1");
+  const [v2Stages, setV2Stages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number; id: string }[]>([]);
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -162,21 +164,86 @@ export function AppSidebar() {
  });
  }, [user]);
 
- // Fetch dynamic workflow stages for tenant (generic platform)
+ // Fetch dynamic workflow stages for tenant (generic platform) + workflow version
  useEffect(() => {
    if (!tenantId) return;
+   // Get tenant workflow version
+   supabase.from("tenants").select("workflow_engine_version, business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
+     if (data) {
+       setWorkflowVersion(data.workflow_engine_version || "v1");
+     }
+   });
+
+   // Old workflow_stages (v1) via RPC
    supabase.rpc("get_workflow_stages", { _tenant_id: tenantId }).then(({ data }: any) => {
      if (data && Array.isArray(data)) {
        setDynamicStages(data);
      }
    });
+
+   // New v2 stages: fetch from workflow_definitions where tenant_id = tenantId or template for industry
+   supabase.from("workflow_definitions").select("id").eq("tenant_id", tenantId).eq("is_active", true).limit(1).maybeSingle().then(async ({ data: wf }: any) => {
+     let workflowId = wf?.id;
+     if (!workflowId) {
+       // Fallback to template based on tenant business_type
+       const { data: tenantData } = await supabase.from("tenants").select("business_type").eq("id", tenantId).single();
+       const industry = (tenantData as any)?.business_type === "hotel" ? "hospitality" : (tenantData as any)?.business_type === "restaurant" ? "food_chain" : "generic";
+       const { data: template } = await supabase.from("workflow_definitions").select("id").eq("is_template", true).eq("industry", industry as any).limit(1).maybeSingle();
+       if (template) workflowId = template.id;
+     }
+     if (workflowId) {
+       supabase.from("workflow_stages_v2").select("id, name_ar, name_en, slug, icon, color, stage_order").eq("workflow_id", workflowId).order("stage_order").then(({ data }: any) => {
+         if (data) setV2Stages(data.map((s: any) => ({ name: s.name_ar, name_en: s.name_en, slug: s.slug, icon: s.icon, color: s.color, stage_order: s.stage_order, id: s.id })));
+       });
+     }
+   });
  }, [tenantId]);
 
  const baseGroups = isSuperAdmin ? adminGroups : tenantGroups;
- // Inject dynamic stages into التشغيل والمحطات group if available
+ // Inject dynamic stages — with v2 awareness
  const groups = (() => {
+   // For v2 tenants, hide legacy laundry stations and show only work-orders + v2 stages
+   if (!isSuperAdmin && workflowVersion === "v2") {
+     const v2Items: NavItem[] = v2Stages.length > 0 ? v2Stages.map(s => ({
+       title: s.name,
+       url: `/stations/${s.slug}`,
+       icon: Workflow,
+       roles: ["owner","ops_manager","cs_manager","employee"]
+     })) : [];
+
+     // Also add work-orders as main for v2
+     const workOrdersItem: NavItem = { title: "طلبات العمل العامة", url: "/work-orders", icon: Layers, roles: ["owner","ops_manager","cs_manager","employee"] };
+
+     return baseGroups.map(g => {
+       if (g.label === "التشغيل والمحطات") {
+         // For v2, replace all legacy laundry stations with work-orders + v2 stages + generic tools
+         return {
+           label: g.label,
+           items: [
+             workOrdersItem,
+             ...v2Items,
+             { title: "الخريطة والفريق", url: "/live-map", icon: Navigation, roles: ["owner", "ops_manager"] },
+             { title: "سلامة النظام APDO", url: "/system-health", icon: ShieldCheck, roles: ["owner", "ops_manager"] },
+             { title: "التعثرات", url: "/issues", icon: AlertTriangle, roles: ["owner", "ops_manager", "cs_manager"] },
+           ]
+         };
+       }
+       if (g.label === "العملاء والمبيعات") {
+         // For v2, hide laundry-specific items like عملية جديدة (orders/new) which is v1, keep customers, CRM etc, but add work-orders link already in previous group
+         return {
+           ...g,
+           items: g.items.filter(it => !(["/orders/new", "/orders", "/services", "/branches", "/inventory"].includes(it.url)))
+             .concat([
+               { title: "العملاء", url: "/customers", icon: Users, roles: ["cs_manager", "owner"] },
+               { title: "CRM والولاء", url: "/crm", icon: HeartHandshake, roles: ["cs_manager", "ops_manager", "owner"] },
+             ])
+         };
+       }
+       return g;
+     });
+   }
+
    if (isSuperAdmin || dynamicStages.length === 0) return baseGroups;
-   // Find التشغيل والمحطات group and add dynamic items after static ones for any custom stages not already covered
    const staticSlugs = new Set(["reception","sorting","cleaning","drying-assembly","ironing","packing","qc","cs","intake","delivery"]);
    const customStages = dynamicStages.filter(s => !staticSlugs.has(s.slug));
    if (customStages.length === 0) return baseGroups;
