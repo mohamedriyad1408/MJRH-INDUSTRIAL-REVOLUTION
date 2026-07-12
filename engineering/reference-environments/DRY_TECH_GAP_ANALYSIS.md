@@ -671,3 +671,115 @@ Core role-aware navigation generation from Capability Pack / Template navigation
 ```
 
 This restores a visible part of the old experience without reintroducing hardcoded Laundry logic.
+
+---
+
+# Business Knowledge Recovery Addendum
+
+**Purpose:** Convert the Dry Tech gap analysis from “missing screens/data” into a business knowledge recovery model.
+
+This addendum follows the rule:
+
+```txt
+Do not restore hardcoded behavior.
+Recover business knowledge into the correct Platform Generator layer.
+```
+
+## Recovery Classification Model
+
+Every business knowledge gap must be classified into exactly one of the following categories:
+
+| Category | Architectural destination |
+|---|---|
+| A | Business Operating Model |
+| B | Business DNA |
+| C | Capability Pack |
+| D | Industry Template Asset |
+| E | Generated Organization Data |
+| F | Configuration |
+| G | Initialization Metadata |
+| H | Legacy Hardcoded Logic |
+
+The answer “hardcode it again” is never acceptable.
+
+---
+
+## Required Historical Comparison Matrix
+
+| Area | Present Before | Present Now | Missing | Root Cause | Correct Restoration |
+|---|---|---|---|---|---|
+| Departments | Dry Tech behavior depended on known operational areas and stations. | Core departments generated: 10. Existing legacy station routes still exist. | Department model is present, but not yet the complete source of UI and work behavior. | Department/station knowledge was split between hardcoded routes, enums, and sidebar logic. | Category D — Industry Template Asset. Laundry work areas should be generated as template assets; generic rendering belongs to Core. |
+| Roles | `user_roles` controlled access; station/job role assumptions routed employees. | `user_roles` preserved and `core_roles` generated, but not unified. | Mapping between generated roles and runtime permissions is incomplete. | Old roles were operational and code-driven; new roles are generated but not yet authoritative. | Category C — Capability Pack. Permission/role mapping should be reusable across industries. |
+| Navigation | Rich static sidebar exposed operations, orders, customers, staff, finance, reports, map, settings. | Generated navigation has 10 workspace links. | Many business areas are not generated into navigation. | Navigation lived in `components/app-sidebar.tsx`, not in generator assets. | Category C — Capability Pack. Navigation should be pack/template configuration consumed by Core. |
+| Services | Dry Tech had 205 operational services. | Same 205 services preserved. Laundry Template has 10 service assets. | Reproducible service catalog is missing. | Services are Dry Tech data, not declarative template/data-pack assets. | Category E — Generated Organization Data for full Dry Tech catalog; Category D for curated Laundry defaults. |
+| Categories | Services had practical business grouping/categories in data/code. | Service rows preserved; category reproducibility not guaranteed. | Category taxonomy is not yet a template/data-pack asset. | Categories emerged in business data and UI, not as generator output. | Category D — Industry Template Asset for common laundry categories; Category E for Dry Tech-specific catalog details. |
+| Service Types | Cleaning/ironing/both style service types existed. | Existing enum/data preserved. | Service type semantics are not fully abstracted for other industries. | Service types are laundry-oriented but partly generic as “work type.” | Category C — Capability Pack. Generalize as service/work type attributes; Laundry Template supplies labels. |
+| Workflow Stages | Dry Tech used legacy workflow stages and order statuses. | Legacy stages preserved; Core workflow blueprint generated. | Operational bridge between Core workflow and legacy execution is missing. | Dual workflow models coexist. | Category C — Capability Pack. Workflow Pack should map template stages to executable work orders/tasks. |
+| Stations | Station-specific screens/routes existed. | Station routes still exist; generated departments point to some station routes. | Stations are not fully generated assets. | Station definitions were hardcoded routes and enums. | Category D — Industry Template Asset. Generic station/work-area renderer belongs to Core. |
+| Operational Rules | Routing, station assignment, ironing distribution, QC and delivery rules existed in code. | Some code remains, but not expressed as packs/configuration. | Operational rules are disconnected from generator model. | Business rules were implemented as code rather than pack assets. | Category C — Capability Pack where reusable; Category D for laundry-specific rules; H for obsolete implementation shape. |
+| Order Lifecycle | Orders moved through statuses and service units. | Historical orders preserved; Core Work Orders are not used for Dry Tech yet. | Order → Work Order → Task bridge is missing. | Old Dry Tech was order-centric; new model is work-order-centric. | Category C — Capability Pack plus Core execution support. |
+| Customer Features | Customer list, portal, tracking, signup, messages existed. | Data and routes preserved; generated assets incomplete. | Customer journey is not generated from CRM/Notification/Document packs. | Customer behavior was route/component-driven. | Category C — CRM/Notification/Document Capability Packs. |
+| Pickup Flow | Pickup requests and customer pickup statuses existed. | Pickup data preserved. Navigation/pack model incomplete. | Pickup flow is not generated by Field Service Pack. | Pickup was laundry/order-specific in code. | Category C — Field Service Capability Pack with Laundry Template labels. |
+| Delivery Flow | Driver route, delivery status, collection existed. | Driver route generated; live map and full delivery workflow not generated. | Delivery behavior is partially connected only. | Field operations were spread across routes/components. | Category C — Field Service Pack. |
+| Financial Events | Order/payment accounting sync and journal entries existed. | Journal history preserved; generic financial event types generated. | Generic mapping between operational events and financial events is incomplete. | Accounting was order-specific. | Category C — Accounting Pack, with Core financial transaction abstraction. |
+| Accounting Configuration | Cash accounts, chart accounts, journals existed. | Preserved. | Initialization can preserve but not fully regenerate all accounting behavior. | Legacy bootstrap and accounting functions predate generator. | Category F — Configuration for accounts; Category C — Accounting Pack for behavior. |
+| Reports | Reports existed mostly as coded routes/components. | Data exists; generated report assets are minimal. | Reports are not configuration-first. | Reporting was UI/component-driven. | Category C — Reporting Pack. |
+| Dashboard Widgets | Dashboards existed as coded components. | Generated dashboard/widget definitions missing. | First dashboard/gold standard widgets are not generated assets. | Dashboard behavior was not modeled. | Category C — Reporting/Operations Pack; some belongs to Business Operating Model. |
+| Permissions | Runtime permissions existed via `user_roles` and checks. | Preserved, plus generated `core_roles`. | Single permission source of truth missing. | Generated roles not wired to runtime checks. | Category C — Permission Capability Pack / Core permission execution. |
+| Notifications | Customer messages/notification center existed. | Messages preserved; rules/templates incomplete. | Notification templates and triggers are not generator assets. | Notifications were tied to order/customer code. | Category C — Notification Pack. |
+| Templates | Old Dry Tech did not come from a formal template. | Laundry Template exists but is incomplete. | Laundry Template does not reproduce full old behavior. | Old implementation was app-specific, not template-based. | Category D — Industry Template Asset. |
+| Forms | Some operational forms/checklists were implicit or screen-driven. | Two core forms generated. | Complete form set missing. | Forms were not formal assets. | Category C — Document/Form Capability Pack; Laundry-specific forms in Template. |
+| Documents | Receipts/delivery/payment documents existed in behavior. | Three core documents generated. | Document templates are shallow. | Documents were implicit in print/order code. | Category C — Document Management Pack. |
+| Business Settings | App settings and business defaults existed. | Preserved but not fully represented in Business DNA output. | Business settings generation is incomplete. | Settings predate Business DNA model. | Category B — Business DNA and Category F — Configuration. |
+| Pricing Rules | Prices preserved in services. | Pricing rules beyond service prices not formalized. | Discounts, urgent fees, delivery fees, commissions need rule model. | Pricing behavior spread across order/payment screens. | Category C — Accounting/Pricing Capability Pack. |
+| Validation Rules | Laundry validation files and UI validations existed. | Some remain in legacy code. | Rules not moved to template/pack configuration. | Hardcoded validation logic. | Category D for laundry-specific validation; Category C for reusable validation framework. |
+| Automation Rules | Auto financial sync, task movement, notifications existed in triggers/functions. | Some remain; not generator governed. | Automation registry/rule model missing. | Automation was embedded in triggers/functions. | Category C — Automation/Workflow/Accounting Packs. |
+| Business Defaults | Defaults existed via seed functions/bootstrap. | Some defaults generated; legacy bootstrap remains risky. | Defaults are split between legacy bootstrap and new templates. | Old bootstrap was not template-aware. | Category H — Legacy Hardcoded Logic for old bootstrap; Category D/F for replacement defaults. |
+
+---
+
+## Root Cause Summary
+
+| Root Cause | Impact |
+|---|---|
+| Static UI was used as business configuration | Navigation, dashboards, reports, and actions are not fully generated. |
+| Laundry/station concepts were embedded in routes and enums | Station behavior is not portable to other industries. |
+| Order-centric execution predated Work Orders and Tasks | New Core execution model is not yet connected to historical Dry Tech behavior. |
+| Legacy bootstrap performed hidden mutations | Restoration dry run nearly changed service counts. |
+| Reports/dashboards were components, not assets | Platform Generator cannot reproduce old insights yet. |
+| Notifications were tied to order-specific events | Notification Pack needs extraction. |
+| Roles existed in runtime checks, not generated permission model | `core_roles` and `user_roles` are parallel instead of unified. |
+
+---
+
+## Recovery Path Summary
+
+| Recovery Path | Items |
+|---|---|
+| Generate from Capability Pack | Navigation, CRM, workflow execution, accounting, reporting, notifications, HR/staff, field service, document forms, approval rules. |
+| Generate from Industry Template | Laundry stations, laundry stage labels, laundry service defaults, laundry-specific validation rules, document defaults. |
+| Generate during Business Initialization | Business settings, owner confirmations, operating hours, branch structure, payment preferences. |
+| Generate during Platform Generator | Core departments, roles, navigation, workflow blueprints, documents, forms, feature flags. |
+| Store as Configuration | Pricing rules, approval thresholds, notification preferences, dashboard layout, report definitions. |
+| Store as Business Knowledge | Operating model patterns, Business DNA questions, service/product/work distinctions. |
+| Restore existing business data | Dry Tech 205 services, historical orders, customers, employees, accounting history. |
+| Keep as historical data only | Old journal entries, old operation events, historical messages where not needed as future templates. |
+| Retire as Obsolete | Legacy bootstrap side effects, direct station redirects, workflow v1 as execution path, static sidebar as source of truth. |
+
+---
+
+## Final Business Knowledge Recovery Rule
+
+Success is not simply:
+
+```txt
+Dry Tech works.
+```
+
+Success is:
+
+```txt
+Every piece of business knowledge that existed before has either been preserved, correctly relocated into the new architecture, or intentionally retired with justification.
+```
+
+No implementation should begin before this analysis and the recovery roadmap are reviewed and approved.
