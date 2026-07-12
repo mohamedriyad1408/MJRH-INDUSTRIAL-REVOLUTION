@@ -293,34 +293,26 @@ BEGIN
       config = EXCLUDED.config,
       sort_order = EXCLUDED.sort_order;
 
-    INSERT INTO public.core_navigation_items (tenant_id, department_key, item_key, label_ar, label_en, route, icon, sort_order)
-    VALUES (
-      _tenant_id,
-      dep->>'key',
-      (dep->>'key') || '_workspace',
-      COALESCE(NULLIF(dep->>'name_ar',''), dep->>'key'),
-      COALESCE(NULLIF(dep->>'name_en',''), dep->>'key'),
-      CASE dep->>'key'
-        WHEN 'owner_dashboard' THEN '/dashboard'
-        WHEN 'customer_service' THEN '/cs'
-        WHEN 'operations' THEN '/work-orders'
-        WHEN 'accounting' THEN '/accounting'
-        WHEN 'sales' THEN '/crm'
-        WHEN 'marketing' THEN '/marketing'
-        WHEN 'hr' THEN '/staff'
-        WHEN 'legal' THEN '/legal'
-        WHEN 'administration' THEN '/settings'
-        ELSE '/dashboard'
-      END,
-      'LayoutDashboard',
-      _dept_count * 10
-    )
-    ON CONFLICT (tenant_id, item_key) DO UPDATE SET
-      label_ar = EXCLUDED.label_ar,
-      label_en = EXCLUDED.label_en,
-      route = EXCLUDED.route,
-      is_active = true,
-      sort_order = EXCLUDED.sort_order;
+    IF NULLIF(dep->>'route','') IS NOT NULL THEN
+      INSERT INTO public.core_navigation_items (tenant_id, department_key, item_key, label_ar, label_en, route, icon, sort_order)
+      VALUES (
+        _tenant_id,
+        dep->>'key',
+        (dep->>'key') || '_workspace',
+        COALESCE(NULLIF(dep->>'name_ar',''), dep->>'key'),
+        COALESCE(NULLIF(dep->>'name_en',''), dep->>'key'),
+        dep->>'route',
+        COALESCE(NULLIF(dep->>'icon',''), 'LayoutDashboard'),
+        _dept_count * 10
+      )
+      ON CONFLICT (tenant_id, item_key) DO UPDATE SET
+        label_ar = EXCLUDED.label_ar,
+        label_en = EXCLUDED.label_en,
+        route = EXCLUDED.route,
+        icon = EXCLUDED.icon,
+        is_active = true,
+        sort_order = EXCLUDED.sort_order;
+    END IF;
 
     _dept_count := _dept_count + 1;
   END LOOP;

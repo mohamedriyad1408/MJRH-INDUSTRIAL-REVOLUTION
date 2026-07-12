@@ -14,7 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, Building2, Users, CreditCard, Sparkles, ArrowLeft, ArrowRight, Bell, Palette, ShieldCheck, Workflow, GitBranch, Settings2 } from "lucide-react";
-import { buildCoreSetupPayload, CORE_SETUP_STEPS, DEFAULT_CORE_DEPARTMENTS, DEFAULT_SETUP_FORM, type SetupFormState } from "@/lib/core-platform";
+import { buildCoreSetupPayload, CORE_SETUP_STEPS, DEFAULT_SETUP_FORM, type SetupFormState } from "@/lib/core-platform";
+import { getTemplate, TEMPLATE_REGISTRY } from "@/lib/template-registry";
 
 export const Route = createFileRoute("/$tenant/onboarding")({
   head: () => ({ meta: [{ title: "MJRH Core Platform Setup Wizard" }] }),
@@ -29,8 +30,12 @@ const DAYS = [
 function mergeSetup(profile: any, tenant: any): SetupFormState {
   const raw = profile?.raw_setup || {};
   const org = raw.organization || profile?.organization || {};
+  const templateSlug = raw.template_slug || DEFAULT_SETUP_FORM.templateSlug;
+  const template = getTemplate(templateSlug);
+  const assets = raw.template_assets || {};
   return {
     ...DEFAULT_SETUP_FORM,
+    templateSlug,
     organizationName: org.name || tenant?.name || DEFAULT_SETUP_FORM.organizationName,
     industry: org.industry || DEFAULT_SETUP_FORM.industry,
     businessType: org.business_type || tenant?.business_type || DEFAULT_SETUP_FORM.businessType,
@@ -39,13 +44,15 @@ function mergeSetup(profile: any, tenant: any): SetupFormState {
     languages: org.languages || DEFAULT_SETUP_FORM.languages,
     timezone: org.timezone || DEFAULT_SETUP_FORM.timezone,
     branches: raw.branches || profile?.branches || DEFAULT_SETUP_FORM.branches,
-    departments: raw.departments || DEFAULT_CORE_DEPARTMENTS,
+    departments: assets.departments || template.assets.departments,
     workingHours: raw.working_hours || profile?.working_hours || DEFAULT_SETUP_FORM.workingHours,
     tax: raw.tax || profile?.tax || DEFAULT_SETUP_FORM.tax,
     operationalModel: raw.operational_model || profile?.operational_model || DEFAULT_SETUP_FORM.operationalModel,
     workflowStyle: raw.workflow_style || profile?.workflow_style || DEFAULT_SETUP_FORM.workflowStyle,
     accounting: raw.accounting || profile?.accounting || DEFAULT_SETUP_FORM.accounting,
-    roles: raw.roles || DEFAULT_SETUP_FORM.roles,
+    roles: assets.roles || template.assets.roles,
+    workflows: assets.workflows || template.assets.workflows,
+    financialEvents: assets.financial_events || template.assets.financialEvents,
     notifications: raw.notifications || profile?.notifications || DEFAULT_SETUP_FORM.notifications,
     numbering: raw.document_numbering || profile?.document_numbering || DEFAULT_SETUP_FORM.numbering,
     approvals: raw.approvals || profile?.approvals || DEFAULT_SETUP_FORM.approvals,
@@ -85,6 +92,19 @@ function CoreSetupWizardPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function applyTemplate(templateSlug: string) {
+    const template = getTemplate(templateSlug);
+    setForm((prev) => ({
+      ...prev,
+      templateSlug,
+      departments: template.assets.departments,
+      roles: template.assets.roles,
+      workflows: template.assets.workflows,
+      financialEvents: template.assets.financialEvents,
+      workflowStyle: template.assets.workflows[0]?.style || "template_defined",
+    }));
+  }
+
   function toggleDay(day: string, checked: boolean) {
     const days = checked ? Array.from(new Set([...form.workingHours.days, day])) : form.workingHours.days.filter((d) => d !== day);
     update("workingHours", { ...form.workingHours, days });
@@ -96,13 +116,13 @@ function CoreSetupWizardPage() {
   }
 
   function validateStep(targetStep = step) {
-    if (targetStep >= 1) {
+    if (targetStep >= 1 && !form.templateSlug.trim()) return "اختيار القالب مطلوب";
+    if (targetStep >= 2) {
       if (!form.organizationName.trim()) return "اسم المنظمة مطلوب";
       if (!form.industry.trim()) return "الصناعة مطلوبة كإعداد، وليست كود داخل المنصة";
       if (!form.businessType.trim()) return "نوع النشاط مطلوب كإعداد";
     }
-    if (targetStep >= 2 && !form.branches.some((b) => b.name.trim())) return "أضف فرعاً واحداً على الأقل";
-    if (targetStep >= 3 && !form.departments.some((d) => d.enabled)) return "يجب تفعيل قسم واحد على الأقل";
+    if (targetStep >= 3 && !form.branches.some((b) => b.name.trim())) return "أضف فرعاً واحداً على الأقل";
     return null;
   }
 
@@ -138,7 +158,7 @@ function CoreSetupWizardPage() {
         completed_steps: CORE_SETUP_STEPS.filter((s) => s.id < target).map((s) => s.id),
         branch_data: payload.branches,
         catalog_choice: "manual",
-        staff_data: payload.roles,
+        staff_data: payload.template_assets.roles,
         payment_method: payload.accounting.basis,
         is_completed: false,
       }, { onConflict: "tenant_id" });
@@ -199,10 +219,10 @@ function CoreSetupWizardPage() {
       <Card className="shadow-lg border-slate-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {step === 1 && <><Building2 className="w-5 h-5" /> 1. الهوية الأساسية</>}
+            {step === 1 && <><Sparkles className="w-5 h-5" /> 1. Template Registry + Identity</>}
             {step === 2 && <><GitBranch className="w-5 h-5" /> 2. الفروع وساعات العمل</>}
-            {step === 3 && <><Users className="w-5 h-5" /> 3. Department Engine</>}
-            {step === 4 && <><Workflow className="w-5 h-5" /> 4. Workflow Engine</>}
+            {step === 3 && <><Users className="w-5 h-5" /> 3. Template Assets</>}
+            {step === 4 && <><Workflow className="w-5 h-5" /> 4. Workflow Assets</>}
             {step === 5 && <><CreditCard className="w-5 h-5" /> 5. Financial Engine</>}
             {step === 6 && <><ShieldCheck className="w-5 h-5" /> 6. Permissions & Approvals</>}
             {step === 7 && <><Bell className="w-5 h-5" /> 7. Notifications & Branding</>}
@@ -213,6 +233,22 @@ function CoreSetupWizardPage() {
         <CardContent className="space-y-6">
           {step === 1 && (
             <div className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 rounded-2xl border p-4 bg-slate-50 space-y-3">
+                <Label>Organization Template *</Label>
+                <Select value={form.templateSlug} onValueChange={applyTemplate}>
+                  <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_REGISTRY.map((template) => (
+                      <SelectItem key={template.slug} value={template.slug}>
+                        {template.name_ar} — {template.name_en} {template.status === "placeholder" ? "(future package)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  القالب هو مصدر departments, roles, workflows, financial event types. الـ Core ينفذ capabilities فقط ولا يفترض أي هيكل أعمال.
+                </p>
+              </div>
               <div><Label>Organization Name *</Label><Input className="mt-1" value={form.organizationName} onChange={(e) => update("organizationName", e.target.value)} placeholder="MJRH Client Company" /></div>
               <div><Label>Industry *</Label><Input className="mt-1" value={form.industry} onChange={(e) => update("industry", e.target.value)} placeholder="مثال: Healthcare / Manufacturing / Hospitality" /></div>
               <div><Label>Business Type *</Label><Input className="mt-1" value={form.businessType} onChange={(e) => update("businessType", e.target.value)} placeholder="مثال: Hospital / Hotel / Factory" /></div>
@@ -238,7 +274,7 @@ function CoreSetupWizardPage() {
 
           {step === 3 && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-sm text-blue-900">الأقسام الافتراضية موجودة دائماً، ويمكن إضافة أقسام أخرى لاحقاً. لا يوجد أي اسم صناعة داخل الكود.</div>
+              <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-sm text-blue-900">الأقسام هنا Template Assets وليست Core defaults. يمكن أن يكون القالب فارغاً، ويمكنك إضافة أو حذف أي Department قبل توليد المنظمة.</div>
               <div className="grid md:grid-cols-2 gap-3">{form.departments.map((d, idx) => <div key={d.key} className="flex items-center gap-3 rounded-2xl border p-3"><Checkbox checked={d.enabled} onCheckedChange={(v) => { const departments = [...form.departments]; departments[idx] = { ...departments[idx], enabled: Boolean(v) }; update("departments", departments); }} /><div className="flex-1"><div className="font-black">{d.name_ar}</div><div className="text-xs text-muted-foreground">{d.name_en} — {d.key}</div></div></div>)}</div>
               <div className="flex gap-2"><Input value={customDepartmentName} onChange={(e) => setCustomDepartmentName(e.target.value)} placeholder="قسم إضافي" /><Button variant="outline" onClick={() => { const name = customDepartmentName.trim(); if (!name) return; const key = name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || `department_${form.departments.length + 1}`; update("departments", [...form.departments, { key, name_ar: name, name_en: name, enabled: true }]); setCustomDepartmentName(""); }}>إضافة</Button></div>
             </div>
@@ -260,6 +296,10 @@ function CoreSetupWizardPage() {
               <div><Label>Next Number</Label><Input type="number" className="mt-1" value={form.numbering.nextNumber} onChange={(e) => update("numbering", { ...form.numbering, nextNumber: Number(e.target.value || 1) })} /></div>
               <div className="md:col-span-2 flex items-center gap-3 rounded-2xl border p-3"><Checkbox checked={form.tax.enabled} onCheckedChange={(v) => update("tax", { ...form.tax, enabled: Boolean(v) })} /><div className="font-bold">Enable Tax System</div></div>
               {form.tax.enabled && <><div><Label>Tax ID</Label><Input className="mt-1" value={form.tax.taxId || ""} onChange={(e) => update("tax", { ...form.tax, taxId: e.target.value })} /></div><div><Label>Tax Rate %</Label><Input className="mt-1" value={form.tax.rate || ""} onChange={(e) => update("tax", { ...form.tax, rate: e.target.value })} /></div></>}
+              <div className="md:col-span-2 rounded-2xl border p-3 bg-slate-50">
+                <div className="font-black text-sm mb-2">Generic Financial Event Types</div>
+                <div className="flex flex-wrap gap-2">{form.financialEvents.map((event) => <Badge key={event.key} variant="outline">{event.name_en}</Badge>)}</div>
+              </div>
             </div>
           )}
 
