@@ -15,11 +15,15 @@ Capability Manifest
 ↓
 Capability Registry
 ↓
-Dependency Resolution
+Generic Asset Definitions
 ↓
-Installation Pipeline
+Asset-Type Registry
+↓
+Generic Asset Installation Pipeline
 ↓
 Organization Runtime
+↓
+Navigation / Permissions
 ```
 
 Manifest model now includes:
@@ -28,57 +32,94 @@ Manifest model now includes:
 - version
 - owner
 - dependencies
-- navigation asset references
-- permission asset references
-- future asset buckets for workflow/forms/reports/automation
+- generic asset references
+- grouped asset references
+- future workflow/form/report/document/dashboard/automation asset buckets
 - reserved install/uninstall hooks
 - metadata
 
-Runtime organization state remains in:
+Runtime organization state remains in organization-owned runtime tables:
 
 ```txt
 core_organization_capabilities
+core_organization_asset_installs
+core_navigation_items
+core_permission_bindings
 ```
-
-with manifest-derived identity/dependency metadata captured in organization install config.
 
 ---
 
-## 2. Manifest Functions
+## 2. Generic Asset Pipeline Model
 
 Created:
+
+```txt
+core_asset_type_registry
+core_capability_asset_definitions
+core_organization_asset_installs
+```
+
+Supported asset categories:
+
+| Asset Type | Status | Installer |
+|---|---|---|
+| navigation | active | apply_navigation_assets_for_tenant |
+| permission | active | apply_permission_assets_for_tenant |
+| workflow | reserved | future |
+| form | reserved | future |
+| report | reserved | future |
+| document | reserved | future |
+| dashboard | reserved | future |
+| automation | reserved | future |
+
+Navigation and Permission assets are now mirrored into generic asset definitions while preserving backward compatibility with their existing source tables.
+
+---
+
+## 3. Manifest Functions
+
+Created/updated:
 
 ```sql
 build_capability_manifest(capability_key)
 refresh_capability_manifest(capability_key)
 refresh_all_capability_manifests()
 validate_capability_manifest(capability_key)
+refresh_generic_capability_asset_definitions()
+apply_capability_assets_for_tenant(tenant_id, template_slug)
 ```
 
-The registry now stores:
+`build_capability_manifest()` now emits schema version 2 and includes:
 
 ```txt
-manifest_schema_version
-manifest_json
+assets_generic
+assets.navigation
+assets.permissions
+assets.workflow
+assets.forms
+assets.reports
+assets.documents
+assets.dashboards
+assets.automation
 ```
 
 ---
 
-## 3. Installation Pipeline
+## 4. Installation Pipeline
 
-`apply_capabilities_for_tenant()` now refreshes manifests and installs runtime capabilities from manifest-backed registry entries.
+`apply_capability_assets_for_tenant()` performs:
 
-Installed organization capability records include:
+1. refresh generic asset definitions
+2. apply/install capabilities
+3. create organization-owned asset install records
+4. invoke asset-type installers through `core_asset_type_registry.installer_function`
+5. preserve future reserved asset types without changing the pipeline
 
-- installed version
-- source template
-- manifest schema version
-- manifest identity
-- manifest dependencies
+This keeps the pipeline asset-type extensible.
 
 ---
 
-## 4. Dry Tech Validation
+## 5. Dry Tech Validation
 
 Target:
 
@@ -87,30 +128,41 @@ Dry Tech
 slug: dry-tech
 ```
 
-Validation result:
+Dry Tech pipeline execution:
 
 ```json
 {
-  "refresh": { "refreshed": 10 },
-  "capabilities_apply": {
-    "updated": 10,
-    "inserted": 0,
-    "template_slug": "laundry",
-    "installed_capabilities": 10
+  "definition_sync": {
+    "navigation_assets_synced": 47,
+    "permission_assets_synced": 49
   },
-  "permission_apply": {
-    "updated": 145,
-    "inserted": 0,
-    "total_permission_bindings": 145
+  "manifest_refresh": {
+    "refreshed": 10
   },
-  "navigation_apply": {
-    "updated": 47,
-    "inserted": 0,
-    "total_navigation_items": 57
+  "pipeline": {
+    "asset_install_records_touched": 96,
+    "installed_asset_records": 96,
+    "installer_results": [
+      {
+        "asset_type": "navigation",
+        "installer_function": "apply_navigation_assets_for_tenant"
+      },
+      {
+        "asset_type": "permission",
+        "installer_function": "apply_permission_assets_for_tenant"
+      }
+    ]
   },
   "historical_counts_preserved": true
 }
 ```
+
+Dry Tech installed asset state:
+
+| Asset Type | Status | Count |
+|---|---|---:|
+| navigation | enabled | 47 |
+| permission | enabled | 49 |
 
 Dry Tech historical counts remained unchanged:
 
@@ -127,7 +179,7 @@ Dry Tech historical counts remained unchanged:
 
 ---
 
-## 5. Manifest Dependency Validation
+## 6. Manifest Dependency Validation
 
 All enabled capabilities returned:
 
@@ -150,11 +202,21 @@ Validated capabilities:
 - reporting
 - workflow
 
+Sample manifest verification:
+
+```json
+{
+  "capability": "orders",
+  "schema_version": 2,
+  "assets_generic_count": 6
+}
+```
+
 ---
 
-## 6. Disposable Organization Validation
+## 7. Disposable Organization Validation
 
-A disposable organization was created inside a transaction rollback and installed from manifests.
+A disposable organization was created inside a transaction rollback and installed through the generic asset pipeline.
 
 Result:
 
@@ -162,61 +224,91 @@ Result:
 {
   "tenant_created": true,
   "can_enter_platform": true,
-  "installed_capabilities": 10,
-  "manifest_backed_installs": 10,
+  "asset_installs": 96,
+  "navigation_asset_installs": 47,
+  "permission_asset_installs": 49,
   "permission_bindings": 145,
   "navigation_items": 47,
-  "dry_tech_leak": false,
-  "manifest_validation_all_valid": true
+  "dry_tech_leak": false
 }
 ```
 
 Validation:
 
-- disposable organization installed capabilities from manifests
-- permissions generated from installed capabilities
-- navigation generated from installed capabilities
+- disposable organization installed assets through generic pipeline
+- permissions generated through active asset installer
+- navigation generated through active asset installer
 - no Dry Tech-specific config leaked
 - transaction rolled back
 
 ---
 
-## 7. Known Limitations
+## 8. Backward Compatibility
 
-1. Manifest version upgrade mechanics are not implemented yet.
-2. Install/uninstall hooks are reserved but intentionally not executed.
-3. Future asset types exist as manifest buckets but are not connected yet:
-   - workflow
-   - forms
-   - reports
-   - automation
-4. Dependency validation checks existence and required dependencies, not semantic version compatibility yet.
-5. Marketplace packaging metadata is not implemented yet.
-6. Optional per-organization capability selection UI is future work.
+Sprint 1A and 1B source tables remain intact:
+
+```txt
+core_navigation_assets
+core_permission_assets
+```
+
+Generic asset definitions reference them through:
+
+```txt
+source_table
+source_id
+payload
+```
+
+Existing runtime tables remain intact:
+
+```txt
+core_navigation_items
+core_permission_bindings
+```
+
+The generic pipeline invokes existing installers for active asset types, preserving current behavior while enabling future asset categories.
 
 ---
 
-## 8. Definition of Done Check
+## 9. Known Limitations
+
+1. Future asset categories are reserved but not implemented yet:
+   - workflow
+   - form
+   - report
+   - document
+   - dashboard
+   - automation
+2. Installer functions currently use a common `(tenant_id uuid, template_slug text)` signature.
+3. Asset version upgrade mechanics are not implemented yet.
+4. Install/uninstall hooks are reserved but not executed.
+5. Dependency validation does not yet evaluate semantic version compatibility.
+6. Marketplace metadata is not implemented yet.
+
+---
+
+## 10. Definition of Done Check
 
 | Requirement | Status |
 |---|---|
-| Capability Manifest model exists | PASS |
-| Manifest includes identity/version/owner/dependencies/assets/hooks/metadata | PASS |
-| Installation pipeline uses manifest-derived registry definitions | PASS |
-| Registry remains catalog of available capabilities | PASS |
-| Organization runtime state remains in organization capability table | PASS |
-| Dependencies validate before/with installation | PASS |
-| Sprint 1A navigation behavior preserved | PASS |
-| Sprint 1B permission behavior preserved | PASS |
-| Dry Tech works and historical data unchanged | PASS |
-| Disposable organization installs from manifests | PASS |
+| Generic Asset Pipeline exists | PASS |
+| Navigation uses it | PASS |
+| Permissions use it | PASS |
+| Future asset types can plug in through registry | PASS |
+| Capability Manifest references generic assets | PASS |
+| Installation pipeline installs assets by type | PASS |
+| Backward compatibility preserved | PASS |
+| Dry Tech validates with historical data unchanged | PASS |
+| Disposable organization validates | PASS |
 | Typecheck passes | PASS |
+| Validation report exists | PASS |
 
 ---
 
-## 9. Recommendation
+## 11. Recommendation
 
-Sprint 1D completes the missing manifest layer between registry and installation.
+Sprint 1D completes the generic asset pipeline foundation.
 
 Recommended next sprint:
 
@@ -224,8 +316,10 @@ Recommended next sprint:
 Sprint 2 — Work Order + Task Bridge
 ```
 
-Alternative if continuing Platform services first:
+Alternative if extending the asset system first:
 
 ```txt
-Sprint 1E — Asset Pipeline Extension for Workflow / Report / Form Assets
+Sprint 1E — Workflow Asset Installer
 ```
+
+The most valuable next business step is the Work Order + Task bridge, because it connects generated capabilities to real operational execution.
