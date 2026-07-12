@@ -81,8 +81,8 @@ BEGIN
       END IF;
     END LOOP;
 
-    -- Check for forbidden patterns (no JS eval)
-    IF _rules::text ~* '(eval|function|=>|prototype|__proto__|constructor|process|require|import)' THEN
+    -- Check for forbidden patterns (no JS eval) — avoid matching 'required' (allowed key) by using word boundaries for require/process
+    IF _rules::text ~* '(eval\s*\(|function\s*\(|=>|prototype|__proto__|constructor|process\.|require\s*\(|import\s+)' THEN
       RAISE EXCEPTION 'validation_rules contains forbidden JS pattern';
     END IF;
   END IF;
@@ -104,7 +104,7 @@ BEGIN
       END IF;
     END IF;
 
-    IF _visibility::text ~* '(eval|function|=>|prototype|__proto__|constructor|process|require|import|;|--|/\*)' THEN
+    IF _visibility::text ~* '(eval\s*\(|function\s*\(|=>|prototype|__proto__|constructor|process\.|require\s*\(|import\s+|;|--|/\*)' THEN
       RAISE EXCEPTION 'visibility_condition contains forbidden pattern';
     END IF;
   END IF;
@@ -390,7 +390,7 @@ GRANT EXECUTE ON FUNCTION public.schedule_report_delivery() TO authenticated;
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
-    PERFORM cron.schedule('schedule-reports', '0 * * * *', $$SELECT public.schedule_report_delivery();$$);
+    PERFORM cron.schedule('schedule-reports', '0 * * * *', $cron$SELECT public.schedule_report_delivery();$cron$);
   END IF;
 EXCEPTION WHEN OTHERS THEN NULL;
 END;
