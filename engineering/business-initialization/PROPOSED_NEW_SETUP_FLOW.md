@@ -1,6 +1,7 @@
-# Proposed New Setup Flow
+# Proposed New Business Initialization Flow
 
-**Status:** Flow proposal — not implemented
+**Status:** Flow proposal — not implemented  
+**Primary objective:** Minimize decisions by letting MJRH propose defaults and asking the owner to confirm
 
 ---
 
@@ -26,6 +27,9 @@
 
 ## Design Commitments
 
+- MJRH proposes; the owner confirms.
+- Ask the fewest possible required questions.
+- Use business type and country to generate intelligent defaults.
 - No technical terminology.
 - No developer language.
 - No ERP terminology.

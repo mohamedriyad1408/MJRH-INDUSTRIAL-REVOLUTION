@@ -441,6 +441,22 @@ Everything else exists only to demonstrate its capabilities.
 
 ---
 
+## INTERNAL PRODUCT PRINCIPLE
+
+The team adopts this internal principle:
+
+```txt
+The software should know more about running a business than the business owner does.
+```
+
+This does not mean replacing the owner.
+
+It means MJRH must guide, propose, warn, and reduce operational mistakes.
+
+MJRH should become an intelligent operating advisor, not merely a management system.
+
+---
+
 ## CTO RULE
 
 One final architectural rule:

@@ -2,7 +2,7 @@
 
 **Status:** Planning deliverable — no restoration execution yet  
 **Branch:** `feature/mjrh-v3-core-platform`  
-**Objective:** Restore `Dry Tech` as the official complete reference organization  
+**Objective:** Restore `Dry Tech` as the Official Gold Standard Organization  
 **Target slug:** `dry-tech`  
 **Temporary generated reference slug:** `dry-tech-reference`
 
@@ -10,9 +10,13 @@
 
 ## 1. Mission
 
-Dry Tech must become the official reference organization again.
+Dry Tech must become the **Official Gold Standard Organization**.
 
-It must be suitable for:
+This is stronger than being a reference organization.
+
+Every new platform capability must be validated against Dry Tech before approval.
+
+Dry Tech must be suitable for:
 
 - customer demonstrations
 - training
@@ -21,6 +25,8 @@ It must be suitable for:
 - videos
 - pilot deployment
 - future customer onboarding
+- platform capability validation
+- regression checks before approval
 
 Dry Tech must never become a development environment.
 
@@ -118,6 +124,8 @@ The restoration should add the missing Platform Generator compatibility layer ar
 6. Run every restoration command first in dry-run mode.
 7. Create a database backup/snapshot before applying changes.
 8. Record every restoration action in an audit/event log.
+9. Treat Dry Tech as the approval benchmark for new platform capabilities.
+10. Long-term, Dry Tech must be reproducible through: Template → Platform Generator → Demo Data Import.
 
 ---
 
@@ -299,7 +307,57 @@ Required behavior:
 
 ---
 
-## 8. Risks
+## 8. Gold Standard Validation Policy
+
+After restoration, every new platform capability must pass validation against Dry Tech before approval.
+
+Validation should answer:
+
+1. Does this capability work inside a realistic business with historical data?
+2. Does it preserve orders, customers, services, accounting, and reports?
+3. Does it improve the Core Platform rather than only one demo case?
+4. Does it avoid turning Dry Tech into a development environment?
+5. Can the same capability be generated or enabled through templates/configuration?
+
+Approval rule:
+
+```txt
+No platform capability is approved until it works safely in Dry Tech.
+```
+
+Dry Tech is a gold standard benchmark, not a sandbox.
+
+---
+
+## 9. Long-Term Reproducibility Target
+
+Dry Tech must never become manually maintained.
+
+The long-term target is:
+
+```txt
+Laundry Template
+↓
+Platform Generator
+↓
+Demo Data Import
+↓
+Dry Tech Gold Standard Organization
+```
+
+Deleting and recreating Dry Tech should become a routine validation process.
+
+This requires:
+
+- complete Laundry Template assets
+- declarative demo data import packs
+- repeatable generation scripts
+- checksums/versioning
+- automated validation reports
+
+---
+
+## 10. Risks
 
 ### Risk 1 — Legacy data does not fully match new Core assumptions
 

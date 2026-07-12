@@ -1,5 +1,13 @@
 # MJRH Engineering Workspace
 
+Internal principle:
+
+```txt
+The software should know more about running a business than the business owner does.
+```
+
+This means MJRH should guide, propose, and warn — not force non-technical owners to design operations from scratch.
+
 This directory is the dedicated Engineering Workspace for internal architecture notes, implementation planning, migration notes, technical decisions, and temporary development reminders.
 
 ## Rules

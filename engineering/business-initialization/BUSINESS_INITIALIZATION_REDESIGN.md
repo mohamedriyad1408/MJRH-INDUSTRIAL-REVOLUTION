@@ -1,15 +1,24 @@
 # Business Initialization Redesign
 
 **Status:** Design proposal — not approved for implementation yet  
-**Objective:** Replace Setup Version 1 with a business-owner friendly initialization journey  
+**Objective:** Replace Setup Version 1 with a business-owner friendly initialization journey that minimizes owner decisions  
 **Target user:** Non-technical business owner  
-**Core rule:** Avoid technical, developer, and ERP terminology
+**Core rule:** Avoid technical, developer, and ERP terminology  
+**Primary design goal:** MJRH proposes; the owner confirms
 
 ---
 
 ## 1. Product Experience Goal
 
 The experience should feel like a business advisor helping the owner build the company step by step.
+
+The objective is not to make the owner configure more.
+
+The objective is to minimize the number of business decisions required from the owner.
+
+MJRH should intelligently propose defaults based on business type, country, template, and local operating norms.
+
+The owner should confirm rather than configure whenever possible.
 
 The owner should never feel lost.
 
@@ -667,7 +676,43 @@ This mapping must stay internal.
 
 ---
 
-## 10. Recommendation
+## 10. First Success Experience
+
+Immediately after Business Initialization, the owner must feel that a real company has been created.
+
+The first minute inside the platform is part of the product.
+
+The first dashboard should:
+
+- say clearly that the business is ready
+- show what MJRH prepared
+- avoid empty-state confusion
+- recommend one next best action
+- guide the owner toward the first real customer or first work item
+- allow sample data exploration if the owner is not ready
+
+Recommended first dashboard message:
+
+```txt
+Your business is ready. We prepared your workspace, services, work steps, receipts, reports, and customer messages.
+```
+
+Recommended next action:
+
+```txt
+Create your first customer
+```
+
+Secondary actions:
+
+- Review your services
+- Invite your team
+- Create first order/work item
+- Explore with sample data
+
+---
+
+## 11. Recommendation
 
 Do not implement this immediately.
 
