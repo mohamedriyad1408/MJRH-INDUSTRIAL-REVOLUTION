@@ -158,6 +158,7 @@ export function AppSidebar() {
   const [workflowVersion, setWorkflowVersion] = useState<string>("v1");
   const [v2Stages, setV2Stages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number; id: string }[]>([]);
   const [coreNavItems, setCoreNavItems] = useState<any[]>([]);
+  const [actorPermissions, setActorPermissions] = useState<Set<string>>(new Set());
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -187,6 +188,12 @@ export function AppSidebar() {
      .eq("is_active", true)
      .order("sort_order")
      .then(({ data }: any) => setCoreNavItems(Array.isArray(data) ? data : []));
+
+   if (user) {
+     supabase
+       .rpc("get_actor_permissions", { _tenant_id: tenantId, _actor_user_id: user.id })
+       .then(({ data }: any) => setActorPermissions(new Set((Array.isArray(data) ? data : []).map((p: any) => p.permission_key).filter(Boolean))));
+   }
 
    // Get tenant workflow version
    supabase.from("tenants").select("workflow_engine_version, business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
@@ -218,7 +225,7 @@ export function AppSidebar() {
        });
      }
    });
- }, [tenantId]);
+ }, [tenantId, user]);
 
  const baseGroups = isSuperAdmin ? adminGroups : tenantGroups;
  // Sidebar is generated from Core configuration when the setup wizard has produced it.
@@ -267,6 +274,7 @@ export function AppSidebar() {
          url: item.route,
          icon: iconFor(item.icon),
          roles: item.required_roles || ["owner", "ops_manager", "cs_manager", "employee"],
+         required_permissions: item.required_permissions || [],
        })),
      }));
    }
@@ -345,6 +353,10 @@ export function AppSidebar() {
  if (!isSuperAdmin && hasRole("courier") && !isManager) {
  if (item.url === "/search") return true;
  return item.url === "/driver";
+ }
+ const requiredPermissions = (item as any).required_permissions || (item as any).requiredPermissions || [];
+ if (!isSuperAdmin && Array.isArray(requiredPermissions) && requiredPermissions.length > 0) {
+   if (!requiredPermissions.every((permission: string) => actorPermissions.has(permission))) return false;
  }
  if (item.roles && !hasRole(...item.roles)) return false;
  return true;
