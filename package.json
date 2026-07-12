@@ -26,7 +26,8 @@
     "bundle:check": "node scripts/check-bundle-size.mjs",
     "prod:health": "node scripts/check-production-health.mjs",
     "demo:dry-run": "node scripts/seed-demo-tenant.mjs",
-    "demo:seed": "DEMO_APPLY=1 node scripts/seed-demo-tenant.mjs"
+    "demo:seed": "DEMO_APPLY=1 node scripts/seed-demo-tenant.mjs",
+    "reference:dry-tech": "node scripts/generate-reference-dry-tech.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

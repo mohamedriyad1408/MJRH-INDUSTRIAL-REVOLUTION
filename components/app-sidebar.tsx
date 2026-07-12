@@ -19,6 +19,18 @@ import { useI18n } from "@/lib/i18n";
 
 type NavItem = { title: string; url: string; icon: React.ComponentType<{ className?: string }>; roles?: any[] };
 
+const iconRegistry: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard, CalendarCheck, Search, Settings, HelpCircle, ListOrdered, PlusCircle,
+  Users, HeartHandshake, Tag, Boxes, Building2, Layers, ShieldCheck, PlayCircle,
+  AlertTriangle, Inbox, Truck, Navigation, Wallet, Calculator, BookOpenCheck,
+  UsersRound, LockKeyhole, Target, BarChart3, BriefcaseBusiness, Clock, Banknote,
+  CalendarDays, ClipboardCheck, Sparkles, Wind, Shirt, Package, Headphones,
+};
+
+function iconFor(name?: string | null) {
+  return name && iconRegistry[name] ? iconRegistry[name] : LayoutDashboard;
+}
+
 const adminGroups: { label: string; items: NavItem[] }[] = [
  {
  label: "نظرة عامة",
@@ -146,6 +158,7 @@ export function AppSidebar() {
   const [workflowVersion, setWorkflowVersion] = useState<string>("v1");
   const [v2Stages, setV2Stages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number; id: string }[]>([]);
   const [coreNavItems, setCoreNavItems] = useState<any[]>([]);
+  const [actorPermissions, setActorPermissions] = useState<Set<string>>(new Set());
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -170,11 +183,17 @@ export function AppSidebar() {
    if (!tenantId) return;
    supabase
      .from("core_navigation_items")
-     .select("department_key,item_key,label_ar,label_en,route,required_roles,sort_order,is_active")
+     .select("department_key,item_key,label_ar,label_en,route,icon,required_roles,sort_order,is_active,source_asset_id,source_ownership_level")
      .eq("tenant_id", tenantId)
      .eq("is_active", true)
      .order("sort_order")
      .then(({ data }: any) => setCoreNavItems(Array.isArray(data) ? data : []));
+
+   if (user) {
+     supabase
+       .rpc("get_actor_permissions", { _tenant_id: tenantId, _actor_user_id: user.id })
+       .then(({ data }: any) => setActorPermissions(new Set((Array.isArray(data) ? data : []).map((p: any) => p.permission_key).filter(Boolean))));
+   }
 
    // Get tenant workflow version
    supabase.from("tenants").select("workflow_engine_version, business_type").eq("id", tenantId).maybeSingle().then(({ data }: any) => {
@@ -206,16 +225,26 @@ export function AppSidebar() {
        });
      }
    });
- }, [tenantId]);
+ }, [tenantId, user]);
 
  const baseGroups = isSuperAdmin ? adminGroups : tenantGroups;
  // Sidebar is generated from Core configuration when the setup wizard has produced it.
  const groups = (() => {
    if (!isSuperAdmin && coreNavItems.length > 0) {
      const labels: Record<string, string> = {
+       main: "الرئيسية",
+       commerce: "العمليات والمبيعات",
+       customers: "العملاء والعلاقات",
+       catalog: "الخدمات والأصول",
+       operations: "التشغيل",
+       field: "التوصيل والعمل الميداني",
+       finance: "المالية والإدارة",
+       reports: "التقارير والذكاء",
+       people: "الفريق والموارد",
+       admin: "الإعدادات والدعم",
+       laundry_operations: "تشغيل Laundry Template",
        owner_dashboard: "لوحة المالك",
        customer_service: "خدمة العملاء",
-       operations: "التشغيل",
        accounting: "الحسابات",
        sales: "المبيعات",
        marketing: "التسويق",
@@ -223,7 +252,16 @@ export function AppSidebar() {
        legal: "الشؤون القانونية",
        administration: "الإدارة",
      };
-     const byDepartment = coreNavItems.reduce((acc: Record<string, any[]>, item: any) => {
+     const uniqueCoreNavItems = Array.from(
+       coreNavItems.reduce((acc: Map<string, any>, item: any) => {
+         const key = item.route || item.item_key;
+         const existing = acc.get(key);
+         // Prefer capability/template/core asset-generated records over older compatibility records.
+         if (!existing || (!existing.source_asset_id && item.source_asset_id)) acc.set(key, item);
+         return acc;
+       }, new Map<string, any>()).values()
+     ).sort((a: any, b: any) => (a.sort_order ?? 100) - (b.sort_order ?? 100));
+     const byDepartment = uniqueCoreNavItems.reduce((acc: Record<string, any[]>, item: any) => {
        const key = item.department_key || "core";
        acc[key] = acc[key] || [];
        acc[key].push(item);
@@ -234,8 +272,9 @@ export function AppSidebar() {
        items: items.map((item: any) => ({
          title: item.label_ar || item.label_en || item.item_key,
          url: item.route,
-         icon: LayoutDashboard,
+         icon: iconFor(item.icon),
          roles: item.required_roles || ["owner", "ops_manager", "cs_manager", "employee"],
+         required_permissions: item.required_permissions || [],
        })),
      }));
    }
@@ -314,6 +353,10 @@ export function AppSidebar() {
  if (!isSuperAdmin && hasRole("courier") && !isManager) {
  if (item.url === "/search") return true;
  return item.url === "/driver";
+ }
+ const requiredPermissions = (item as any).required_permissions || (item as any).requiredPermissions || [];
+ if (!isSuperAdmin && Array.isArray(requiredPermissions) && requiredPermissions.length > 0) {
+   if (!requiredPermissions.every((permission: string) => actorPermissions.has(permission))) return false;
  }
  if (item.roles && !hasRole(...item.roles)) return false;
  return true;
