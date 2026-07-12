@@ -140,7 +140,7 @@ Purpose:
 - prevent demo data drift during repair
 - avoid partial state while restoring setup compatibility
 
-### Step 2 — Create backup checkpoint
+### Step 2 — Create backup checkpoint and verify restore
 
 Create a recoverable checkpoint before any mutation.
 
@@ -158,6 +158,12 @@ Recommended backup assets:
 - accounting/journal data
 - workflow-related records
 - operational events
+
+The backup is not considered valid until a restore test has been successfully performed on a temporary environment.
+
+```txt
+A backup that cannot be restored is not a backup.
+```
 
 This backup is for disaster recovery only. It must not become the restoration mechanism.
 
@@ -382,7 +388,95 @@ This requires:
 
 ---
 
-## 11. Risks
+## 11. Business Acceptance Validation
+
+Restoration validation must not rely only on record counts.
+
+Counts prove data volume survived.
+
+Business Acceptance Validation proves the restored organization behaves like a real production business.
+
+After restoration, execute operational validation by confirming that:
+
+- the owner can log in using the same owner account
+- the owner reaches `/dry-tech` with no setup-blocking experience
+- existing customers are searchable
+- a historical customer profile opens correctly
+- an old historical order can be opened
+- an old historical order can be edited and saved safely
+- a new order can be created successfully
+- an invoice/receipt can be generated
+- a payment can be recorded
+- financial transactions post or display correctly
+- accounting views load correctly
+- financial reports load correctly
+- operational reports load correctly
+- dashboards load correctly
+- role permissions still work for owner, managers, employees, couriers, and customers where applicable
+- the restored organization behaves as a real production business, not as a newly generated empty setup
+
+Minimum acceptance statement:
+
+```txt
+The owner experiences the same Dry Tech business with the same URL, same content, and restored operational continuity.
+```
+
+Record-count validation remains required, but it is not sufficient for approval.
+
+---
+
+## 12. Backup Verification Requirement
+
+No destructive or irreversible operation may begin until the backup is proven restorable.
+
+A valid backup process requires:
+
+1. create backup/checkpoint
+2. restore it into a temporary environment or temporary verification target
+3. run basic integrity checks on the restored copy
+4. confirm key Dry Tech records are readable in the restored copy
+5. document restore test result
+
+If the restore test fails, stop restoration.
+
+```txt
+A backup that cannot be restored must not be considered a valid recovery point.
+```
+
+---
+
+## 13. Safe Decommissioning Policy
+
+Do not delete any development, demo, or reference organization in the same restoration sprint.
+
+The decommissioning sequence must be:
+
+```txt
+Restore Dry Tech
+↓
+Validate counts and integrity
+↓
+Run Business Acceptance Validation
+↓
+Freeze / observation period for 3–7 days
+↓
+Monitor issues
+↓
+Request explicit approval
+↓
+Delete obsolete organizations only after approval
+```
+
+The temporary generated organization, such as `dry-tech-reference`, must not be deleted until:
+
+- official `dry-tech` passes all validation
+- observation period is complete
+- no blocking issues are found
+- explicit approval is granted
+
+---
+
+## 14. Risks
 
 ### Risk 1 — Legacy data does not fully match new Core assumptions
 
@@ -417,7 +511,7 @@ Mitigation:
 
 ---
 
-## 12. Recommendation
+## 15. Recommendation
 
 Proceed with a controlled restoration of `dry-tech` in place.
 
