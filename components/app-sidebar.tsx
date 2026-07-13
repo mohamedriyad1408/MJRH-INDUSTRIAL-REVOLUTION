@@ -267,11 +267,13 @@ export function AppSidebar() {
        crm: "العملاء والعلاقات",
        reporting: "التقارير والذكاء",
      };
+     const sourceOwnedNavItems = coreNavItems.filter((item: any) => item.source_asset_id);
+     const runtimeNavSource = sourceOwnedNavItems.length > 0 ? sourceOwnedNavItems : coreNavItems;
      const uniqueCoreNavItems = Array.from(
-       coreNavItems.reduce((acc: Map<string, any>, item: any) => {
+       runtimeNavSource.reduce((acc: Map<string, any>, item: any) => {
          const key = item.route || item.item_key;
          const existing = acc.get(key);
-         // Prefer capability/template/core asset-generated records over older compatibility records.
+         // Source-owned generated assets are the runtime source of truth; legacy rows are only fallback.
          if (!existing || (!existing.source_asset_id && item.source_asset_id)) acc.set(key, item);
          return acc;
        }, new Map<string, any>()).values()
