@@ -158,7 +158,7 @@ export function AppSidebar() {
   const [workflowVersion, setWorkflowVersion] = useState<string>("v1");
   const [v2Stages, setV2Stages] = useState<{ name: string; name_en: string; slug: string; icon: string; color: string; stage_order: number; id: string }[]>([]);
   const [coreNavItems, setCoreNavItems] = useState<any[]>([]);
-  const [actorPermissions, setActorPermissions] = useState<Set<string>>(new Set());
+  const [actorPermissions, setActorPermissions] = useState<Set<string> | null>(null);
 
  const tenantSlug = path.startsWith("/admin") ? null : (path.split("/")[1] && !["customer-portal", "login", "landing", "privacy", "terms", "admin"].includes(path.split("/")[1]) ? path.split("/")[1] : "dry-tech");
 
@@ -190,9 +190,19 @@ export function AppSidebar() {
      .then(({ data }: any) => setCoreNavItems(Array.isArray(data) ? data : []));
 
    if (user) {
+     setActorPermissions(null);
      supabase
        .rpc("get_actor_permissions", { _tenant_id: tenantId, _actor_user_id: user.id })
-       .then(({ data }: any) => setActorPermissions(new Set((Array.isArray(data) ? data : []).map((p: any) => p.permission_key).filter(Boolean))));
+       .then(({ data, error }: any) => {
+         if (error) {
+           console.warn("Permission load failed; falling back to role-based navigation", error.message);
+           setActorPermissions(null);
+           return;
+         }
+         setActorPermissions(new Set((Array.isArray(data) ? data : []).map((p: any) => p.permission_key).filter(Boolean)));
+       });
+   } else {
+     setActorPermissions(null);
    }
 
    // Get tenant workflow version
@@ -372,7 +382,7 @@ export function AppSidebar() {
  return item.url === "/driver";
  }
  const requiredPermissions = (item as any).required_permissions || (item as any).requiredPermissions || [];
- if (!isSuperAdmin && Array.isArray(requiredPermissions) && requiredPermissions.length > 0) {
+ if (!isSuperAdmin && actorPermissions && Array.isArray(requiredPermissions) && requiredPermissions.length > 0) {
    if (!requiredPermissions.every((permission: string) => actorPermissions.has(permission))) return false;
  }
  if (item.roles && !hasRole(...item.roles)) return false;
