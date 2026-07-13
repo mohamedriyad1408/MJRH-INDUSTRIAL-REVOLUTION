@@ -1217,6 +1217,15 @@ const dict: Record<LanguageCode, Record<string, string>> = {
   },
 };
 
+
+const missingBusinessLabels: Record<string, string> = {
+  "staff.commission": "Commission",
+};
+for (const lang of ["en", "fr", "it", "es", "de", "zh", "ja", "pt"] as LanguageCode[]) {
+  dict[lang] = { ...dict[lang], ...missingBusinessLabels };
+}
+dict.ar = { ...dict.ar, "staff.commission": "العمولة" };
+
 const navArabic: Record<string, string> = {
   "navGroup.الرئيسية": "Main",
   "navGroup.التشغيل والمحطات": "Operations & Stations",
