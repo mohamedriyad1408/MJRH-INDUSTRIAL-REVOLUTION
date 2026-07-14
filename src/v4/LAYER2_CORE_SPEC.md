@@ -1,36 +1,20 @@
-# MJRH V4 — Layer 2 Core Specification v1.0 (APPROVED)
+# MJRH V4 — Layer 2 Core Specification v1.1 (HARDENED)
 
-## 1. Responsibility
-The Sovereign Brain of the enterprise. Manages the legal right to act (Authority), computes runtime permissions (Authorization), and enforces operating constraints (Policy).
+## 1. Policy Version Resolution
+- **Algorithm:** Temporal Match. 
+- **Rule:** The engine MUST use the policy version where `T(event) ∈ [valid_from, valid_until)`. 
+- **Fallback:** If multiple versions match due to overlap, the one with the highest `version_id` is selected.
 
-## 2. Governance Decision Model
-Every check returns a formal `Decision`:
-- `ALLOW`: Proceed.
-- `DENY`: Terminate.
-- `REQUIRE_APPROVAL`: Suspend for sign-off.
-- `REQUIRE_ESCALATION`: Transfer to higher authority.
+## 2. Conflict Resolution (Intra-layer)
+If multiple policies of the same class (e.g., Business) apply:
+1. **Explicit Deny:** If any policy returns DENY, the final decision is DENY.
+2. **Specificity:** The policy anchored to the node closest to the target (deepest in tree) wins.
+3. **Priority Weight:** If depths are equal, the higher `priority_score` wins.
 
-## 3. Conflict Resolution (Precedence)
-1. **Explicit Deny** (Highest)
-2. **Legal Policy**
-3. **Business Policy**
-4. **Active Mandate**
-5. **Default Deny** (Lowest)
+## 3. Governance Composition
+- **Mandates:** ADDITIVE (Union). An actor gains the sum of all granted mandates across all assigned nodes.
+- **Policies:** RESTRICTIVE (Intersection). An action is permitted only if it satisfies EVERY applicable policy.
 
-## 4. Versioning & Immutability
-- No in-place edits for Mandates or Policies.
-- Mandatory `valid_from` and `valid_until` tracking.
-- Every decision is linked to a specific version for L5 audit integrity.
-
-## 5. Component Definitions
-- **Authority Manager:** Owns Mandates. Distinct from Org Roles.
-- **Policy Engine:** Owns Predicates and Compliance logic.
-- **Authorization Service:** Dynamic computation of Rights.
-
-## 6. Architectural Boundary (L1/L2)
-| Concept | Layer 1 | Layer 2 |
-| :--- | :--- | :--- |
-| **Organization** | Structural Nodes | Scope for Authority |
-| **Identity** | Structural URN | Target for Mandate |
-| **Authority** | **NONE** | Full Ownership |
-| **Rules** | **NONE** | Full Ownership |
+## 4. Caching Contract
+- **TTL:** 300 seconds for resolved mandates.
+- **Invalidation:** Mandatory cache purge on `IDENTITY_MOVED` or `MANDATE_REVOKED` events.
