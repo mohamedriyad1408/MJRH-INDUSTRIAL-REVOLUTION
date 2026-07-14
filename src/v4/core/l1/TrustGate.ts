@@ -1,40 +1,31 @@
-/**
- * MJRH V4 — Layer 1: TrustGate Service Implementation
- * Based on Specification v2.0
- */
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SovereignContext {
   sovereignId: string;
   nodeId: string;
-  path: string[];
+  path: string;
 }
 
 export class TrustGate {
-  /**
-   * Contract: ResolveStructuralContext
-   * Returns the structural wrapper for any entity.
-   */
   async resolveStructuralContext(nodeId: string): Promise<SovereignContext> {
-    // Implementation: Fetch node and its path to determine the sovereign root.
-    // In L1, this is a pure database lookup.
-    throw new Error("Method not implemented.");
+    const { data, error } = await supabase.rpc('resolve_sovereign_root', { target_node_id: nodeId });
+    if (error || !data) throw new Error("SOVEREIGN_CONTEXT_NOT_FOUND");
+    return {
+        sovereignId: data.sovereign_id,
+        nodeId: nodeId,
+        path: data.path
+    };
   }
 
-  /**
-   * Contract: ResolveHierarchy
-   * Returns full ancestry path for a given node.
-   */
   async resolveHierarchy(nodeId: string): Promise<string[]> {
-    throw new Error("Method not implemented.");
+    const { data, error } = await supabase.from('v4_l1.nodes').select('node_path').eq('id', nodeId).single();
+    if (error) throw new Error("HIERARCHY_RESOLUTION_FAILED");
+    return data.node_path.split('.');
   }
 
-  /**
-   * Contract: ValidateStructuralBoundary
-   * Ensures data doesn't bleed across sovereign roots.
-   */
   async validateStructuralBoundary(nodeA: string, nodeB: string): Promise<boolean> {
-    const ctxA = await this.resolveStructuralContext(nodeA);
-    const ctxB = await this.resolveStructuralContext(nodeB);
-    return ctxA.sovereignId === ctxB.sovereignId;
+    const rootA = await this.resolveStructuralContext(nodeA);
+    const rootB = await this.resolveStructuralContext(nodeB);
+    return rootA.sovereignId === rootB.sovereignId;
   }
 }

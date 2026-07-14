@@ -1,84 +1,94 @@
--- MJRH V4 — Layer 1: Persistence Layer (Refactored)
--- Specification Version: 2.2
-
+-- MJRH V4 — Layer 1: THE FROZEN CORE (v2.5)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
--- 1. Identity Registry
-CREATE TABLE IF NOT EXISTS v4_l1.identities (
+-- [TABLE] Identity Registry
+CREATE TABLE v4_l1.identities (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     global_urn text UNIQUE NOT NULL,
+    legal_name text NOT NULL,
     is_sovereign_root boolean DEFAULT false,
-    status text NOT NULL DEFAULT 'active'
+    status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- 2. Topology Nodes
-CREATE TABLE IF NOT EXISTS v4_l1.nodes (
+-- [TABLE] Topology Nodes
+CREATE TABLE v4_l1.nodes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     identity_id uuid NOT NULL REFERENCES v4_l1.identities(id),
     parent_id uuid REFERENCES v4_l1.nodes(id),
     node_class text NOT NULL CHECK (node_class IN ('SOVEREIGN_ROOT', 'INTERNAL_NODE')),
-    lifecycle_status text NOT NULL DEFAULT 'DRAFT' CHECK (lifecycle_status IN ('DRAFT', 'ACTIVE', 'SUSPENDED', 'ARCHIVED')),
+    lifecycle_status text NOT NULL DEFAULT 'ACTIVE' CHECK (lifecycle_status IN ('DRAFT', 'ACTIVE', 'SUSPENDED', 'ARCHIVED')),
     node_path ltree,
-    
-    -- Invariant: Identity cannot be its own parent
-    CONSTRAINT no_identity_recursion CHECK (true) -- Enforced by Trigger for depth
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ============================================================================
--- ATOMIC INTEGRITY FUNCTIONS
--- ============================================================================
+CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- A. Path Calculation
-CREATE OR REPLACE FUNCTION v4_l1.fn_calculate_path(_id uuid, _parent_id uuid) RETURNS ltree AS $$
+-- [RPC: Resolve Sovereign Root]
+CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(target_node_id uuid)
+RETURNS jsonb AS $$
 DECLARE
-    _parent_path ltree;
-    _current_label label := ('_' || replace(_id::text, '-', ''))::label;
+    _path ltree;
+    _root_id uuid;
 BEGIN
-    IF _parent_id IS NULL THEN
-        RETURN _current_label::ltree;
-    ELSE
-        SELECT node_path FROM v4_l1.nodes WHERE id = _parent_id INTO _parent_path;
-        RETURN _parent_path || _current_label;
-    END IF;
+    SELECT node_path INTO _path FROM v4_l1.nodes WHERE id = target_node_id;
+    IF _path IS NULL THEN RETURN NULL; END IF;
+    _root_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
+    RETURN jsonb_build_object('sovereign_id', _root_id, 'path', _path::text);
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- B. Validation (Invariants)
-CREATE OR REPLACE FUNCTION v4_l1.fn_validate_node(_node v4_l1.nodes) RETURNS void AS $$
+-- [LOGIC: Invariant Enforcement]
+CREATE OR REPLACE FUNCTION v4_l1.fn_l1_node_guard() RETURNS trigger AS $$
 DECLARE
-    _is_sovereign boolean;
-    _existing_path ltree;
+    _is_sov boolean;
+    _p_path ltree;
 BEGIN
-    -- Root Sovereignty check
-    IF _node.parent_id IS NULL THEN
-        SELECT is_sovereign_root INTO _is_sovereign FROM v4_l1.identities WHERE id = _node.identity_id;
-        IF NOT _is_sovereign THEN RAISE EXCEPTION 'Non-Sovereign Identity cannot be Root.'; END IF;
-    END IF;
+    IF (TG_OP = 'INSERT') OR (NEW.parent_id IS DISTINCT FROM OLD.parent_id) THEN
+        IF NEW.parent_id IS NULL THEN
+            SELECT is_sovereign_root INTO _is_sov FROM v4_l1.identities WHERE id = NEW.identity_id;
+            IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT_VIOLATION'; END IF;
+        END IF;
 
-    -- Identity Ancestry Violation (1:N Constraint)
-    IF EXISTS (
-        SELECT 1 FROM v4_l1.nodes 
-        WHERE identity_id = _node.identity_id 
-        AND (_node.node_path <@ node_path OR _node.node_path @> node_path)
-        AND id <> _node.id
-    ) THEN
-        RAISE EXCEPTION 'Identity Violation: This identity already exists in this ancestry path.';
-    END IF;
-END;
-$$ LANGUAGE plpgsql STABLE;
+        IF NEW.parent_id IS NOT NULL THEN
+            SELECT node_path FROM v4_l1.nodes WHERE id = NEW.parent_id INTO _p_path;
+        END IF;
 
--- C. Trigger orchestrator
-CREATE OR REPLACE FUNCTION v4_l1.trg_node_orchestrator() RETURNS trigger AS $$
-BEGIN
-    -- 1. Calculate Path
-    NEW.node_path := v4_l1.fn_calculate_path(NEW.id, NEW.parent_id);
-    
-    -- 2. Validate Invariants
-    PERFORM v4_l1.fn_validate_node(NEW);
-    
+        IF (TG_OP = 'UPDATE') AND (NEW.parent_id IS NOT NULL) THEN
+            IF (OLD.node_path @> _p_path) THEN
+                RAISE EXCEPTION 'CIRCULAR_DEPENDENCY_VIOLATION';
+            END IF;
+        END IF;
+
+        IF NEW.parent_id IS NULL THEN 
+            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
+        ELSE
+            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
+        END IF;
+
+        IF EXISTS (
+            SELECT 1 FROM v4_l1.nodes 
+            WHERE identity_id = NEW.identity_id AND id <> NEW.id
+            AND (node_path @> NEW.node_path OR node_path <@ NEW.node_path)
+        ) THEN
+            RAISE EXCEPTION 'IDENTITY_PATH_RECURSION_VIOLATION';
+        END IF;
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_l1_node_integrity BEFORE INSERT OR UPDATE ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.trg_node_orchestrator();
+-- [LOGIC] Subtree Propagation
+CREATE OR REPLACE FUNCTION v4_l1.fn_l1_propagation() RETURNS trigger AS $$
+BEGIN
+    IF (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
+        UPDATE v4_l1.nodes SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
+        WHERE node_path <@ OLD.node_path AND id <> NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_l1_node_before BEFORE INSERT OR UPDATE ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_node_guard();
+CREATE TRIGGER trg_l1_node_after AFTER UPDATE OF node_path ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_propagation();
