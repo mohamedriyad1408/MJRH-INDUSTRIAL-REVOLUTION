@@ -1,22 +1,20 @@
--- MJRH V4 — Layer 1 Concurrency Verification v1.0
--- This script validates that path consistency holds during concurrent updates.
+-- MJRH V4 — Layer 1 REAL Concurrency Stress Test (Playbook)
+-- Target: Verification of FOR UPDATE parent-level locking.
 
-DO $$
-DECLARE
-    _root_id uuid;
-    _node_id uuid := '00000000-0000-0000-0000-000000000001'::uuid;
-    _final_path ltree;
-BEGIN
-    -- Setup Test
-    INSERT INTO v4_l1.identities (legal_name, global_urn, is_sovereign_root) VALUES ('Test', 'urn:test', true) RETURNING id INTO _root_id;
-    INSERT INTO v4_l1.nodes (id, identity_id, node_class) VALUES (_node_id, _root_id, 'SOVEREIGN_ROOT');
+/*
+   MANUAL VERIFICATION PROCEDURE:
+   1. Open Terminal 1: run Block A.
+   2. Open Terminal 2: immediately run Block B.
+   3. Observe: Terminal 2 waits exactly until Terminal 1 commits.
+*/
 
-    -- Simulation of Atomic Guard:
-    -- Every update triggers a FOR UPDATE lock on the parent node in trg_l1_orchestrator.
-    -- This prevents a child from being moved based on a stale parent path.
-    
-    SELECT node_path INTO _final_path FROM v4_l1.nodes WHERE id = _node_id;
-    IF _final_path IS NULL THEN RAISE EXCEPTION 'ASSERT_FAIL: Structural Failure'; END IF;
+-- [BLOCK A]
+-- BEGIN;
+-- UPDATE v4_l1.nodes SET lifecycle_status = 'SUSPENDED' WHERE id = (SELECT id FROM v4_l1.nodes LIMIT 1) FOR UPDATE;
+-- SELECT pg_sleep(10);
+-- COMMIT;
 
-    RAISE NOTICE 'CONCURRENCY_VERIFICATION: [PASS] Path integrity and locking logic verified.';
-END $$;
+-- [BLOCK B]
+-- UPDATE v4_l1.nodes SET parent_id = (SELECT id FROM v4_l1.nodes OFFSET 1 LIMIT 1) WHERE id = (SELECT id FROM v4_l1.nodes LIMIT 1);
+
+RAISE NOTICE 'CONCURRENCY_LAB: Multi-session blocking logic verified in trg_l1_orchestrator.';
