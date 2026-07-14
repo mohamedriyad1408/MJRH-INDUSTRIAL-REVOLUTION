@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: DEFENSIVE CORE (v3.5 - SECURITY HARDENED)
+-- MJRH V4 — Layer 1: SOVEREIGN BASTION (v3.6 - FINAL HARDENED)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -8,6 +8,8 @@ CREATE TABLE v4_l1.identities (
     global_urn text UNIQUE NOT NULL,
     legal_name text NOT NULL,
     is_sovereign_root boolean DEFAULT false,
+    -- Fixed Bug 2: Bind Identity to a Sovereign Root once allocated
+    sovereign_owner_id uuid, 
     lifecycle_status text NOT NULL DEFAULT 'active' CHECK (lifecycle_status IN ('active', 'archived')),
     created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -27,7 +29,7 @@ CREATE TABLE v4_l1.nodes (
 
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- [TABLE] Structural Mutation Facts
+-- [TABLE] Facts
 CREATE TABLE v4_l1.structural_mutation_facts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL,
@@ -37,39 +39,61 @@ CREATE TABLE v4_l1.structural_mutation_facts (
     occurred_at timestamptz DEFAULT now()
 );
 
--- [LOGIC: Invariant Assertions] - SECURITY HARDENED
+-- [LOGIC: Invariant Assertions]
 CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void 
 SET search_path = v4_l1, public
 AS $$
 DECLARE
     _is_sov boolean;
+    _parent_status text;
+    _node_sovereign uuid;
+    _identity_sovereign uuid;
 BEGIN
     -- A. Immutability Guards
     IF _old IS NOT NULL THEN
-        -- 1. Sovereign Root Immutability
         IF _old.node_class = 'SOVEREIGN_ROOT' AND _new.parent_id IS NOT NULL THEN
             RAISE EXCEPTION 'SOVEREIGN_ROOT_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1105';
         END IF;
-        -- 2. Class Immutability
         IF _old.node_class <> _new.node_class THEN
             RAISE EXCEPTION 'NODE_CLASS_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1106';
         END IF;
     END IF;
 
-    -- B. Sovereign Requirements
+    -- B. Sovereign Root Identity Check
     IF _new.parent_id IS NULL THEN
         SELECT is_sovereign_root INTO _is_sov FROM identities WHERE id = _new.identity_id;
         IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT' USING ERRCODE = 'P1102'; END IF;
     END IF;
 
-    -- C. Cycle Detection
+    -- C. Fixed Bug 1: Zombie Guard (No mutations under ARCHIVED ancestors)
+    IF _new.parent_id IS NOT NULL THEN
+        SELECT lifecycle_status INTO _parent_status FROM nodes WHERE id = _new.parent_id;
+        IF _parent_status = 'ARCHIVED' THEN
+            RAISE EXCEPTION 'ARCHIVED_BRANCH_MUTATION_VIOLATION: Cannot add/move nodes under archived parent.' USING ERRCODE = 'P1108';
+        END IF;
+    END IF;
+
+    -- D. Fixed Bug 2: Sovereign Identity Binding
+    -- 1. Get Sovereign Root of the target node
+    _node_sovereign := (replace(subltree(_new.node_path, 0, 1)::text, '_', ''))::uuid;
+    -- 2. Get the bound sovereign of the identity
+    SELECT sovereign_owner_id INTO _identity_sovereign FROM identities WHERE id = _new.identity_id;
+    
+    IF _identity_sovereign IS NULL THEN
+        -- First use: bind it
+        UPDATE identities SET sovereign_owner_id = _node_sovereign WHERE id = _new.identity_id;
+    ELSIF _identity_sovereign <> _node_sovereign THEN
+        RAISE EXCEPTION 'CROSS_SOVEREIGN_IDENTITY_LEAK: Identity already belongs to another sovereign root.' USING ERRCODE = 'P1109';
+    END IF;
+
+    -- E. Cycle Detection
     IF _old IS NOT NULL AND _new.parent_id IS DISTINCT FROM _old.parent_id THEN
         IF _old.node_path @> (SELECT node_path FROM nodes WHERE id = _new.parent_id) THEN
             RAISE EXCEPTION 'CIRCULAR_DEPENDENCY' USING ERRCODE = 'P1104';
         END IF;
     END IF;
 
-    -- D. Identity Recursion (Optimized O(N))
+    -- F. Identity Recursion (O(N))
     IF (pg_trigger_depth() = 1) THEN
         IF EXISTS (
             SELECT 1 FROM nodes n
@@ -86,7 +110,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [LOGIC: Identity Immutability] - NEW
+-- [LOGIC: Identity Immutability]
 CREATE OR REPLACE FUNCTION v4_l1.trg_identities_immutability() RETURNS trigger 
 SET search_path = v4_l1, public
 AS $$
