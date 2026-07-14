@@ -32,7 +32,7 @@ DECLARE
     _path ltree;
     _root_id uuid;
 BEGIN
-    SELECT node_path FROM v4_l1.nodes WHERE id = target_node_id;
+    SELECT node_path INTO _path FROM v4_l1.nodes WHERE id = target_node_id;
     IF _path IS NULL THEN RETURN NULL; END IF;
     _root_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
     RETURN jsonb_build_object('sovereign_id', _root_id, 'path', _path::text);
