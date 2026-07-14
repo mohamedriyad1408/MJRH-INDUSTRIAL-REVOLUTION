@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: HARDENED CORE (v3.0 - FROZEN)
+-- MJRH V4 — Layer 1: THE FROZEN CORE (v3.0 - FINAL)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -27,11 +27,11 @@ CREATE TABLE v4_l1.nodes (
 
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- [TABLE] Structural Mutation Facts (L1 to L5 Bridge)
+-- [TABLE] Structural Mutation Facts (Fact Contract)
 CREATE TABLE v4_l1.structural_mutation_facts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL,
-    fact_type text NOT NULL, -- CREATED, MOVED, ARCHIVED
+    fact_type text NOT NULL, -- INSERT, UPDATE
     previous_path ltree,
     new_path ltree NOT NULL,
     occurred_at timestamptz DEFAULT now()
@@ -53,7 +53,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [RPC: Resolve Hierarchy] - Fixed: Moved logic from TS to SQL
+-- [RPC: Resolve Hierarchy]
 CREATE OR REPLACE FUNCTION v4_l1.resolve_hierarchy(_node_id uuid)
 RETURNS text[] AS $$
 BEGIN
@@ -61,7 +61,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [LOGIC: Invariant Assertion]
+-- [LOGIC: Invariant Assertions]
 CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void AS $$
 DECLARE
     _is_sov boolean;
@@ -87,7 +87,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [ORCHESTRATION: Trigger]
+-- [ORCHESTRATION: Main Trigger]
 CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger AS $$
 DECLARE
     _p_path ltree;
@@ -97,6 +97,7 @@ BEGIN
     IF NEW.parent_id IS NULL THEN 
         NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
     ELSE
+        -- Pessimistic Lock for Concurrency (Point 9)
         SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR UPDATE;
         IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
         NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
@@ -104,7 +105,7 @@ BEGIN
 
     PERFORM v4_l1.fn_assert_l1_invariants(NEW, CASE WHEN TG_OP = 'UPDATE' THEN OLD ELSE NULL END);
 
-    -- Fact Emission (L1 to L5)
+    -- Fact Emission (Point 7)
     INSERT INTO v4_l1.structural_mutation_facts (node_id, fact_type, previous_path, new_path)
     VALUES (NEW.id, TG_OP, CASE WHEN TG_OP = 'UPDATE' THEN OLD.node_path ELSE NULL END, NEW.node_path);
 
