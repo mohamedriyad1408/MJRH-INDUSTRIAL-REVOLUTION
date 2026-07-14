@@ -2,9 +2,9 @@ name: MJRH CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/mjrh-v4-platform]
   pull_request:
-    branches: [main]
+    branches: [main, feature/mjrh-v4-platform]
 
 jobs:
   build-test:
