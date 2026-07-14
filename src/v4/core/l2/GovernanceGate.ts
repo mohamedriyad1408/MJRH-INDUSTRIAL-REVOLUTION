@@ -5,12 +5,13 @@ export type DecisionType = 'ALLOW' | 'DENY' | 'REQUIRE_APPROVAL' | 'REQUIRE_ESCA
 export interface GovernanceDecision {
     decision: DecisionType;
     reason: string;
+    matched_policy_id?: string;
+    matched_mandate_id?: string;
+    sovereign_id?: string;
+    eval_at?: string;
 }
 
 export class GovernanceGate {
-    /**
-     * The single entry point for L4 to ask L2 for permission.
-     */
     async evaluate(actorId: string, nodeId: string, action: string, resourceClass: string): Promise<GovernanceDecision> {
         const { data, error } = await supabase.rpc('fn_evaluate_governance', {
             _actor_id: actorId,
@@ -19,10 +20,7 @@ export class GovernanceGate {
             _resource_class: resourceClass
         });
 
-        if (error || !data) {
-            return { decision: 'DENY', reason: 'GOVERNANCE_ENGINE_ERROR' };
-        }
-
+        if (error || !data) throw new Error("GOVERNANCE_ENGINE_ERROR");
         return data as GovernanceDecision;
     }
 }

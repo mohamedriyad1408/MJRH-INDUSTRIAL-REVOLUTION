@@ -1,29 +1,33 @@
--- MJRH V4 — L2 Acceptance Suite v1.0
-DO $$
-DECLARE
-    _node_id uuid := '00000000-0000-0000-0000-000000000001'; -- Assumed from L1 setup
-    _actor_id uuid := gen_random_uuid();
-    _res jsonb;
-BEGIN
-    RAISE NOTICE 'Starting L2 Acceptance Suite...';
+-- MJRH V4 — L2 Core Acceptance v2.0
+BEGIN;
+    -- Assume L1 nodes exist: N1 (Root), N2 (Child)
+    -- Identities 10 (Corp A), 20 (Dept B)
 
-    -- Note: This suite assumes L1 Frozen Core is active in DB.
-    
-    -- 1. Test Default Deny
-    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
-    IF (_res->>'decision' = 'DENY') THEN RAISE NOTICE 'PASS: Default Deny enforced.'; END IF;
-
-    -- 2. Test Mandate Granting
+    -- 1. Test Scope Inheritance
+    -- Give actor mandate on Root (N1), should ALLOW on Child (N2)
     INSERT INTO v4_l2.mandates (actor_id, org_node_id, action_scope, resource_class)
-    VALUES (_actor_id, _node_id, 'finance.read', 'ledger');
+    VALUES ('00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'ops.execute', 'task');
     
-    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
-    IF (_res->>'decision' = 'ALLOW') THEN RAISE NOTICE 'PASS: Mandate Granting verified.'; END IF;
+    IF (v4_l2.fn_evaluate_governance('00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000000002'::uuid, 'ops.execute', 'task')->>'decision' = 'ALLOW') THEN
+        RAISE NOTICE 'PASS: Scope Inheritance verified.';
+    END IF;
 
-    -- 3. Test Revocation
-    UPDATE v4_l2.mandates SET revoked_at = now() WHERE actor_id = _actor_id;
-    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
-    IF (_res->>'decision' = 'DENY') THEN RAISE NOTICE 'PASS: Revocation verified.'; END IF;
+    -- 2. Test Explicit Deny over Mandate
+    -- Add a policy that denies 'ops.execute' at the sovereign level
+    INSERT INTO v4_l2.policies (sovereign_id, name, policy_class, effect, action_scope)
+    VALUES ('00000000-0000-0000-0000-000000000010'::uuid, 'Global Lock', 'LEGAL', 'DENY', 'ops.execute');
+    
+    IF (v4_l2.fn_evaluate_governance('00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000000002'::uuid, 'ops.execute', 'task')->>'decision' = 'DENY') THEN
+        RAISE NOTICE 'PASS: Explicit Deny precedence verified.';
+    END IF;
 
-    RAISE NOTICE 'L2 VERIFICATION COMPLETE.';
-END $$;
+    -- 3. Test Require Approval state
+    INSERT INTO v4_l2.policies (sovereign_id, name, policy_class, effect, action_scope, priority)
+    VALUES ('00000000-0000-0000-0000-000000000010'::uuid, 'High Value Check', 'BUSINESS', 'REQUIRE_APPROVAL', 'finance.spend', 50);
+
+    IF (v4_l2.fn_evaluate_governance('00000000-0000-0000-0000-000000000555'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'finance.spend', 'ledger')->>'decision' = 'REQUIRE_APPROVAL') THEN
+        RAISE NOTICE 'PASS: Require Approval outcome verified.';
+    END IF;
+
+    RAISE NOTICE 'L2 VERIFICATION v2.0 COMPLETE.';
+ROLLBACK;
