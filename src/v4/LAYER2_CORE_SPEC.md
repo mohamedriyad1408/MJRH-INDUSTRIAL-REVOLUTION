@@ -1,20 +1,19 @@
-# MJRH V4 — Layer 2 Core Specification v1.1 (HARDENED)
+# MJRH V4 — Layer 2: Governance & Policy Specification v1.1
 
 ## 1. Policy Version Resolution
-- **Algorithm:** Temporal Match. 
-- **Rule:** The engine MUST use the policy version where `T(event) ∈ [valid_from, valid_until)`. 
-- **Fallback:** If multiple versions match due to overlap, the one with the highest `version_id` is selected.
+- **Algorithm:** Temporal Match (Point-in-Time).
+- **Rule:** Select policy where `ValidFrom <= T(event) < ValidUntil`.
+- **Precedence:** Highest `version_id` if overlaps exist.
 
-## 2. Conflict Resolution (Intra-layer)
-If multiple policies of the same class (e.g., Business) apply:
-1. **Explicit Deny:** If any policy returns DENY, the final decision is DENY.
-2. **Specificity:** The policy anchored to the node closest to the target (deepest in tree) wins.
-3. **Priority Weight:** If depths are equal, the higher `priority_score` wins.
+## 2. Conflict Resolution
+- **Prio 1:** Explicit DENY always wins.
+- **Prio 2:** Proximity Wins (Policy anchored to Node closest to the action).
+- **Prio 3:** Highest `priority_score` (Numeric weight).
 
-## 3. Governance Composition
-- **Mandates:** ADDITIVE (Union). An actor gains the sum of all granted mandates across all assigned nodes.
-- **Policies:** RESTRICTIVE (Intersection). An action is permitted only if it satisfies EVERY applicable policy.
+## 3. Composition Rules
+- **Mandates:** UNION (Additive). Total rights = Sum of all valid mandates.
+- **Policies:** INTERSECTION (Restrictive). Action allowed only if ALL policies permit.
 
 ## 4. Caching Contract
-- **TTL:** 300 seconds for resolved mandates.
-- **Invalidation:** Mandatory cache purge on `IDENTITY_MOVED` or `MANDATE_REVOKED` events.
+- **Duration:** 300s default TTL.
+- **Invalidation:** Mandatory purge triggered by L1 Structural Facts or Mandate Revocation.

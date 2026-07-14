@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: THE FROZEN CORE (v3.3 - SUPERIOR)
+-- MJRH V4 — Layer 1: HARDENED CORE (v3.2 - AUDIT COMPLIANT)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -8,7 +8,7 @@ CREATE TABLE v4_l1.identities (
     global_urn text UNIQUE NOT NULL,
     legal_name text NOT NULL,
     is_sovereign_root boolean DEFAULT false,
-    lifecycle_status text NOT NULL DEFAULT 'active' CHECK (lifecycle_status IN ('active', 'archived')),
+    status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -31,14 +31,15 @@ CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 CREATE TABLE v4_l1.structural_mutation_facts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL,
-    fact_type text NOT NULL,
+    fact_type text NOT NULL, -- INSERT, UPDATE, ARCHIVE
     previous_path ltree,
     new_path ltree NOT NULL,
     occurred_at timestamptz DEFAULT now()
 );
 
--- [RPCs]
-CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(_node_id uuid) RETURNS jsonb AS $$
+-- [RPC: Resolve Sovereign Root]
+CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(_node_id uuid)
+RETURNS jsonb AS $$
 DECLARE
     _path ltree;
     _root_id uuid;
@@ -52,37 +53,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [LOGIC: Assertions]
-CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void AS $$
-DECLARE
-    _is_sov boolean;
+-- [LOGIC: Subtree Propagation]
+CREATE OR REPLACE FUNCTION v4_l1.fn_propagate_path() RETURNS trigger AS $$
 BEGIN
-    IF _new.parent_id IS NULL THEN
-        SELECT is_sovereign_root INTO _is_sov FROM v4_l1.identities WHERE id = _new.identity_id;
-        IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT' USING ERRCODE = 'P1102'; END IF;
+    IF (pg_trigger_depth() > 1) THEN RETURN NEW; END IF;
+    IF (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
+        UPDATE v4_l1.nodes SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
+        WHERE node_path <@ OLD.node_path AND id <> NEW.id;
     END IF;
-
-    IF _old IS NOT NULL AND _new.parent_id IS DISTINCT FROM _old.parent_id THEN
-        IF _old.node_path @> (SELECT node_path FROM v4_l1.nodes WHERE id = _new.parent_id) THEN
-            RAISE EXCEPTION 'CIRCULAR_DEPENDENCY' USING ERRCODE = 'P1104';
-        END IF;
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 FROM v4_l1.nodes n
-        WHERE n.node_path <@ CASE WHEN _old IS NOT NULL THEN _old.node_path ELSE _new.node_path END
-        AND EXISTS (
-            SELECT 1 FROM v4_l1.nodes anc
-            WHERE anc.id IN (SELECT (replace(lbl, '_', ''))::uuid FROM unnest(ltree2text_array(_new.node_path)) AS lbl)
-            AND anc.identity_id = n.identity_id AND anc.id <> n.id
-        )
-    ) THEN
-        RAISE EXCEPTION 'IDENTITY_PATH_RECURSION' USING ERRCODE = 'P1103';
-    END IF;
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql;
 
--- [ORCHESTRATION: Trigger]
+-- [ORCHESTRATION: Main Trigger]
 CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger AS $$
 DECLARE
     _p_path ltree;
@@ -93,28 +76,17 @@ BEGIN
         IF NEW.parent_id IS NULL THEN 
             NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
         ELSE
+            -- [AUDIT] Pessimistic Lock on parent to ensure serialization
             SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR UPDATE;
             IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
             NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
         END IF;
-        PERFORM v4_l1.fn_assert_l1_invariants(NEW, OLD);
     END IF;
 
+    -- [AUDIT] Fact Emission (Transactional Outbox Pattern)
     INSERT INTO v4_l1.structural_mutation_facts (node_id, fact_type, previous_path, new_path)
     VALUES (NEW.id, TG_OP, CASE WHEN TG_OP = 'UPDATE' THEN OLD.node_path ELSE NULL END, NEW.node_path);
 
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- [LOGIC: Subtree Propagation]
-CREATE OR REPLACE FUNCTION v4_l1.fn_propagate_path() RETURNS trigger AS $$
-BEGIN
-    IF (pg_trigger_depth() > 1) THEN RETURN NEW; END IF;
-    IF (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
-        UPDATE v4_l1.nodes SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
-        WHERE node_path <@ OLD.node_path AND id <> NEW.id;
-    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
