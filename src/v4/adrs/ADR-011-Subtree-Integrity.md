@@ -3,7 +3,7 @@
 ## Status: Accepted
 ## Context: Ensuring atomic safety during large-scale re-parenting.
 ## Decision: 
-1. Use `FOR SHARE` locks on parent nodes during path calculation.
+1. Use `FOR UPDATE` locks on parent nodes during path calculation.
 2. Use a single `AFTER UPDATE` trigger for descendant propagation.
 3. Rely on PostgreSQL Serializability/Read Committed transaction isolation.
 ## Rationale: 
