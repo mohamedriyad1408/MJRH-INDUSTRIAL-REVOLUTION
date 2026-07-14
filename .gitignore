@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.local
+.DS_Store
+Thumbs.db
+.env.production
+*.tsbuildinfo
+
+# Generated demo video intermediates
+playwright-report/
+test-results/
+demo-video/real-system/
+demo-video/system-slides/screens/
+*.beatbox.wav
+
+# Temp and local caches
+.npm/
+.supabase/
+supabase/.temp/
+.temp/
+.vercel
+.env*

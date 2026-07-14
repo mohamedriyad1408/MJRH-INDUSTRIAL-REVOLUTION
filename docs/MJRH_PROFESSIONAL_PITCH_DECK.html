@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MJRH Industrial Revolution — Pitch Deck v2.1 CTO-Hardened</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .bg-glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
+        .shadow-glow { box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.2); }
+        .badge-fact { background: rgba(16,185,129,.12); color:#6ee7b7; border:1px solid rgba(16,185,129,.35)}
+        .badge-assump { background: rgba(245,158,11,.10); color:#fcd34d; border:1px solid rgba(245,158,11,.35)}
+        .badge-asp { background: rgba(139,92,246,.10); color:#c4b5fd; border:1px solid rgba(139,92,246,.35)}
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-slate-100 min-h-screen p-6 md:p-12 overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="max-w-6xl mx-auto flex items-center justify-between bg-white/10 backdrop-blur-md border border-white/20 px-8 py-4 rounded-3xl mb-12 shadow-glow">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">MJ</div>
+            <div>
+                <h1 class="font-black text-xl tracking-tight text-white">MJRH INDUSTRIAL REVOLUTION</h1>
+                <p class="text-xs text-teal-300 font-semibold">Laundry Operating System · v2.1 CTO-Hardened · Facts / Assumptions / Aspirations</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-5 text-sm font-bold text-slate-200">
+            <a href="#slide-problem" class="hover:text-teal-400 transition">المشكلة</a>
+            <a href="#slide-solution" class="hover:text-teal-400 transition">الحل</a>
+            <a href="#slide-pillars" class="hover:text-teal-400 transition">الركائز</a>
+            <a href="#slide-evidence" class="hover:text-amber-400 transition">Evidence</a>
+            <a href="#slide-biz" class="hover:text-teal-400 transition">التسعير</a>
+            <a href="#slide-investment" class="bg-teal-400 text-slate-950 px-5 py-2.5 rounded-2xl shadow-md hover:bg-teal-300 transition">Facts Sheet</a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto space-y-16">
+        <!-- Slide 1: Cover — CTO hardened -->
+        <section class="bg-slate-900/80 border border-teal-500/30 rounded-3xl p-8 md:p-16 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-32 -left-32 w-72 h-72 bg-teal-500/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+            <div class="relative z-10 space-y-6 max-w-3xl mx-auto">
+                <span class="badge-fact px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest inline-block">Engineering Reality Document — v2.1</span>
+                <h2 class="text-4xl md:text-5xl font-black tracking-tight leading-tight text-white">
+                    دورة تشغيل المغسلة مربوطة بالمحاسبة المزدوجة<br>داخل نظام واحد — مع تتبع APDO
+                </h2>
+                <p class="text-lg md:text-xl text-slate-300 font-medium leading-relaxed">
+                    ليست “أفضل منصة في العالم”. هي منصة <strong class="text-teal-400">Operating System</strong> موثقة هندسياً:
+                    <strong>double-entry ledger</strong> يتولد تلقائياً من أحداث المحطات، مع <strong>Operational Advisor — Live Simulation (rule-based)</strong>، وتوطين 9 لغات، وصفر <code>as any</code> مُحقق بـ CI.
+                </p>
+                <div class="flex flex-wrap gap-3 justify-center text-xs font-bold">
+                    <span class="badge-fact px-3 py-1.5 rounded-full">FACT — Double-Entry Ledger</span>
+                    <span class="badge-fact px-3 py-1.5 rounded-full">FACT — 9 لغات / RTL</span>
+                    <span class="badge-fact px-3 py-1.5 rounded-full">FACT — 28/28 tests</span>
+                    <span class="badge-assump px-3 py-1.5 rounded-full">ASSUMPTION — CAC / Payback</span>
+                    <span class="badge-asp px-3 py-1.5 rounded-full">ASPIRATION — ML 2027</span>
+                </div>
+                <div class="pt-4 flex flex-wrap gap-4 justify-center">
+                    <a href="#slide-evidence" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-8 py-4 rounded-2xl shadow-lg transition text-base">Evidence / Facts Sheet</a>
+                    <a href="https://mjrh.vercel.app" target="_blank" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-8 py-4 rounded-2xl transition text-base">بوابة النظام الحية</a>
+                </div>
+                <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-10 text-center text-sm">
+                    <div><div class="text-xl font-black text-teal-400">9.5 / 10</div><div class="text-[11px] text-slate-400 mt-1">Engineering Reality<br>CTO Audit</div></div>
+                    <div><div class="text-xl font-black text-cyan-400">9 / 10</div><div class="text-[11px] text-slate-400 mt-1">Product Strategy</div></div>
+                    <div><div class="text-xl font-black text-emerald-400">8 / 10</div><div class="text-[11px] text-slate-400 mt-1">Pitch Deck</div></div>
+                    <div><div class="text-xl font-black text-amber-400">4 / 10</div><div class="text-[11px] text-slate-400 mt-1">Pricing Justification<br><span class="text-amber-300">needs real cohort</span></div></div>
+                </div>
+                <p class="text-[11px] text-slate-400 max-w-2xl mx-auto">“Zero as any” = ممارسة TypeScript hygiene — ليست ميزة تسويقية بحد ذاتها. OCR = regex heuristics — ليست Bank API. “AI Advisor” = Operational Advisor — rule-based Live Simulation — لا يوجد ML training pipeline اليوم.</p>
+            </div>
+        </section>
+
+        <!-- Slide 2: Problem -->
+        <section id="slide-problem" class="bg-slate-900/80 border border-white/10 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-red-400 font-bold text-xs uppercase tracking-wider">تحديات القطاع التقليدي · FACTS</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">لماذا تعاني إدارة المغاسل من الهدر المالي؟</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/80 border border-red-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-black text-xl">⚠️</div>
+                    <h4 class="font-black text-lg text-white">انعدام الربط المحاسبي</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">لا يوجد ربط تلقائي بين حركة القطع، الفواتير، وحسابات الخزنة — تسريب إيرادات وتسليم غير مدفوع.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-amber-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xl">⏳</div>
+                    <h4 class="font-black text-lg text-white">اختناقات بلا SLA</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">تراكم القطع في الغسيل/الكي بدون إنذار مبكر — تأخير مزمن عن المواعيد الموعودة.</p>
+                </div>
+                <div class="bg-slate-800/80 border border-blue-500/20 p-6 rounded-2xl space-y-3">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black text-xl">🔧</div>
+                    <h4 class="font-black text-lg text-white">صيانة يدوية — لا IoT بعد</h4>
+                    <p class="text-sm text-slate-300 leading-relaxed">توقف مفاجئ للمعدات — <strong>اليوم:</strong> timestamps يدوية + flags — <strong>IoT:</strong> Aspirational Phase 3 Q4 2026.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: Solution — APDO + Double-Entry -->
+        <section id="slide-solution" class="bg-slate-900/80 border border-teal-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-teal-400 font-bold text-xs uppercase tracking-wider">الحل — FACTS — v2.1</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">Operating System يربط التشغيل بالمحاسبة — APDO auditable</h3>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="space-y-5">
+                    <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">١</div>
+                        <div><h4 class="font-black text-lg text-white">7 محطات فعلية + QR تتبع القطعة</h4>
+                        <p class="text-sm text-slate-300 mt-1">Reception → Cleaning → Drying/Assembly → Ironing → Packing → QC → Delivery — مع <code>service_units</code> و <code>task_assignments</code> — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">FACT</span></p></div></div>
+                    <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">٢</div>
+                        <div><h4 class="font-black text-lg text-white">Double-Entry تلقائي</h4>
+                        <p class="text-sm text-slate-300 mt-1"><code>journal_entries / journal_lines</code> — trigger <code>sync_order_financials</code> — منع تكرار الإيراد — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">FACT — 95 entries / 190 lines live</span></p></div></div>
+                    <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">٣</div>
+                        <div><h4 class="font-black text-lg text-white">Overpayment split — Invoice • Driver Tip</h4>
+                        <p class="text-sm text-slate-300 mt-1">تحويل بنكي زائد → <code>order_payment (1100→1000)</code> + <code>driver_tip (2065)</code> — فصل محاسبي صحيح — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">FACT</span></p></div></div>
+                    <div class="flex items-start gap-4"><div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold">!</div>
+                        <div><h4 class="font-black text-lg text-amber-300">OCR = regex heuristics — NOT Bank API</h4>
+                        <p class="text-xs text-slate-400 mt-1">InstaPay proof → <code>api.ocr.space</code> Engine2 → regex extract — <strong>OCR ≠ banking reconciliation</strong> — Bank webhook MT940 = <span class="badge-asp px-2 py-0.5 rounded text-[10px]">Phase 2 Q3 2026</span></p></div></div>
+                </div>
+                <div class="bg-gradient-to-br from-teal-500/10 to-slate-800/80 border border-teal-500/30 p-8 rounded-3xl text-center space-y-4">
+                    <h4 class="font-black text-2xl text-white">Customer Portal — Live Simulation</h4>
+                    <p class="text-sm text-slate-300">العميل يطلب، يصور القطع، يتتبع SLA، يرفع إيصال InstaPay — <strong>واجهة تحقق تفاعلية simulated</strong> — ليست ML.</p>
+                    <div class="text-[11px] text-amber-300 font-bold">Operational Advisor — Rule-based — NO ML training pipeline today</div>
+                    <a href="https://mjrh.vercel.app/customer-portal" target="_blank" class="inline-block bg-teal-400 text-slate-950 font-bold px-6 py-3 rounded-2xl shadow hover:bg-teal-300 transition text-sm">جرّب البوابة الحية</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: 7 Pillars — CTO hardened -->
+        <section id="slide-pillars" class="bg-slate-900/80 border border-cyan-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-cyan-400 font-bold text-xs uppercase tracking-wider">الركائز — FACTS vs ASPIRATIONS</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-8">7 ركائز — ما هو موجود فعلاً وما هو مخطط</h3>
+            <div class="grid md:grid-cols-3 gap-5 text-sm">
+                <div class="bg-slate-800 border border-emerald-500/30 p-5 rounded-2xl"><div class="font-black text-emerald-400">01. Executive Dashboard</div><div class="text-white font-bold mt-1">لوحة تنفيذية</div><p class="text-slate-300 text-xs mt-2">KPIs حية / فروع / إيرادات — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">SHIPPED</span></p></div>
+                <div class="bg-slate-800 border border-amber-500/30 p-5 rounded-2xl"><div class="font-black text-amber-300">02. Operational Advisor</div><div class="text-white font-bold mt-1">مستشار تشغيلي — Live Simulation</div><p class="text-slate-300 text-xs mt-2">توصيات rule-based صباحية — **لا ML اليوم** — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">RULE ENGINE SHIPPED</span> <span class="badge-asp px-2 py-0.5 rounded text-[10px]">ML 2027</span></p></div>
+                <div class="bg-slate-800 border border-emerald-500/30 p-5 rounded-2xl"><div class="font-black text-emerald-400">03. Profit Analytics</div><div class="text-white font-bold mt-1">P&L / ميزان مراجعة</div><p class="text-slate-300 text-xs mt-2">Double-entry + daily close — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">95 journal entries live</span></p></div>
+                <div class="bg-slate-800 border border-amber-500/30 p-5 rounded-2xl"><div class="font-black text-amber-300">04. Predictive Maintenance</div><div class="text-white font-bold mt-1">صيانة — يدوية اليوم</div><p class="text-slate-300 text-xs mt-2"><code>next_maintenance_at</code> timestamps + manual flags — **لا IoT بعد** — <span class="badge-asp px-2 py-0.5 rounded text-[10px]">IoT Phase 3 Q4 2026</span></p></div>
+                <div class="bg-slate-800 border border-emerald-500/30 p-5 rounded-2xl"><div class="font-black text-emerald-400">05. Smart Scheduling</div><div class="text-white font-bold mt-1">توزيع كي حسب الحضور</div><p class="text-slate-300 text-xs mt-2">Ironing distribution — attendance-aware — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">SHIPPED</span></p></div>
+                <div class="bg-slate-800 border border-emerald-500/30 p-5 rounded-2xl"><div class="font-black text-emerald-400">06. SLA Monitoring</div><div class="text-white font-bold mt-1">مراقبة مواعيد</div><p class="text-slate-300 text-xs mt-2"><code>promised_delivery_at</code> + alerts — <span class="badge-fact px-2 py-0.5 rounded text-[10px]">SHIPPED</span></p></div>
+                <div class="bg-slate-800 border border-white/20 p-5 rounded-2xl md:col-span-3"><div class="font-black text-teal-300">07. Branch Benchmarking</div><p class="text-slate-300 text-xs mt-2">مقارنة فروع — **UI filter قيد التنفيذ README §8.1** — RLS مفعل بالفعل — فرع البنفسج: 0 orders حتى الآن — <span class="badge-assump px-2 py-0.5 rounded text-[10px]">P0 code / P2 operational</span></p></div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Evidence / Facts Sheet -->
+        <section id="slide-evidence" class="bg-slate-950 border border-amber-400/40 rounded-3xl p-8 md:p-14 shadow-2xl">
+            <span class="text-amber-300 font-black text-xs uppercase tracking-widest">Evidence — FACTS SHEET — 2026-06-30</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-3 mb-6">أرقام تشغيل حقيقية — من قاعدة بيانات الإنتاج</h3>
+            <div class="grid md:grid-cols-4 gap-4 text-center mb-8">
+                <div class="bg-slate-900 border border-white/10 p-5 rounded-2xl"><div class="text-3xl font-black text-teal-400">1</div><div class="text-xs text-slate-300 mt-1">Tenant نشط<br><strong>Dry Tech</strong><br>dry-tech<br>since 2026-06-21</div></div>
+                <div class="bg-slate-900 border border-white/10 p-5 rounded-2xl"><div class="text-3xl font-black text-cyan-400">24</div><div class="text-xs text-slate-300 mt-1">Orders<br>19 delivered<br>11 last 7d</div></div>
+                <div class="bg-slate-900 border border-white/10 p-5 rounded-2xl"><div class="text-3xl font-black text-emerald-400">12,549</div><div class="text-xs text-slate-300 mt-1">GMV EGP<br>Delivered: 11,339<br>AOV: 522.88</div></div>
+                <div class="bg-slate-900 border border-white/10 p-5 rounded-2xl"><div class="text-3xl font-black text-amber-300">0</div><div class="text-xs text-slate-300 mt-1">Verified $199/$399<br>MRR invoices<br><strong>Pre-revenue pilot</strong></div></div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-5 text-xs">
+                <div class="bg-slate-900/70 border border-emerald-500/20 p-5 rounded-2xl">
+                    <h4 class="font-black text-emerald-400 mb-2">Repository Evidence — FACTS</h4>
+                    <ul class="text-slate-300 space-y-1 leading-relaxed">
+                        <li>• TypeScript: <strong>0 errors</strong></li>
+                        <li>• Vitest: <strong>28/28</strong></li>
+                        <li>• Build: <strong>13.04s / 2017 modules</strong></li>
+                        <li>• <code>as any</code>: <strong>0</strong></li>
+                        <li>• Bundle gzip: <strong>~285KB</strong></li>
+                        <li>• journal_entries: <strong>95</strong> / lines: <strong>190</strong></li>
+                        <li>• service_units: <strong>134</strong></li>
+                        <li>• 9 languages — RTL/LTR</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-900/70 border border-cyan-500/20 p-5 rounded-2xl">
+                    <h4 class="font-black text-cyan-300 mb-2">Operational Evidence</h4>
+                    <ul class="text-slate-300 space-y-1 leading-relaxed">
+                        <li>• Customers: <strong>6</strong></li>
+                        <li>• Employees: <strong>10</strong> / Profiles: <strong>12</strong></li>
+                        <li>• Branches: <strong>2</strong> — الرئيسي (24 orders) / البنفسج (0 orders)</li>
+                        <li>• Cash safe الرئيسي: <strong>50,903.40 EGP</strong></li>
+                        <li>• QC checks: <strong>19</strong></li>
+                        <li>• Operation events (APDO): <strong>119</strong></li>
+                        <li>• First order: <strong>2026-06-21</strong></li>
+                        <li>• Last order: <strong>2026-06-30</strong></li>
+                    </ul>
+                </div>
+                <div class="bg-slate-900/70 border border-amber-500/20 p-5 rounded-2xl">
+                    <h4 class="font-black text-amber-300 mb-2">Business Assumptions — NOT FACTS</h4>
+                    <ul class="text-slate-300 space-y-1 leading-relaxed">
+                        <li>• CAC $1,200 → <strong>ASSUMPTION — $0 paid</strong></li>
+                        <li>• Payback 3 months → <strong>MODEL — NOT validated</strong></li>
+                        <li>• Gross Margin 88% → <strong>PROJECTION</strong></li>
+                        <li>• Churn &lt;5% → <strong>NO DATA — cohort 9 days</strong></li>
+                        <li>• MRR $199/$399 → <strong>0 verified invoices</strong></li>
+                        <li>• AI/ML forecasting → <strong>ASPIRATION 2027</strong></li>
+                        <li>• Bank API / IoT → <strong>NOT SHIPPED</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-6 text-center">Source: <code>supabase db query --linked -o json</code> — project <code>dngjfjrjddigqadlyain</code> — 2026-06-30 22:40 UTC — Full Facts Sheet: <code>docs/FACTS_SHEET_2026-06-30.md</code></p>
+        </section>
+
+        <!-- Slide: APDO -->
+        <section id="slide-apdo" class="bg-slate-900/80 border border-amber-500/30 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-amber-400 font-bold text-xs uppercase tracking-wider">APDO Governance — FACT</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-6">Actor • Process • Data • Output — forensic traceability</h3>
+            <div class="grid md:grid-cols-4 gap-4 text-center text-sm">
+                <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/20"><div class="text-2xl font-black text-amber-400">A</div><div class="font-bold text-white mt-1">Actor</div><p class="text-xs text-slate-300 mt-2">UUID + AppRole — من نفذ؟</p></div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/20"><div class="text-2xl font-black text-amber-400">P</div><div class="font-bold text-white mt-1">Process</div><p class="text-xs text-slate-300 mt-2">cash_transfer / qc_rejection / order_cancellation</p></div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/20"><div class="text-2xl font-black text-amber-400">D</div><div class="font-bold text-white mt-1">Data</div><p class="text-xs text-slate-300 mt-2">immutable JSONB snapshot — quantities / amounts / geo / OCR</p></div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/20"><div class="text-2xl font-black text-amber-400">O</div><div class="font-bold text-white mt-1">Output</div><p class="text-xs text-slate-300 mt-2">journal_entry + cash_movement + notification — automatic</p></div>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-6">APDO trace stored append-only — <code>operation_events</code> = <strong>119 events live</strong> — <code>journal_entries</code> = <strong>95</strong></p>
+        </section>
+
+        <!-- Pricing — revised -->
+        <section id="slide-biz" class="bg-slate-900/80 border border-white/10 rounded-3xl p-8 md:p-14 shadow-xl">
+            <span class="text-teal-400 font-bold text-xs uppercase tracking-wider">B2B SaaS — PRICING — with Assumption labels</span>
+            <h3 class="text-3xl md:text-4xl font-black text-white mt-2 mb-6">التسعير — حقائق وافتراضات مفصولة بوضوح</h3>
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-slate-800/60 border border-white/10 p-6 rounded-3xl">
+                    <h4 class="font-black text-lg text-white">Pilot</h4>
+                    <div class="text-2xl font-black text-teal-400 mt-2">$0 <span class="text-xs text-slate-400">/ 14 يوم</span></div>
+                    <p class="text-xs text-slate-300 mt-3">7 محطات • Customer Portal • قيود محاسبية</p>
+                    <span class="inline-block mt-3 text-[10px] bg-emerald-500/15 text-emerald-300 px-2 py-1 rounded">FACT — SHIPPED</span>
+                </div>
+                <div class="bg-gradient-to-br from-teal-900/30 to-slate-800 border border-teal-400 p-6 rounded-3xl relative">
+                    <span class="absolute top-3 left-3 bg-teal-400 text-slate-950 px-2 py-1 rounded-full text-[10px] font-black">FLAGSHIP</span>
+                    <h4 class="font-black text-lg text-white mt-4">Growth</h4>
+                    <div class="text-2xl font-black text-teal-400 mt-2">$399 <span class="text-xs text-slate-400">/ شهر</span></div>
+                    <p class="text-xs text-slate-300 mt-3">Operational Advisor (rule-based Live Sim) • SLA • *.mjrh.com • Accounting كامل</p>
+                    <span class="inline-block mt-3 text-[10px] bg-emerald-500/15 text-emerald-300 px-2 py-1 rounded">FACT — SHIPPED</span>
+                </div>
+                <div class="bg-slate-800/60 border border-white/10 p-6 rounded-3xl">
+                    <h4 class="font-black text-lg text-white">Enterprise</h4>
+                    <div class="text-2xl font-black text-teal-400 mt-2">$899+ <span class="text-xs text-slate-400">/ شهر</span></div>
+                    <p class="text-xs text-slate-300 mt-3">Multi-branch Benchmarking • Dedicated DB • @mjrh.com</p>
+                    <span class="inline-block mt-3 text-[10px] bg-amber-500/15 text-amber-300 px-2 py-1 rounded">NEEDS ≥1 multi-branch paying customer</span>
+                </div>
+            </div>
+            <!-- Pricing assumptions box -->
+            <div class="bg-amber-950/30 border border-amber-500/30 rounded-2xl p-6 text-start">
+                <h4 class="font-black text-amber-300 mb-3">⚠️ Pricing Justification — ASSUMPTIONS — NOT FACTS (CTO review)</h4>
+                <div class="grid md:grid-cols-2 gap-4 text-xs text-slate-300">
+                    <div>
+                        <p class="mb-2"><strong class="text-amber-200">Assumption — needs validation:</strong></p>
+                        <ul class="space-y-1 list-disc list-inside text-slate-400">
+                            <li>CAC = $1,200 → <strong>$0 paid CAC to date</strong></li>
+                            <li>Payback = 3 months → <strong>financial model — NOT validated</strong></li>
+                            <li>Gross Margin 88% → <strong>projection — pending COGS audit</strong></li>
+                            <li>Churn &lt;5%/mo → <strong>no data — cohort 9 days old</strong></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong class="text-emerald-200">Fact — verifiable today:</strong></p>
+                        <ul class="space-y-1 list-disc list-inside text-slate-300">
+                            <li>9-language i18n — shipped</li>
+                            <li>Double-entry ledger — 95 journal_entries live</li>
+                            <li>Customer portal + InstaPay OCR — shipped</li>
+                            <li>Production: mjrh.vercel.app — 200 OK</li>
+                            <li>CI: 28/28 tests — zero as-any</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-4 border-t border-amber-500/20 pt-3">
+                    “We will NOT claim ‘Payback in 3 Months’ or ‘88% margin’ as fact until we close ≥20 paying customers and publish cohort 1 retention.” — <em>03_MARKET_PITCH_DECK.md v2.1</em>
+                </p>
+            </div>
+        </section>
+
+        <!-- Investment / Facts Sheet Close -->
+        <section id="slide-investment" class="bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 border border-teal-500/40 p-8 md:p-14 rounded-3xl text-center shadow-2xl space-y-5">
+            <span class="bg-amber-400/15 text-amber-300 border border-amber-400/30 px-4 py-1.5 rounded-full text-xs font-black">Investor Due Diligence — Honest Answers — 2026-06-30</span>
+            <h3 class="text-2xl md:text-4xl font-black text-white">5 أسئلة — إجابات صريحة مدعومة بـ Evidence</h3>
+            <div class="max-w-3xl mx-auto text-start bg-slate-900/70 border border-white/10 rounded-2xl p-6 space-y-3 text-sm">
+                <p><strong class="text-teal-300">1. كم مغسلة تستخدم النظام؟</strong><br><span class="text-slate-300">→ <strong>1 tenant نشط: Dry Tech</strong> (dry-tech) — created 2026-06-21 — is_active=true — Supabase dngjfjrjddigqadlyain</span></p>
+                <p><strong class="text-teal-300">2. كم Order processed؟</strong><br><span class="text-slate-300">→ <strong>24 orders total / 19 delivered / 11 last 7d</strong> — GMV 12,549 EGP — Delivered 11,339 EGP — AOV 522.88 EGP</span></p>
+                <p><strong class="text-teal-300">3. ما هو churn؟</strong><br><span class="text-slate-300">→ <strong>Unknown — first cohort 9 days old</strong> (2026-06-21 → 2026-06-30) — no 30/90-day retention yet</span></p>
+                <p><strong class="text-teal-300">4. ما هو CAC الحقيقي؟</strong><br><span class="text-slate-300">→ <strong>$0 paid CAC</strong> — organic / founder-led / design partner — $1,200 = industry benchmark <em>assumption</em></span></p>
+                <p><strong class="text-teal-300">5. هل دفع أحد $199/$399؟</strong><br><span class="text-amber-300 font-bold">→ Pre-revenue pilot — 0 verified Stripe $199/$399 MRR invoices as of 2026-06-30 — publish receipts before claiming MRR</span></p>
+            </div>
+            <div class="pt-4">
+                <a href="https://mjrh.vercel.app" target="_blank" class="inline-block bg-teal-400 hover:bg-teal-300 text-slate-950 font-black text-lg px-10 py-4 rounded-2xl shadow-xl transition">افتح النظام الحي — mjrh.vercel.app 🚀</a>
+                <p class="text-[11px] text-slate-400 mt-3">Docs: <a class="underline text-teal-300" href="https://github.com/mohamedriyad1408/MJRH-INDUSTRIAL-REVOLUTION/blob/main/docs/01_ENGINEERING_REALITY.md">01 Engineering Reality 9.5/10</a> • <a class="underline text-teal-300" href="https://github.com/mohamedriyad1408/MJRH-INDUSTRIAL-REVOLUTION/blob/main/docs/02_PRODUCT_STRATEGY.md">02 Product Strategy 9/10</a> • <a class="underline text-teal-300" href="https://github.com/mohamedriyad1408/MJRH-INDUSTRIAL-REVOLUTION/blob/main/docs/03_MARKET_PITCH_DECK.md">03 Market Pitch 8/10</a> • <a class="underline text-amber-300" href="https://github.com/mohamedriyad1408/MJRH-INDUSTRIAL-REVOLUTION/blob/main/docs/FACTS_SHEET_2026-06-30.md">Facts Sheet</a></p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="max-w-6xl mx-auto mt-16 border-t border-white/10 pt-6 pb-10 text-center text-[11px] text-slate-500" dir="ltr">
+        © 2026 MJRH INDUSTRIAL REVOLUTION — v2.1 CTO-Hardened — Facts / Assumptions / Aspirations separated<br>
+        Engineering Reality 9.5/10 • Product Strategy 9/10 • Pitch 8/10 • Pricing Justification 4/10 — pending real customer cohort<br>
+        “Laundry operations workflow natively coupled to double-entry accounting + APDO forensic traceability.”<br>
+        Live: <a class="text-teal-400 underline" href="https://mjrh.vercel.app">mjrh.vercel.app</a> • Pitch: <a class="text-teal-400 underline" href="https://mohamedriyad1408.github.io/MJRH-INDUSTRIAL-REVOLUTION/">mohamedriyad1408.github.io/MJRH-INDUSTRIAL-REVOLUTION</a>
+    </footer>
+</body>
+</html>
