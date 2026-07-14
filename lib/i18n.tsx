@@ -1217,7 +1217,7 @@ const dict: Record<LanguageCode, Record<string, string>> = {
   },
 };
 
-const navArabic: Record<string, string> = {
+const navEnglishBase: Record<string, string> = {
   "navGroup.الرئيسية": "Main",
   "navGroup.التشغيل والمحطات": "Operations & Stations",
   "navGroup.العملاء والمبيعات": "Customers & Sales",
@@ -1291,9 +1291,9 @@ const navArabic: Record<string, string> = {
 };
 
 for (const lang of ["fr", "it", "es", "de", "zh", "ja", "pt"] as LanguageCode[]) {
-  dict[lang] = { ...dict[lang], ...navArabic };
+  dict[lang] = { ...dict[lang], ...navEnglishBase };
 }
-dict.en = { ...dict.en, ...navArabic };
+dict.en = { ...dict.en, ...navEnglishBase };
 
 const publicTranslations: Record<LanguageCode, Record<string, string>> = {
   ar: {
@@ -1327,6 +1327,53 @@ const publicTranslations: Record<LanguageCode, Record<string, string>> = {
     "terms.p3": "يجب مراجعة الإعدادات والضرائب والأسعار قبل التشغيل التجاري.",
     "terms.p4": "المنصة توفر أدوات متابعة وإصلاح، لكن الإدارة مسؤولة عن القرارات التشغيلية والمالية النهائية.",
     "terms.p5": "أي تكامل خارجي مثل WhatsApp Business API أو الطباعة الصامتة يحتاج إعدادًا منفصلًا.",
+    "navGroup.اللوحات": "لوحات التحكم",
+    "navGroup.الطلبات": "الطلبات",
+    "navGroup.محطات العمل": "محطات العمل",
+    "navGroup.الموظفون": "الموظفون",
+    "navGroup.المالية والتشغيل": "المالية والتشغيل",
+    "navGroup.الإدارة": "الإدارة",
+    "navGroup.الرئيسية": "الرئيسية",
+    "navGroup.التشغيل والمحطات": "التشغيل والمحطات",
+    "navGroup.العملاء والمبيعات": "العملاء والمبيعات",
+    "navGroup.المالية والإدارة": "المالية والإدارة",
+    "navGroup.نظرة عامة": "نظرة عامة",
+    "navGroup.النمو والتشغيل": "النمو والتشغيل",
+    "navGroup.المالية والمراقبة": "المالية والمراقبة",
+    "navGroup.إدارة المنصة": "إدارة المنصة",
+    "nav./daily-operations": "تشغيل اليوم",
+    "nav./today": "مركز اليوم",
+    "nav./dashboard": "لوحة المالك",
+    "nav./ops": "لوحة التشغيل",
+    "nav./cs": "خدمة العملاء",
+    "nav./manager": "لوحة المدير",
+    "nav./driver": "لوحة السائق",
+    "nav./live-map": "خريطة المراقبة الحية",
+    "nav./reports": "التقارير والذكاء",
+    "nav./orders": "جميع العمليات",
+    "nav./orders/new": "عملية جديدة",
+    "nav./stations/reception": "الاستقبال",
+    "nav./stations/cleaning": "التنظيف",
+    "nav./stations/drying-assembly": "التجفيف والتجميع",
+    "nav./stations/ironing": "الكي",
+    "nav./stations/packing": "التغليف",
+    "nav./stations/qc": "الجودة QC",
+    "nav./stations/delivery": "المناديب",
+    "nav./finance": "الحسابات",
+    "nav./accounting": "المحاسبة والخزنة",
+    "nav./ledger": "القيود والتقارير",
+    "nav./system-health": "فحص النظام",
+    "nav./receivables": "ذمم العملاء",
+    "nav./cash-closing": "إقفال الخزنة",
+    "nav./budgets": "الميزانيات",
+    "nav./inventory": "المخزون والمعدات",
+    "nav./billing": "اشتراك المنصة",
+    "nav./customers": "العملاء",
+    "nav./crm": "CRM والولاء",
+    "nav./services": "كتالوج الخدمات",
+    "nav./branches": "نقاط التشغيل",
+    "nav./settings": "الإعدادات",
+    "nav./help": "دليل الاستخدام",
     "track.title": "متابعة طلبك", "track.subtitle": "Dry Tech — منصة تشغيل المشاريع الصناعية", "track.notFound": "الطلب غير موجود", "track.checkLink": "تأكد من رابط المتابعة", "track.orderNumber": "رقم الطلب", "track.total": "الإجمالي", "track.items": "بنود الطلب", "track.payment": "الدفع", "track.paid": "تم تسجيل الدفع", "track.invoiceReady": "الفاتورة جاهزة للدفع", "track.invoiceReview": "الفاتورة قيد المراجعة النهائية", "track.overpayment": "تم تسجيل زيادة", "track.promised": "الموعد المتوقع للتسليم", "track.cancelled": "تم إلغاء الطلب",
     "track.step.pickup_waiting": "في انتظار المندوب", "track.step.pickup_assigned": "المندوب في الطريق", "track.step.received": "دخل الاستقبال", "track.step.cleaning": "تنظيف", "track.step.ironing": "كي", "track.step.packing": "تغليف", "track.step.ready": "جاهز للتسليم", "track.step.out_for_delivery": "خرج للتسليم", "track.step.delivered": "تم التسليم",
     "track.hint.pending": "طلبك اتسجل، وفي انتظار تعيين مندوب للاستلام من عنوانك.", "track.hint.assigned": "تم تعيين مندوب، وهو في طريقه لاستلام الطلب.", "track.hint.converted": "تم استلام الطلب من المندوب ودخل الاستقبال.", "track.hint.processing": "طلبك داخل التشغيل الآن. سيتم اعتماد الفاتورة بعد المراجعة النهائية.", "track.hint.ready": "طلبك جاهز للتسليم. تابع الدفع أو انتظر المندوب.", "track.hint.delivery": "طلبك خرج للتسليم مع المندوب.", "track.hint.delivered": "تم تسليم طلبك. شكرًا لثقتك بنا.",
