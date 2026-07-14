@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: HARDENED CORE (v3.2 - AUDIT COMPLIANT)
+-- MJRH V4 — Layer 1: THE FROZEN CORE (v1.0 - OFFICIAL)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -8,7 +8,7 @@ CREATE TABLE v4_l1.identities (
     global_urn text UNIQUE NOT NULL,
     legal_name text NOT NULL,
     is_sovereign_root boolean DEFAULT false,
-    status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+    lifecycle_status text NOT NULL DEFAULT 'active' CHECK (lifecycle_status IN ('active', 'archived')),
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -27,29 +27,29 @@ CREATE TABLE v4_l1.nodes (
 
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- [TABLE] Structural Mutation Facts (Event Outbox)
+-- [TABLE] Facts
 CREATE TABLE v4_l1.structural_mutation_facts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL,
-    fact_type text NOT NULL, -- INSERT, UPDATE, ARCHIVE
+    fact_type text NOT NULL,
     previous_path ltree,
     new_path ltree NOT NULL,
     occurred_at timestamptz DEFAULT now()
 );
 
--- [RPC: Resolve Sovereign Root]
+-- [RPC: resolve_sovereign_root v1.0]
 CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(_node_id uuid)
 RETURNS jsonb AS $$
 DECLARE
     _path ltree;
-    _root_id uuid;
+    _root_node_id uuid;
     _sov_id uuid;
 BEGIN
     SELECT node_path INTO _path FROM v4_l1.nodes WHERE id = _node_id;
-    IF _path IS NULL THEN RETURN NULL; END IF;
-    _root_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
-    SELECT identity_id INTO _sov_id FROM v4_l1.nodes WHERE id = _root_id;
-    RETURN jsonb_build_object('sovereign_id', _sov_id, 'path', _path::text);
+    IF _path IS NULL THEN RAISE EXCEPTION 'NODE_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
+    _root_node_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
+    SELECT identity_id INTO _sov_id FROM v4_l1.nodes WHERE id = _root_node_id;
+    RETURN jsonb_build_object('v', '1.0', 'sovereign_id', _sov_id, 'path', _path::text);
 END;
 $$ LANGUAGE plpgsql STABLE;
 
@@ -65,28 +65,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- [ORCHESTRATION: Main Trigger]
+-- [ORCHESTRATION: Core Orchestrator]
 CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger AS $$
 DECLARE
     _p_path ltree;
 BEGIN
-    IF TG_OP = 'UPDATE' THEN NEW.version := OLD.version + 1; END IF;
-    
+    NEW.version := OLD.version + 1;
     IF (TG_OP = 'INSERT') OR (NEW.parent_id IS DISTINCT FROM OLD.parent_id) THEN
         IF NEW.parent_id IS NULL THEN 
             NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
         ELSE
-            -- [AUDIT] Pessimistic Lock on parent to ensure serialization
             SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR UPDATE;
             IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
             NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
         END IF;
     END IF;
-
-    -- [AUDIT] Fact Emission (Transactional Outbox Pattern)
     INSERT INTO v4_l1.structural_mutation_facts (node_id, fact_type, previous_path, new_path)
     VALUES (NEW.id, TG_OP, CASE WHEN TG_OP = 'UPDATE' THEN OLD.node_path ELSE NULL END, NEW.node_path);
-
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
