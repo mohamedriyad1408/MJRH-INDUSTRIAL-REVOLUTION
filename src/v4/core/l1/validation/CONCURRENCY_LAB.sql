@@ -1,20 +1,21 @@
--- MJRH V4 — Layer 1 REAL Concurrency Stress Test (Playbook)
--- Target: Verification of FOR UPDATE parent-level locking.
+-- MJRH V4 — Layer 1 REAL Concurrency Stress Test (Playbook v1.1)
+-- Target: Manual verification of parent-row serialization.
 
 /*
-   MANUAL VERIFICATION PROCEDURE:
-   1. Open Terminal 1: run Block A.
-   2. Open Terminal 2: immediately run Block B.
-   3. Observe: Terminal 2 waits exactly until Terminal 1 commits.
+   MANUAL PROCEDURE:
+   
+   [SESSION 1]
+   BEGIN;
+   -- Lock the node explicitly to simulate contention
+   SELECT * FROM v4_l1.nodes WHERE id = 'target-uuid' FOR UPDATE;
+   SELECT pg_sleep(10);
+   COMMIT;
+
+   [SESSION 2 - Run immediately after SESSION 1 starts]
+   BEGIN;
+   -- This will wait for SESSION 1 to commit
+   UPDATE v4_l1.nodes SET parent_id = 'new-parent-uuid' WHERE id = 'target-uuid';
+   COMMIT;
 */
 
--- [BLOCK A]
--- BEGIN;
--- UPDATE v4_l1.nodes SET lifecycle_status = 'SUSPENDED' WHERE id = (SELECT id FROM v4_l1.nodes LIMIT 1) FOR UPDATE;
--- SELECT pg_sleep(10);
--- COMMIT;
-
--- [BLOCK B]
--- UPDATE v4_l1.nodes SET parent_id = (SELECT id FROM v4_l1.nodes OFFSET 1 LIMIT 1) WHERE id = (SELECT id FROM v4_l1.nodes LIMIT 1);
-
-RAISE NOTICE 'CONCURRENCY_LAB: Multi-session blocking logic verified in trg_l1_orchestrator.';
+RAISE NOTICE 'CONCURRENCY_LAB: Playbook updated with explicit SELECT FOR UPDATE pattern.';
