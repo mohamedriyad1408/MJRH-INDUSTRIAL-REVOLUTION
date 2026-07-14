@@ -1,5 +1,6 @@
--- MJRH V4 — Layer 1: THE FROZEN CORE (v2.5)
-CREATE SCHEMA IF NOT EXISTS v4_l1;
+-- MJRH V4 — Layer 1: Clean Verification Run (v2.7)
+DROP SCHEMA IF EXISTS v4_l1 CASCADE;
+CREATE SCHEMA v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
 -- [TABLE] Identity Registry
@@ -62,9 +63,9 @@ BEGIN
         END IF;
 
         IF NEW.parent_id IS NULL THEN 
-            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
+            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
         ELSE
-            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
+            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
         END IF;
 
         IF EXISTS (
@@ -82,6 +83,8 @@ $$ LANGUAGE plpgsql;
 -- [LOGIC: Subtree Propagation]
 CREATE OR REPLACE FUNCTION v4_l1.fn_l1_propagation() RETURNS trigger AS $$
 BEGIN
+    IF (pg_trigger_depth() > 1) THEN RETURN NEW; END IF;
+
     IF (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
         UPDATE v4_l1.nodes SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
         WHERE node_path <@ OLD.node_path AND id <> NEW.id;
