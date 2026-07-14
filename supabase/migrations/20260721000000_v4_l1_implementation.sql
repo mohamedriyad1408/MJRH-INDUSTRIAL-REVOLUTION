@@ -84,7 +84,7 @@ BEGIN
     IF NEW.parent_id IS NULL THEN 
         NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
     ELSE
-        SELECT node_path FROM v4_l1.nodes WHERE id = NEW.parent_id INTO _p_path;
+        SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR SHARE;
         IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
         NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
     END IF;
