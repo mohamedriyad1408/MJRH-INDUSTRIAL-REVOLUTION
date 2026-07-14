@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: HARDENED CORE (v3.4 - AUDIT HARDENED)
+-- MJRH V4 — Layer 1: DEFENSIVE CORE (v3.5 - SECURITY HARDENED)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -37,38 +37,45 @@ CREATE TABLE v4_l1.structural_mutation_facts (
     occurred_at timestamptz DEFAULT now()
 );
 
--- [LOGIC: Invariant Assertions]
-CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void AS $$
+-- [LOGIC: Invariant Assertions] - SECURITY HARDENED
+CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void 
+SET search_path = v4_l1, public
+AS $$
 DECLARE
     _is_sov boolean;
 BEGIN
-    -- 1. Sovereign Root Immutability (FIXED: Critical Bug 1)
-    -- Prevents converting a root into a child, or moving a root.
-    IF _old IS NOT NULL AND _old.node_class = 'SOVEREIGN_ROOT' AND _new.parent_id IS NOT NULL THEN
-        RAISE EXCEPTION 'SOVEREIGN_ROOT_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1105';
+    -- A. Immutability Guards
+    IF _old IS NOT NULL THEN
+        -- 1. Sovereign Root Immutability
+        IF _old.node_class = 'SOVEREIGN_ROOT' AND _new.parent_id IS NOT NULL THEN
+            RAISE EXCEPTION 'SOVEREIGN_ROOT_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1105';
+        END IF;
+        -- 2. Class Immutability
+        IF _old.node_class <> _new.node_class THEN
+            RAISE EXCEPTION 'NODE_CLASS_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1106';
+        END IF;
     END IF;
 
-    -- 2. Sovereign Root Identity Requirement
+    -- B. Sovereign Requirements
     IF _new.parent_id IS NULL THEN
-        SELECT is_sovereign_root INTO _is_sov FROM v4_l1.identities WHERE id = _new.identity_id;
+        SELECT is_sovereign_root INTO _is_sov FROM identities WHERE id = _new.identity_id;
         IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT' USING ERRCODE = 'P1102'; END IF;
     END IF;
 
-    -- 3. Cycle Detection
+    -- C. Cycle Detection
     IF _old IS NOT NULL AND _new.parent_id IS DISTINCT FROM _old.parent_id THEN
-        IF _old.node_path @> (SELECT node_path FROM v4_l1.nodes WHERE id = _new.parent_id) THEN
+        IF _old.node_path @> (SELECT node_path FROM nodes WHERE id = _new.parent_id) THEN
             RAISE EXCEPTION 'CIRCULAR_DEPENDENCY' USING ERRCODE = 'P1104';
         END IF;
     END IF;
 
-    -- 4. Identity Path Uniqueness (PERFORMANCE OPTIMIZED: Bug 2)
-    -- Only run full check for the TOP-LEVEL node in the mutation wave
+    -- D. Identity Recursion (Optimized O(N))
     IF (pg_trigger_depth() = 1) THEN
         IF EXISTS (
-            SELECT 1 FROM v4_l1.nodes n
+            SELECT 1 FROM nodes n
             WHERE n.node_path <@ CASE WHEN _old IS NOT NULL THEN _old.node_path ELSE _new.node_path END
             AND EXISTS (
-                SELECT 1 FROM v4_l1.nodes anc
+                SELECT 1 FROM nodes anc
                 WHERE anc.id IN (SELECT (replace(lbl, '_', ''))::uuid FROM unnest(ltree2text_array(_new.node_path)) AS lbl)
                 AND anc.identity_id = n.identity_id AND anc.id <> n.id
             )
@@ -79,44 +86,55 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- [ORCHESTRATION: Main Trigger]
-CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger AS $$
-DECLARE
-    _p_path ltree;
+-- [LOGIC: Identity Immutability] - NEW
+CREATE OR REPLACE FUNCTION v4_l1.trg_identities_immutability() RETURNS trigger 
+SET search_path = v4_l1, public
+AS $$
 BEGIN
-    -- Increment version for every affected node
-    NEW.version := OLD.version + 1;
-    
-    IF (TG_OP = 'INSERT') OR (NEW.parent_id IS DISTINCT FROM OLD.parent_id) THEN
-        IF NEW.parent_id IS NULL THEN 
-            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
-        ELSE
-            -- [CONCURRENCY: FIXED Bug 3] Pessimistic lock on parent
-            SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR UPDATE;
-            IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
-            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
-        END IF;
-        PERFORM v4_l1.fn_assert_l1_invariants(NEW, OLD);
+    IF OLD.global_urn <> NEW.global_urn THEN
+        RAISE EXCEPTION 'IDENTITY_URN_IMMUTABILITY_VIOLATION' USING ERRCODE = 'P1107';
     END IF;
-
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- [LOGIC: Subtree Propagation & Fact Emission]
-CREATE OR REPLACE FUNCTION v4_l1.fn_after_l1_mutation() RETURNS trigger AS $$
+CREATE TRIGGER trg_l1_identities_defensive BEFORE UPDATE ON v4_l1.identities FOR EACH ROW EXECUTE FUNCTION v4_l1.trg_identities_immutability();
+
+-- [ORCHESTRATION: Main Trigger]
+CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger 
+SET search_path = v4_l1, public
+AS $$
+DECLARE
+    _p_path ltree;
 BEGIN
-    -- Emit Fact for every node touched
-    INSERT INTO v4_l1.structural_mutation_facts (node_id, fact_type, previous_path, new_path)
+    NEW.version := OLD.version + 1;
+    IF (TG_OP = 'INSERT') OR (NEW.parent_id IS DISTINCT FROM OLD.parent_id) THEN
+        IF NEW.parent_id IS NULL THEN 
+            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
+        ELSE
+            SELECT node_path INTO _p_path FROM nodes WHERE id = NEW.parent_id FOR UPDATE;
+            IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
+            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
+        END IF;
+        PERFORM fn_assert_l1_invariants(NEW, OLD);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- [LOGIC: Subtree Propagation & Facts]
+CREATE OR REPLACE FUNCTION v4_l1.fn_after_l1_mutation() RETURNS trigger 
+SET search_path = v4_l1, public
+AS $$
+BEGIN
+    INSERT INTO structural_mutation_facts (node_id, fact_type, previous_path, new_path)
     VALUES (NEW.id, TG_OP, CASE WHEN TG_OP = 'UPDATE' THEN OLD.node_path ELSE NULL END, NEW.node_path);
 
-    -- Propagate to descendants (Only from top-level call)
     IF (pg_trigger_depth() = 1) AND (TG_OP = 'UPDATE') AND (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
-        UPDATE v4_l1.nodes 
-        SET node_path = NEW.node_path || subpath(v4_l1.nodes.node_path, nlevel(OLD.node_path))
-        WHERE v4_l1.nodes.node_path <@ OLD.node_path AND v4_l1.nodes.id <> NEW.id;
+        UPDATE nodes 
+        SET node_path = NEW.node_path || subpath(nodes.node_path, nlevel(OLD.node_path))
+        WHERE nodes.node_path <@ OLD.node_path AND nodes.id <> NEW.id;
     END IF;
-
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -125,22 +143,26 @@ CREATE TRIGGER trg_l1_before BEFORE INSERT OR UPDATE ON v4_l1.nodes FOR EACH ROW
 CREATE TRIGGER trg_l1_after AFTER INSERT OR UPDATE ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_after_l1_mutation();
 
 -- [RPCs]
-CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(_node_id uuid) RETURNS jsonb AS $$
+CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(_node_id uuid) RETURNS jsonb 
+SET search_path = v4_l1, public
+AS $$
 DECLARE
     _path ltree;
     _root_id uuid;
     _sov_id uuid;
 BEGIN
-    SELECT node_path INTO _path FROM v4_l1.nodes WHERE id = _node_id;
+    SELECT node_path INTO _path FROM nodes WHERE id = _node_id;
     IF _path IS NULL THEN RETURN NULL; END IF;
     _root_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
-    SELECT identity_id INTO _sov_id FROM v4_l1.nodes WHERE id = _root_id;
+    SELECT identity_id INTO _sov_id FROM nodes WHERE id = _root_id;
     RETURN jsonb_build_object('sovereign_id', _sov_id, 'path', _path::text);
 END;
 $$ LANGUAGE plpgsql STABLE;
 
-CREATE OR REPLACE FUNCTION v4_l1.resolve_hierarchy(_node_id uuid) RETURNS text[] AS $$
+CREATE OR REPLACE FUNCTION v4_l1.resolve_hierarchy(_node_id uuid) RETURNS text[] 
+SET search_path = v4_l1, public
+AS $$
 BEGIN
-    RETURN (SELECT ltree2text_array(node_path) FROM v4_l1.nodes WHERE id = _node_id);
+    RETURN (SELECT ltree2text_array(node_path) FROM nodes WHERE id = _node_id);
 END;
 $$ LANGUAGE plpgsql STABLE;
