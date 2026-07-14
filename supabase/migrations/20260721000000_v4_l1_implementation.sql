@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: HARDENED CORE (v3.1 - SELF-AUDITED)
+-- MJRH V4 — Layer 1: HARDENED CORE (v3.2 - DEFINITIVE FROZEN)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -27,7 +27,7 @@ CREATE TABLE v4_l1.nodes (
 
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- [TABLE] Structural Mutation Facts
+-- [TABLE] Structural Mutation Facts (Event Outbox)
 CREATE TABLE v4_l1.structural_mutation_facts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL,
@@ -55,16 +55,14 @@ BEGIN
         END IF;
     END IF;
 
-    -- 3. GLOBAL Identity Path Uniqueness (Hardened)
-    -- Ensures neither ancestors NOR descendants of the moved node violate the 1:N disjoint rule.
+    -- 3. GLOBAL Identity Path Uniqueness
     IF EXISTS (
         SELECT 1 FROM v4_l1.nodes n
         WHERE n.node_path <@ CASE WHEN _old IS NOT NULL THEN _old.node_path ELSE _new.node_path END
         AND EXISTS (
             SELECT 1 FROM v4_l1.nodes anc
             WHERE anc.id IN (SELECT (replace(lbl, '_', ''))::uuid FROM unnest(ltree2text_array(_new.node_path)) AS lbl)
-            AND anc.identity_id = n.identity_id
-            AND anc.id <> n.id
+            AND anc.identity_id = n.identity_id AND anc.id <> n.id
         )
     ) THEN
         RAISE EXCEPTION 'IDENTITY_PATH_RECURSION' USING ERRCODE = 'P1103';
@@ -82,6 +80,7 @@ BEGIN
     IF NEW.parent_id IS NULL THEN 
         NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
     ELSE
+        -- [CRITICAL] FOR UPDATE lock to prevent race conditions on parent path
         SELECT node_path INTO _p_path FROM v4_l1.nodes WHERE id = NEW.parent_id FOR UPDATE;
         IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
         NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
@@ -89,6 +88,7 @@ BEGIN
 
     PERFORM v4_l1.fn_assert_l1_invariants(NEW, CASE WHEN TG_OP = 'UPDATE' THEN OLD ELSE NULL END);
 
+    -- Fact Emission
     INSERT INTO v4_l1.structural_mutation_facts (node_id, fact_type, previous_path, new_path)
     VALUES (NEW.id, TG_OP, CASE WHEN TG_OP = 'UPDATE' THEN OLD.node_path ELSE NULL END, NEW.node_path);
 
