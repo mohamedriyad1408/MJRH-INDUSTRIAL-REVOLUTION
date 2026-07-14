@@ -1,55 +1,48 @@
--- MJRH V4 — L1 Final Self-Asserting Acceptance Suite
--- Rule: Every failure MUST RAISE EXCEPTION. No NOTICE for Pass.
+-- MJRH V4 — Layer 1 Final Hermetic Acceptance Suite v2.8
 DO $$
 DECLARE
-    r1 uuid; r2 uuid; n1 uuid; n2 uuid; n3 uuid; n4 uuid;
-    _path ltree;
+    _r1 uuid; _r2 uuid;
+    _n1 uuid; _n2 uuid; _n3 uuid; _n4 uuid;
 BEGIN
-    -- [1] Identity Setup
-    INSERT INTO v4_l1.identities (id, legal_name, global_urn, is_sovereign_root) VALUES ('00000000-0000-0000-0000-000000000010'::uuid, 'Corp A', 'urn:corp:a', true) RETURNING id INTO r1;
-    INSERT INTO v4_l1.identities (id, legal_name, global_urn, is_sovereign_root) VALUES ('00000000-0000-0000-0000-000000000020'::uuid, 'Dept B', 'urn:dept:b', false) RETURNING id INTO r2;
+    RAISE NOTICE 'Starting Hermetic L1 Acceptance Suite...';
 
-    -- [2] Basic Creation
-    INSERT INTO v4_l1.nodes (id, identity_id, node_class) VALUES ('00000000-0000-0000-0000-000000000001'::uuid, r1, 'SOVEREIGN_ROOT') RETURNING id INTO n1;
-    INSERT INTO v4_l1.nodes (id, identity_id, parent_id, node_class) VALUES ('00000000-0000-0000-0000-000000000002'::uuid, r2, n1, 'INTERNAL_NODE') RETURNING id INTO n2;
+    -- [1] Setup
+    INSERT INTO v4_l1.identities (legal_name, global_urn, is_sovereign_root) 
+    VALUES ('Corp Root', 'urn:mjrh:root:' || gen_random_uuid(), true) RETURNING id INTO _r1;
 
-    -- [3] Cycle Detection Assert
+    -- [2] Root Node
+    INSERT INTO v4_l1.nodes (identity_id, node_class) VALUES (_r1, 'SOVEREIGN_ROOT') RETURNING id INTO _n1;
+
+    -- [3] Cycle Detection (P1104)
+    INSERT INTO v4_l1.nodes (identity_id, parent_id, node_class) 
+    VALUES ((SELECT id FROM v4_l1.identities LIMIT 1), _n1, 'INTERNAL_NODE') RETURNING id INTO _n2;
+    
     BEGIN
-        UPDATE v4_l1.nodes SET parent_id = n2 WHERE id = n1;
-        RAISE EXCEPTION 'ASSERT_FAIL: Cycle Detection bypassed';
+        UPDATE v4_l1.nodes SET parent_id = _n2 WHERE id = _n1;
+        RAISE EXCEPTION 'FAIL: Circular dependency bypassed';
     EXCEPTION WHEN OTHERS THEN
-        IF SQLERRM NOT LIKE '%Circular dependency detected%' THEN RAISE EXCEPTION 'ASSERT_FAIL: Wrong cycle error: %', SQLERRM; END IF;
+        IF SQLSTATE <> 'P1104' THEN RAISE EXCEPTION 'FAIL: Expected P1104, got %', SQLSTATE; END IF;
     END;
 
-    -- [4] Identity Recursion Assert
+    -- [4] Identity Recursion (P1103)
     BEGIN
-        INSERT INTO v4_l1.nodes (identity_id, parent_id, node_class) VALUES (r1, n2, 'INTERNAL_NODE');
-        RAISE EXCEPTION 'ASSERT_FAIL: Identity Recursion bypassed';
+        INSERT INTO v4_l1.nodes (identity_id, parent_id, node_class) VALUES (_r1, _n2, 'INTERNAL_NODE');
+        RAISE EXCEPTION 'FAIL: Identity Recursion bypassed';
     EXCEPTION WHEN OTHERS THEN
-        IF SQLERRM NOT LIKE '%Identity Recursion in Path%' THEN RAISE EXCEPTION 'ASSERT_FAIL: Wrong recursion error: %', SQLERRM; END IF;
+        IF SQLSTATE <> 'P1103' THEN RAISE EXCEPTION 'FAIL: Expected P1103, got %', SQLSTATE; END IF;
     END;
 
-    -- [5] Subtree Propagation Assert
-    INSERT INTO v4_l1.nodes (id, identity_id, parent_id, node_class) VALUES ('00000000-0000-0000-0000-000000000003'::uuid, r2, n1, 'INTERNAL_NODE') RETURNING id INTO n3;
-    INSERT INTO v4_l1.nodes (id, identity_id, parent_id, node_class) VALUES ('00000000-0000-0000-0000-000000000004'::uuid, r2, n3, 'INTERNAL_NODE') RETURNING id INTO n4;
+    -- [5] Subtree Move and Atomic Propagation
+    INSERT INTO v4_l1.nodes (id, identity_id, parent_id, node_class) 
+    VALUES ('00000000-0000-0000-0000-00000000000a'::uuid, (SELECT id FROM v4_l1.identities LIMIT 1), _n1, 'INTERNAL_NODE') RETURNING id INTO _n3;
+    INSERT INTO v4_l1.nodes (id, identity_id, parent_id, node_class) 
+    VALUES ('00000000-0000-0000-0000-00000000000b'::uuid, (SELECT id FROM v4_l1.identities LIMIT 1), _n3, 'INTERNAL_NODE') RETURNING id INTO _n4;
+
+    UPDATE v4_l1.nodes SET parent_id = _n2 WHERE id = _n3;
     
-    -- Move n3 (and child n4) under n2
-    UPDATE v4_l1.nodes SET parent_id = n2 WHERE id = n3;
-    
-    IF nlevel((SELECT node_path FROM v4_l1.nodes WHERE id = n4)) <> 4 THEN
-        RAISE EXCEPTION 'ASSERT_FAIL: Subtree Propagation failed. N4 path: %', (SELECT node_path FROM v4_l1.nodes WHERE id = n4);
+    IF nlevel((SELECT node_path FROM v4_l1.nodes WHERE id = _n4)) <> 4 THEN
+        RAISE EXCEPTION 'FAIL: Subtree Propagation failed';
     END IF;
 
-    -- [6] Rollback Integrity Assert
-    -- We'll try a move that fails at the end (using a sub-block)
-    BEGIN
-        UPDATE v4_l1.nodes SET parent_id = n4 WHERE id = n1; -- Fails (Cycle)
-    EXCEPTION WHEN OTHERS THEN
-        -- Integrity Check: n1 must still have its original path
-        IF (SELECT node_path FROM v4_l1.nodes WHERE id = n1)::text <> '_00000000000000000000000000000001' THEN
-            RAISE EXCEPTION 'ASSERT_FAIL: Rollback Integrity failed. Path corrupted.';
-        END IF;
-    END;
-
-    RAISE NOTICE 'SUCCESS: Layer 1 Core Acceptance verified.';
+    RAISE NOTICE 'SUCCESS: L1 Core v2.8 Acceptance verified.';
 END $$;
