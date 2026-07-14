@@ -1,5 +1,6 @@
--- MJRH V4 — Layer 1: THE FROZEN CORE (v2.6)
-CREATE SCHEMA IF NOT EXISTS v4_l1;
+-- MJRH V4 — Layer 1: THE FROZEN CORE (v2.7 - FINAL)
+DROP SCHEMA IF EXISTS v4_l1 CASCADE;
+CREATE SCHEMA v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
 -- [TABLE] Identity Registry
@@ -26,16 +27,24 @@ CREATE TABLE v4_l1.nodes (
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
 -- [RPC: Resolve Sovereign Root]
+-- Fixed: Now returns the IDENTITY_ID of the sovereign root node.
 CREATE OR REPLACE FUNCTION v4_l1.resolve_sovereign_root(target_node_id uuid)
 RETURNS jsonb AS $$
 DECLARE
     _path ltree;
-    _root_id uuid;
+    _root_node_id uuid;
+    _sovereign_identity_id uuid;
 BEGIN
     SELECT node_path INTO _path FROM v4_l1.nodes WHERE id = target_node_id;
     IF _path IS NULL THEN RETURN NULL; END IF;
-    _root_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
-    RETURN jsonb_build_object('sovereign_id', _root_id, 'path', _path::text);
+    
+    -- Extract first node ID from path
+    _root_node_id := (replace(subltree(_path, 0, 1)::text, '_', ''))::uuid;
+    
+    -- Get the identity associated with that root node
+    SELECT identity_id INTO _sovereign_identity_id FROM v4_l1.nodes WHERE id = _root_node_id;
+    
+    RETURN jsonb_build_object('sovereign_id', _sovereign_identity_id, 'path', _path::text);
 END;
 $$ LANGUAGE plpgsql STABLE;
 
@@ -51,25 +60,19 @@ BEGIN
             IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT_VIOLATION'; END IF;
         END IF;
 
-        IF NEW.parent_id IS NOT NULL THEN
+        IF NEW.parent_id IS NULL THEN 
+            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
+        ELSE
             SELECT node_path FROM v4_l1.nodes WHERE id = NEW.parent_id INTO _p_path;
+            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
         END IF;
 
-        -- Cycle Detection
         IF (TG_OP = 'UPDATE') AND (NEW.parent_id IS NOT NULL) THEN
-            IF (OLD.node_path @> _p_path) THEN
+            IF (OLD.node_path @> (SELECT node_path FROM v4_l1.nodes WHERE id = NEW.parent_id)) THEN
                 RAISE EXCEPTION 'CIRCULAR_DEPENDENCY_VIOLATION';
             END IF;
         END IF;
 
-        -- Path Calculation
-        IF NEW.parent_id IS NULL THEN 
-            NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
-        ELSE
-            NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::label::ltree;
-        END IF;
-
-        -- Identity Recursion (Disjoint branch check)
         IF EXISTS (
             SELECT 1 FROM v4_l1.nodes 
             WHERE identity_id = NEW.identity_id AND id <> NEW.id
@@ -82,7 +85,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- [LOGIC: Subtree Propagation with Recursive Guard]
+-- [LOGIC: Subtree Propagation]
 CREATE OR REPLACE FUNCTION v4_l1.fn_l1_propagation() RETURNS trigger AS $$
 BEGIN
     IF (pg_trigger_depth() > 1) THEN RETURN NEW; END IF;
@@ -95,5 +98,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_l1_node_before BEFORE INSERT OR UPDATE ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_node_guard();
-CREATE TRIGGER trg_l1_node_after AFTER UPDATE OF node_path ON v4_l1.nodes FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_propagation();
+CREATE TRIGGER trg_l1_node_before BEFORE INSERT OR UPDATE ON v4_l1.nodes 
+FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_node_guard();
+
+CREATE TRIGGER trg_l1_node_after AFTER UPDATE ON v4_l1.nodes 
+FOR EACH ROW EXECUTE FUNCTION v4_l1.fn_l1_propagation();
