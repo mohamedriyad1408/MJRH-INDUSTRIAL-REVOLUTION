@@ -50,16 +50,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
-CREATE OR REPLACE FUNCTION v4_l1.resolve_hierarchy(_node_id uuid) RETURNS uuid[] AS $$
+CREATE OR REPLACE FUNCTION v4_l1.resolve_hierarchy(_node_id uuid)
+RETURNS jsonb AS $$
 BEGIN
-    RETURN (
-        SELECT array_agg((replace(lbl, '_', ''))::uuid)
-        FROM (
-            SELECT unnest(ltree2text_array(node_path)) as lbl
-            FROM v4_l1.nodes WHERE id = _node_id
-        ) s
+    RETURN jsonb_build_object(
+        'v', '1.0',
+        'hierarchy', (SELECT array_agg((replace(lbl, '_', ''))::uuid) FROM (SELECT unnest(ltree2text_array(node_path)) as lbl FROM v4_l1.nodes WHERE id = _node_id) s)
     );
 END;
+$$ LANGUAGE plpgsql STABLE;
 $$ LANGUAGE plpgsql STABLE;
 
 -- [LOGIC]
