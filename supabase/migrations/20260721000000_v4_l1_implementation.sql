@@ -1,4 +1,4 @@
--- MJRH V4 — Layer 1: HARDENED CORE (v2.8 - FINAL REFACTOR)
+-- MJRH V4 — Layer 1: HARDENED CORE (v2.9 - DEFINITIVE)
 CREATE SCHEMA IF NOT EXISTS v4_l1;
 CREATE EXTENSION IF NOT EXISTS ltree;
 
@@ -27,48 +27,33 @@ CREATE TABLE v4_l1.nodes (
 
 CREATE INDEX idx_nodes_path_gist ON v4_l1.nodes USING gist(node_path);
 
--- [LOGIC: Path Calculation]
-CREATE OR REPLACE FUNCTION v4_l1.fn_compute_path(_node_id uuid, _parent_id uuid) RETURNS ltree AS $$
-DECLARE
-    _p_path ltree;
-    _label label := ('_' || replace(_node_id::text, '-', ''))::label;
-BEGIN
-    IF _parent_id IS NULL THEN RETURN _label::ltree; END IF;
-    SELECT node_path FROM v4_l1.nodes WHERE id = _parent_id INTO _p_path;
-    IF _p_path IS NULL THEN 
-        RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101';
-    END IF;
-    RETURN _p_path || _label;
-END;
-$$ LANGUAGE plpgsql STABLE;
-
--- [LOGIC: Invariant Assertion]
-CREATE OR REPLACE FUNCTION v4_l1.fn_assert_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void AS $$
+-- [LOGIC: Invariant Assertions]
+CREATE OR REPLACE FUNCTION v4_l1.fn_assert_l1_invariants(_new v4_l1.nodes, _old v4_l1.nodes DEFAULT NULL) RETURNS void AS $$
 DECLARE
     _is_sov boolean;
 BEGIN
     -- 1. Sovereign Root Requirement
     IF _new.parent_id IS NULL THEN
         SELECT is_sovereign_root INTO _is_sov FROM v4_l1.identities WHERE id = _new.identity_id;
-        IF NOT _is_sov THEN 
-            RAISE EXCEPTION 'NON_SOVEREIGN_ROOT' USING ERRCODE = 'P1102';
-        END IF;
+        IF NOT _is_sov THEN RAISE EXCEPTION 'NON_SOVEREIGN_ROOT' USING ERRCODE = 'P1102'; END IF;
     END IF;
 
-    -- 2. Identity Recursion (1:N Disjoint Rule)
-    IF EXISTS (
-        SELECT 1 FROM v4_l1.nodes n
-        WHERE n.id IN (SELECT (replace(lbl, '_', ''))::uuid FROM unnest(ltree2text_array(_new.node_path)) AS lbl)
-        AND n.identity_id = _new.identity_id AND n.id <> _new.id
-    ) THEN
-        RAISE EXCEPTION 'IDENTITY_PATH_RECURSION' USING ERRCODE = 'P1103';
-    END IF;
-
-    -- 3. Cycle Detection
+    -- 2. Cycle Detection (Strict Path containment)
     IF _old IS NOT NULL AND _new.parent_id IS DISTINCT FROM _old.parent_id THEN
         IF _old.node_path @> (SELECT node_path FROM v4_l1.nodes WHERE id = _new.parent_id) THEN
             RAISE EXCEPTION 'CIRCULAR_DEPENDENCY' USING ERRCODE = 'P1104';
         END IF;
+    END IF;
+
+    -- 3. Identity Path Uniqueness (Mathematical Check)
+    -- This checks the identity_id against the identity_ids of ALL nodes in the calculated path.
+    IF EXISTS (
+        SELECT 1 FROM v4_l1.nodes n
+        WHERE n.id IN (SELECT (replace(lbl, '_', ''))::uuid FROM unnest(ltree2text_array(_new.node_path)) AS lbl)
+        AND n.identity_id = _new.identity_id
+        AND n.id <> _new.id
+    ) THEN
+        RAISE EXCEPTION 'IDENTITY_PATH_RECURSION' USING ERRCODE = 'P1103';
     END IF;
 END;
 $$ LANGUAGE plpgsql STABLE;
@@ -76,9 +61,12 @@ $$ LANGUAGE plpgsql STABLE;
 -- [LOGIC: Subtree Propagation]
 CREATE OR REPLACE FUNCTION v4_l1.fn_propagate_path() RETURNS trigger AS $$
 BEGIN
+    -- Guard: Only allow the top-level trigger to propagate
     IF (pg_trigger_depth() > 1) THEN RETURN NEW; END IF;
+
     IF (OLD.node_path IS DISTINCT FROM NEW.node_path) THEN
-        UPDATE v4_l1.nodes SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
+        UPDATE v4_l1.nodes 
+        SET node_path = NEW.node_path || subpath(node_path, nlevel(OLD.node_path))
         WHERE node_path <@ OLD.node_path AND id <> NEW.id;
     END IF;
     RETURN NEW;
@@ -87,10 +75,21 @@ $$ LANGUAGE plpgsql;
 
 -- [ORCHESTRATION: Trigger]
 CREATE OR REPLACE FUNCTION v4_l1.trg_l1_orchestrator() RETURNS trigger AS $$
+DECLARE
+    _p_path ltree;
 BEGIN
     IF TG_OP = 'UPDATE' THEN NEW.version := OLD.version + 1; END IF;
-    NEW.node_path := v4_l1.fn_compute_path(NEW.id, NEW.parent_id);
-    PERFORM v4_l1.fn_assert_invariants(NEW, CASE WHEN TG_OP = 'UPDATE' THEN OLD ELSE NULL END);
+    
+    -- Path Calculation
+    IF NEW.parent_id IS NULL THEN 
+        NEW.node_path := ('_' || replace(NEW.id::text, '-', ''))::ltree;
+    ELSE
+        SELECT node_path FROM v4_l1.nodes WHERE id = NEW.parent_id INTO _p_path;
+        IF _p_path IS NULL THEN RAISE EXCEPTION 'PARENT_NOT_FOUND' USING ERRCODE = 'P1101'; END IF;
+        NEW.node_path := _p_path || ('_' || replace(NEW.id::text, '-', ''))::ltree;
+    END IF;
+
+    PERFORM v4_l1.fn_assert_l1_invariants(NEW, CASE WHEN TG_OP = 'UPDATE' THEN OLD ELSE NULL END);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
