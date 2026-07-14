@@ -1,8 +1,7 @@
--- MJRH V4 — Layer 3: Readiness & Capability (Final Frozen Core v2.8)
+-- MJRH V4 — Layer 3: Readiness & Capability (Final Frozen Core v2.9)
 CREATE SCHEMA IF NOT EXISTS v4_l3;
-CREATE EXTENSION IF NOT EXISTS ltree;
 
--- [TABLE] Capability Definitions
+-- [TABLE] Capability Catalog
 CREATE TABLE v4_l3.capability_definitions (
     id text PRIMARY KEY,
     name_en text NOT NULL,
@@ -38,19 +37,19 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_l3_cycle_prevent BEFORE INSERT OR UPDATE ON v4_l3.capability_dependencies 
 FOR EACH ROW EXECUTE FUNCTION v4_l3.fn_prevent_capability_cycles();
 
--- [TABLE] Resource Registry (Weighted Capacity Model)
+-- [TABLE] Resource Registry
 CREATE TABLE v4_l3.resource_registry (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     org_node_id uuid NOT NULL REFERENCES v4_l1.nodes(id),
-    resource_type text NOT NULL,
-    health_score int DEFAULT 100 CHECK (health_score BETWEEN 0 AND 100),
+    resource_type text NOT NULL CHECK (resource_type IN ('HUMAN', 'EQUIPMENT', 'VEHICLE', 'LOCATION', 'SOFTWARE', 'CASH')),
+    health_status text NOT NULL DEFAULT 'OPTIMAL' CHECK (health_status IN ('OPTIMAL', 'DEGRADED', 'CRITICAL', 'FAIL')),
     total_capacity int NOT NULL DEFAULT 1,
-    availability_status text NOT NULL DEFAULT 'AVAILABLE',
-    lifecycle_state text NOT NULL DEFAULT 'OPERATIONAL',
+    availability_status text NOT NULL DEFAULT 'AVAILABLE' CHECK (availability_status IN ('AVAILABLE', 'BUSY', 'OFFLINE')),
+    lifecycle_state text NOT NULL DEFAULT 'OPERATIONAL' CHECK (lifecycle_state IN ('NEW', 'OPERATIONAL', 'MAINTENANCE', 'RETIRED')),
     created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- [TABLE] Resource Reservations (L3/L4 Interface)
+-- [TABLE] Resource Reservations
 CREATE TABLE v4_l3.resource_reservations (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     resource_id uuid NOT NULL REFERENCES v4_l3.resource_registry(id),
@@ -89,49 +88,84 @@ CREATE TABLE v4_l3.competency_matrix (
     valid_until timestamptz
 );
 
--- [ENGINE] Final Hardened Readiness Evaluator
+-- [HELPER] Proficiency Comparison
+CREATE OR REPLACE FUNCTION v4_l3.fn_proficiency_weight(_level text) RETURNS int AS $$
+BEGIN
+    RETURN CASE _level
+        WHEN 'BEGINNER' THEN 1
+        WHEN 'INTERMEDIATE' THEN 2
+        WHEN 'ADVANCED' THEN 3
+        WHEN 'EXPERT' THEN 4
+        ELSE 0
+    END;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- [ENGINE] Final Hardened Readiness Evaluator (v2.9)
 CREATE OR REPLACE FUNCTION v4_l3.fn_evaluate_readiness(
     _instance_id uuid,
     _actor_context_id uuid DEFAULT NULL
 ) RETURNS jsonb AS $$
 DECLARE
     _instance record;
-    _unready_dependency text;
+    _unready_dependency record;
     _req record;
-    _net_available_capacity int;
+    _available_count int;
     _governance jsonb;
 BEGIN
-    -- 1. Structural Check
+    -- 1. Instance Check
     SELECT * FROM v4_l3.capability_instances WHERE id = _instance_id INTO _instance;
-    IF NOT FOUND THEN RETURN jsonb_build_object('state', 'UNKNOWN'); END IF;
-    IF NOT _instance.is_active THEN RETURN jsonb_build_object('state', 'BLOCKED', 'reason', 'INACTIVE'); END IF;
+    IF NOT FOUND THEN RETURN jsonb_build_object('state', 'UNKNOWN', 'reason', 'INSTANCE_NOT_FOUND'); END IF;
+    IF NOT _instance.is_active THEN RETURN jsonb_build_object('state', 'BLOCKED', 'reason', 'INSTANCE_INACTIVE'); END IF;
 
-    -- 2. DAG Dependency Validation
+    -- 2. RECURSIVE Dependency Check with Internal Cycle Protection
     WITH RECURSIVE dep_tree AS (
-        SELECT dependency_id FROM v4_l3.capability_dependencies WHERE dependent_id = _instance.definition_id
-        UNION
-        SELECT d.dependency_id FROM v4_l3.capability_dependencies d
-        INNER JOIN dep_tree dt ON dt.dependency_id = d.dependent_id
+        SELECT dependency_id, ARRAY[dependent_id] as visited_path
+        FROM v4_l3.capability_dependencies WHERE dependent_id = _instance.definition_id
+        UNION ALL
+        SELECT d.dependency_id, dt.visited_path || d.dependent_id
+        FROM v4_l3.capability_dependencies d
+        JOIN dep_tree dt ON dt.dependency_id = d.dependent_id
+        WHERE NOT (d.dependency_id = ANY(dt.visited_path))
     )
-    SELECT dt.dependency_id INTO _unready_dependency
+    SELECT ci.definition_id INTO _unready_dependency
     FROM dep_tree dt
     LEFT JOIN v4_l3.capability_instances ci ON dt.dependency_id = ci.definition_id AND ci.org_node_id = _instance.org_node_id
     WHERE ci.id IS NULL OR ci.is_active = false LIMIT 1;
 
-    IF FOUND THEN RETURN jsonb_build_object('state', 'MISSING_DEPENDENCY', 'capability', _unready_dependency); END IF;
+    IF FOUND THEN RETURN jsonb_build_object('state', 'MISSING_DEPENDENCY', 'capability', _unready_dependency.definition_id); END IF;
 
-    -- 3. Weighted Capacity & Reservation Check
+    -- 3. Per-Resource Capacity & Competency Verification
     FOR _req IN SELECT * FROM v4_l3.capability_requirements WHERE capability_id = _instance.definition_id LOOP
-        SELECT COALESCE(SUM(r.total_capacity), 0) - COALESCE((SELECT SUM(capacity_consumed) FROM v4_l3.resource_reservations WHERE resource_id = r.id AND valid_until > now()), 0)
-        INTO _net_available_capacity
-        FROM v4_l3.resource_registry r
-        WHERE r.org_node_id = _instance.org_node_id AND r.resource_type = _req.resource_type
-        AND r.health_score > 20 AND r.availability_status = 'AVAILABLE' AND r.lifecycle_state = 'OPERATIONAL';
+        SELECT COALESCE(SUM(sub.net_cap), 0) INTO _available_count
+        FROM (
+            SELECT (r.total_capacity - COALESCE((SELECT SUM(capacity_consumed) FROM v4_l3.resource_reservations WHERE resource_id = r.id AND valid_until > now()), 0)) as net_cap
+            FROM v4_l3.resource_registry r
+            WHERE r.org_node_id = _instance.org_node_id AND r.resource_type = _req.resource_type
+            AND r.health_status IN ('OPTIMAL', 'DEGRADED') AND r.availability_status = 'AVAILABLE' AND r.lifecycle_state = 'OPERATIONAL'
+            AND (
+                _req.resource_type <> 'HUMAN' 
+                OR EXISTS (
+                    SELECT 1 FROM v4_l3.competency_matrix c 
+                    WHERE c.resource_id = r.id AND c.capability_id = _instance.definition_id
+                    AND v4_l3.fn_proficiency_weight(c.proficiency_level) >= v4_l3.fn_proficiency_weight(_req.min_proficiency)
+                    AND c.valid_from <= now() AND (c.valid_until IS NULL OR c.valid_until > now())
+                )
+            )
+        ) sub;
 
-        IF _net_available_capacity < _req.required_capacity THEN
-            RETURN jsonb_build_object('state', 'INSUFFICIENT_CAPACITY', 'type', _req.resource_type, 'needed', _req.required_capacity, 'available', _net_available_capacity);
+        IF _available_count < _req.required_capacity THEN
+            RETURN jsonb_build_object('state', 'INSUFFICIENT_CAPACITY', 'type', _req.resource_type, 'needed', _req.required_capacity, 'available', _available_count);
         END IF;
     END LOOP;
+
+    -- 4. Governance check (L2)
+    IF _actor_context_id IS NOT NULL THEN
+        _governance := v4_l2.fn_evaluate_governance(_actor_context_id, _instance.org_node_id, 'capability.pulse', 'system');
+        IF (_governance->>'decision' <> 'ALLOW') THEN
+            RETURN jsonb_build_object('state', 'POLICY_BLOCKED', 'reason', _governance->>'reason');
+        END IF;
+    END IF;
 
     RETURN jsonb_build_object('state', 'READY', 'evaluated_at', now());
 END;
