@@ -10,6 +10,7 @@
 ## Phase 1: Architecture (CURRENT)
 - 1.1 Domain Blueprint (AUDITED & FIXED)
 - 1.2 ER Diagram (AUDITED & FIXED)
-- 1.3 Invariants Catalog (NEXT)
+- 1.3 Invariants Catalog (AUDITED & FIXED)
 - 1.4 Temporal Rules
 - 1.5 RPC Contracts
+- 1.4 Temporal Rules (NEXT)
