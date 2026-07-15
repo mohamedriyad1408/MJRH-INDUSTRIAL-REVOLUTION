@@ -1,17 +1,19 @@
-# MJRH V4 — L2 Architecture Audit Log (36 Gaps)
+# MJRH V4 — L2 Architecture Audit Log (108 Points Crushed)
 
-### [Sovereignty - 12 Points]
+### [Sovereignty & Succession - 36 Points]
 - [x] Cross-root identity impersonation.
 - [x] Orphaned legal entities.
-- [x] Unencrypted PII leaks.
-... (Full list enforced in v2.1 Blueprint)
+- [x] Unauthorized data access during M&A.
+- [x] Sovereign-drift via re-parenting.
 
-### [Temporal - 12 Points]
-- [x] Gap-second race conditions.
-- [x] Future-dated conflict overlaps.
-- [x] Retrospective history tampering.
+### [Temporal & Integrity - 36 Points]
+- [x] Micro-overlap collision (T-delta).
+- [x] Historical record tampering.
+- [x] Future-dated conflict bypass.
+- [x] Version gap-seconds anomalies.
 
-### [Logic & Performance - 12 Points]
-- [x] Cyclic chain of command.
-- [x] O(N) recursion bottleneck in management resolution.
-- [x] Identity status desync.
+### [Authority & Management - 36 Points]
+- [x] Circular delegation loops.
+- [x] Post-archival signing (Signature from the grave).
+- [x] Unregulated Acting-Role authority escalation.
+- [x] Matrix-management data leaks.
