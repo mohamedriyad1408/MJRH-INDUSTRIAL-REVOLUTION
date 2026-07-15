@@ -1,15 +1,12 @@
-# MJRH V4 — Layer 2 Temporal Rules v1.0
+# MJRH V4 — Layer 2 Temporal Rules v1.3 (Defensive Grade)
 
-## 1. Versioning Pattern
-All legal assignments and authorities follow an append-only, versioned pattern. 
-- **Immutable Past:** No record can be edited once `valid_until` is set.
-- **Traceable Succession:** `superseded_by_id` links versions into a continuous chain.
+## 1. Absolute Continuity
+- **Zero-Overlap Invariant:** PRIMARY assignments use PostgreSQL `EXCLUDE` constraints with `TSTZRANGE` to prevent person-level identity duplication for even a microsecond.
+- **Atomic Succession:** Any modification to a legal attribute MUST spawn a new version with an audit-trace to the initiating Actor Assignment ID.
 
-## 2. Integrity Guards
-- **[TEMP_001] Continuity:** New versions must begin exactly when previous versions end.
-- **[TEMP_002] Atomic Handover:** Closing a version and opening a new one must be a single DB transaction.
-- **[TEMP_003] Logical Deletion:** Removal is handled by setting `valid_until = now()` and status to `ARCHIVED`.
+## 2. Temporal Accountability
+- **Accountability Link:** Every version change must record `authorized_by_assignment_id` to maintain the legal chain of command.
+- **Eternal URN:** Once a Global URN is archived, it remains locked in the global registry to prevent historical shadowing.
 
-## 3. Precision Rules
-- All timestamps must use `transaction_timestamp()` for consistency within a pulse.
-- Overlap prevention is enforced via `EXCLUDE` constraints using `TSTZRANGE` where applicable.
+## 3. Propagation & Revocation
+- **Cascading Invalidation:** If a Root Assignment is suspended, all downstream Delegations and Signatures are automatically frozen at the DB level.
