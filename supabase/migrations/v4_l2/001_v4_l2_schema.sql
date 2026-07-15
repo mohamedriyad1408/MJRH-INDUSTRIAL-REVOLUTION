@@ -1,7 +1,0 @@
-CREATE SCHEMA IF NOT EXISTS v4_l2;
-DO $$ BEGIN
-    CREATE TYPE v4_l2.assignment_type AS ENUM ('PRIMARY', 'SECONDARY', 'ACTING', 'SHARED');
-    CREATE TYPE v4_l2.reporting_type AS ENUM ('DIRECT', 'FUNCTIONAL', 'MATRIX');
-    CREATE TYPE v4_l2.signature_domain AS ENUM ('CONTRACTS', 'INVOICES', 'HR', 'FINANCE', 'BANK', 'TAX');
-    CREATE TYPE v4_l2.legal_status AS ENUM ('DRAFT', 'ACTIVE', 'SUSPENDED', 'ARCHIVED');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
