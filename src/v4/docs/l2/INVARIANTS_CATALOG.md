@@ -1,15 +1,14 @@
-# MJRH V4 — Layer 2 Invariants Catalog v1.0
+# MJRH V4 — Layer 2 Invariants Catalog v1.1
 
-## 1. Sovereignty Invariants
-- **[L2_INV_001] Strict Sovereign Binding:** A Person ID is bound to a single Sovereign Root upon its first Assignment. Cross-sovereign identity usage is prohibited.
-- **[L2_INV_002] Structural Alignment:** All Departments and Positions must resolve to the same Sovereign Root as their underlying L1 Nodes.
+## 1. Sovereignty & Registration
+- **[L2_INV_001] Permanent Binding:** Once an Identity is linked to Root A, it cannot be linked to Root B.
+- **[L2_INV_002] Sovereign Consistency:** All Position Instances must share the same Sovereign Root as their anchoring L1 Node.
 
-## 2. Assignment Invariants
-- **[L2_INV_003] Primary Singularity:** A Person can hold exactly ONE active PRIMARY assignment per Organization at any point in time.
-- **[L2_INV_004] Temporal Non-Overlap:** Sequential assignments for the same Person-Position pair must have disjoint time ranges.
-- **[L2_INV_005] Status Integrity:** Active assignments require an ACTIVE L1 Node and an ACTIVE L2 Person.
+## 2. Assignment & Temporal Guard
+- **[L2_INV_003] Primary Uniqueness:** Max one ACTIVE PRIMARY assignment per Person-Organization pair.
+- **[L2_INV_004] Atomic Time Windows:** All temporal changes must use `transaction_timestamp()` to ensure zero-gap sequencing.
+- **[L2_INV_005] Immutability:** Historical assignments are read-only and version-locked.
 
-## 3. Authority & Delegation Invariants
-- **[L2_INV_006] Reporting DAG:** Reporting lines must be acyclic. Self-reporting or circular reporting is blocked at the DB layer.
-- **[L2_INV_007] Delegation Lifecycle:** Delegations are strictly bound by the Grantor's assignment period. If the Grantor leaves, delegations expire.
-- **[L2_INV_008] Signature Thresholds:** A Signature Right cannot be granted for a domain or amount that exceeds the grantor's own Authority.
+## 3. Hierarchy Guard
+- **[L2_INV_006] Acyclic Chain:** Reporting lines must form a DAG.
+- **[L2_INV_007] Scope Authority:** A manager's functional authority is limited to the sub-tree defined in L1.

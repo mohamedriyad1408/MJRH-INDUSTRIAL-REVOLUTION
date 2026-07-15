@@ -1,17 +1,14 @@
-# MJRH V4 — Layer 2 Domain Blueprint v1.2 (Audit Hardened)
+# MJRH V4 — Layer 2 Domain Blueprint v1.3 (Post-Audit)
 
-## 1. Sovereign Identity Binding (FIXED: Isolation Leak)
-- Every **Person** and **Organization** is physically bound to one **L1 Sovereign Root**.
-- Cross-Sovereign assignments are strictly prohibited to prevent data/legal bleeding.
+## 1. Party & Sovereign Binding
+- **Identity Binding:** Identities must be formally registered to a Sovereign Root BEFORE any functional assignment. 
+- **Atomic Registration:** Registration uses a Mutex to prevent cross-sovereign race conditions.
 
-## 2. Functional Hierarchy (FIXED: Sovereign Desync)
-- **Departments** and **Positions** derive their sovereign context dynamically from the L1 Node path.
-- Moving a Node in L1 automatically updates the functional sovereignty in L2.
+## 2. Functional Hierarchy Optimization
+- **Job Definition:** Global template for a role (e.g., "Senior Accountant").
+- **Position Instance:** The actual seat in the Org-Tree (e.g., "Senior Accountant at Branch X").
+- **Rule:** Position Instances are unique to an L1 Node.
 
-## 3. Reporting Integrity (FIXED: Reporting Loops)
-- The Chain of Command must form a **Directed Acyclic Graph (DAG)**.
-- A position cannot report to itself or any of its subordinates.
-
-## 4. Temporal Integrity (FIXED: Overlaps & Amnesia)
-- **Assignments:** Zero-tolerance for overlapping time windows for PRIMARY roles.
-- **Metadata Versioning:** Changes to legal names or attributes trigger a version increment (Historical Persistence).
+## 3. Reporting & Command
+- **Isolation:** Reporting lines (Direct/Matrix) are strictly contained within a single Sovereign Root.
+- **Integrity:** Self-reporting or circular references are blocked by a recursive invariant check.
