@@ -1,69 +1,67 @@
--- MJRH V4 — Layer 2: Legal Identity Core (v2.2 Enterprise Grade)
+-- MJRH V4 — Layer 2: LEGAL CORE (v4.0 - ETERNAL)
 CREATE SCHEMA IF NOT EXISTS v4_l2;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
+-- [TYPES]
 DO $$ BEGIN
-    CREATE TYPE v4_l2.actor_type AS ENUM ('HUMAN', 'SERVICE', 'SYNTHETIC');
-    CREATE TYPE v4_l2.legal_status AS ENUM ('DRAFT', 'ACTIVE', 'SUSPENDED', 'ARCHIVED');
-    CREATE TYPE v4_l2.assignment_type AS ENUM ('PRIMARY', 'SECONDARY', 'ACTING', 'INTERIM', 'CONSULTANT', 'EXTERNAL');
+    CREATE TYPE v4_l2.assignment_status AS ENUM ('DRAFT', 'ACTIVE', 'SUSPENDED', 'ARCHIVED');
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- [TABLE] Actors
-CREATE TABLE v4_l2.actors (
+-- [TABLE] Job Blueprints
+CREATE TABLE v4_l2.job_blueprints (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    identity_id uuid NOT NULL UNIQUE REFERENCES v4_l1.identities(id) ON DELETE RESTRICT,
-    type v4_l2.actor_type NOT NULL,
-    sovereign_root_id uuid NOT NULL,
-    created_at timestamptz DEFAULT now()
+    code text UNIQUE NOT NULL,
+    title text NOT NULL,
+    required_capabilities text[] DEFAULT '{}'
 );
-ALTER TABLE v4_l2.actors ENABLE ROW LEVEL SECURITY;
 
--- [TABLE] Positions
+-- [TABLE] Positions (Structural Seat)
 CREATE TABLE v4_l2.positions (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     node_id uuid NOT NULL UNIQUE REFERENCES v4_l1.nodes(id) ON DELETE RESTRICT,
-    sovereign_root_id uuid NOT NULL,
+    job_id uuid NOT NULL REFERENCES v4_l2.job_blueprints(id),
     reports_to_id uuid REFERENCES v4_l2.positions(id),
-    lifecycle_status v4_l2.legal_status DEFAULT 'ACTIVE',
-    created_at timestamptz DEFAULT now()
+    created_at timestamptz DEFAULT now(),
+    CONSTRAINT no_self_report CHECK (id <> reports_to_id)
 );
-ALTER TABLE v4_l2.positions ENABLE ROW LEVEL SECURITY;
 
--- [TABLE] Assignments (The Hardened Heart)
+-- [TABLE] Assignments (The Pulse)
 CREATE TABLE v4_l2.assignments (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     actor_id uuid NOT NULL REFERENCES v4_l2.actors(id),
     position_id uuid NOT NULL REFERENCES v4_l2.positions(id),
-    organization_id uuid NOT NULL, -- Logical link to sovereign
-    assignment_type v4_l2.assignment_type NOT NULL DEFAULT 'PRIMARY',
-    lifecycle_status v4_l2.legal_status NOT NULL DEFAULT 'DRAFT',
+    lifecycle_status v4_l2.assignment_status NOT NULL DEFAULT 'ACTIVE',
     version bigint NOT NULL DEFAULT 1,
+    aggregate_version bigint NOT NULL DEFAULT 1,
     effective_range tstzrange NOT NULL,
-    digest text, -- SHA256 of state
-    prev_digest text, -- Link to previous version
-    created_at timestamptz DEFAULT now(),
-    
-    -- Invariant: One primary per person per org
-    EXCLUDE USING gist (actor_id WITH =, effective_range WITH &&) WHERE (assignment_type = 'PRIMARY' AND lifecycle_status = 'ACTIVE')
+    created_at timestamptz DEFAULT now()
 );
-ALTER TABLE v4_l2.assignments ENABLE ROW LEVEL SECURITY;
 
--- [LOGIC: State Machine Validation]
-CREATE OR REPLACE FUNCTION v4_l2.fn_validate_legal_transition(_old v4_l2.legal_status, _new v4_l2.legal_status) RETURNS boolean AS $$
+-- [VALIDATORS]
+CREATE OR REPLACE FUNCTION v4_l2.fn_v_sovereign_lock(_actor_id uuid, _pos_id uuid) RETURNS void AS $$
 BEGIN
-    RETURN CASE 
-        WHEN _old = 'ARCHIVED' THEN FALSE -- Permanent state
-        WHEN _old = 'SUSPENDED' AND _new = 'ACTIVE' THEN TRUE
-        WHEN _old = 'DRAFT' AND _new = 'ACTIVE' THEN TRUE
-        WHEN _new = 'ARCHIVED' THEN TRUE
-        ELSE FALSE
-    END;
+    IF (SELECT sovereign_root_id FROM v4_l2.actors WHERE id = _actor_id) <> 
+       (SELECT (v4_l1.resolve_sovereign_root(node_id)->>'sovereign_id')::uuid FROM v4_l2.positions WHERE id = _pos_id) 
+    THEN RAISE EXCEPTION 'SOVEREIGN_LEAK' USING ERRCODE = 'P1202'; END IF;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql STABLE;
 
--- [LOGIC: Cryptographic Digest Generation]
-CREATE OR REPLACE FUNCTION v4_l2.fn_generate_assignment_digest(_row v4_l2.assignments) RETURNS text AS $$
+CREATE OR REPLACE FUNCTION v4_l2.fn_v_lifecycle_integrity(_actor_id uuid, _pos_id uuid) RETURNS void AS $$
 BEGIN
-    RETURN encode(digest(_row.actor_id::text || _row.position_id::text || _row.effective_range::text || COALESCE(_row.prev_digest, ''), 'sha256'), 'hex');
+    IF EXISTS (SELECT 1 FROM v4_l1.identities WHERE id = (SELECT identity_id FROM v4_l2.actors WHERE id = _actor_id) AND lifecycle_status = 'archived')
+    OR EXISTS (SELECT 1 FROM v4_l1.nodes WHERE id = (SELECT node_id FROM v4_l2.positions WHERE id = _pos_id) AND lifecycle_status = 'ARCHIVED')
+    THEN RAISE EXCEPTION 'ZOMBIE_ASSIGNMENT' USING ERRCODE = 'P1205'; END IF;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql STABLE;
+
+-- [ORCHESTRATOR]
+CREATE OR REPLACE FUNCTION v4_l2.trg_l2_master_pulse() RETURNS trigger AS $$
+BEGIN
+    PERFORM v4_l2.fn_v_sovereign_lock(NEW.actor_id, NEW.position_id);
+    PERFORM v4_l2.fn_v_lifecycle_integrity(NEW.actor_id, NEW.position_id);
+    NEW.version := OLD.version + 1;
+    NEW.aggregate_version := COALESCE(OLD.aggregate_version, 0) + 1;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_l2_main BEFORE INSERT OR UPDATE ON v4_l2.assignments FOR EACH ROW EXECUTE FUNCTION v4_l2.trg_l2_master_pulse();
