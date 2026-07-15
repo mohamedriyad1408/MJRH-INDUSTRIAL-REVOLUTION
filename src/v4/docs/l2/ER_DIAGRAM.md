@@ -1,22 +1,22 @@
-# MJRH V4 — Layer 2 ER Diagram v1.1 (Hardened)
+# MJRH V4 — Layer 2 ER Diagram v2.0 (Diamond Grade)
 
-## 1. Physical Relationship Map (Mermaid)
 ```mermaid
 erDiagram
-    IDENTITIES_L1 ||--|| PERSONS : "Identity Extension"
-    IDENTITIES_L1 ||--|| ORGANIZATIONS : "Sovereign Extension"
-    NODES_L1 ||--|| POSITIONS : "Functional Anchor"
+    IDENTITIES_L1 ||--|| LEGAL_ACTORS : "Existential Root"
+    LEGAL_ACTORS ||--|| PERSONS : "Is Human"
+    LEGAL_ACTORS ||--|| SERVICE_ACCOUNTS : "Is Machine"
     
-    PERSONS ||--o{ ASSIGNMENTS : "Mandated to"
-    POSITIONS ||--o{ ASSIGNMENTS : "Occupied by"
+    JOBS_GLOBAL ||--o{ POSITION_INSTANCES : "Defines"
+    NODES_L1 ||--|| POSITION_INSTANCES : "Anchors"
     
-    ASSIGNMENTS ||--o{ DELEGATIONS : "Authority Transfer"
-    ASSIGNMENTS ||--o{ SIGNATURES : "Legal Attestation"
+    LEGAL_ACTORS ||--o{ ASSIGNMENTS : "Holds"
+    POSITION_INSTANCES ||--o{ ASSIGNMENTS : "Contains"
     
-    POSITIONS ||--o{ POSITIONS : "Reports to (DAG)"
+    ASSIGNMENTS ||--o{ DELEGATIONS : "Extends Authority"
+    ASSIGNMENTS ||--o{ SIGNATURE_RIGHTS : "Grants Power"
 ```
 
-## 2. Integrity Guards (ERD Level)
-- **Composite Sovereign Keys:** Every assignment references the Sovereign Root ID from L1 to prevent cross-tenant data bleed.
-- **Materialized Chain of Command:** Positions use `ltree` for O(1) reporting line resolution and cycle prevention.
-- **Immutable Succession:** The `assignments` table enforces a linked-list pattern for version history.
+## 3. Integrity Constraints (Final)
+- **[INV_L2_ACTOR]:** No mandate can be exercised by an un-anchored actor.
+- **[INV_L2_CURRENCY]:** Financial authority is invalid without a matching L1 currency context.
+- **[INV_L2_ORDER]:** Sequential signing must follow the `approval_priority` field.

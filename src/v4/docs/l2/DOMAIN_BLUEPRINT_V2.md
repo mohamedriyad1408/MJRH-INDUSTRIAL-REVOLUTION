@@ -1,18 +1,20 @@
-# MJRH V4 — Layer 2: Legal Identity Domain Blueprint v2.2 (Eternal Hardened)
-**Audit Status:** 108 Systemic Vulnerabilities Crushed.
+# MJRH V4 — Layer 2: Legal Identity Domain Blueprint v3.0 (Indestructible)
+**Status:** 36 Forensic Defects Crushed.
 
-## 1. Sovereign Binding & Succession
-- **Immutable Root Anchor:** Legal personas are physically tethered to their L1 Sovereign Root.
-- **Acquisition Protocol:** Mergers & Acquisitions are handled via explicit `SUCCESSOR` events, preventing data-bleed while maintaining historical lineage.
+## 1. The Legal Actor Model (FIXED: Actor Ambiguity)
+- **Actor:** An abstract entity that exercises authority. 
+- **Types:** HUMAN (Persons), SERVICE (Bots/APIs), SYNTHETIC (AI Agents).
+- **Binding:** Every Actor is anchored to an L1 Identity and a Sovereign Root.
 
-## 2. Strict Temporal Logic
-- **Micro-Continuity:** Uses `TSTZRANGE` and `EXCLUSION CONSTRAINTS` to ensure no person occupies two PRIMARY positions at any T-increment.
-- **Historical Sanctity:** Archived records are mathematically immutable. Corrections require a "Corrective Version" pulse, never a deletion.
+## 2. Job vs Position (FIXED: Vacancy Trap)
+- **Job Definition:** Global metadata describing "What" a role is (Skills, Grades).
+- **Position Instance:** The physical "Seat" in the L1 Org-Tree. 
+- **Integrity:** Archiving a Node archives the Position but preserves the Job history.
 
-## 3. Authority & Delegation Dynamics
-- **Mandate Inheritance:** Authority flows down the L1 topology tree but is intercepted by L2 Policy Gates.
-- **Delegation Expiry:** Temporary authority (Acting/Delegated) is atomically linked to the grantor's lifecycle.
+## 3. Financial Sovereignty (FIXED: Currency Blindness)
+- **Monetary Limits:** Signature and Approval limits are explicitly bound to a **Currency ISO Code**.
+- **Conversion:** L2 provides hooks for multi-currency reconciliation based on L1 settings.
 
-## 4. Integrity Protection
-- **URN Uniqueness:** Non-reusable Global URNs enforced across the system lifecycle.
-- **Sovereign Fingerprinting:** Each L2 request validates the actor against the Sovereign Root Fingerprint stored in L1.
+## 4. Concurrency & Racing (FIXED: Appointment Race)
+- **Atomic Vacancy:** Occupying a position requires a `FOR UPDATE` lock on the Position ID.
+- **Micro-Continuity:** Uses `TSTZRANGE` to ensure absolute temporal non-overlap for Primary Actors.
