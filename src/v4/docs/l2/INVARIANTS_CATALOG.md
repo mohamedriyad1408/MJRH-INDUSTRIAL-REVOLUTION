@@ -1,14 +1,14 @@
-# MJRH V4 — Layer 2 Invariants Catalog v1.1
+# MJRH V4 — Layer 2 Invariants Catalog v1.2 (Hardened)
 
-## 1. Sovereignty & Registration
-- **[L2_INV_001] Permanent Binding:** Once an Identity is linked to Root A, it cannot be linked to Root B.
-- **[L2_INV_002] Sovereign Consistency:** All Position Instances must share the same Sovereign Root as their anchoring L1 Node.
+## 1. Sovereignty (Total Isolation)
+- **[INV_L2_001] Sovereign Attachment:** Persons/Orgs are atomic to a Root ID.
+- **[INV_L2_002] Path Consistency:** L2 entities must share L1 node ancestry.
 
-## 2. Assignment & Temporal Guard
-- **[L2_INV_003] Primary Uniqueness:** Max one ACTIVE PRIMARY assignment per Person-Organization pair.
-- **[L2_INV_004] Atomic Time Windows:** All temporal changes must use `transaction_timestamp()` to ensure zero-gap sequencing.
-- **[L2_INV_005] Immutability:** Historical assignments are read-only and version-locked.
+## 2. Temporal Logic (Slowly Changing Dimensions)
+- **[INV_L2_003] Zero-Gap Sequencing:** Assignments must be contiguous with no time leakage.
+- **[INV_L2_004] Immutable Past:** Any record with `effective_to < now()` is locked.
 
-## 3. Hierarchy Guard
-- **[L2_INV_006] Acyclic Chain:** Reporting lines must form a DAG.
-- **[L2_INV_007] Scope Authority:** A manager's functional authority is limited to the sub-tree defined in L1.
+## 3. Governance (The Chain)
+- **[INV_L2_005] Reporting DAG:** Mandatory Acyclicity.
+- **[INV_L2_006] Delegation Cap:** Duration(Delegation) <= Duration(Parent Assignment).
+- **[INV_L2_007] Identity Uniqueness:** 1:1 Global URN mapping enforced at L2.
