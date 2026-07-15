@@ -14,4 +14,5 @@
 - 1.4 Temporal Rules
 - 1.5 RPC Contracts
 - 1.4 Temporal Rules (AUDITED & FIXED)
-- 1.5 RPC Contracts (NEXT)
+- 1.5 RPC Contracts (AUDITED & FIXED)
+## Phase 2: Implementation (NEXT)
