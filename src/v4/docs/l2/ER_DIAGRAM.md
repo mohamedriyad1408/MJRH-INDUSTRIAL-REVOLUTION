@@ -1,24 +1,21 @@
-# MJRH V4 — Layer 2 ER Diagram v3.1 (Cohesion Hardened)
+# MJRH V4 — Layer 2 ER Diagram v4.2 (Coherent)
 
 ```mermaid
 erDiagram
-    IDENTITIES_L1 ||--|| LEGAL_ACTORS : "Sovereign Root"
-    LEGAL_ACTORS ||--|| PERSONS : "Bio-Data (Encrypted)"
-    LEGAL_ACTORS ||--|| SERVICE_ACCOUNTS : "Logic-Data"
+    IDENTITIES_L1 ||--|| ACTORS : "Sovereign Root"
+    ACTORS ||--o| PERSONS : "Bio-Data"
+    ACTORS ||--o| SERVICE_ACCOUNTS : "System-Data"
     
-    JOBS_GLOBAL ||--o{ POSITION_INSTANCES : "Defines"
-    NODES_L1 ||--|| POSITION_INSTANCES : "Anchors"
+    NODES_L1 ||--|| POSITIONS : "Structural Anchor"
     
-    LEGAL_ACTORS ||--o{ ASSIGNMENTS : "Occupies (Versioned)"
-    POSITION_INSTANCES ||--o{ ASSIGNMENTS : "Holds (Versioned)"
+    ACTORS ||--o{ ASSIGNMENTS : "Occupies"
+    POSITIONS ||--o{ ASSIGNMENTS : "Holds"
     
-    ASSIGNMENTS ||--o{ DELEGATIONS : "Recursive Links"
-    ASSIGNMENTS ||--o{ SIGNATURE_RIGHTS : "Fingerprinted"
-    
-    ASSIGNMENTS ||--o| ASSIGNMENTS : "Successor (Succession Link)"
-    REPORTING_LINES ||--|| LEGAL_ACTORS : "Contains Precedence Weight"
+    ASSIGNMENTS ||--o| ASSIGNMENTS : "Predecessor (Lineage)"
+    ASSIGNMENTS ||--o{ DELEGATIONS : "Recursive Transfer"
 ```
 
-## 3. Cohesion Rules
-- **[INV_L2_ACCOUNTABILITY]:** Every legal change records the `trace_id` of the governing Policy and the `actor_id`.
-- **[INV_L2_SUCCESSION]:** Assignments form an immutable chain via `successor_id`.
+## 3. Cohesion Constants
+- `sovereign_root_id`: Present in every table.
+- `version`: Sequential BigInt.
+- `lifecycle_status`: Enum (DRAFT, ACTIVE, SUSPENDED, ARCHIVED).
