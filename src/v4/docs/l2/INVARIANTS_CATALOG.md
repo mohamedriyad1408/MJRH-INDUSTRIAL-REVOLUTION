@@ -1,13 +1,14 @@
-# MJRH V4 — Layer 2 Invariants Catalog v1.3 (Audit Hardened)
+# MJRH V4 — Layer 2 Invariants Catalog v1.4 (Sovereign Bastion)
 
-## 1. Sovereign & Identity
-- **[L2_INV_001] Eternal Binding:** Global URNs are immutable and non-reusable across the lifecycle.
-- **[L2_INV_002] Multi-Currency Limits:** Signature thresholds MUST include a Currency ISO Code (L1 reference).
+## 1. Structural Integrity
+- **[L2_INV_001] Strict Linkage:** 1:1 Identity-to-Party uniqueness enforced via hard Unique Constraints.
+- **[L2_INV_002] Position Dependency:** A Position cannot exist if its parent Org-Node (L1) is deleted or missing.
 
-## 2. Assignment Integrity
-- **[L2_INV_003] Atomic Handover:** A new PRIMARY assignment must logically and physically close the previous version in the same Transaction.
-- **[L2_INV_004] Grade Hierarchy:** A Position cannot report to another Position of a lower `Job Grade` unless explicitly allowed by a Policy.
+## 2. Authority & Delegation
+- **[L2_INV_003] Acyclic Delegation:** Delegation chains (A->B->C) must never point back to an ancestor.
+- **[L2_INV_004] Sequential Signing:** Multi-signer domains must respect the `sequence_order` defined in L2.
+- **[L2_INV_005] Active-Only Policy:** Only assignments in `ACTIVE` state can contribute to the Decision Engine (L4). Drafts carry zero authority.
 
-## 3. Delegation & Safety
-- **[L2_INV_005] Sub-Delegation Block:** Delegated authority cannot be re-delegated (No recursive authority leaks).
-- **[L2_INV_006] Coverage Invariant:** ACTING assignments must link to a specific source event (e.g., Leave of Absence).
+## 3. History & State
+- **[L2_INV_006] Immutable Past:** Records with `valid_until < now()` are read-only. No Revocation or Update allowed.
+- **[L2_INV_007] Metadata Pulse:** Any change in JSONB metadata triggers an automatic version increment and fact emission.
