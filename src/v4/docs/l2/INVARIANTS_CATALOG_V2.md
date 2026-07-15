@@ -7,7 +7,7 @@
 
 ## 2. Temporal & Versioning Invariants
 - **[L2_INV_003] Zero-Gap Succession:** New assignment versions must start precisely at the microsecond the previous one ends (Atomic Transition).
-- **[L2_INV_004] Primary Singularity:** Exactly ONE active PRIMARY assignment is permitted per (Person, Organization) pair at any T.
+- **[L2_INV_004] Primary Singularity:** Exactly ONE active PRIMARY assignment is permitted per (Legal Actor, Organization) pair at any T.
 
 ## 3. Governance & Authority Invariants
 - **[L2_INV_005] Recursive Revocation:** Deactivation of a Mandate triggers a recursive deactivation of all downstream Delegations/Signatures.

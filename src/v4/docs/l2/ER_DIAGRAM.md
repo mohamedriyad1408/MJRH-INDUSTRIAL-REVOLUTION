@@ -1,4 +1,4 @@
-# MJRH V4 — Layer 2 ER Diagram v3.0 (Forensic Grade)
+# MJRH V4 — Layer 2 ER Diagram v3.1 (Cohesion Hardened)
 
 ```mermaid
 erDiagram
@@ -14,9 +14,11 @@ erDiagram
     
     ASSIGNMENTS ||--o{ DELEGATIONS : "Recursive Links"
     ASSIGNMENTS ||--o{ SIGNATURE_RIGHTS : "Fingerprinted"
+    
+    ASSIGNMENTS ||--o| ASSIGNMENTS : "Successor (Succession Link)"
+    REPORTING_LINES ||--|| LEGAL_ACTORS : "Contains Precedence Weight"
 ```
 
-## 3. Advanced Invariants
-- **[INV_L2_CHAIN]:** No delegation loop allowed (A->B->C->A is blocked).
-- **[INV_L2_CURRENCY]:** Financial limits require a verified Exchange Rate Fact (L3/L5).
-- **[INV_L2_ACCOUNTABILITY]:** Every legal change records the `trace_id` of the governing Policy.
+## 3. Cohesion Rules
+- **[INV_L2_ACCOUNTABILITY]:** Every legal change records the `trace_id` of the governing Policy and the `actor_id`.
+- **[INV_L2_SUCCESSION]:** Assignments form an immutable chain via `successor_id`.
