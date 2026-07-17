@@ -35,7 +35,7 @@ function businessTypeLabel(t: (k: string, f?: string) => string, type: string | 
 }
 
 function HomeDirectory() {
-  const { t, dir } = useI18n();
+  const { t, dir, language } = useI18n();
   const { session, loading: authLoading } = useAuth();
   const [tenants, setTenants] = useState<ActiveTenant[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
@@ -49,6 +49,7 @@ function HomeDirectory() {
         id,
         node_path,
         current_state,
+        translation,
         identities!inner (
             id,
             legal_name,
@@ -65,7 +66,7 @@ function HomeDirectory() {
         }
         const mapped = (data || []).map((n: any) => ({
             slug: n.node_path.toString().replace(/_/g, '-'), // Ensure compatibility with URL slugs
-            name: n.identities.legal_name,
+            name: (n.translation as any)?.[language] || n.identities.legal_name,
             logo_url: n.identities.metadata?.logo_url || null,
             brand_color: n.identities.metadata?.brand_color || null,
             business_type: n.identities.metadata?.business_type || "laundry"

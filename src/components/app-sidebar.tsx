@@ -73,7 +73,7 @@ export function AppSidebar() {
         <SidebarContent className="bg-[#020617] flex items-center justify-center p-6">
           <div className="text-center space-y-4">
             <div className="text-xs text-slate-500 italic mb-4">No Sovereign Routes Detected</div>
-            <Link to="/onboarding" onClick={() => setOpenMobile(false)}>
+            <Link to={`/${tenantSlug}/onboarding` as any} onClick={() => setOpenMobile(false)}>
               <SidebarMenuButton className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-xl justify-center gap-2">
                 <Rocket className="w-5 h-5" />
                 <span>تأسيس مشروع جديد</span>
