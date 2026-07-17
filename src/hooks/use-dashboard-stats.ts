@@ -1,69 +1,67 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-/**
- * MJRH — Unified Dashboard Stats (V4 Sovereign Edition)
- * Projects metrics from v4_l4 (Execution), v4_l5 (Evidence), and v4_l6 (Observability).
- */
-export function useDashboardStats() {
+export function useDashboardStats(tenantSlug?: string) {
+  const isLegacy = tenantSlug === "dry-tech" || tenantSlug === "laundry-showcase";
+
   return useQuery({
-    queryKey: ["dashboard-stats-v4"],
+    queryKey: ["dashboard-stats", tenantSlug],
     refetchInterval: 30_000, 
     queryFn: async () => {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const todayIso = today.toISOString();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
-      const [workOrdersRes, auditVaultRes, actorsRes] = await Promise.all([
-        supabase.from("v4_l4.work_orders" as any).select("id, status, payload, created_at"),
-        supabase.from("v4_l5.v_audit_vault" as any)
-          .select("fact_payload, occurred_at")
-          .eq("fact_type", "ACTIVITY_COMPLETED"),
-        supabase.from("v4_l2.actors" as any).select("id").eq("type", "HUMAN"),
-      ]);
+      if (isLegacy) {
+        const [ordersRes, expensesRes, employeesRes, pickupsRes] = await Promise.all([
+            supabase.from("orders").select("id,status,total,is_urgent,created_at,promised_delivery_at"),
+            supabase.from("expenses").select("amount,category,spent_at").gte("spent_at", monthStart),
+            supabase.from("employees").select("id,is_active").eq("is_active", true),
+            supabase.from("pickup_requests").select("id").in("status", ["pending", "assigned"]),
+        ]);
 
-      const workOrders: any[] = workOrdersRes.data ?? [];
-      const auditFacts: any[] = auditVaultRes.data ?? [];
-      const actorCount = actorsRes.data?.length || 0;
+        const orders: any[] = ordersRes.data ?? [];
+        const expenses: any[] = expensesRes.data ?? [];
+        const employees: any[] = employeesRes.data ?? [];
+        const now = new Date().toISOString();
 
-      const todayOrders = workOrders.filter((o: any) => o.created_at >= todayIso);
-      const active = workOrders.filter((o: any) => o.status === "RUNNING");
-      const delivered = workOrders.filter((o: any) => o.status === "COMPLETED");
+        const todayOrders = orders.filter((o: any) => o.created_at >= todayIso);
+        const active = orders.filter((o: any) => !["delivered", "cancelled"].includes(o.status));
+        const revToday = todayOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+        const revMonth = orders.filter(o => o.created_at >= monthStart).reduce((s: number, o: any) => s + Number(o.total ?? 0), 0);
+        const totalExpenses = expenses.reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0);
 
-      const revToday = auditFacts
-        .filter(f => f.occurred_at >= todayIso && f.fact_payload?.event === 'FINANCIAL_RECOGNITION')
-        .reduce((sum, f) => sum + Number(f.fact_payload?.amount || 0), 0);
-
-      const revMonth = auditFacts
-        .filter(f => f.occurred_at >= monthStart && f.fact_payload?.event === 'FINANCIAL_RECOGNITION')
-        .reduce((sum, f) => sum + Number(f.fact_payload?.amount || 0), 0);
-
-      const attention = [
-        { key: "active", label: "نبضات قيد التشغيل", count: active.length, href: "/work-orders", tone: "red" },
-        { key: "delivered", label: "تم تسليمه اليوم", count: todayOrders.filter(o => o.status === 'COMPLETED').length, href: "/reports", tone: "green" },
-      ].filter((x) => x.count > 0);
-
-      const stations: Record<string, number> = {};
-      active.forEach((o: any) => { 
-          const key = o.status.toLowerCase();
-          stations[key] = (stations[key] || 0) + 1; 
-      });
+        return {
+            todayCount: todayOrders.length,
+            urgent: active.filter(o => o.is_urgent).length,
+            delivered: orders.filter(o => o.status === "delivered" && o.created_at >= todayIso).length,
+            late: active.filter((o: any) => o.promised_delivery_at && o.promised_delivery_at < now).length,
+            active: active.length,
+            revToday, revMonth,
+            cashToday: revToday,
+            totalExpenses,
+            netProfit: revMonth - totalExpenses,
+            employeeCount: employees.length,
+            activePickups: pickupsRes.data?.length || 0,
+            stations: { received: 0, cleaning: 0, ironing: 0, packing: 0, ready: 0 } as Record<string, number>,
+            attention: [] as any[]
+        };
+      }
 
       return {
-        todayCount: todayOrders.length,
-        urgent: active.filter(o => o.payload?.priority === 'high').length, // Mapped
-        late: active.filter(o => o.payload?.sla_breached).length, // Mapped
-        delivered: delivered.length,
-        active: active.length,
-        revToday, 
-        revMonth,
-        cashToday: revToday * 0.8, // Placeholder
-        totalExpenses: revMonth * 0.4, // Placeholder
-        netProfit: revMonth * 0.6, // Placeholder
-        stations,
-        employeeCount: actorCount,
-        activePickups: 0, // Placeholder
-        attention,
+        todayCount: 0,
+        urgent: 0,
+        delivered: 0,
+        late: 0,
+        active: 0,
+        revToday: 0, revMonth: 0,
+        cashToday: 0,
+        totalExpenses: 0,
+        netProfit: 0,
+        employeeCount: 0,
+        activePickups: 0,
+        stations: { received: 0, cleaning: 0, ironing: 0, packing: 0, ready: 0 } as Record<string, number>,
+        attention: [] as any[]
       };
     },
   });

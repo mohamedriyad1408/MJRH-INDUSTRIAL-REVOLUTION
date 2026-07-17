@@ -30,24 +30,78 @@ function iconFor(name?: string | null) {
   return name && iconRegistry[name] ? iconRegistry[name] : LayoutDashboard;
 }
 
+const legacyTenantGroups = [
+ {
+ label: "الرئيسية",
+ items: [
+ { title: "مركز اليوم", url: "/today", icon: CalendarCheck },
+ { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle },
+ { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard },
+ { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck },
+ { title: "الخريطة والفريق", url: "/live-map", icon: Navigation },
+ { title: "التقارير والذكاء", url: "/reports", icon: BarChart3 },
+ ],
+ },
+ {
+ label: "التشغيل والمحطات",
+ items: [
+ { title: "الاستقبال", url: "/stations/reception", icon: ClipboardCheck },
+ { title: "الفرز والتصنيف", url: "/stations/sorting", icon: Tags },
+ { title: "التشغيل والغسيل", url: "/stations/cleaning", icon: Sparkles },
+ { title: "التجفيف والتجميع", url: "/stations/drying-assembly", icon: Wind },
+ { title: "الكي والمكابس", url: "/stations/ironing", icon: Shirt },
+ { title: "التغليف والشحن", url: "/stations/packing", icon: Package },
+ { title: "الجودة QC", url: "/stations/qc", icon: ShieldCheck },
+ { title: "سلامة النظام APDO", url: "/system-health", icon: ShieldCheck },
+ ],
+ },
+ {
+ label: "العملاء والمبيعات",
+ items: [
+ { title: "عملية جديدة", url: "/orders/new", icon: PlusCircle },
+ { title: "كل العمليات", url: "/orders", icon: ListOrdered },
+ { title: "العملاء", url: "/customers", icon: Users },
+ { title: "CRM والولاء", url: "/crm", icon: HeartHandshake },
+ { title: "كتالوج الخدمات", url: "/services", icon: Tag },
+ { title: "المواقع والفروع", url: "/branches", icon: Building2 },
+ { title: "المخزون", url: "/inventory", icon: Boxes },
+ ],
+ },
+ {
+ label: "المالية والإدارة",
+ items: [
+ { title: "المالية", url: "/finance", icon: Wallet },
+ { title: "المحاسبة والخزنة", url: "/accounting", icon: Calculator },
+ { title: "القيود", url: "/ledger", icon: BookOpenCheck },
+ { title: "الذمم", url: "/receivables", icon: UsersRound },
+ { title: "إقفال الخزنة", url: "/cash-closing", icon: LockKeyhole },
+ { title: "الموظفون", url: "/staff", icon: BriefcaseBusiness },
+ { title: "الإعدادات", url: "/settings", icon: Settings },
+ { title: "الدليل", url: "/help", icon: HelpCircle },
+ ],
+ },
+];
+
 export function AppSidebar() {
  const path = useRouterState({ select: (r) => r.location.pathname });
- const { user, signOut, isSuperAdmin } = useAuth();
+ const { user, signOut, isSuperAdmin, hasRole } = useAuth();
  const { dir, t } = useI18n();
  const { setOpenMobile } = useSidebar();
+
+ const tenantSlug = path.split("/")[1] || "dry-tech";
+ const isLegacyTenant = tenantSlug === "dry-tech" || tenantSlug === "laundry-showcase";
  
  // V4 Sovereign Lens: Dynamic Navigation from the Cockpit Engine
- const { data: cockpit, isLoading } = useQuery({
-   queryKey: ["personal-cockpit", user?.id],
+ const { data: cockpit, isLoading } = useQuery<any>({
+   queryKey: ["personal-cockpit", user?.id, tenantSlug],
    queryFn: async () => {
+     if (isLegacyTenant) return null; // Don't even hit V4 for legacy
      const { data, error } = await supabase.rpc('rpc_get_personal_cockpit');
      if (error) throw error;
      return data;
    },
-   enabled: !!user,
+   enabled: !!user && !isLegacyTenant,
  });
-
- const tenantSlug = cockpit?.identity?.urn?.replace('urn:mjrh:', '').replace(/_/g, '-') || "dry-tech";
 
  if (isLoading) {
     return (
@@ -60,54 +114,50 @@ export function AppSidebar() {
     );
  }
 
- // Setup State / Missing Navigation
- if (!cockpit || !cockpit.navigation || cockpit.navigation.length === 0) {
-    return (
-      <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
-        <SidebarHeader className="border-b border-slate-800 p-4 bg-[#020617]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center font-black text-white text-xl">M</div>
-            <div className="font-black text-sm text-white">MJRH V4</div>
-          </div>
-        </SidebarHeader>
-        <SidebarContent className="bg-[#020617] flex items-center justify-center p-6">
-          <div className="text-center space-y-4">
-            <div className="text-xs text-slate-500 italic mb-4">No Sovereign Routes Detected</div>
-            <Link to={`/${tenantSlug}/onboarding` as any} onClick={() => setOpenMobile(false)}>
-              <SidebarMenuButton className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-xl justify-center gap-2">
-                <Rocket className="w-5 h-5" />
-                <span>تأسيس مشروع جديد</span>
-              </SidebarMenuButton>
-            </Link>
-          </div>
-        </SidebarContent>
-        <SidebarFooter className="border-t border-slate-800 p-2 bg-[#020617]">
-          <SidebarMenuButton onClick={() => signOut()} className="font-bold text-red-600 hover:text-red-700">
-            <LogOut className="w-4 h-4" /><span>{t("app.signOut")}</span>
-          </SidebarMenuButton>
-        </SidebarFooter>
-      </Sidebar>
-    );
- }
+ // Logic to render sidebar groups
+ const renderGroups = () => {
+    if (isLegacyTenant) {
+        return legacyTenantGroups.map((group) => (
+            <SidebarGroup key={group.label}>
+                <SidebarGroupLabel className="text-slate-500 font-black uppercase text-[10px] tracking-widest px-4">
+                    {group.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        {group.items.map((item) => {
+                            const targetUrl = `/${tenantSlug}${item.url}`;
+                            const isActive = path === targetUrl || path.startsWith(targetUrl + "/");
+                            return (
+                                <SidebarMenuItem key={item.url}>
+                                    <SidebarMenuButton asChild isActive={isActive}>
+                                        <Link to={targetUrl as any} className="flex items-center gap-2 font-bold text-slate-300" onClick={() => setOpenMobile(false)}>
+                                            <item.icon className="w-4 h-4" />
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+        ));
+    }
 
- return (
-  <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
-    <SidebarHeader className="border-b border-slate-800 p-4 bg-[#020617]">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-red-900/20">
-          {cockpit.identity?.name?.charAt(0) || 'M'}
-        </div>
-        <div className="min-w-0">
-          <div className="font-black text-sm truncate tracking-tight text-white flex items-center gap-1">
-            <span>{cockpit.identity?.name || 'MJRH V4'}</span>
-          </div>
-          <div className="text-[10px] text-slate-500 truncate font-mono">{cockpit.identity?.urn}</div>
-        </div>
-      </div>
-    </SidebarHeader>
+    if (!cockpit || !cockpit.navigation || cockpit.navigation.length === 0) {
+        return (
+            <div className="flex items-center justify-center p-6">
+                <Link to={`/${tenantSlug}/onboarding` as any} onClick={() => setOpenMobile(false)}>
+                    <SidebarMenuButton className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-xl justify-center gap-2">
+                        <Rocket className="w-5 h-5" />
+                        <span>تأسيس مشروع جديد</span>
+                    </SidebarMenuButton>
+                </Link>
+            </div>
+        );
+    }
 
-    <SidebarContent className="bg-[#020617]">
-      {cockpit.navigation.map((group: any) => (
+    return cockpit.navigation.map((group: any) => (
         <SidebarGroup key={group.group}>
           <SidebarGroupLabel className="text-slate-500 font-black uppercase text-[10px] tracking-widest px-4">
             {t(`navGroup.${group.group}`, group.group)}
@@ -133,9 +183,30 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      ))}
+    ));
+ };
 
-      {/* Super Admin Escape Hatch */}
+ return (
+  <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
+    <SidebarHeader className="border-b border-slate-800 p-4 bg-[#020617]">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-red-900/20">
+          {isLegacyTenant ? "D" : (cockpit?.identity?.name?.charAt(0) || 'M')}
+        </div>
+        <div className="min-w-0">
+          <div className="font-black text-sm truncate tracking-tight text-white flex items-center gap-1">
+            <span>{isLegacyTenant ? "Dry Tech" : (cockpit?.identity?.name || 'MJRH V4')}</span>
+          </div>
+          <div className="text-[10px] text-slate-500 truncate font-mono">
+            {isLegacyTenant ? "urn:mjrh:dry-tech" : cockpit?.identity?.urn}
+          </div>
+        </div>
+      </div>
+    </SidebarHeader>
+
+    <SidebarContent className="bg-[#020617]">
+      {renderGroups()}
+
       {isSuperAdmin && (
         <SidebarGroup>
           <SidebarGroupLabel className="text-slate-500 font-black uppercase text-[10px] tracking-widest px-4">Platform</SidebarGroupLabel>
