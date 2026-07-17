@@ -1,23 +1,19 @@
-# MJRH V4 — Layer 2 Core Specification v0.1
-## Governance, Authority & Institutional Logic
+# MJRH V4 — Layer 2: Governance & Policy Specification v1.1
 
-### 1. Responsibility
-The Sovereign Brain of the enterprise. Manages the legal right to act (Authority), computes runtime permissions (Authorization), and enforces operating constraints (Policy). It sits above the Structural Layer (L1) and governs the Execution Layer (L4).
+## 1. Policy Version Resolution
+- **Algorithm:** Temporal Match (Point-in-Time).
+- **Rule:** Select policy where `ValidFrom <= T(event) < ValidUntil`.
+- **Precedence:** Highest `version_id` if overlaps exist.
 
-### 2. Core Entities
-- **Actor:** The subject of authority (Human, Service Account, AI Agent).
-- **Mandate:** A formal delegation of power anchored to an L1 Node.
-- **Resource Class:** Generic types of assets (Financial, Operational, Human).
-- **Policy:** A declarative rule (Condition -> Effect).
+## 2. Conflict Resolution
+- **Prio 1:** Explicit DENY always wins.
+- **Prio 2:** Proximity Wins (Policy anchored to Node closest to the action).
+- **Prio 3:** Highest `priority_score` (Numeric weight).
 
-### 3. Decisions Model
-Every governance request returns a formal **Decision Object**:
-- `ALLOW`: Proceed with operation.
-- `DENY`: Hard stop (Policy violation).
-- `REQUIRE_APPROVAL`: Suspend pending human sign-off.
-- `REQUIRE_ESCALATION`: Transfer to higher mandate level.
+## 3. Composition Rules
+- **Mandates:** UNION (Additive). Total rights = Sum of all valid mandates.
+- **Policies:** INTERSECTION (Restrictive). Action allowed only if ALL policies permit.
 
-### 4. Architectural Invariants
-- **[INV_MANDATE_ROOT]:** No authority can be exercised without a valid mandate linked to an L1 Sovereign Root.
-- **[INV_POLICY_OVERRIDE]:** Policies can restrict a Mandate, but a Mandate cannot violate a hard Compliance Policy.
-- **[INV_TEMPORAL_GOVERNANCE]:** Every authority and policy is versioned and time-bound.
+## 4. Caching Contract
+- **Duration:** 300s default TTL.
+- **Invalidation:** Mandatory purge triggered by L1 Structural Facts or Mandate Revocation.
