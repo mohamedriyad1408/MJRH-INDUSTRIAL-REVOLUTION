@@ -1,22 +1,36 @@
-# MJRH V4 — Architecture Lock-In (FROZEN VISION)
-**Status:** ARCHITECTURAL SINGULARITY REACHED.
-**Directive:** No further expansion of layers or dimensions. Focus is 100% on Hardening, Performance, and Integrity.
+# MJRH V4 — Business Operating System (BOS)
+## Strategic Architecture Blueprint
 
-## 1. Static Layer Definition (L1-L6)
-- L1: Constitutional (Structural Identity) - [FROZEN]
-- L2: Governance (Policy & Logic) - [IN DESIGN]
-- L3: Readiness (Capability & Assets)
-- L4: Runtime (Execution & Pulse)
-- L5: Evidence (Audit & Integrity)
-- L6: Insight (Evolution & AI)
+### 1. The Golden Rule
+> "If it won't work for 100,000 employees across 10 countries, don't build it."
 
-## 2. Integration Bridges (The 4 Pillars)
-- Governance Interlocks: Hardened state-machine hooks.
-- Fact Chaining: Merkle-proofed event streams.
-- Metadata Interpreter: Generative runtime from blueprints.
-- Sovereign Bridge: Dual-key trust contracts.
+### 2. Layers Specification
 
-## 3. Engineering Standard
-- Target Grade: A+++++
-- Scale: 100k Employees / 1M Nodes.
-- Resilience: Zero-Downtime, Atomic Rollbacks, Deadlock Immunity.
+#### Layer 1: Core Engine (Internal: /v4/core)
+- **Identity & Org:** Multi-level tree (Holdings, Entities, Units).
+- **Capability Registry:** Discovery service for installed business features.
+- **Event Bus:** Centralized pub/sub for all system state changes.
+- **Security:** RLS + Capability-based RBAC/ABAC.
+
+#### Layer 2: Platform Services (Internal: /v4/platform)
+- **Metadata Engine:** Generates UI and Validation from JSON descriptors.
+- **Dynamic AI Proxy:** Context-aware LLM routing.
+- **Global Search:** Multi-tenant vector & text search.
+
+#### Layer 3: Capability Packs (Internal: /v4/capabilities)
+- **FinancePack:** Universal Ledger, Tax, and Multi-currency.
+- **OpsPack:** Generic Work Orders and Task Distribution.
+- **PeoplePack:** HR, Attendance, and Performance.
+- **AssetPack:** Inventory, Equipment, and Maintenance.
+
+#### Layer 4: Industry Templates (Internal: /v4/templates)
+- **Templates:** Configuration-only definitions (Laundry, Hotel, Clinic).
+- **Custom Branding:** Theme and localized terminology mappings.
+
+---
+
+### 3. Reusable Assets from V3
+- **Infrastructure:** Supabase/Postgres logic.
+- **UI System:** Tailwind/Radix/Lucide patterns.
+- **Logic:** Multi-currency formatting, I18n runtime.
+- **Security:** RLS function patterns (can_access_tenant).

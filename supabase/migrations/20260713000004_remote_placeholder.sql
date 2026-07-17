@@ -1,3 +1,0 @@
--- Placeholder for migration version 20260713000004 that exists in the remote Supabase
--- migration history but was missing locally. Kept intentionally empty so local
--- migration history can stay aligned with production without reverting remote work.

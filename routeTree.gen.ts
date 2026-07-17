@@ -8,111 +8,117 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LandingRouteImport } from './routes/landing'
-import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
-import { Route as AdminRouteImport } from './routes/_admin'
-import { Route as TenantRouteImport } from './routes/$tenant'
-import { Route as SlugRouteImport } from './routes/$slug'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as TrackTokenRouteImport } from './routes/track.$token'
-import { Route as JoinSlugRouteImport } from './routes/join.$slug'
-import { Route as TenantWorkOrdersRouteImport } from './routes/$tenant/work-orders'
-import { Route as TenantTodayRouteImport } from './routes/$tenant/today'
-import { Route as TenantSystemHealthRouteImport } from './routes/$tenant/system-health'
-import { Route as TenantSubscriptionsRouteImport } from './routes/$tenant/subscriptions'
-import { Route as TenantSettingsRouteImport } from './routes/$tenant/settings'
-import { Route as TenantServicesRouteImport } from './routes/$tenant/services'
-import { Route as TenantSearchRouteImport } from './routes/$tenant/search'
-import { Route as TenantReportsRouteImport } from './routes/$tenant/reports'
-import { Route as TenantReceivablesRouteImport } from './routes/$tenant/receivables'
-import { Route as TenantOpsRouteImport } from './routes/$tenant/ops'
-import { Route as TenantOnboardingRouteImport } from './routes/$tenant/onboarding'
-import { Route as TenantMarketplaceRouteImport } from './routes/$tenant/marketplace'
-import { Route as TenantMarketingRouteImport } from './routes/$tenant/marketing'
-import { Route as TenantManagerRouteImport } from './routes/$tenant/manager'
-import { Route as TenantLiveMapRouteImport } from './routes/$tenant/live-map'
-import { Route as TenantLegalRouteImport } from './routes/$tenant/legal'
-import { Route as TenantLedgerRouteImport } from './routes/$tenant/ledger'
-import { Route as TenantIssuesRouteImport } from './routes/$tenant/issues'
-import { Route as TenantInventoryRouteImport } from './routes/$tenant/inventory'
-import { Route as TenantHelpRouteImport } from './routes/$tenant/help'
-import { Route as TenantFinanceRouteImport } from './routes/$tenant/finance'
-import { Route as TenantExecutiveRouteImport } from './routes/$tenant/executive'
-import { Route as TenantDriverRouteImport } from './routes/$tenant/driver'
-import { Route as TenantDemoRouteImport } from './routes/$tenant/demo'
-import { Route as TenantDashboardRouteImport } from './routes/$tenant/dashboard'
-import { Route as TenantDailyOperationsRouteImport } from './routes/$tenant/daily-operations'
-import { Route as TenantCustomersRouteImport } from './routes/$tenant/customers'
-import { Route as TenantCustomerCareRouteImport } from './routes/$tenant/customer-care'
-import { Route as TenantCsRouteImport } from './routes/$tenant/cs'
-import { Route as TenantCrmRouteImport } from './routes/$tenant/crm'
-import { Route as TenantCashClosingRouteImport } from './routes/$tenant/cash-closing'
-import { Route as TenantBudgetsRouteImport } from './routes/$tenant/budgets'
-import { Route as TenantBranchesRouteImport } from './routes/$tenant/branches'
-import { Route as TenantBillingRouteImport } from './routes/$tenant/billing'
-import { Route as TenantAccountingRouteImport } from './routes/$tenant/accounting'
-import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index'
-import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
-import { Route as TenantSettingsIndexRouteImport } from './routes/$tenant/settings/index'
-import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
-import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
-import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
-import { Route as AdminAdminTemplatesRouteImport } from './routes/_admin/admin/templates'
-import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
-import { Route as AdminAdminReportBuilderRouteImport } from './routes/_admin/admin/report-builder'
-import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
-import { Route as AdminAdminPlatformBuilderRouteImport } from './routes/_admin/admin/platform-builder'
-import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/admin/marketing-plan'
-import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
-import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
-import { Route as AdminAdminInputBuilderRouteImport } from './routes/_admin/admin/input-builder'
-import { Route as AdminAdminDemoLibraryRouteImport } from './routes/_admin/admin/demo-library'
-import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
-import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
-import { Route as AdminAdminBizDevRouteImport } from './routes/_admin/admin/biz-dev'
-import { Route as AdminAdminBillingRouteImport } from './routes/_admin/admin/billing'
-import { Route as TenantStationsSortingRouteImport } from './routes/$tenant/stations/sorting'
-import { Route as TenantStationsReceptionRouteImport } from './routes/$tenant/stations/reception'
-import { Route as TenantStationsQcRouteImport } from './routes/$tenant/stations/qc'
-import { Route as TenantStationsPackingRouteImport } from './routes/$tenant/stations/packing'
-import { Route as TenantStationsIroningRouteImport } from './routes/$tenant/stations/ironing'
-import { Route as TenantStationsIntakeRouteImport } from './routes/$tenant/stations/intake'
-import { Route as TenantStationsDryingAssemblyRouteImport } from './routes/$tenant/stations/drying-assembly'
-import { Route as TenantStationsDeliveryRouteImport } from './routes/$tenant/stations/delivery'
-import { Route as TenantStationsCsRouteImport } from './routes/$tenant/stations/cs'
-import { Route as TenantStationsCleaningRouteImport } from './routes/$tenant/stations/cleaning'
-import { Route as TenantStationsStageRouteImport } from './routes/$tenant/stations/$stage'
-import { Route as TenantStaffUsersRouteImport } from './routes/$tenant/staff/users'
-import { Route as TenantStaffScorecardRouteImport } from './routes/$tenant/staff/scorecard'
-import { Route as TenantStaffScheduleRouteImport } from './routes/$tenant/staff/schedule'
-import { Route as TenantStaffSalariesRouteImport } from './routes/$tenant/staff/salaries'
-import { Route as TenantStaffRequestsRouteImport } from './routes/$tenant/staff/requests'
-import { Route as TenantStaffNewRouteImport } from './routes/$tenant/staff/new'
-import { Route as TenantStaffLeavesRouteImport } from './routes/$tenant/staff/leaves'
-import { Route as TenantStaffIroningPayrollRouteImport } from './routes/$tenant/staff/ironing-payroll'
-import { Route as TenantStaffFairnessRouteImport } from './routes/$tenant/staff/fairness'
-import { Route as TenantStaffAttendanceRouteImport } from './routes/$tenant/staff/attendance'
-import { Route as TenantStaffIdRouteImport } from './routes/$tenant/staff/$id'
-import { Route as TenantSettingsWorkflowRouteImport } from './routes/$tenant/settings/workflow'
-import { Route as TenantSettingsRolesRouteImport } from './routes/$tenant/settings/roles'
-import { Route as TenantReportsBuilderRouteImport } from './routes/$tenant/reports/builder'
-import { Route as TenantPickupsNewRouteImport } from './routes/$tenant/pickups/new'
-import { Route as TenantOrdersNewRouteImport } from './routes/$tenant/orders/new'
-import { Route as TenantOrdersIdRouteImport } from './routes/$tenant/orders/$id'
-import { Route as TenantBranchesIdRouteImport } from './routes/$tenant/branches/$id'
-import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin/admin/users/index'
-import { Route as AdminAdminTenantsIndexRouteImport } from './routes/_admin/admin/tenants/index'
-import { Route as TenantSettingsWorkflowIndexRouteImport } from './routes/$tenant/settings/workflow/index'
-import { Route as AdminAdminTenantsIdRouteImport } from './routes/_admin/admin/tenants/$id'
-import { Route as TenantSettingsWorkflowStageIdFieldsRouteImport } from './routes/$tenant/settings/workflow/$stageId/fields'
+import { Route as rootRouteImport } from './src/routes/__root'
+import { Route as V4DashboardRouteImport } from './src/routes/v4-dashboard'
+import { Route as TermsRouteImport } from './src/routes/terms'
+import { Route as SignupRouteImport } from './src/routes/signup'
+import { Route as ResetPasswordRouteImport } from './src/routes/reset-password'
+import { Route as PrivacyRouteImport } from './src/routes/privacy'
+import { Route as MarketplaceRouteImport } from './src/routes/marketplace'
+import { Route as LoginRouteImport } from './src/routes/login'
+import { Route as LandingRouteImport } from './src/routes/landing'
+import { Route as CustomerPortalRouteImport } from './src/routes/customer-portal'
+import { Route as AdminRouteImport } from './src/routes/_admin'
+import { Route as TenantRouteImport } from './src/routes/$tenant'
+import { Route as SlugRouteImport } from './src/routes/$slug'
+import { Route as IndexRouteImport } from './src/routes/index'
+import { Route as TrackTokenRouteImport } from './src/routes/track.$token'
+import { Route as JoinSlugRouteImport } from './src/routes/join.$slug'
+import { Route as TenantWorkOrdersRouteImport } from './src/routes/$tenant/work-orders'
+import { Route as TenantTodayRouteImport } from './src/routes/$tenant/today'
+import { Route as TenantSystemHealthRouteImport } from './src/routes/$tenant/system-health'
+import { Route as TenantSubscriptionsRouteImport } from './src/routes/$tenant/subscriptions'
+import { Route as TenantSettingsRouteImport } from './src/routes/$tenant/settings'
+import { Route as TenantServicesRouteImport } from './src/routes/$tenant/services'
+import { Route as TenantSearchRouteImport } from './src/routes/$tenant/search'
+import { Route as TenantReportsRouteImport } from './src/routes/$tenant/reports'
+import { Route as TenantReceivablesRouteImport } from './src/routes/$tenant/receivables'
+import { Route as TenantOpsRouteImport } from './src/routes/$tenant/ops'
+import { Route as TenantOnboardingRouteImport } from './src/routes/$tenant/onboarding'
+import { Route as TenantMarketplaceRouteImport } from './src/routes/$tenant/marketplace'
+import { Route as TenantMarketingRouteImport } from './src/routes/$tenant/marketing'
+import { Route as TenantManagerRouteImport } from './src/routes/$tenant/manager'
+import { Route as TenantLiveMapRouteImport } from './src/routes/$tenant/live-map'
+import { Route as TenantLegalRouteImport } from './src/routes/$tenant/legal'
+import { Route as TenantLedgerRouteImport } from './src/routes/$tenant/ledger'
+import { Route as TenantIssuesRouteImport } from './src/routes/$tenant/issues'
+import { Route as TenantInventoryRouteImport } from './src/routes/$tenant/inventory'
+import { Route as TenantHelpRouteImport } from './src/routes/$tenant/help'
+import { Route as TenantFinanceRouteImport } from './src/routes/$tenant/finance'
+import { Route as TenantExecutiveRouteImport } from './src/routes/$tenant/executive'
+import { Route as TenantDriverRouteImport } from './src/routes/$tenant/driver'
+import { Route as TenantDemoRouteImport } from './src/routes/$tenant/demo'
+import { Route as TenantDashboardRouteImport } from './src/routes/$tenant/dashboard'
+import { Route as TenantDailyOperationsRouteImport } from './src/routes/$tenant/daily-operations'
+import { Route as TenantCustomersRouteImport } from './src/routes/$tenant/customers'
+import { Route as TenantCustomerCareRouteImport } from './src/routes/$tenant/customer-care'
+import { Route as TenantCsRouteImport } from './src/routes/$tenant/cs'
+import { Route as TenantCrmRouteImport } from './src/routes/$tenant/crm'
+import { Route as TenantCashClosingRouteImport } from './src/routes/$tenant/cash-closing'
+import { Route as TenantBudgetsRouteImport } from './src/routes/$tenant/budgets'
+import { Route as TenantBranchesRouteImport } from './src/routes/$tenant/branches'
+import { Route as TenantBillingRouteImport } from './src/routes/$tenant/billing'
+import { Route as TenantAccountingRouteImport } from './src/routes/$tenant/accounting'
+import { Route as AdminAdminIndexRouteImport } from './src/routes/_admin/admin/index'
+import { Route as TenantStaffIndexRouteImport } from './src/routes/$tenant/staff/index'
+import { Route as TenantSettingsIndexRouteImport } from './src/routes/$tenant/settings/index'
+import { Route as TenantPickupsIndexRouteImport } from './src/routes/$tenant/pickups/index'
+import { Route as TenantOrdersIndexRouteImport } from './src/routes/$tenant/orders/index'
+import { Route as AdminAdminWorkflowBuilderRouteImport } from './src/routes/_admin/admin/workflow-builder'
+import { Route as AdminAdminTemplatesRouteImport } from './src/routes/_admin/admin/templates'
+import { Route as AdminAdminTelemetryRouteImport } from './src/routes/_admin/admin/telemetry'
+import { Route as AdminAdminReportBuilderRouteImport } from './src/routes/_admin/admin/report-builder'
+import { Route as AdminAdminPlatformFeesRouteImport } from './src/routes/_admin/admin/platform-fees'
+import { Route as AdminAdminPlatformBuilderRouteImport } from './src/routes/_admin/admin/platform-builder'
+import { Route as AdminAdminMarketingPlanRouteImport } from './src/routes/_admin/admin/marketing-plan'
+import { Route as AdminAdminLegalRouteImport } from './src/routes/_admin/admin/legal'
+import { Route as AdminAdminInvestorRelationsRouteImport } from './src/routes/_admin/admin/investor-relations'
+import { Route as AdminAdminInputBuilderRouteImport } from './src/routes/_admin/admin/input-builder'
+import { Route as AdminAdminDemoLibraryRouteImport } from './src/routes/_admin/admin/demo-library'
+import { Route as AdminAdminCustomerSuccessRouteImport } from './src/routes/_admin/admin/customer-success'
+import { Route as AdminAdminBusinessPlanRouteImport } from './src/routes/_admin/admin/business-plan'
+import { Route as AdminAdminBizDevRouteImport } from './src/routes/_admin/admin/biz-dev'
+import { Route as AdminAdminBillingRouteImport } from './src/routes/_admin/admin/billing'
+import { Route as TenantStationsSortingRouteImport } from './src/routes/$tenant/stations/sorting'
+import { Route as TenantStationsReceptionRouteImport } from './src/routes/$tenant/stations/reception'
+import { Route as TenantStationsQcRouteImport } from './src/routes/$tenant/stations/qc'
+import { Route as TenantStationsPackingRouteImport } from './src/routes/$tenant/stations/packing'
+import { Route as TenantStationsIroningRouteImport } from './src/routes/$tenant/stations/ironing'
+import { Route as TenantStationsIntakeRouteImport } from './src/routes/$tenant/stations/intake'
+import { Route as TenantStationsDryingAssemblyRouteImport } from './src/routes/$tenant/stations/drying-assembly'
+import { Route as TenantStationsDeliveryRouteImport } from './src/routes/$tenant/stations/delivery'
+import { Route as TenantStationsCsRouteImport } from './src/routes/$tenant/stations/cs'
+import { Route as TenantStationsCleaningRouteImport } from './src/routes/$tenant/stations/cleaning'
+import { Route as TenantStationsStageRouteImport } from './src/routes/$tenant/stations/$stage'
+import { Route as TenantStaffUsersRouteImport } from './src/routes/$tenant/staff/users'
+import { Route as TenantStaffScorecardRouteImport } from './src/routes/$tenant/staff/scorecard'
+import { Route as TenantStaffScheduleRouteImport } from './src/routes/$tenant/staff/schedule'
+import { Route as TenantStaffSalariesRouteImport } from './src/routes/$tenant/staff/salaries'
+import { Route as TenantStaffRequestsRouteImport } from './src/routes/$tenant/staff/requests'
+import { Route as TenantStaffNewRouteImport } from './src/routes/$tenant/staff/new'
+import { Route as TenantStaffLeavesRouteImport } from './src/routes/$tenant/staff/leaves'
+import { Route as TenantStaffIroningPayrollRouteImport } from './src/routes/$tenant/staff/ironing-payroll'
+import { Route as TenantStaffFairnessRouteImport } from './src/routes/$tenant/staff/fairness'
+import { Route as TenantStaffAttendanceRouteImport } from './src/routes/$tenant/staff/attendance'
+import { Route as TenantStaffIdRouteImport } from './src/routes/$tenant/staff/$id'
+import { Route as TenantSettingsWorkflowRouteImport } from './src/routes/$tenant/settings/workflow'
+import { Route as TenantSettingsRolesRouteImport } from './src/routes/$tenant/settings/roles'
+import { Route as TenantReportsBuilderRouteImport } from './src/routes/$tenant/reports/builder'
+import { Route as TenantPickupsNewRouteImport } from './src/routes/$tenant/pickups/new'
+import { Route as TenantOrdersNewRouteImport } from './src/routes/$tenant/orders/new'
+import { Route as TenantOrdersIdRouteImport } from './src/routes/$tenant/orders/$id'
+import { Route as TenantBranchesIdRouteImport } from './src/routes/$tenant/branches/$id'
+import { Route as AdminAdminUsersIndexRouteImport } from './src/routes/_admin/admin/users/index'
+import { Route as AdminAdminTenantsIndexRouteImport } from './src/routes/_admin/admin/tenants/index'
+import { Route as TenantSettingsWorkflowIndexRouteImport } from './src/routes/$tenant/settings/workflow/index'
+import { Route as AdminAdminTenantsIdRouteImport } from './src/routes/_admin/admin/tenants/$id'
+import { Route as TenantSettingsWorkflowStageIdFieldsRouteImport } from './src/routes/$tenant/settings/workflow/$stageId/fields'
 
+const V4DashboardRoute = V4DashboardRouteImport.update({
+  id: '/v4-dashboard',
+  path: '/v4-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -648,6 +654,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/v4-dashboard': typeof V4DashboardRoute
   '/$tenant/accounting': typeof TenantAccountingRoute
   '/$tenant/billing': typeof TenantBillingRoute
   '/$tenant/branches': typeof TenantBranchesRouteWithChildren
@@ -752,6 +759,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/v4-dashboard': typeof V4DashboardRoute
   '/$tenant/accounting': typeof TenantAccountingRoute
   '/$tenant/billing': typeof TenantBillingRoute
   '/$tenant/branches': typeof TenantBranchesRouteWithChildren
@@ -856,6 +864,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/v4-dashboard': typeof V4DashboardRoute
   '/$tenant/accounting': typeof TenantAccountingRoute
   '/$tenant/billing': typeof TenantBillingRoute
   '/$tenant/branches': typeof TenantBranchesRouteWithChildren
@@ -962,6 +971,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/v4-dashboard'
     | '/$tenant/accounting'
     | '/$tenant/billing'
     | '/$tenant/branches'
@@ -1066,6 +1076,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/v4-dashboard'
     | '/$tenant/accounting'
     | '/$tenant/billing'
     | '/$tenant/branches'
@@ -1169,6 +1180,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/terms'
+    | '/v4-dashboard'
     | '/$tenant/accounting'
     | '/$tenant/billing'
     | '/$tenant/branches'
@@ -1275,12 +1287,20 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  V4DashboardRoute: typeof V4DashboardRoute
   JoinSlugRoute: typeof JoinSlugRoute
   TrackTokenRoute: typeof TrackTokenRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/v4-dashboard': {
+      id: '/v4-dashboard'
+      path: '/v4-dashboard'
+      fullPath: '/v4-dashboard'
+      preLoaderRoute: typeof V4DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -2256,6 +2276,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  V4DashboardRoute: V4DashboardRoute,
   JoinSlugRoute: JoinSlugRoute,
   TrackTokenRoute: TrackTokenRoute,
 }
