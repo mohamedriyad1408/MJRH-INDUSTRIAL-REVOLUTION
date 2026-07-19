@@ -1,1 +1,10 @@
-{}
+{
+  "main": "Main",
+  "today": "Today Center",
+  "dashboard": "Owner Dashboard",
+  "orders": "All Orders",
+  "customers": "Customers",
+  "staff": "Staff",
+  "finance": "Finance",
+  "settings": "Settings"
+}

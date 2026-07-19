@@ -1,0 +1,10 @@
+{
+  "main": "Home",
+  "today": "Centro oggi",
+  "dashboard": "Dashboard",
+  "orders": "Ordini",
+  "customers": "Clienti",
+  "staff": "Personale",
+  "finance": "Finanza",
+  "settings": "Impostazioni"
+}
