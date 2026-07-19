@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { createReworkOrder, recordAuditLog } from "@/lib/rules/workflow-engine-v1";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

@@ -13,8 +13,8 @@ function readProjectRef() {
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 const ref = readProjectRef();
 const apply = process.env.DEMO_APPLY === "1" || process.argv.includes("--apply");
-const slug = process.env.DEMO_TENANT_SLUG || "industrial-revolution-demo";
-const name = process.env.DEMO_TENANT_NAME || "MJRH Industrial Demo";
+const slug = process.env.DEMO_TENANT_SLUG || "mjrh-demo";
+const name = process.env.DEMO_TENANT_NAME || "MJRH Demo Laundry";
 const ownerUserId = process.env.DEMO_OWNER_USER_ID || null;
 
 if (!token || !ref) {
@@ -58,7 +58,7 @@ BEGIN
   DELETE FROM public.tenants WHERE slug='${slug}';
 
   INSERT INTO public.tenants(name, slug, business_type, owner_user_id, notes, public_url, industry_profile)
-  VALUES ('${name}', '${slug}', 'generic', owner_id, 'MJRH generated demo tenant', 'https://mjrh.vercel.app/${slug}', jsonb_build_object('demo', true, 'source', 'seed-demo-tenant'))
+  VALUES ('${name}', '${slug}', 'laundry', owner_id, 'MJRH generated demo tenant', 'https://mjrh.vercel.app/${slug}', jsonb_build_object('demo', true, 'source', 'seed-demo-tenant'))
   RETURNING id INTO tid;
 
   INSERT INTO public.user_roles(user_id, role, tenant_id)

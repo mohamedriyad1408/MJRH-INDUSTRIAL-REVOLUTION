@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { validateOrderMove, validateOrderMoveLegacy } from "../lib/station-workflow";
-import { validateTransitionV2 } from "@/core/workflow/engine";
+import { validateTransitionV2 } from "../lib/workflow-engine-v2";
 
 // Mock Supabase client for Workflow tests — covers all 7 stations + v2 generic
 vi.mock("@/integrations/supabase/client", () => {

@@ -1,7 +1,7 @@
 # MJRH INDUSTRIAL REVOLUTION — منظومة تشغيل المشاريع التشغيلية
 
-**آخر تحديث: 2026-07-12**
-**النسخة: Platform v3.0 — Workflow Engine v2 + Enterprise OS**
+**آخر تحديث: 2026-07-11**
+**النسخة: Platform v2.0 — Enterprise OS**
 
 > منصة واحدة تشغّل أي مشروع تشغيلي — من أول عملية لحد إقفال الخزنة. من مغسلة صغيرة إلى فندق 7 نجوم، مستشفى، أو سلسلة مطاعم 50 فرع — نفس النواة، تخصيص لا نهائي.
 
@@ -328,45 +328,6 @@ Migration `20260711000001`:
 - **Live:** `https://mjrh.vercel.app` / `https://mjrh-d93e9ydee-mjrh.vercel.app`
 - **Supabase Project Ref:** `dngjfjrjddigqadlyain` URL `https://dngjfjrjddigqadlyain.supabase.co`
 
-
-### 8.1) البنية الجديدة v3 — من محرك مغاسل إلى Workflow Engine مؤسسي عام (2026-07-12)
-
-**الفجوة التي تم اكتشافها:** المنصة كانت Enterprise DB + Laundry Engine — `GARMENT_PROFILES` و 7 محطات ثابتة `if (to === "ironing")` داخل الكود، مش قابلة للتشكيل.
-
-**الحل المنفذ — Phase 0+1:**
-
-**Phase 0 — شبكة أمان إلزامية:**
-- Feature Flag `tenants.workflow_engine_version` v1|v2 default v1 لكل الحاليين — أي تعديل في v2 لا يكسر الإنتاج
-- E2E Safety Net `e2e/workflow-v1-stations.spec.ts` يغطي 7 محطات كاملة + Builder + Flag — لازم يعدي 100% قبل أي commit
-- Unit Tests `station-workflow-core.test.ts` من 4 → 12 test يغطي 7 محطات + v2 generic + snapshot — الآن 36 test
-
-**Phase 1 — Workflow Builder الحقيقي:**
-- Schema جديد:
-  `workflow_definitions(id, tenant_id, name, industry, is_template, version)`
-  `workflow_stages_v2(id, workflow_id, name_ar/en, slug, stage_order, required_role, sla_target/max, required_fields jsonb, icon, color, is_initial/final)`
-  `workflow_transitions(id, workflow_id, from_stage_id, to_stage_id, condition_json, required_role)`
-  `work_orders(id, tenant_id, workflow_id, workflow_version_snapshot jsonb, current_stage_id, custom_fields, sla_due_at, sla_breached)`
-- `workflow_version_snapshot` — لما طلب يتفتح، بنحفظ نسخة من التعريف وقتها، لو المدير عدّل بعدين، الطلبات القديمة تكمل بالقديم مش تتكسر
-- أمان إلزامي: `validate_transition_condition()` whitelist للحقول المسموحة فقط `[requires_photo, requires_qc, requires_payment, requires_fields...]` + block لـ `; -- /* xp_ exec drop` — مفيش eval حر
-- Wrapper `station-workflow.ts`: لو work_order موجود → v2 DB-driven، لو orders قديمة → v1 laundry legacy
-- عزل: `workflow-engine-v1.ts` → `legacy/laundry-workflow-v1.ts` (نقل بدون تعديل منطقي)، `workflow-engine-v2.ts` جديد يقرأ من DB
-- Seed templates: Generic 5 مراحل + Housekeeping 6 مراحل (inspection, cleaning, minibar_check, maintenance_check, qc, ready)
-
-**UI Builder:**
-- `/ _admin/admin/workflow-builder` drag-and-drop بـ `@dnd-kit` (مجاني) — كل مرحلة: اسم عربي/إنجليزي + slug + ترتيب + دور مسؤول + SLA + حقول مطلوبة checkboxes + initial/final + icon/color
-- صفحات جديدة: `/$tenant/work-orders.tsx` — إثبات أن نفس الكود يشغل مغسلة + housekeeping + أي نشاط — صفر `if (stage==='ironing')` في المسار الجديد
-
-**Phase 3-4 أساسيات:**
-- PMS Bridge Edge Function `supabase/functions/pms-bridge` — Mews Sandbox mock (مجاني): `POST ?action=checkin` ينشئ housekeeping work_order، `folio_post` يسجل notification ويتجنب PCI DSS
-- SLA Engine: `check_sla_breaches()` pg_cron كل 15 دقيقة
-- Audit Logs: `audit_logs_immutable` append-only (لا UPDATE/DELETE policies) + `export_audit_logs()` للمدقق الخارجي
-- Holding: `intercompany_transactions`, `v_consolidated_pnl` مع eliminations، `approval_chains`, `vendors` + `vendor_contracts` على مستوى Enterprise
-
-**قاعدة إلزامية من الآن فصاعداً (مذكورة في الصورة): إذا كل التعديلات خلصت محتاج تعدل ملف readme دائماً مع كل تحديث أو تعديل — تم الالتزام:**
-- هذا الملف يتم تحديثه مع كل push لـ main (آخر تحديث 2026-07-12 يوثق v3 + Node.js fix + CI #239)
-- CI workflow يفحص repo guard + bundle budget + E2E + typecheck — لو README ناقص، التوثيق يعتبر ناقص
-
-
 ---
 
 ## 9) أوامر مهمة
@@ -429,31 +390,7 @@ git push origin main
 - #223-226 marketplace public
 - #227 budgets fix
 - #231 `e2848334` ✅ vercel rewrite fix 404 → 200
-- #239 `47048f6e` ✅ fix(e2e): make workflow v1 safety net less strict — 9 test files, 36 tests, 3m 28s Success (الصورة المرفقة) — Vitest Report 9 passes, 36 passes
-  - Build-test: Success
-  - Annotations: 1 warning فقط — Node.js 20 deprecated
-- #238 `26f65366` ❌ failure (feat v3) — لم يتم عمل Re-run لأنه تم دفع fix جديد #239، فـ #238 يبقى فاشل و #239 هو الأخير الناجح — طبيعي في GitHub، Re-run يتعمل يدوياً بزر Re-run all jobs لو عايز تعيد نفس الـ commit
-- **#29150006248 ✅ fix(i18n) full translation coverage — no more Arabic when French selected** (قبل الأخير)
-
-#### تحذير Node.js 20 Deprecated — تم إصلاحه
-**الصورة المرفقة تظهر:**
-```
-⚠ build-test
-Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4
-```
-**السبب:** GitHub Actions runners بقت تستخدم Node.js 24 افتراضياً من سبتمبر 2025 (changelog 2025-09-19). الأكشنات القديمة v4 مبنية على Node 20 فبتطلع warning لكن بتشتغل.
-
-**الحل المنفذ (2026-07-12):**
-- `actions/checkout@v4` → `actions/checkout@v6`
-- `actions/setup-node@v4` → `actions/setup-node@v6`
-- `node-version: 20` → `node-version: 22` (LTS)
-- الآن الـ workflow يستخدم Node 24 native بدون forced warning
-- ملف `.github/workflows/ci.yml` اتحدث
-
-#### لماذا CI #238 لم يعمل Re-run؟
-- #238 كان failure بسبب `browser-image-compression` كسر `npm ci` + E2E strict
-- لم نضغط Re-run all jobs في #238، بل دفعنا commit جديد #239 فيه Fix — فـ GitHub يعتبر #239 هو الـ run الجديد الناجح و #238 يفضل فاشل
-- لو عايز تعيد #238 نفسه، اضغط زر `Re-run all jobs` في صفحة الـ Actions، لكن مش محتاج لأنه اتصلح في #239
+- **#29150006248 ✅ fix(i18n) full translation coverage — no more Arabic when French selected** (الأخير 2026-07-11)
 
 ### Bundle
 ```

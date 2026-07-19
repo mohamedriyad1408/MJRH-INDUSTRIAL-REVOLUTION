@@ -25,11 +25,7 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    alias: {
-      "@/core": path.resolve(__dirname, "./src/core"),
-      "@/modules": path.resolve(__dirname, "./src/modules"),
-      "@": path.resolve(__dirname, "."),
-    },
+    alias: { "@": path.resolve(__dirname, ".") },
   },
   build: {
     outDir: "dist",

@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Loader2, Hourglass, LogOut } from "lucide-react";
@@ -20,12 +20,10 @@ export const Route = createFileRoute("/$tenant")({
 
 const RESERVED_ROUTE_NAMES = ["today", "orders", "customers", "staff", "stations", "finance", "accounting", "ledger", "receivables", "cash-closing", "budgets", "inventory", "billing", "crm", "services", "branches", "settings", "help", "system-health", "daily-operations", "ops", "cs", "manager", "driver", "live-map", "reports", "executive", "pickups", "search", "scorecard", "attendance", "dashboard"];
 
-function AppLayout() { 
+function AppLayout() {
   const { session, user, loading, roles, isSuperAdmin, hasRole, signOut, tenantId } = useAuth();
   const { dir, t } = useI18n();
   const [tenantBrand, setTenantBrand] = useState<any>(null);
-  const [setupGate, setSetupGate] = useState<{ loading: boolean; canEnter: boolean }>({ loading: true, canEnter: false });
-  const [routeAccess, setRouteAccess] = useState<{ loading: boolean; allowed: boolean; checkedPath: string | null }>({ loading: true, allowed: true, checkedPath: null });
   const nav = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { tenant: tenantParam } = Route.useParams() as { tenant?: string };
@@ -71,80 +69,11 @@ function AppLayout() {
     }
   }, [loading, session, isSuperAdmin, path, nav, tenantParam]);
 
-  // MJRH Core Platform Gate:
-  // No user can enter the operating platform before the mandatory setup wizard
-  // finishes generating the configuration-driven OS.
-  useEffect(() => {
-    if (loading || !session) return;
-    const currentTenantId = tenantBrand?.id || tenantId;
-    if (!currentTenantId) {
-      setSetupGate({ loading: false, canEnter: path.includes("/onboarding") });
-      return;
-    }
-    if (path.includes("/onboarding")) {
-      setSetupGate({ loading: false, canEnter: true });
-      return;
-    }
-    setSetupGate({ loading: true, canEnter: false });
-    supabase.rpc("can_enter_platform", { _tenant_id: currentTenantId }).then(async ({ data, error }: any) => {
-      if (error) {
-        const { data: onboarding } = await supabase.from("tenant_onboarding").select("is_completed").eq("tenant_id", currentTenantId).maybeSingle();
-        const canEnter = Boolean(onboarding?.is_completed);
-        setSetupGate({ loading: false, canEnter });
-        if (!canEnter && tenantParam) nav({ to: `/${tenantParam}/onboarding` as any, replace: true });
-        return;
-      }
-      const canEnter = Boolean(data);
-      setSetupGate({ loading: false, canEnter });
-      if (!canEnter && tenantParam) nav({ to: `/${tenantParam}/onboarding` as any, replace: true });
-    });
-  }, [loading, session, tenantBrand?.id, tenantId, path, tenantParam, nav]);
 
-  // Generic route/action permission adoption: if a generated navigation item declares
-  // permissions for the current route, enforce them below UI visibility as well.
-  useEffect(() => {
-    if (loading || !session || !user || isSuperAdmin) {
-      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
-      return;
-    }
-    if (path.includes("/onboarding")) {
-      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
-      return;
-    }
-    const currentTenantId = tenantBrand?.id || tenantId;
-    if (!currentTenantId || !tenantParam) {
-      setRouteAccess({ loading: false, allowed: true, checkedPath: path });
-      return;
-    }
-
-    const routePath = path.startsWith(`/${tenantParam}`) ? path.slice(tenantParam.length + 1) || "/dashboard" : path;
-    setRouteAccess({ loading: true, allowed: true, checkedPath: path });
-
-    supabase
-      .from("core_navigation_items")
-      .select("route,required_permissions,is_active")
-      .eq("tenant_id", currentTenantId)
-      .eq("is_active", true)
-      .then(async ({ data }: any) => {
-        const items = Array.isArray(data) ? data : [];
-        const match = items
-          .filter((item: any) => item.route && (routePath === item.route || routePath.startsWith(`${item.route}/`)))
-          .sort((a: any, b: any) => String(b.route).length - String(a.route).length)[0];
-        const required = match?.required_permissions || [];
-        if (!required.length) {
-          setRouteAccess({ loading: false, allowed: true, checkedPath: path });
-          return;
-        }
-        const { data: perms } = await supabase.rpc("get_actor_permissions", { _tenant_id: currentTenantId, _actor_user_id: user.id });
-        const owned = new Set((Array.isArray(perms) ? perms : []).map((p: any) => p.permission_key).filter(Boolean));
-        setRouteAccess({ loading: false, allowed: required.every((p: string) => owned.has(p)), checkedPath: path });
-      });
-  }, [loading, session, user, isSuperAdmin, path, tenantBrand?.id, tenantId, tenantParam]);
 
   // Guard employee/courier deep links: non-managers should only access their operational page.
   useEffect(() => {
     if (loading || !session || !roles.length || isSuperAdmin) return;
-    if (!path.includes("/onboarding") && !setupGate.canEnter) return;
     const isManager = hasRole("owner", "ops_manager", "cs_manager");
     if (isManager) return;
 
@@ -173,7 +102,7 @@ function AppLayout() {
           if (target && !path.includes(target)) nav({ to: `${tenantParam ? `/${tenantParam}` : ""}${target}` as any });
         });
     }
-  }, [loading, session, roles.length, isSuperAdmin, hasRole, path, nav, user, tenantParam, setupGate.canEnter]);
+  }, [loading, session, roles.length, isSuperAdmin, hasRole, path, nav, user, tenantParam]);
 
   if (loading || !session) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -197,47 +126,7 @@ function AppLayout() {
     );
   }
 
-  if (!path.includes("/onboarding") && setupGate.loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
-  }
-
-  if (!path.includes("/onboarding") && !setupGate.canEnter) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
-        <Card className="max-w-md w-full p-8 text-center space-y-4 border-amber-200 bg-amber-50/40 shadow-lg">
-          <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 flex items-center justify-center border border-amber-200">
-            <Hourglass className="w-7 h-7 text-amber-700" />
-          </div>
-          <h1 className="text-xl font-extrabold text-amber-950">Setup Wizard Required</h1>
-          <p className="text-sm text-amber-900 font-medium">
-            لا يمكن دخول المنصة قبل انتهاء معالج إعداد MJRH Core Platform. كل شيء يجب أن يولد من configuration أولاً.
-          </p>
-          <Button className="w-full font-bold" onClick={() => tenantParam && nav({ to: `/${tenantParam}/onboarding` as any, replace: true })}>فتح معالج الإعداد</Button>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!path.includes("/onboarding") && setupGate.canEnter && routeAccess.loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
-  }
-
-  if (!path.includes("/onboarding") && setupGate.canEnter && !routeAccess.allowed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
-        <Card className="max-w-md w-full p-8 text-center space-y-4 border-red-200 bg-red-50/40 shadow-lg">
-          <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
-            <LogOut className="w-7 h-7 text-red-600" />
-          </div>
-          <h1 className="text-xl font-extrabold text-red-950">غير مصرح بالدخول</h1>
-          <p className="text-sm text-red-900 font-medium">هذه الصفحة تتطلب صلاحية غير مفعّلة لحسابك داخل هذه المنظمة.</p>
-          <Button variant="outline" className="w-full font-bold" onClick={() => tenantParam && nav({ to: `/${tenantParam}/dashboard` as any, replace: true })}>العودة للوحة القيادة</Button>
-        </Card>
-      </div>
-    );
-  }
-
-  // إيقاف تفعيل المنظمة من مدير المنصة (Super Admin)
+  // إيقاف تفعيل المغسلة من مدير المنصة (Super Admin)
   if (tenantBrand && tenantBrand.is_active === false && !isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4" dir={dir}>
@@ -245,11 +134,11 @@ function AppLayout() {
           <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
             <LogOut className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title", t("common.تم_إيقاف_تفعيل_حساب_المغسلة"))}</h1>
+          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title", "تم إيقاف تفعيل حساب المغسلة")}</h1>
           <p className="text-sm text-red-800 font-medium">
-            {t("tenant.suspended.body", t("common.حساب_هذه_المغسلة_موقوف_حالياً_من_قِبل_إد"))}
+            {t("tenant.suspended.body", "حساب هذه المغسلة موقوف حالياً من قِبل إدارة المنصة (Super Admin). يرجى التواصل مع الدعم الفني أو إدارة المنصة لإعادة التفعيل.")}
           </p>
-          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut", t("common.تسجيل_الخروج"))}</Button>
+          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut", "تسجيل الخروج")}</Button>
         </Card>
       </div>
     );

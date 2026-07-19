@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { fmtDate } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Calendar, AlertTriangle, Zap, PlusCircle, Eye, Timer, CreditCard, MessageCircle, FileText } from "lucide-react";

@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
-import { useI18n, interpolate } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,14 +107,14 @@ function FairnessEnginePage() {
     try {
       const { data, error } = await supabase.rpc("generate_burnout_alerts", { _tenant_id: tenantId });
       if (error) throw error;
-      toast.success(interpolate(t("fairness.alertsCreated", "تم إنشاء {count} تنبيه إرهاق"), { count: data ?? 0 }));
+      toast.success(`تم إنشاء ${data ?? 0} تنبيه إرهاق`);
       load();
     } catch (e: any) {
       // fallback to client-side check if RPC not available
       const { error } = await supabase.rpc("generate_burnout_alerts" as any);
       if (e.message?.includes("does not exist")) {
         // manual insert for demo
-        toast.info(t("fairness.viewBurnoutRisk", "سيتم إنشاء تنبيهات الإرهاق من view v_burnout_risk"));
+        toast.info("سيتم إنشاء تنبيهات الإرهاق من view v_burnout_risk");
       } else {
         toast.error(e.message);
       }
@@ -122,7 +122,7 @@ function FairnessEnginePage() {
   }
 
   if (!isManager) {
-    return <Card className="p-8 text-center font-bold">{t("fairness.accessDenied", "هذه الصفحة للمالك ومدير التشغيل فقط.")}</Card>;
+    return <Card className="p-8 text-center font-bold">هذه الصفحة للمالك ومدير التشغيل فقط.</Card>;
   }
 
   return (
@@ -130,15 +130,15 @@ function FairnessEnginePage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div>
           <h1 className="text-2xl font-black flex items-center gap-2">
-            <Activity className="w-6 h-6 text-teal-600" /> {t("fairness.title", "محرك التوازن التشغيلي — Fairness Engine")}
+            <Activity className="w-6 h-6 text-teal-600" /> محرك التوازن التشغيلي — Fairness Engine
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("fairness.description", "Workload Index (WLI) = وحدات الموظف ÷ متوسط المحطة في نفس اليوم — بدون AI، SQL فقط — Zero Cost")}
+            Workload Index (WLI) = وحدات الموظف ÷ متوسط المحطة في نفس اليوم — بدون AI، SQL فقط — Zero Cost
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={load} disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t("fairness.refresh", "تحديث")}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "تحديث"}
           </Button>
           <Button onClick={async () => {
             const { data, error } = await supabase.rpc("generate_burnout_alerts" as any, { _tenant_id: tenantId });
@@ -151,10 +151,10 @@ function FairnessEnginePage() {
                 // we actually created generate_burnout_alerts
                 const { data: d3, error: e3 } = await supabase.rpc("generate_burnout_alerts", { _tenant_id: tenantId } as any);
                 if (e3) toast.error(e3.message);
-                else toast.success(interpolate(t("fairness.burnoutAlerts", "تنبيهات: {count}"), { count: d3 }));
+                else toast.success(`تنبيهات: ${d3}`);
               }
             } else {
-              toast.success(interpolate(t("fairness.burnoutAlerts", "تنبيهات إرهاق: {count}"), { count: data }));
+              toast.success(`تنبيهات إرهاق: ${data}`);
             }
             // try our function
             const { data: bData, error: bErr } = await supabase.rpc("generate_burnout_alerts", { _tenant_id: tenantId } as any);
@@ -169,12 +169,12 @@ function FairnessEnginePage() {
             const { data: final, error: finalErr } = await supabase.rpc("generate_burnout_alerts" as any, { _tenant_id: tenantId });
             if (finalErr) {
               const { data: f2, error: e2 } = await supabase.rpc("generate_burnout_alerts", { _tenant_id: tenantId });
-              if (!e2) toast.success(interpolate(t("fairness.alertsCreatedSimple", "تم إنشاء {count} تنبيه"), { count: f2 }));
+              if (!e2) toast.success(`تم إنشاء ${f2} تنبيه`);
             } else {
-              toast.success(interpolate(t("fairness.alertsCreatedSimple", "تم إنشاء {count} تنبيه"), { count: final }));
+              toast.success(`تم إنشاء ${final} تنبيه`);
             }
           }} className="bg-amber-600 hover:bg-amber-700">
-            <ShieldAlert className="w-4 h-4 me-2" /> {t("fairness.checkBurnout", "فحص الإرهاق")}
+            <ShieldAlert className="w-4 h-4 me-2" /> فحص الإرهاق
           </Button>
         </div>
       </div>
@@ -182,10 +182,10 @@ function FairnessEnginePage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{t("fairness.avgWli", "متوسط WLI")}</div><div className="text-xl font-black">{stats.avgWli.toFixed(2)}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{t("fairness.maxWli", "أعلى WLI")}</div><div className="text-xl font-black text-red-600">{stats.maxWli.toFixed(2)}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{t("fairness.highLoad", "حالات عبء عالي (>1.5)")}</div><div className="text-xl font-black text-amber-600">{stats.highLoad}</div></CardContent></Card>
-          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">{t("fairness.totalRecords", "إجمالي السجلات")}</div><div className="text-xl font-black">{stats.total}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">متوسط WLI</div><div className="text-xl font-black">{stats.avgWli.toFixed(2)}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">أعلى WLI</div><div className="text-xl font-black text-red-600">{stats.maxWli.toFixed(2)}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">حالات عبء عالي (&gt;1.5)</div><div className="text-xl font-black text-amber-600">{stats.highLoad}</div></CardContent></Card>
+          <Card><CardContent className="p-4"><div className="text-xs text-muted-foreground">إجمالي السجلات</div><div className="text-xl font-black">{stats.total}</div></CardContent></Card>
         </div>
       )}
 
@@ -193,20 +193,20 @@ function FairnessEnginePage() {
       <Card className="border-amber-200 bg-amber-50/50">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-600" /> {t("fairness.burnoutFlag", "Burnout Flag — تنبيه إرهاق (WLI >1.5 لمدة 3 أيام متتالية)")}
+            <AlertTriangle className="w-5 h-5 text-amber-600" /> Burnout Flag — تنبيه إرهاق (WLI &gt;1.5 لمدة 3 أيام متتالية)
           </CardTitle>
-          <CardDescription className="text-xs">{t("fairness.burnoutDescription", "بدون AI — SQL فقط — يضيف إشعار داخلي في /system-health")}</CardDescription>
+          <CardDescription className="text-xs">بدون AI — SQL فقط — يضيف إشعار داخلي في /system-health</CardDescription>
         </CardHeader>
         <CardContent>
           {burnoutRows.length === 0 ? (
-            <div className="text-sm text-slate-500 p-4 text-center">{t("fairness.noBurnout", "لا توجد حالات إرهاق حالياً — جميع الموظفين ضمن التوازن.")}</div>
+            <div className="text-sm text-slate-500 p-4 text-center">لا توجد حالات إرهاق حالياً — جميع الموظفين ضمن التوازن.</div>
           ) : (
             <div className="space-y-2">
               {burnoutRows.map((b, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-white border rounded-xl">
                   <div>
                     <div className="font-bold text-sm">{employeeMap.get(b.employee_id) || b.employee_id.slice(0, 8)} — {b.station}</div>
-                    <div className="text-xs text-muted-foreground">{b.start_date} → {b.end_date} • {b.consecutive_days} {t("fairness.days", "أيام")} • {t("fairness.avgWli", "متوسط WLI")} {Number(b.avg_wli).toFixed(2)}</div>
+                    <div className="text-xs text-muted-foreground">{b.start_date} → {b.end_date} • {b.consecutive_days} أيام • متوسط WLI {Number(b.avg_wli).toFixed(2)}</div>
                   </div>
                   <Badge className="bg-red-600 text-white">Burnout</Badge>
                 </div>
@@ -219,15 +219,15 @@ function FairnessEnginePage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Select value={selectedStation} onValueChange={setSelectedStation}>
-          <SelectTrigger className="w-44"><SelectValue placeholder={t("fairness.station", "المحطة")} /></SelectTrigger>
+          <SelectTrigger className="w-44"><SelectValue placeholder="المحطة" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("fairness.allStations", "كل المحطات")}</SelectItem>
-            <SelectItem value="received">{t("fairness.received", "استقبال")}</SelectItem>
-            <SelectItem value="cleaning">{t("fairness.cleaning", "تنظيف")}</SelectItem>
-            <SelectItem value="ironing">{t("fairness.ironing", "كي")}</SelectItem>
-            <SelectItem value="packing">{t("fairness.packing", "تغليف")}</SelectItem>
-            <SelectItem value="qc">{t("fairness.qc", "جودة")}</SelectItem>
-            <SelectItem value="delivery">{t("fairness.delivery", "توصيل")}</SelectItem>
+            <SelectItem value="all">كل المحطات</SelectItem>
+            <SelectItem value="received">استقبال</SelectItem>
+            <SelectItem value="cleaning">تنظيف</SelectItem>
+            <SelectItem value="ironing">كي</SelectItem>
+            <SelectItem value="packing">تغليف</SelectItem>
+            <SelectItem value="qc">جودة</SelectItem>
+            <SelectItem value="delivery">توصيل</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -235,25 +235,25 @@ function FairnessEnginePage() {
       {/* WLI Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5" /> {t("fairness.tableTitle", "Workload Index Daily")}</CardTitle>
-          <CardDescription className="text-xs">{t("fairness.tableDescription", "محسوب من task_assignments + service_units — Zero Cost View")}</CardDescription>
+          <CardTitle className="flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Workload Index Daily</CardTitle>
+          <CardDescription className="text-xs">محسوب من task_assignments + service_units — Zero Cost View</CardDescription>
         </CardHeader>
         <CardContent className="overflow-auto">
           {loading ? (
             <div className="p-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>
           ) : filteredWli.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">{t("fairness.noData", "لا توجد بيانات — ابدأ بتوزيع مهام في المحطات")}</div>
+            <div className="p-8 text-center text-sm text-muted-foreground">لا توجد بيانات — ابدأ بتوزيع مهام في المحطات</div>
           ) : (
             <table className="w-full text-xs">
               <thead className="border-b text-muted-foreground">
                 <tr>
-                  <th className="p-2 text-start">{t("fairness.date", "التاريخ")}</th>
-                  <th className="p-2 text-start">{t("fairness.employee", "الموظف")}</th>
-                  <th className="p-2 text-start">{t("fairness.station", "المحطة")}</th>
-                  <th className="p-2 text-center">{t("fairness.units", "وحدات")}</th>
-                  <th className="p-2 text-center">{t("fairness.avgStation", "متوسط المحطة")}</th>
+                  <th className="p-2 text-start">التاريخ</th>
+                  <th className="p-2 text-start">الموظف</th>
+                  <th className="p-2 text-start">المحطة</th>
+                  <th className="p-2 text-center">وحدات</th>
+                  <th className="p-2 text-center">متوسط المحطة</th>
                   <th className="p-2 text-center">WLI</th>
-                  <th className="p-2 text-center">{t("fairness.status", "حالة")}</th>
+                  <th className="p-2 text-center">حالة</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -270,7 +270,7 @@ function FairnessEnginePage() {
                       </Badge>
                     </td>
                     <td className="p-2 text-center">
-                      {Number(r.wli) > 1.5 ? <span className="text-red-600 font-bold">{t("fairness.high", "عالي")}</span> : Number(r.wli) < 0.7 ? <span className="text-blue-600">{t("fairness.low", "منخفض")}</span> : <span className="text-emerald-600">{t("fairness.balanced", "متوازن")}</span>}
+                      {Number(r.wli) > 1.5 ? <span className="text-red-600 font-bold">عالي</span> : Number(r.wli) < 0.7 ? <span className="text-blue-600">منخفض</span> : <span className="text-emerald-600">متوازن</span>}
                     </td>
                   </tr>
                 ))}

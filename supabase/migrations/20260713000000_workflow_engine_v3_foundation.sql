@@ -369,7 +369,7 @@ SET search_path = public
 AS $$
 DECLARE
   wo RECORD;
-  v_from_stage_id uuid;
+  from_stage_id uuid;
   transition RECORD;
   condition jsonb;
   required_fields jsonb;
@@ -381,13 +381,13 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'message', 'Work order not found');
   END IF;
 
-  v_from_stage_id := wo.current_stage_id;
+  from_stage_id := wo.current_stage_id;
 
   -- Find allowed transition
   SELECT * INTO transition
   FROM workflow_transitions
   WHERE workflow_id = wo.workflow_id
-    AND (workflow_transitions.from_stage_id IS NULL OR workflow_transitions.from_stage_id = wo.current_stage_id)
+    AND (from_stage_id IS NULL OR from_stage_id = wo.current_stage_id)
     AND to_stage_id = _to_stage_id
   LIMIT 1;
 
@@ -458,30 +458,33 @@ ON CONFLICT (id) DO NOTHING;
 -- Stages for test template
 INSERT INTO public.workflow_stages_v2 (workflow_id, name_ar, name_en, slug, stage_order, required_role, sla_target_mins, sla_max_mins, is_initial, is_final, icon, color)
 VALUES
-  ('00000000-0000-0000-0000-000000000001'::uuid, 'استلام', 'Intake', 'intake', 1, 'cs_manager', 60, 120, true, false, '📥', '#0d9488'),
-  ('00000000-0000-0000-0000-000000000001'::uuid, 'تشخيص', 'Diagnosis', 'diagnosis', 2, 'ops_manager', 120, 240, false, false, '🔍', '#3b82f6'),
-  ('00000000-0000-0000-0000-000000000001'::uuid, 'تنفيذ', 'Execution', 'execution', 3, 'employee', 240, 480, false, false, '⚙️', '#8b5cf6'),
-  ('00000000-0000-0000-0000-000000000001'::uuid, 'جودة', 'Quality', 'qc', 4, 'ops_manager', 60, 120, false, false, '✅', '#f59e0b'),
-  ('00000000-0000-0000-0000-000000000001'::uuid, 'تسليم', 'Delivery', 'delivery', 5, 'courier', 60, 120, false, true, '🚚', '#10b981')
+  ('00000000-0000-0000-0000-000000000001', 'استلام', 'Intake', 'intake', 1, 'cs_manager', 60, 120, true, false, '📥', '#0d9488'),
+  ('00000000-0000-0000-0000-000000000001', 'تشخيص', 'Diagnosis', 'diagnosis', 2, 'ops_manager', 120, 240, false, false, '🔍', '#3b82f6'),
+  ('00000000-0000-0000-0000-000000000001', 'تنفيذ', 'Execution', 'execution', 3, 'employee', 240, 480, false, false, '⚙️', '#8b5cf6'),
+  ('00000000-0000-0000-0000-000000000001', 'جودة', 'Quality', 'qc', 4, 'ops_manager', 60, 120, false, false, '✅', '#f59e0b'),
+  ('00000000-0000-0000-0000-000000000001', 'تسليم', 'Delivery', 'delivery', 5, 'courier', 60, 120, false, true, '🚚', '#10b981')
 ON CONFLICT (workflow_id, slug) DO NOTHING;
 
 -- Transitions for test template (linear)
 WITH stages AS (
-  SELECT id, slug, stage_order FROM workflow_stages_v2 WHERE workflow_id = '00000000-0000-0000-0000-000000000001'::uuid ORDER BY stage_order
+  SELECT id, slug, stage_order FROM workflow_stages_v2 WHERE workflow_id = '00000000-0000-0000-0000-000000000001' ORDER BY stage_order
 )
 INSERT INTO public.workflow_transitions (workflow_id, from_stage_id, to_stage_id, condition_json)
 SELECT 
-  '00000000-0000-0000-0000-000000000001'::uuid,
+  '00000000-0000-0000-0000-000000000001',
   (SELECT id FROM stages WHERE stage_order = 1),
   (SELECT id FROM stages WHERE stage_order = 2),
   '{}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM workflow_transitions WHERE workflow_id = '00000000-0000-0000-0000-000000000001' AND from_stage_id = (SELECT id FROM stages WHERE stage_order = 1))
 UNION ALL
-SELECT '00000000-0000-0000-0000-000000000001'::uuid, (SELECT id FROM stages WHERE stage_order = 2), (SELECT id FROM stages WHERE stage_order = 3), '{}'::jsonb
+SELECT '00000000-0000-0000-0000-000000000001', (SELECT id FROM stages WHERE stage_order = 2), (SELECT id FROM stages WHERE stage_order = 3), '{}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM workflow_transitions WHERE workflow_id = '00000000-0000-0000-000000000001' AND from_stage_id = (SELECT id FROM stages WHERE stage_order = 2))
 UNION ALL
-SELECT '00000000-0000-0000-0000-000000000001'::uuid, (SELECT id FROM stages WHERE stage_order = 3), (SELECT id FROM stages WHERE stage_order = 4), '{}'::jsonb
+SELECT '00000000-0000-0000-0000-000000000001', (SELECT id FROM stages WHERE stage_order = 3), (SELECT id FROM stages WHERE stage_order = 4), '{}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM workflow_transitions WHERE workflow_id = '00000000-0000-0000-000000000001' AND from_stage_id = (SELECT id FROM stages WHERE stage_order = 3))
 UNION ALL
-SELECT '00000000-0000-0000-0000-000000000001'::uuid, (SELECT id FROM stages WHERE stage_order = 4), (SELECT id FROM stages WHERE stage_order = 5), '{"requires_qc": true}'::jsonb
-ON CONFLICT DO NOTHING;
+SELECT '00000000-0000-0000-0000-000000000001', (SELECT id FROM stages WHERE stage_order = 4), (SELECT id FROM stages WHERE stage_order = 5), '{"requires_qc": true}'::jsonb
+WHERE NOT EXISTS (SELECT 1 FROM workflow_transitions WHERE workflow_id = '00000000-0000-0000-000000000001' AND from_stage_id = (SELECT id FROM stages WHERE stage_order = 4));
 
 -- Template 2: Hotel Housekeeping (Phase 2 proof)
 INSERT INTO public.workflow_definitions (id, name, name_en, industry, is_template, is_active, description)
@@ -498,19 +501,19 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.workflow_stages_v2 (workflow_id, name_ar, name_en, slug, stage_order, required_role, sla_target_mins, sla_max_mins, is_initial, is_final, icon, color, required_fields)
 VALUES
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'فحص أولي', 'Inspection', 'inspection', 1, 'housekeeping_supervisor', 15, 30, true, false, '🔍', '#0d9488', '["room_number","guest_status"]'::jsonb),
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'تنظيف', 'Cleaning', 'cleaning', 2, 'housekeeper', 30, 60, false, false, '🧹', '#3b82f6', '["cleaning_type"]'::jsonb),
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'فحص Minibar', 'Minibar Check', 'minibar_check', 3, 'housekeeper', 10, 20, false, false, '🧃', '#8b5cf6', '["minibar_used"]'::jsonb),
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'صيانة', 'Maintenance Check', 'maintenance_check', 4, 'maintenance', 20, 40, false, false, '🔧', '#f59e0b', '["maintenance_issue"]'::jsonb),
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'جودة', 'Quality', 'qc', 5, 'housekeeping_supervisor', 15, 30, false, false, '✅', '#10b981', '["intake_photo_url"]'::jsonb),
-  ('00000000-0000-0000-0000-000000000002'::uuid, 'جاهز', 'Ready', 'ready', 6, 'front_office', 5, 10, false, true, '🏨', '#059669', '[]'::jsonb)
+  ('00000000-0000-0000-0000-000000000002', 'فحص أولي', 'Inspection', 'inspection', 1, 'housekeeping_supervisor', 15, 30, true, false, '🔍', '#0d9488', '["room_number","guest_status"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'تنظيف', 'Cleaning', 'cleaning', 2, 'housekeeper', 30, 60, false, false, '🧹', '#3b82f6', '["cleaning_type"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'فحص Minibar', 'Minibar Check', 'minibar_check', 3, 'housekeeper', 10, 20, false, false, '🧃', '#8b5cf6', '["minibar_used"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'صيانة', 'Maintenance Check', 'maintenance_check', 4, 'maintenance', 20, 40, false, false, '🔧', '#f59e0b', '["maintenance_issue"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'جودة', 'Quality', 'qc', 5, 'housekeeping_supervisor', 15, 30, false, false, '✅', '#10b981', '["intake_photo_url"]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'جاهز', 'Ready', 'ready', 6, 'front_office', 5, 10, false, true, '🏨', '#059669', '[]'::jsonb)
 ON CONFLICT (workflow_id, slug) DO NOTHING;
 
 -- Transitions for housekeeping
 WITH stages AS (
-  SELECT id, slug, stage_order FROM workflow_stages_v2 WHERE workflow_id = '00000000-0000-0000-0000-000000000002'::uuid ORDER BY stage_order
+  SELECT id, slug, stage_order FROM workflow_stages_v2 WHERE workflow_id = '00000000-0000-0000-0000-000000000002' ORDER BY stage_order
 )
 INSERT INTO public.workflow_transitions (workflow_id, from_stage_id, to_stage_id, condition_json)
-SELECT '00000000-0000-0000-0000-000000000002'::uuid, s1.id, s2.id, '{}'::jsonb
+SELECT '00000000-0000-0000-0000-000000000002', s1.id, s2.id, '{}'::jsonb
 FROM stages s1 JOIN stages s2 ON s2.stage_order = s1.stage_order + 1
 ON CONFLICT DO NOTHING;

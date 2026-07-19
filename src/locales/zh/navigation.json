@@ -1,0 +1,10 @@
+{
+  "main": "主页",
+  "today": "今日中心",
+  "dashboard": "仪表板",
+  "orders": "订单",
+  "customers": "客户",
+  "staff": "员工",
+  "finance": "财务",
+  "settings": "设置"
+}

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { BookOpenCheck, Calculator, CheckCircle2, HelpCircle, Map, PackageCheck, Shirt, Truck, Users, Wallet } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 

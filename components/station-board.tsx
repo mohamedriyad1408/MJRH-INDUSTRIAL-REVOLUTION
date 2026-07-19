@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { fmtDate, ORDER_STATUS_AR } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, UserPlus, PlayCircle, CheckCircle2, Trophy } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
-import { autoAssignIroningPieces } from "@/modules/laundry/ironing/assignment";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { interpolate, useI18n } from "@/lib/i18n";
 

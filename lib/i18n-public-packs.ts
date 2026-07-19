@@ -52,9 +52,6 @@ export const publicLanguagePacks: Partial<Record<LanguageCode, PublicPack>> = {
     "legal.privacyTitle": "Politique de confidentialité",
     "legal.termsTitle": "Conditions générales",
     "legal.back": "Retour",
-    "track.title": "Suivi de commande",
-    "customer.title": "Portail client",
-    "system.title": "Santé du système",
   },
   it: {
     "landing.metaTitle": "MJRH — Piattaforma operativa",

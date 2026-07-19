@@ -1,0 +1,10 @@
+{
+  "main": "Inicio",
+  "today": "Centro de hoy",
+  "dashboard": "Panel de control",
+  "orders": "Pedidos",
+  "customers": "Clientes",
+  "staff": "Personal",
+  "finance": "Finanzas",
+  "settings": "Configuración"
+}

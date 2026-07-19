@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Loader2, LogOut } from "lucide-react";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
 });
 
-function AdminLayout() { 
+function AdminLayout() {
   const { session, loading, isSuperAdmin, signOut } = useAuth();
   const { dir, t } = useI18n();
   const nav = useNavigate();
