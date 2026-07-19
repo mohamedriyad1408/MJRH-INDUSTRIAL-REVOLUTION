@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, Palette, Check, Settings2, Workflow, Download, Upload, FileJson } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/settings/workflow/")({
   head: () => ({ meta: [{ title: "إعدادات مراحل العمل — MJRH" }] }),
@@ -75,12 +75,12 @@ function WorkflowSettingsPage() {
     setSaving(true);
     const { data, error } = await supabase.rpc("apply_workflow_template", { _tenant_id: tenantId, _template_slug: templateSlug });
     if (error) toast.error(error.message);
-    else { toast.success(`تم تطبيق القالب (${data} مرحلة)`); setShowTemplates(false); load(); }
+    else { toast.success(interpolate(t("workflow-settings.toastTemplateApplied"), { count: data })); setShowTemplates(false); load(); }
     setSaving(false);
   }
 
   async function addStage() {
-    if (!tenantId || !newStage.name?.trim()) return toast.error("أدخل اسم المرحلة");
+    if (!tenantId || !newStage.name?.trim()) return toast.error(t("workflow-settings.errorRequired"));
     const slug = newStage.slug?.trim() || newStage.name!.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     setSaving(true);
     const { error } = await supabase.from("workflow_stages").insert({
@@ -94,14 +94,14 @@ function WorkflowSettingsPage() {
       is_active: true,
     });
     if (error) toast.error(error.message);
-    else { toast.success("تمت إضافة المرحلة"); setShowNewStage(false); setNewStage({ name: "", name_en: "", slug: "", icon: "📦", color: "#0d9488" }); load(); }
+    else { toast.success(t("workflow-settings.toastStageAdded")); setShowNewStage(false); setNewStage({ name: "", name_en: "", slug: "", icon: "📦", color: "#0d9488" }); load(); }
     setSaving(false);
   }
 
   async function removeStage(stageId: string) {
     const { error } = await supabase.from("workflow_stages").update({ is_active: false }).eq("id", stageId);
     if (error) toast.error(error.message);
-    else { toast.success("تم حذف المرحلة"); load(); }
+    else { toast.success(t("workflow-settings.toastStageDeleted")); load(); }
   }
 
   async function moveStage(index: number, direction: -1 | 1) {
@@ -116,7 +116,7 @@ function WorkflowSettingsPage() {
       if (s.id) await supabase.from("workflow_stages").update({ stage_order: s.stage_order }).eq("id", s.id);
     }
     setSaving(false);
-    toast.success("تم تحديث الترتيب");
+    toast.success(t("workflow-settings.toastOrderUpdated"));
   }
 
   async function exportWorkflow() {
@@ -133,7 +133,7 @@ function WorkflowSettingsPage() {
       a.download = `workflow-${tenantId}-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("تم تصدير Workflow كـ JSON");
+      toast.success(t("workflow-settings.toastExported"));
     }
   }
 
@@ -147,15 +147,15 @@ function WorkflowSettingsPage() {
       const { data, error } = await supabase.rpc("import_workflow_template", { _tenant_id: tenantId, _payload: json });
       setSaving(false);
       if (error) throw error;
-      toast.success(`تم استيراد ${data} مراحل`);
+      toast.success(interpolate(t("workflow-settings.toastImported"), { count: data }));
       load();
     } catch (err: any) {
       setSaving(false);
-      toast.error(err.message || "فشل الاستيراد");
+      toast.error(err.message || t("workflow-settings.errorImportFailed"));
     }
   }
 
-  if (!canEdit) return <Card><CardContent className="p-10 text-center text-muted-foreground">إعدادات مراحل العمل للمالك فقط.</CardContent></Card>;
+  if (!canEdit) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("workflow-settings.accessDenied")}</CardContent></Card>;
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>;
 
   return (
@@ -163,28 +163,28 @@ function WorkflowSettingsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black flex items-center gap-2"><Workflow className="w-7 h-7 text-teal-600" /> إعدادات مراحل العمل</h1>
-          <p className="text-sm text-muted-foreground">عرّف محطات العمل حسب نشاطك. كل مشروع له workflow مختلف.</p>
+          <h1 className="text-2xl font-black flex items-center gap-2"><Workflow className="w-7 h-7 text-teal-600" /> {t("workflow-settings.pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("workflow-settings.pageSubtitle")}</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={exportWorkflow} disabled={saving}><Download className="w-4 h-4 me-1" /> تصدير JSON</Button>
+          <Button variant="outline" onClick={exportWorkflow} disabled={saving}><Download className="w-4 h-4 me-1" /> {t("workflow-settings.exportJson")}</Button>
           <label className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
-            <Upload className="w-4 h-4 me-1" /> استيراد JSON
+            <Upload className="w-4 h-4 me-1" /> {t("workflow-settings.importJson")}
             <input type="file" accept=".json" className="hidden" onChange={importWorkflow} />
           </label>
           <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
             <DialogTrigger asChild>
-              <Button variant="outline"><Settings2 className="w-4 h-4 ms-1" /> استخدام قالب جاهز</Button>
+              <Button variant="outline"><Settings2 className="w-4 h-4 ms-1" /> {t("workflow-settings.useTemplate")}</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl" dir={dir}>
-              <DialogHeader><DialogTitle>اختر قالب نشاطك</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("workflow-settings.chooseTemplate")}</DialogTitle></DialogHeader>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                 {templates.map((tpl) => (
                   <button key={tpl.id} onClick={() => applyTemplate(tpl.slug)} className="text-start rounded-2xl border p-4 hover:shadow-lg hover:border-teal-300 transition active:scale-[0.98]">
                     <div className="flex items-center gap-2 font-black text-lg"><span>{tpl.icon}</span> {tpl.name}</div>
                     <div className="text-xs text-muted-foreground mt-1 font-mono">{tpl.name_en}</div>
                     <div className="text-sm text-muted-foreground mt-2">{tpl.description}</div>
-                    <Badge variant="secondary" className="mt-2">{(tpl.stages as unknown as Stage[]).length} مراحل</Badge>
+                    <Badge variant="secondary" className="mt-2">{interpolate(t("workflow-settings.stagesCount"), { count: (tpl.stages as unknown as Stage[]).length })}</Badge>
                   </button>
                 ))}
               </div>
@@ -192,24 +192,24 @@ function WorkflowSettingsPage() {
           </Dialog>
           <Dialog open={showNewStage} onOpenChange={setShowNewStage}>
             <DialogTrigger asChild>
-              <Button><Plus className="w-4 h-4 ms-1" /> إضافة مرحلة</Button>
+              <Button><Plus className="w-4 h-4 ms-1" /> {t("workflow-settings.addStage")}</Button>
             </DialogTrigger>
             <DialogContent dir={dir}>
-              <DialogHeader><DialogTitle>إضافة مرحلة جديدة</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t("workflow-settings.addNewStage")}</DialogTitle></DialogHeader>
               <div className="space-y-4 mt-4">
-                <div><Label>اسم المرحلة *</Label><Input value={newStage.name || ""} onChange={(e) => setNewStage({ ...newStage, name: e.target.value })} placeholder="مثال: الكي" className="mt-1" /></div>
-                <div><Label>الاسم بالإنجليزي</Label><Input value={newStage.name_en || ""} onChange={(e) => setNewStage({ ...newStage, name_en: e.target.value })} placeholder="Ironing" className="mt-1" /></div>
-                <div><Label>الأيقونة</Label>
+                <div><Label>{t("workflow-settings.stageNameAr")}</Label><Input value={newStage.name || ""} onChange={(e) => setNewStage({ ...newStage, name: e.target.value })} placeholder="مثال: الكي" className="mt-1" /></div>
+                <div><Label>{t("workflow-settings.stageNameEn")}</Label><Input value={newStage.name_en || ""} onChange={(e) => setNewStage({ ...newStage, name_en: e.target.value })} placeholder="Ironing" className="mt-1" /></div>
+                <div><Label>{t("workflow-settings.icon")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">{ICON_OPTIONS.map((ic) => (
                     <button key={ic} onClick={() => setNewStage({ ...newStage, icon: ic })} className={`w-10 h-10 rounded-xl text-xl flex items-center justify-center border-2 transition ${newStage.icon === ic ? "border-teal-500 bg-teal-50" : "border-slate-200 hover:border-slate-400"}`}>{ic}</button>
                   ))}</div>
                 </div>
-                <div><Label>اللون</Label>
+                <div><Label>{t("workflow-settings.color")}</Label>
                   <div className="flex flex-wrap gap-2 mt-1">{COLOR_OPTIONS.map((c) => (
                     <button key={c} onClick={() => setNewStage({ ...newStage, color: c })} className={`w-8 h-8 rounded-full border-2 transition ${newStage.color === c ? "border-slate-900 scale-110" : "border-transparent"}`} style={{ backgroundColor: c }} />
                   ))}</div>
                 </div>
-                <Button onClick={addStage} disabled={saving} className="w-full">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إضافة المرحلة"}</Button>
+                <Button onClick={addStage} disabled={saving} className="w-full">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("workflow-settings.addBtn")}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -221,9 +221,9 @@ function WorkflowSettingsPage() {
         <Card className="border-dashed">
           <CardContent className="p-10 text-center space-y-4">
             <div className="text-4xl">🔧</div>
-            <h2 className="text-xl font-black">لم يتم تعريف مراحل العمل بعد</h2>
-            <p className="text-muted-foreground">اختر قالب جاهز أو أضف مراحل يدوياً</p>
-            <Button onClick={() => setShowTemplates(true)}>ابدأ بقالب جاهز ←</Button>
+            <h2 className="text-xl font-black">{t("workflow-settings.emptyTitle")}</h2>
+            <p className="text-muted-foreground">{t("workflow-settings.emptySubtitle")}</p>
+            <Button onClick={() => setShowTemplates(true)}>{t("workflow-settings.startWithTemplate")}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -241,8 +241,8 @@ function WorkflowSettingsPage() {
                   <div className="text-xs text-muted-foreground font-mono">{stage.slug}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {stage.is_initial && <Badge className="bg-teal-600">بداية</Badge>}
-                  {stage.is_final && <Badge className="bg-emerald-600">نهاية</Badge>}
+                  {stage.is_initial && <Badge className="bg-teal-600">{t("workflow-settings.initial")}</Badge>}
+                  {stage.is_final && <Badge className="bg-emerald-600">{t("workflow-settings.final")}</Badge>}
                   <Badge variant="outline" className="font-mono">#{stage.stage_order}</Badge>
                   {stage.id && <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => removeStage(stage.id!)}><Trash2 className="w-4 h-4" /></Button>}
                 </div>
@@ -255,7 +255,7 @@ function WorkflowSettingsPage() {
       {/* Workflow Preview */}
       {stages.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4 text-teal-600" /> معاينة مسار العمل</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4 text-teal-600" /> {t("workflow-settings.preview")}</CardTitle></CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-2">
               {stages.map((stage, i) => (

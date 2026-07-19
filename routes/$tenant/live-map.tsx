@@ -93,7 +93,6 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
 
     if (routeMode && selectedIds.size >= 2) {
       const sel = validPins.filter((p) => selectedIds.has(p.id));
-      // Maintain order of selection
       const orderedSel = [...selectedIds].map((id) => sel.find((p) => p.id === id)).filter(Boolean) as MapPin[];
       const toUse = orderedSel.length >= 2 ? orderedSel : sel;
       if (toUse.length >= 2) {
@@ -147,7 +146,7 @@ function LiveMapPage() {
     }
     (pickups ?? []).forEach((p: any) => {
       const due = dueInfo(p.scheduled_at);
-      raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? "بانتظار سائق" : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id, source: "pickup", sourceId: p.id, coordKind: "pickup" });
+      raw.push({ id: `p-${p.id}`, type: "pickup", label: p.customer_name, sublabel: p.phone, address: p.address, lat: p.lat ?? undefined, lng: p.lng ?? undefined, status: p.status === "pending" ? t("map.status.received", "بانتظار سائق") : "سائق في الطريق", dueLabel: due.label, late: due.late, pieces: p.estimated_pieces ?? 1, assignedTo: p.driver_employee_id, source: "pickup", sourceId: p.id, coordKind: "pickup" });
     });
     (orders ?? []).forEach((o: any) => {
       if (openPickupOrderIds.has(o.id)) return;
@@ -155,7 +154,7 @@ function LiveMapPage() {
       const inPickupPhase = ["received", "cleaning", "ironing", "packing"].includes(o.status);
       const addr = inPickupPhase ? (o.pickup_address || o.delivery_address) : (o.delivery_address || o.pickup_address);
       if (!addr) return;
-      const statusAr: Record<string, string> = { received: "تم الاستلام", cleaning: "في الغسيل", ironing: "في الكي", packing: "في التغليف", ready: "جاهز للتسليم", out_for_delivery: "خرج للتسليم" };
+      const statusAr: Record<string, string> = { received: t("map.status.received"), cleaning: t("map.status.cleaning"), ironing: t("map.status.ironing"), packing: t("map.status.packing"), ready: t("map.status.ready"), out_for_delivery: t("map.status.out_for_delivery") };
       raw.push({
         id: `${inPickupPhase ? "op" : "d"}-${o.id}`,
         type: inPickupPhase ? "pickup" : "delivery",
@@ -191,7 +190,7 @@ function LiveMapPage() {
     setGeocoding(false);
     setPins(geocoded);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "تعذر تحميل الخريطة");
+      toast.error(e instanceof Error ? e.message : t("map.loadError", "تعذر تحميل الخريطة"));
       setPins([]);
     } finally {
       setGeocoding(false);
@@ -234,13 +233,11 @@ function LiveMapPage() {
     toast.success(`تم رسم خط السير بين ${selectedPins.length} نقاط`);
   }
 
-  // NEW: Zero-cost route optimization via Haversine nearest-neighbor (no Google Directions API)
   function optimizeRoute() {
     if (selectedPins.length < 2) {
       toast.error("اختر نقطتين على الأقل لترتيب المسار");
       return;
     }
-    // Use first driver location as origin if available, else first selected pin
     const driverPin = pins.find((p) => p.type === "driver" && p.lat && p.lng);
     const origin = driverPin ? { lat: driverPin.lat!, lng: driverPin.lng! } : { lat: selectedPins[0].lat!, lng: selectedPins[0].lng! };
 
@@ -262,9 +259,7 @@ function LiveMapPage() {
 
     const { ordered, totalDistanceKm } = orderTasksByNearestNeighbor(origin, tasks as any);
 
-    // Reorder selectedIds based on optimized order
     const newOrder = new Set<string>();
-    // Keep driver pin first if was selected
     const driverSelected = [...selectedIds].filter((id) => pins.find((p) => p.id === id)?.type === "driver");
     driverSelected.forEach((id) => newOrder.add(id));
     ordered.forEach((t) => newOrder.add(t.id));

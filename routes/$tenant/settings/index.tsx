@@ -103,42 +103,42 @@ function SettingsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto" dir={dir}>
       <div className="border-b pb-4">
-        <h1 className="text-2xl font-black flex items-center gap-2"><Settings2 className="w-6 h-6" /> {t("settings.pageTitle", "إعدادات المغسلة")} — مركز التحكم المؤسسي</h1>
-        <p className="text-sm text-muted-foreground mt-1">هنا تقدر تضيف كل شيء: العملة، الرسوم، الهوية البصرية White-label، محرك سير العمل v1/v2، وإعدادات مخصصة JSON — كلها بدون كود</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><Settings2 className="w-6 h-6" /> {t("settings.pageTitle", "إعدادات المغسلة")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle", "هنا تقدر تضيف كل شيء: العملة، الرسوم، الهوية البصرية White-label، محرك سير العمل v1/v2، وإعدادات مخصصة JSON — كلها بدون كود")}</p>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_280px] gap-6">
         <div className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" /> {t("settings.infoTitle", "معلومات المشروع")}</CardTitle><CardDescription className="text-xs">الاسم، النوع، والهوية</CardDescription></CardHeader>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Building2 className="w-4 h-4" /> {t("settings.infoTitle", "معلومات المشروع")}</CardTitle><CardDescription className="text-xs">{t("settings.infoSubtitle", "الاسم، النوع، والهوية")}</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div><Label>{t("settings.bizName", "اسم المشروع")}</Label><Input value={settings.business_name} disabled={!canEdit} onChange={(e) => setSettings({ ...settings, business_name: e.target.value })} className="mt-1" /></div>
-              <div><Label>Slug (رابط المشروع)</Label><Input value={tenant.slug} disabled className="mt-1 font-mono text-xs" /></div>
+              <div><Label>{t("settings.slugLabel", "Slug (رابط المشروع)")}</Label><Input value={tenant.slug} disabled className="mt-1 font-mono text-xs" /></div>
               <div>
-                <Label>نوع النشاط</Label>
+                <Label>{t("settings.bizType", "نوع النشاط")}</Label>
                 <Select value={tenant.business_type} disabled={!canEdit} onValueChange={(v) => setTenant({ ...tenant, business_type: v })}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="laundry">مغسلة ملابس 🧺</SelectItem>
-                    <SelectItem value="carpet">سجاد 🧹</SelectItem>
-                    <SelectItem value="repair">ورشة 🔧</SelectItem>
-                    <SelectItem value="carwash">غسيل سيارات 🚗</SelectItem>
-                    <SelectItem value="cleaning">تنظيف 🏠</SelectItem>
-                    <SelectItem value="restaurant">مطعم 🍽️</SelectItem>
-                    <SelectItem value="other">أخرى 📦</SelectItem>
+                    <SelectItem value="laundry">{t("settings.bizTypes.laundry")}</SelectItem>
+                    <SelectItem value="carpet">{t("settings.bizTypes.carpet")}</SelectItem>
+                    <SelectItem value="repair">{t("settings.bizTypes.repair")}</SelectItem>
+                    <SelectItem value="carwash">{t("settings.bizTypes.carwash")}</SelectItem>
+                    <SelectItem value="cleaning">{t("settings.bizTypes.cleaning")}</SelectItem>
+                    <SelectItem value="restaurant">{t("settings.bizTypes.restaurant")}</SelectItem>
+                    <SelectItem value="other">{t("settings.bizTypes.other")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>محرك سير العمل — Feature Flag (مهم)</Label>
+                <Label>{t("settings.workflowVersion", "محرك سير العمل — Feature Flag (مهم)")}</Label>
                 <Select value={workflowVersion} disabled={!canEdit} onValueChange={setWorkflowVersion}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="v1">v1 Legacy — مغسلة هاردكود (آمن للإنتاج الحالي)</SelectItem>
-                    <SelectItem value="v2">v2 Generic — محرك مؤسسي عام DB-driven</SelectItem>
+                    <SelectItem value="v1">{t("settings.workflowV1", "v1 Legacy — مغسلة هاردكود (آمن للإنتاج الحالي)")}</SelectItem>
+                    <SelectItem value="v2">{t("settings.workflowV2", "v2 Generic — محرك مؤسسي عام DB-driven")}</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="text-[11px] text-muted-foreground mt-1">v1 = GARMENT_PROFILES + if ironing، v2 = workflow_definitions/stages_v2/transitions + work_orders + snapshot</div>
+                <div className="text-[11px] text-muted-foreground mt-1">{t("settings.workflowHint", "v1 = GARMENT_PROFILES + if ironing، v2 = workflow_definitions/stages_v2/transitions + work_orders + snapshot")}</div>
               </div>
               <div className="md:col-span-2">
                 <Label>{t("settings.currencyLabel", "العملة")}</Label>
@@ -157,11 +157,11 @@ function SettingsPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4" /> هوية بصرية White-label (للفنادق)</CardTitle><CardDescription className="text-xs">بوابة الضيف تقرأ منه — يخفي شعار MJRH لو فعلت</CardDescription></CardHeader>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4" /> {t("settings.brandingTitle", "هوية بصرية White-label (للفنادق)")}</CardTitle><CardDescription className="text-xs">{t("settings.brandingSubtitle", "بوابة الضيف تقرأ منه — يخفي شعار MJRH لو فعلت")}</CardDescription></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <div><Label>Logo URL</Label><Input value={branding.logo_url} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, logo_url: e.target.value })} placeholder="https://..." className="mt-1" /></div>
-              <div><Label>Primary Color</Label><Input type="color" value={branding.primary_color} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, primary_color: e.target.value })} className="mt-1 h-9" /></div>
-              <div className="md:col-span-2"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={branding.hide_mjrh_branding} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, hide_mjrh_branding: e.target.checked })} /> إخفاء شعار MJRH في بوابة الضيف (White-label للفندق)</label></div>
+              <div><Label>{t("settings.logoUrl", "Logo URL")}</Label><Input value={branding.logo_url} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, logo_url: e.target.value })} placeholder="https://..." className="mt-1" /></div>
+              <div><Label>{t("settings.primaryColor", "Primary Color")}</Label><Input type="color" value={branding.primary_color} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, primary_color: e.target.value })} className="mt-1 h-9" /></div>
+              <div className="md:col-span-2"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={branding.hide_mjrh_branding} disabled={!canEdit} onChange={(e) => setBranding({ ...branding, hide_mjrh_branding: e.target.checked })} /> {t("settings.hideMjrh", "إخفاء شعار MJRH في بوابة الضيف (White-label للفندق)")}</label></div>
             </CardContent>
           </Card>
 
@@ -175,7 +175,7 @@ function SettingsPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">Custom Config JSON — إعدادات مخصصة بدون كود</CardTitle><CardDescription className="text-xs">أي إعداد خاص بالمشروع (مثلاً room_types, minibar_items) — يُقرأ في work_orders.custom_fields</CardDescription></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("settings.customConfigTitle", "Custom Config JSON — إعدادات مخصصة بدون كود")}</CardTitle><CardDescription className="text-xs">{t("settings.customConfigSubtitle", "أي إعداد خاص بالمشروع (مثلاً room_types, minibar_items) — يُقرأ في work_orders.custom_fields")}</CardDescription></CardHeader>
             <CardContent>
               <Textarea value={customConfig} disabled={!canEdit} onChange={(e) => setCustomConfig(e.target.value)} rows={8} className="font-mono text-xs" placeholder='{"room_types": ["single","double","suite"]}' />
             </CardContent>
@@ -184,7 +184,7 @@ function SettingsPage() {
           {canEdit && (
             <div className="flex justify-end">
               <Button onClick={save} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> {t("settings.save", "حفظ كل الإعدادات المؤسسية")}</>}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> {t("settings.saveBtn", "حفظ كل الإعدادات المؤسسية")}</>}
               </Button>
             </div>
           )}
@@ -192,30 +192,29 @@ function SettingsPage() {
 
         <div className="space-y-3">
           <Card>
-            <CardHeader><CardTitle className="text-sm">روابط سريعة — إضافة شيء جديد</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">{t("settings.quickLinks", "روابط سريعة — إضافة شيء جديد")}</CardTitle></CardHeader>
             <CardContent className="grid gap-2">
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/workflow" params={{ tenant: tenant.slug } as any}><Workflow className="w-4 h-4 me-2" /> مراحل العمل (Workflow Builder)</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/workflow/$stageId/fields" params={{ tenant: tenant.slug, stageId: "new" } as any}><Layers className="w-4 h-4 me-2" /> حقول مخصصة لكل مرحلة (Input Builder)</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/marketplace" params={{ tenant: tenant.slug } as any}><Store className="w-4 h-4 me-2" /> سوق القوالب</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/roles" params={{ tenant: tenant.slug } as any}><Shield className="w-4 h-4 me-2" /> الأدوار والصلاحيات</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/subscriptions" params={{ tenant: tenant.slug } as any}><Package className="w-4 h-4 me-2" /> اشتراكات العملاء</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/staff/fairness" params={{ tenant: tenant.slug } as any}><Sparkles className="w-4 h-4 me-2" /> التوازن التشغيلي (WLI)</Link></Button>
-              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/onboarding" params={{ tenant: tenant.slug } as any}><Settings2 className="w-4 h-4 me-2" /> معالج التفعيل 5 خطوات</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/workflow" params={{ tenant: tenant.slug } as any}><Workflow className="w-4 h-4 me-2" /> {t("settings.linkWorkflow", "مراحل العمل (Workflow Builder)")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/workflow/$stageId/fields" params={{ tenant: tenant.slug, stageId: "new" } as any}><Layers className="w-4 h-4 me-2" /> {t("settings.linkInputs", "حقول مخصصة لكل مرحلة (Input Builder)")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/marketplace" params={{ tenant: tenant.slug } as any}><Store className="w-4 h-4 me-2" /> {t("settings.linkMarketplace", "سوق القوالب")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/settings/roles" params={{ tenant: tenant.slug } as any}><Shield className="w-4 h-4 me-2" /> {t("settings.linkRoles", "الأدوار والصلاحيات")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/subscriptions" params={{ tenant: tenant.slug } as any}><Package className="w-4 h-4 me-2" /> {t("settings.linkSubs", "اشتراكات العملاء")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/staff/fairness" params={{ tenant: tenant.slug } as any}><Sparkles className="w-4 h-4 me-2" /> {t("settings.linkFairness", "التوازن التشغيلي (WLI)")}</Link></Button>
+              <Button asChild variant="outline" size="sm" className="justify-start"><Link to="/$tenant/onboarding" params={{ tenant: tenant.slug } as any}><Settings2 className="w-4 h-4 me-2" /> {t("settings.linkOnboarding", "معالج التفعيل 5 خطوات")}</Link></Button>
             </CardContent>
           </Card>
 
           <Card className="bg-amber-50 border-amber-200">
             <CardContent className="p-3 text-xs leading-5">
-              <b>ليه الصفحة دي كانت فاضية قبل كده؟</b><br />
-              لأن `settings.tsx` كان ملف واحد بدون Outlet — أي صفحة فرعية مثل `/settings/workflow` كانت ترجع لنفس صفحة الإعدادات البسيطة. تم إصلاحه بـ Layout مع Outlet و `settings/index.tsx` للمعلومات العامة + `settings/workflow/index.tsx` لمراحل العمل.<br /><br />
-              الآن كل صفحة في القائمة الجانبية تفتح محتواها الحقيقي، والإعدادات نفسها بقت مركز تحكم مؤسسي (Branding, Workflow Engine v1/v2, Custom Config) — تقدر تضيف أي شيء بدون كود.
+              <b>{t("settings.whyPageTitle", "ليه الصفحة دي كانت فاضية قبل كده؟")}</b><br />
+              {t("settings.whyPageBody", "لأن `settings.tsx` كان ملف واحد بدون Outlet — أي صفحة فرعية مثل `/settings/workflow` كانت ترجع لنفس صفحة الإعدادات البسيطة. تم إصلاحه بـ Layout مع Outlet و `settings/index.tsx` للمعلومات العامة + `settings/workflow/index.tsx` لمراحل العمل.\n\nالآن كل صفحة في القائمة الجانبية تفتح محتواها الحقيقي، والإعدادات نفسها بقت مركز تحكم مؤسسي (Branding, Workflow Engine v1/v2, Custom Config) — تقدر تضيف أي شيء بدون كود.")}
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="p-3 text-xs">
-              <div>Enterprise ID: <span className="font-mono">{tenant.enterprise_id || "— لا يوجد (مشروع مستقل)"}</span></div>
-              <div className="mt-1">Workflow Engine: <Badge variant={workflowVersion === "v2" ? "default" : "outline"}>{workflowVersion}</Badge> {workflowVersion === "v2" ? "— محرك عام DB-driven" : "— مغسلة legacy"}</div>
+              <div>{t("settings.enterpriseId", "Enterprise ID:")} <span className="font-mono">{tenant.enterprise_id || t("settings.independentProject", "— لا يوجد (مشروع مستقل)")}</span></div>
+              <div className="mt-1">{t("settings.workflowEngine", "Workflow Engine:")} <Badge variant={workflowVersion === "v2" ? "default" : "outline"}>{workflowVersion}</Badge> {workflowVersion === "v2" ? t("settings.genericEngine", "— محرك عام DB-driven") : t("settings.legacyEngine", "— مغسلة legacy")}</div>
             </CardContent>
           </Card>
         </div>
