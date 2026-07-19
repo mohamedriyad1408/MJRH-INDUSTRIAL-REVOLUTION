@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_admin")({
   component: AdminLayout,
 });
 
-function AdminLayout() {
+function AdminLayout() { 
   const { session, loading, isSuperAdmin, signOut } = useAuth();
   const { dir, t } = useI18n();
   const nav = useNavigate();

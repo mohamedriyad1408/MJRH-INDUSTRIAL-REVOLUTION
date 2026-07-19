@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { PosCategoryTabs, type ServiceTypeFilter } from "@/components/pos-category-tabs";
-import { DRY_TECH_CATALOG_SEED, POS_CATEGORY_TABS } from "@/lib/dry-tech-catalog";
+import { POS_CATEGORY_TABS } from "@/lib/dry-tech-catalog";
 
 export const Route = createFileRoute("/$tenant/services")({
   head: () => ({ meta: [{ title: "كتالوج الخدمات والأصناف" }] }),
@@ -137,8 +137,11 @@ function ServicesPage() {
     if (!tenantId) return;
     setSyncing(true);
     try {
+      const { getCatalogData } = await import("@/lib/dry-tech-catalog");
+      const { DRY_TECH_CATALOG_SEED } = await getCatalogData();
+      
       const existingNames = new Set(list.map((i) => i.name.trim().toLowerCase()));
-      const missing = DRY_TECH_CATALOG_SEED.filter((seed) => !existingNames.has(seed.name.trim().toLowerCase()));
+      const missing = (DRY_TECH_CATALOG_SEED as any[]).filter((seed) => !existingNames.has(seed.name.trim().toLowerCase()));
       if (missing.length === 0) {
         toast.success("الكتالوج مكتمل ومطابق لمعايير Dry Tech 100%!");
         setSyncing(false);

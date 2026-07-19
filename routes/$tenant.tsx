@@ -20,7 +20,7 @@ export const Route = createFileRoute("/$tenant")({
 
 const RESERVED_ROUTE_NAMES = ["today", "orders", "customers", "staff", "stations", "finance", "accounting", "ledger", "receivables", "cash-closing", "budgets", "inventory", "billing", "crm", "services", "branches", "settings", "help", "system-health", "daily-operations", "ops", "cs", "manager", "driver", "live-map", "reports", "executive", "pickups", "search", "scorecard", "attendance", "dashboard"];
 
-function AppLayout() {
+function AppLayout() { 
   const { session, user, loading, roles, isSuperAdmin, hasRole, signOut, tenantId } = useAuth();
   const { dir, t } = useI18n();
   const [tenantBrand, setTenantBrand] = useState<any>(null);
@@ -245,11 +245,11 @@ function AppLayout() {
           <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
             <LogOut className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title", "تم إيقاف تفعيل حساب المغسلة")}</h1>
+          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title", t("common.تم_إيقاف_تفعيل_حساب_المغسلة"))}</h1>
           <p className="text-sm text-red-800 font-medium">
-            {t("tenant.suspended.body", "حساب هذه المغسلة موقوف حالياً من قِبل إدارة المنصة (Super Admin). يرجى التواصل مع الدعم الفني أو إدارة المنصة لإعادة التفعيل.")}
+            {t("tenant.suspended.body", t("common.حساب_هذه_المغسلة_موقوف_حالياً_من_قِبل_إد"))}
           </p>
-          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut", "تسجيل الخروج")}</Button>
+          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut", t("common.تسجيل_الخروج"))}</Button>
         </Card>
       </div>
     );

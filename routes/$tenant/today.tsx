@@ -228,9 +228,9 @@ function TodayCenter() {
       `- تم تسليمها اليوم: ${data.deliveredToday}`,
       `- طلبات نشطة: ${data.activeOrders}`,
       `- طلبات متأخرة: ${data.lateOrders}`,
-      `- أسباب التأخير: ${Object.entries(data.delayByStage).map(([k,v]) => `${stageAr(k)} ${v}`).join("، ") || "لا يوجد"}`,
+      `- أسباب التأخير: ${Object.entries(data.delayByStage).map(([k,v]) => `${stageAr(k, t)} ${v}`).join("، ") || "لا يوجد"}`,
       `- استلامات مفتوحة: ${data.openPickups}`,
-      `- توزيع الطلبات النشطة: ${Object.entries(data.stuckByStage).map(([k,v]) => `${stageAr(k)} ${v}`).join("، ") || "لا يوجد"}`,
+      `- توزيع الطلبات النشطة: ${Object.entries(data.stuckByStage).map(([k,v]) => `${stageAr(k, t)} ${v}`).join("، ") || "لا يوجد"}`,
       "",
       "ثانيًا: الماليات",
       `- إيراد اليوم: ${fmtMoney(data.revenueToday)}`,
@@ -280,16 +280,16 @@ function TodayCenter() {
     toast.success("تم نسخ التقرير");
   }
 
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">مركز اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("today.noAccess", "مركز اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.")}</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
   return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("nav./today")}</h1>
+        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("today.title", "مركز اليوم")}</h1>
         <p className="text-sm text-muted-foreground">{t("today.description")}</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>{t("today.copyEndOfDay")}</Button><Button onClick={saveEndOfDayReport}>{t("today.endOfDayReport")}</Button></div>
+      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport", "حفظ كتنبيه")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>{t("today.copyEndOfDay")}</Button><Button onClick={saveEndOfDayReport}>{t("today.endOfDayReport")}</Button></div>
     </div>
 
     <div className="grid md:grid-cols-6 gap-3">
@@ -302,15 +302,15 @@ function TodayCenter() {
     </div>
 
     {!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>{t("today.warn.cashClosingNotCompleted")}</b><div className="text-xs mt-1">{t("today.warn.cashClosingDetail").replace("{closed}", String(data.cashClosings)).replace("{total}", String(data.cashSafes))}</div></div><Button asChild size="sm"><Link to={"/$tenant/cash-closing" as any}>{t("today.warn.cashClosingBtn")}</Link></Button></CardContent></Card>}
-    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>آخر إقفال خزنة فيه فرق:</b> {data.lastClosingAccount ?? "خزنة"} — {fmtMoney(data.lastClosingDiff, t("common.egp"))}. راجع سبب الفرق.</CardContent></Card>}
+    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>{t("today.warn.lastClosingDiff", "آخر إقفال خزنة فيه فرق")}:</b> {data.lastClosingAccount ?? t("account.type.cash", "خزنة")} — {fmtMoney(data.lastClosingDiff, t("common.egp"))}. {t("today.warn.reviewDiff", "راجع سبب الفرق.")}</CardContent></Card>}
 
-    {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">من أين يأتي التأخير؟</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage)}: {count}</Badge>)}</CardContent></Card>}
+    {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">{t("today.delayOrigin")}</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage, t)}: {count}</Badge>)}</CardContent></Card>}
 
     <Card>
       <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />{t("today.needsAction")}</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">{t("today.noCritical")}</div>}
-        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link>; })}
+        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}{t("common.btn.assignNow", "توزيع الآن")}</Button>}</div>; return <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link>; })}
       </CardContent>
     </Card>
 
@@ -321,7 +321,7 @@ function TodayCenter() {
         {latestReports.map((r) => <div key={r.id} className="rounded-xl border p-3 bg-white text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString("ar-EG")}</Badge></div>
           <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground font-sans max-h-32 overflow-auto">{r.body}</pre>
-          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>نسخ</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={resolveAppUrl(r.href) as any}>فتح</Link></Button>}</div>
+          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>{t("common.copy", "نسخ")}</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={resolveAppUrl(r.href) as any}>{t("common.open", "فتح")}</Link></Button>}</div>
         </div>)}
       </CardContent>
     </Card>
@@ -332,17 +332,17 @@ function TodayCenter() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
               <Clock className="w-5 h-5 text-teal-600" />
-              <span>مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
+              <span>{t("today.surgeMonitor.title")}</span>
             </CardTitle>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 عادي: {surgeData.normalCount}</Badge>
-              <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 ذروة عادية: {surgeData.normalPeakCount}</Badge>
-              <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 ذروة متوسطة: {surgeData.mediumPeakCount}</Badge>
-              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">ذروة شديدة: {surgeData.severePeakCount}</Badge>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 {t("today.surgeMonitor.normal")}: {surgeData.normalCount}</Badge>
+              <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 {t("today.surgeMonitor.normalPeak")}: {surgeData.normalPeakCount}</Badge>
+              <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 {t("today.surgeMonitor.mediumPeak")}: {surgeData.mediumPeakCount}</Badge>
+              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">{t("today.surgeMonitor.severePeak")}: {surgeData.severePeakCount}</Badge>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            متابعة الضغط التشغيلي على فترات استلام وتسليم المندوب الموزعة على مدار اليوم وغداً (فترات ساعتين متصلتين).
+            {t("today.surgeMonitor.description")}
           </p>
         </CardHeader>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
@@ -355,7 +355,7 @@ function TodayCenter() {
                 </Badge>
               </div>
               <div className={`text-[11px] font-bold ${st.colorClass}`}>
-                {st.count} طلبات مجدولة
+                {st.count} {t("today.surgeMonitor.scheduledOrders")}
               </div>
               <div className="text-[10px] text-slate-500 line-clamp-1">{st.label}</div>
             </div>
@@ -371,14 +371,21 @@ function TodayCenter() {
       <ActionCard title={t("today.card.safe")} detail={t("today.card.safeDetail")} to={"/$tenant/cash-closing" as any} icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
       <ActionCard title={t("today.card.reports")} detail={t("today.card.reportsDetail")} to={"/$tenant/reports" as any} icon={<BarChart3 />} />
       <ActionCard title={t("today.card.receivables")} detail={t("today.card.receivablesDetail")} to={"/$tenant/receivables" as any} icon={<Wallet />} count={data.unpaidReady} />
-      <ActionCard title="مرصد المشاكل والتعثرات" detail="مراقبة الأعطال والمختنقات ومتابعة التحديثات" to={"/$tenant/issues" as any} icon={<AlertTriangle className="text-amber-600 animate-pulse" />} />
+      <ActionCard title={t("today.card.issues")} detail={t("today.card.issuesDetail")} to={"/$tenant/issues" as any} icon={<AlertTriangle className="text-amber-600 animate-pulse" />} />
     </div>
   </div>;
 }
 
 
-function stageAr(s: string) {
-  return ({ received: "استقبال", cleaning: "غسيل", ironing: "كي", packing: "تغليف", ready: "جاهز", out_for_delivery: "توصيل" } as Record<string, string>)[s] ?? s;
+function stageAr(s: string, t: any) {
+  return ({
+    received: t("common.received", "استقبال"),
+    cleaning: t("common.cleaning", "غسيل"),
+    ironing: t("common.ironing", "كي"),
+    packing: t("common.packing", "تغليف"),
+    ready: t("common.ready", "جاهز"),
+    out_for_delivery: t("common.delivery", "توصيل")
+  } as Record<string, string>)[s] ?? s;
 }
 
 function Kpi({ label, value, warn = false }: { label: string; value: any; warn?: boolean }) {

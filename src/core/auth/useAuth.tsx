@@ -28,8 +28,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   async function loadRoles(uid: string) {
-    const { data } = await supabase.from("user_roles").select("role, tenant_id").eq("user_id", uid);
-    setRoleRows(((data ?? []) as RoleRow[]));
+    // Priority: Legacy V2 RLS Roles
+    const { data: v2Data } = await supabase.from("user_roles").select("role, tenant_id").eq("user_id", uid);
+    if (v2Data && v2Data.length > 0) {
+      setRoleRows((v2Data as RoleRow[]));
+    } else {
+      setRoleRows([]);
+    }
   }
 
   useEffect(() => {
