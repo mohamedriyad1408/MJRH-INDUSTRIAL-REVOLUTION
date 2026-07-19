@@ -3,6 +3,8 @@ import { internalTranslations } from "./i18n-internal";
 import { publicLanguagePacks } from "./i18n-public-packs";
 
 // Domain JSON imports
+import arCommon from "../src/locales/ar/common.json";
+import enCommon from "../src/locales/en/common.json";
 import arAccounting from "../src/locales/ar/accounting.json";
 import enAccounting from "../src/locales/en/accounting.json";
 import arToday from "../src/locales/ar/today.json";
@@ -39,6 +41,10 @@ import arWFSettings from "../src/locales/ar/workflow-settings.json";
 import enWFSettings from "../src/locales/en/workflow-settings.json";
 import arWFFields from "../src/locales/ar/workflow-fields.json";
 import enWFFields from "../src/locales/en/workflow-fields.json";
+import arTrack from "../src/locales/ar/track.json";
+import enTrack from "../src/locales/en/track.json";
+import arLanding from "../src/locales/ar/landing.json";
+import enLanding from "../src/locales/en/landing.json";
 
 export type LanguageCode = "ar" | "en" | "fr" | "it" | "es" | "de" | "zh" | "ja" | "pt";
 
@@ -81,6 +87,7 @@ const flatten = (obj: any, prefix = "") => {
 
 // Merge all JSON domains
 const domains: any = {
+  common: { ar: arCommon, en: enCommon },
   accounting: { ar: arAccounting, en: enAccounting },
   today: { ar: arToday, en: enToday },
   reports: { ar: arReports, en: enReports },
@@ -99,6 +106,8 @@ const domains: any = {
   subscriptions: { ar: arSubs, en: enSubs },
   "workflow-settings": { ar: arWFSettings, en: enWFSettings },
   "workflow-fields": { ar: arWFFields, en: enWFFields },
+  track: { ar: arTrack, en: enTrack },
+  landing: { ar: arLanding, en: enLanding },
 };
 
 Object.keys(domains).forEach((domain) => {
@@ -170,6 +179,15 @@ Object.assign(dict.en, {
 for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
   Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
   Object.assign(dict[lang], internalTranslations[lang] ?? {});
+}
+
+// Fallback logic to ensure critical keys have values even in non-AR/EN languages
+const criticalKeys = ["track.title", "customer.title", "landing.heroTitle", "system.title"];
+for (const lang in dict) {
+  const l = lang as LanguageCode;
+  for (const key of criticalKeys) {
+    if (!dict[l][key]) dict[l][key] = dict.en[key] || dict.ar[key] || key;
+  }
 }
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
