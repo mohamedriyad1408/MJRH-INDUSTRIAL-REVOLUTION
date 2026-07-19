@@ -2,9 +2,9 @@ name: MJRH CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/mjrh-v4-platform]
   pull_request:
-    branches: [main]
+    branches: [main, feature/mjrh-v4-platform]
 
 jobs:
   build-test:
@@ -14,12 +14,12 @@ jobs:
       VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install

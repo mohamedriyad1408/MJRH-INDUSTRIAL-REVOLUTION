@@ -1,0 +1,29 @@
+{
+  "title": "Live Map Monitoring",
+  "geocoding": "Determining address coordinates...",
+  "autoRefresh": "Auto-refreshing every 30 seconds",
+  "pickup": "Pickup",
+  "delivery": "Delivery",
+  "drivers": "Drivers",
+  "allBranches": "All Branches",
+  "drawRoute": "Draw Route",
+  "assignCouriers": "Assign Drivers",
+  "routeHint": "Hint: Click points to arrange route",
+  "noLocationWarning": "{count} tasks without coordinates (awaiting Geocoding)",
+  "driverNoLocationWarning": "{count} drivers haven't set their location in the app",
+  "selectedPoints": "Selected points in order:",
+  "loading": "Loading map...",
+  "pieces": "pieces",
+  "unknownLocation": "Unknown location",
+  "selectedNumber": "Order:",
+  "noActive": "No field activity currently",
+  "accessDenied": "Map monitoring for owner and ops manager only.",
+  "status": {
+    "received": "Received",
+    "cleaning": "Cleaning",
+    "ironing": "Ironing",
+    "packing": "Packing",
+    "ready": "Ready for Delivery",
+    "out_for_delivery": "Out for Delivery"
+  }
+}

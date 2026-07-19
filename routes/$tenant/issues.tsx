@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/core/auth/useAuth";
+import { useI18n, interpolate } from "@/lib/i18n";
 import { fmtDate, fmtMoney } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -55,11 +55,11 @@ function TenantIssuesPage() {
           .from("client_error_logs")
           .update({
             resolved_at: new Date().toISOString(),
-            resolution_notes: "تم رصد التعافي الذاتي للنظام وحل العائق التقني والبرمجي آلياً بعد التحقق من استقرار التشغيل",
+            resolution_notes: t("issues.selfHealing.note", "تم رصد التعافي الذاتي للنظام وحل العائق التقني والبرمجي آلياً بعد التحقق من استقرار التشغيل"),
           })
           .in("id", ids);
 
-        toast.success(`إشعار التعافي الذاتي: قام النظام برصد معالجة واستقرار (${ids.length}) مشكلة تقنية في مشروعك وإغلاقها آلياً!`);
+        toast.success(interpolate(t("issues.selfHealing.toast", "إشعار التعافي الذاتي: قام النظام برصد معالجة واستقرار ({count}) مشكلة تقنية في مشروعك وإغلاقها آلياً!"), { count: ids.length }));
       }
     } catch {
       // Silent catch
@@ -119,11 +119,11 @@ function TenantIssuesPage() {
           items.push({
             id: `err-${err.id}`,
             type: "technical",
-            title: `[خطأ بالواجهة] ${err.message?.slice(0, 70) || "خطأ غير محدد"}`,
-            description: "تم إرسال هذا الخطأ آلياً لإدارة المنصة وسجل الصيانة للتطوير والتحديث.",
+            title: interpolate(t("issues.technical.title", "[خطأ بالواجهة] {message}"), { message: err.message?.slice(0, 70) || t("issues.technical.unknown", "خطأ غير محدد") }),
+            description: t("issues.technical.description", "تم إرسال هذا الخطأ آلياً لإدارة المنصة وسجل الصيانة للتطوير والتحديث."),
             severity: "error",
             createdAt: err.created_at,
-            detail: err.path ? `حدث في المسار: ${err.path}` : "خطأ تشغيلي",
+            detail: err.path ? interpolate(t("issues.technical.detailPath", "حدث في المسار: {path}"), { path: err.path }) : t("issues.technical.detailDefault", "خطأ تشغيلي"),
           });
         });
       }
@@ -133,11 +133,11 @@ function TenantIssuesPage() {
           items.push({
             id: `reclean-${u.id}`,
             type: "operational",
-            title: `[إعادة غسيل وتراجع جودة] قطعة ${u.name} في طلب #${u.orders?.order_number}`,
-            description: `السبب المسجل: (${u.reclean_reason}). القطعة في المحطة: ${u.current_stage}`,
+            title: interpolate(t("issues.operational.title", "[إعادة غسيل وتراجع جودة] قطعة {name} في طلب #{order}"), { name: u.name, order: u.orders?.order_number }),
+            description: interpolate(t("issues.operational.description", "السبب المسجل: ({reason}). القطعة في المحطة: {stage}"), { reason: u.reclean_reason, stage: u.current_stage }),
             severity: "warning",
             createdAt: u.created_at,
-            detail: `كود الليبل: ${u.label_code || "—"}`,
+            detail: interpolate(t("issues.operational.detailLabel", "كود الليبل: {code}"), { code: u.label_code || "—" }),
             actionUrl: `/orders/${u.order_id}`,
           });
         });
@@ -148,11 +148,11 @@ function TenantIssuesPage() {
           items.push({
             id: `stale-${o.id}`,
             type: "customer",
-            title: `[مختنق تشغيلي / تأخير عميل] طلب #${o.order_number} عالق في مرحلة الاستلام لأكثر من 24 ساعة`,
-            description: `العميل: ${o.customers?.full_name || "بدون اسم"} • المبلغ: ${fmtMoney(o.total || 0)}`,
+            title: interpolate(t("issues.customer.title", "[مختنق تشغيلي / تأخير عميل] طلب #{order} عالق في مرحلة الاستلام لأكثر من 24 ساعة"), { order: o.order_number }),
+            description: interpolate(t("issues.customer.description", "العميل: {name} • المبلغ: {amount}"), { name: o.customers?.full_name || t("issues.customer.unnamed", "بدون اسم"), amount: fmtMoney(o.total || 0) }),
             severity: "error",
             createdAt: o.created_at,
-            detail: "يجب توجيه محطة الغسيل أو الاستقبال للبدء الفوري بمعالجة الطلب.",
+            detail: t("issues.customer.detail", "يجب توجيه محطة الغسيل أو الاستقبال للبدء الفوري بمعالجة الطلب."),
             actionUrl: `/orders/${o.id}`,
           });
         });
@@ -163,11 +163,11 @@ function TenantIssuesPage() {
           items.push({
             id: `fin-${o.id}`,
             type: "financial",
-            title: `[مراجعة مالية معلقة] طلب #${o.order_number} إيصال الدفع يحتاج تدقيق أو تحصيل`,
-            description: `العميل: ${o.customers?.full_name || "عميل"} • القيمة: ${fmtMoney(o.total || 0)}`,
+            title: interpolate(t("issues.financial.title", "[مراجعة مالية معلقة] طلب #{order} إيصال الدفع يحتاج تدقيق أو تحصيل"), { order: o.order_number }),
+            description: interpolate(t("issues.financial.description", "العميل: {name} • القيمة: {amount}"), { name: o.customers?.full_name || t("issues.financial.customer", "عميل"), amount: fmtMoney(o.total || 0) }),
             severity: "warning",
             createdAt: o.created_at,
-            detail: o.payment_verification_status === "underpaid" ? "المبلغ المدفوع أقل من الفاتورة" : "إيصال انستabay قيد المراجعة",
+            detail: o.payment_verification_status === "underpaid" ? t("issues.financial.underpaid", "المبلغ المدفوع أقل من الفاتورة") : t("issues.financial.instapayReview", "إيصال InstaPay قيد المراجعة"),
             actionUrl: `/orders/${o.id}`,
           });
         });
@@ -176,7 +176,7 @@ function TenantIssuesPage() {
       items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setIssues(items);
     } catch (err: any) {
-      toast.error("فشل تحميل سجل تعثرات المشروع");
+      toast.error(t("issues.loadError", "فشل تحميل سجل تعثرات المشروع"));
     } finally {
       setLoading(false);
     }
@@ -187,7 +187,7 @@ function TenantIssuesPage() {
   }, [tenantId]);
 
   if (!isManager) {
-    return <Card className="p-12 text-center font-bold">صلاحية هذه الصفحة لمديري التشغيل والمالك فقط.</Card>;
+    return <Card className="p-12 text-center font-bold">{t("issues.accessDenied", "صلاحية هذه الصفحة لمديري التشغيل والمالك فقط.")}</Card>;
   }
 
   return (
@@ -209,7 +209,7 @@ function TenantIssuesPage() {
 
         <Button variant="outline" onClick={loadProjectIssues} disabled={loading} className="font-bold h-11 px-5">
           <RefreshCw className={`w-4 h-4 ms-1.5 ${loading ? "animate-spin text-teal-600" : ""}`} />
-          <span>تحديث المرصد</span>
+          <span>{t("issues.refresh", "تحديث المرصد")}</span>
         </Button>
       </div>
 
@@ -219,24 +219,24 @@ function TenantIssuesPage() {
           <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-3">
             <div className="flex items-center gap-2 font-black text-base text-teal-300">
               <Users className="w-5 h-5 text-teal-400" />
-              <span>‍المراقبة اللحظية لقوى الفروع والمحطات العاملة الآن (Live HR Station Staffing)</span>
+              <span>{t("issues.hrMonitorTitle", "‍المراقبة اللحظية لقوى الفروع والمحطات العاملة الآن (Live HR Station Staffing)")}</span>
             </div>
-            <Badge className="bg-emerald-600 text-white font-black text-xs">🟢 إجمالي الحاضرين الآن: {activeStaff.length} موظف</Badge>
+            <Badge className="bg-emerald-600 text-white font-black text-xs">{interpolate(t("issues.totalPresent", "🟢 إجمالي الحاضرين الآن: {count} موظف"), { count: activeStaff.length })}</Badge>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
             {[
-              { id: "reception", label: "الاستقبال والفرز", count: activeStaff.filter(x => ["reception", "sorting", "intake", "cs"].includes(String(x.employees?.station))).length },
-              { id: "cleaning", label: "الغسيل والتنظيف", count: activeStaff.filter(x => x.employees?.station === "cleaning" || x.employees?.role === "cleaning_tech").length },
-              { id: "drying-assembly", label: "التجفيف والتجميع", count: activeStaff.filter(x => x.employees?.station === "drying-assembly" || x.employees?.role === "assembly_tech").length },
-              { id: "ironing", label: "الكي بالبخار", count: activeStaff.filter(x => x.employees?.station === "ironing" || x.employees?.role === "ironing_tech").length },
-              { id: "packing", label: "التغليف والجودة", count: activeStaff.filter(x => ["packing", "qc"].includes(String(x.employees?.station))).length },
-              { id: "delivery", label: "الندب والتوصيل", count: activeStaff.filter(x => x.employees?.station === "delivery" || x.employees?.role === "courier").length },
+              { id: "reception", label: t("issues.stations.reception", "الاستقبال والفرز"), count: activeStaff.filter(x => ["reception", "sorting", "intake", "cs"].includes(String(x.employees?.station))).length },
+              { id: "cleaning", label: t("issues.stations.cleaning", "الغسيل والتنظيف"), count: activeStaff.filter(x => x.employees?.station === "cleaning" || x.employees?.role === "cleaning_tech").length },
+              { id: "assembly", label: t("issues.stations.assembly", "التجفيف والتجميع"), count: activeStaff.filter(x => x.employees?.station === "drying-assembly" || x.employees?.role === "assembly_tech").length },
+              { id: "ironing", label: t("issues.stations.ironing", "الكي بالبخار"), count: activeStaff.filter(x => x.employees?.station === "ironing" || x.employees?.role === "ironing_tech").length },
+              { id: "packing", label: t("issues.stations.packing", "التغليف والجودة"), count: activeStaff.filter(x => ["packing", "qc"].includes(String(x.employees?.station))).length },
+              { id: "delivery", label: t("issues.stations.delivery", "الندب والتوصيل"), count: activeStaff.filter(x => x.employees?.station === "delivery" || x.employees?.role === "courier").length },
             ].map((st) => (
               <div key={st.id} className="p-3 rounded-2xl bg-white/10 border border-white/15 flex flex-col justify-between gap-1">
                 <span className="text-xs font-bold text-white/90 truncate">{st.label}</span>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="font-mono font-black text-lg text-teal-300">{st.count} حاضر</span>
-                  {st.count === 0 && <span className="text-[9px] bg-red-500/80 text-white px-1.5 py-0.5 rounded font-bold">شاغر</span>}
+                  <span className="font-mono font-black text-lg text-teal-300">{interpolate(t("issues.present", "{count} حاضر"), { count: st.count })}</span>
+                  {st.count === 0 && <span className="text-[9px] bg-red-500/80 text-white px-1.5 py-0.5 rounded font-bold">{t("issues.vacant", "شاغر")}</span>}
                 </div>
               </div>
             ))}
@@ -247,11 +247,11 @@ function TenantIssuesPage() {
       {/* Exception Taxonomy Tabs */}
       <div className="flex flex-wrap gap-2 items-center bg-slate-100 p-1.5 rounded-2xl border">
         {[
-          { id: "all", label: "كافة التعثرات", count: issues.length },
-          { id: "operational", label: "تشغيلي (Operational)", count: issues.filter(x => x.type === "operational").length },
-          { id: "technical", label: "فني (Technical)", count: issues.filter(x => x.type === "technical").length },
-          { id: "financial", label: "مالي (Financial)", count: issues.filter(x => x.type === "financial").length },
-          { id: "customer", label: "عميل (Customer)", count: issues.filter(x => x.type === "customer").length },
+          { id: "all", label: t("issues.tabs.all", "كافة التعثرات"), count: issues.length },
+          { id: "operational", label: t("issues.tabs.operational", "تشغيلي (Operational)"), count: issues.filter(x => x.type === "operational").length },
+          { id: "technical", label: t("issues.tabs.technical", "فني (Technical)"), count: issues.filter(x => x.type === "technical").length },
+          { id: "financial", label: t("issues.tabs.financial", "مالي (Financial)"), count: issues.filter(x => x.type === "financial").length },
+          { id: "customer", label: t("issues.tabs.customer", "عميل (Customer)"), count: issues.filter(x => x.type === "customer").length },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -269,12 +269,12 @@ function TenantIssuesPage() {
       {loading ? (
         <div className="py-20 text-center space-y-4">
           <Loader2 className="w-10 h-10 animate-spin text-teal-600 mx-auto" />
-          <div className="font-extrabold text-slate-700">جاري فحص تعثرات ومختنقات المشروع...</div>
+          <div className="font-extrabold text-slate-700">{t("issues.loading", "جاري فحص تعثرات ومختنقات المشروع...")}</div>
         </div>
       ) : issues.length === 0 ? (
         <Card className="p-16 text-center border-dashed rounded-3xl text-slate-400 font-bold space-y-3 bg-white">
           <CheckCircle2 className="w-16 h-16 mx-auto text-emerald-500" />
-          <p className="text-lg text-slate-800 font-black">ممتاز! مشروعك يعمل بانسيابية تامة دون أي مختنقات أو أعطال مرصودة</p>
+          <p className="text-lg text-slate-800 font-black">{t("issues.empty", "ممتاز! مشروعك يعمل بانسيابية تامة دون أي مختنقات أو أعطال مرصودة")}</p>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -284,7 +284,7 @@ function TenantIssuesPage() {
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <Badge className={inc.severity === "error" ? "bg-red-600 text-white" : "bg-amber-500 text-white"}>
-                      {inc.type === "technical" ? "فني" : inc.type === "financial" ? "مالي" : inc.type === "customer" ? "عميل" : "تشغيلي"}
+                      {inc.type === "technical" ? t("issues.types.technical", "فني") : inc.type === "financial" ? t("issues.types.financial", "مالي") : inc.type === "customer" ? t("issues.types.customer", "عميل") : t("issues.types.operational", "تشغيلي")}
                     </Badge>
                     <span className="text-xs text-slate-500 font-mono font-bold">{fmtDate(inc.createdAt)}</span>
                   </div>
@@ -298,7 +298,7 @@ function TenantIssuesPage() {
                 {inc.actionUrl && (
                   <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shrink-0">
                     <Link to={inc.actionUrl as any}>
-                      <span>معالجة الطلب</span>
+                      <span>{t("issues.action", "معالجة الطلب")}</span>
                       <ArrowLeft className="w-3.5 h-3.5 me-1.5" />
                     </Link>
                   </Button>

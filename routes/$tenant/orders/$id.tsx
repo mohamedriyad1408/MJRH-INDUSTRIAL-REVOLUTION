@@ -2,7 +2,7 @@ import { buildOrderIssues, OrderIssuePanel, OrderTimeline, returnTypeAr, returnS
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, Rot
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
-import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { autoAssignIroningPieces } from "@/modules/laundry/ironing/assignment";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/orders/$id")({
@@ -155,11 +155,11 @@ function OrderDetailPage() {
     setInvoiceItems((rows) => rows.map((r, i) => i === idx ? { ...r, ...patch } : r));
   }
 
-  async function deleteInvoiceRow(idx: number) {
+  async function deleteInvoiceItem(idx: number) {
     const row = invoiceItems[idx];
-    const reason = prompt("سبب إلغاء هذا البند من الفاتورة؟");
+    const reason = prompt(t("orders.deleteInvoiceItemReason", "سبب إلغاء هذا البند من الفاتورة؟"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error("لا يمكن إلغاء بند بدون سبب واضح");
+    if (reason.trim().length < 3) return toast.error(t("orders.errorReasonRequired", "لا يمكن إلغاء بند بدون سبب واضح"));
     const amount = Number(row.qty) * Number(row.unit_price);
     if (row.id) {
       await supabase.from("order_cancellations").insert({ order_id: id, order_item_id: row.id, cancel_type: "invoice_item", reason: reason.trim(), amount_delta: amount, cancelled_by: user?.id, tenant_id: order?.tenant_id });
@@ -171,12 +171,12 @@ function OrderDetailPage() {
     setInvoiceItems(next);
     const totals = invoiceTotals(next);
     await supabase.from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
-    toast.success("تم إلغاء البند وتسجيل السبب");
+    toast.success(t("orders.toastInvoiceItemDeleted", "تم إلغاء البند وتسجيل السبب"));
     load();
   }
 
   async function saveInvoiceChanges() {
-    if (!invoiceItems.length) return toast.error("الفاتورة لا تحتوي على بنود");
+    if (!invoiceItems.length) return toast.error(t("orders.errorInvoiceEmpty", "الفاتورة لا تحتوي على بنود"));
     setInvoiceSaving(true);
     for (const it of invoiceItems) {
       const payload = { order_id: id, service_item_id: it.service_item_id ?? null, name: it.name, service_type: it.service_type as any, qty: Math.max(1, Number(it.qty)), unit_price: Number(it.unit_price) };
@@ -194,12 +194,12 @@ function OrderDetailPage() {
     const totals = invoiceTotals();
     const { error } = await supabase.from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
     setInvoiceSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم حفظ تعديلات الفاتورة"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastInvoiceSaved", "تم حفظ تعديلات الفاتورة")); load(); }
   }
 
   async function updateUnitService(unit: ServiceUnit, serviceType: string) {
     const { error } = await supabase.from("service_units").update({ service_type: serviceType, current_stage: serviceType === "both" ? "cleaning" : unit.current_stage }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success("تم تعديل خدمة القطعة"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastUnitServiceUpdated", "تم تعديل خدمة القطعة")); load(); }
   }
 
   async function finalizeAndNotify() {
@@ -211,7 +211,7 @@ function OrderDetailPage() {
     const msg = `فاتورتك النهائية من Dry Tech لطلب #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
     if (phone.length >= 11) window.open(`https://wa.me/2${phone.startsWith("0") ? phone.slice(1) : phone}?text=${encodeURIComponent(msg)}`, "_blank");
     await supabase.rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: "اعتماد فاتورة", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
-    toast.success("تم تأكيد الفاتورة وتجهيز إشعار العميل");
+    toast.success(t("orders.toastInvoiceFinalized", "تم تأكيد الفاتورة وتجهيز إشعار العميل"));
     load();
   }
 
@@ -238,7 +238,7 @@ function OrderDetailPage() {
     setAddingUnit(false);
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: "إضافة قطعة للطلب", _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
-    toast.success("تمت إضافة القطعة");
+    toast.success(t("orders.toastPieceAdded", "تمت إضافة القطعة"));
     setForm({ garment_type: "قميص", color: "", notes: "" });
     load();
   }
@@ -253,12 +253,12 @@ function OrderDetailPage() {
     const { error: uErr } = await supabase.from("service_units").update({ photo_url: data.publicUrl }).eq("id", unit.id);
     setUploading(null);
     if (uErr) return toast.error(uErr.message);
-    toast.success("تم حفظ صورة القطعة");
+    toast.success(t("orders.toastPhotoSaved", "تم حفظ صورة القطعة"));
     load();
   }
 
   async function markReclean(unit: ServiceUnit) {
-    const reason = prompt("سبب رجوع القطعة للتنظيف؟", unit.reclean_reason ?? "");
+    const reason = prompt(t("orders.recleanPrompt", "سبب رجوع القطعة للتنظيف؟"), unit.reclean_reason ?? "");
     if (reason === null) return;
     const { error } = await supabase.from("service_units").update({
       needs_reclean: true,
@@ -266,7 +266,7 @@ function OrderDetailPage() {
       reclean_reported_by: user?.id,
       reclean_reported_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: "تسجيل مرتجع تنظيف", _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success("تم تسجيل مرتجع التنظيف"); load(); }
+    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: "تسجيل مرتجع تنظيف", _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("orders.toastRecleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
   }
 
   async function resolveReclean(unit: ServiceUnit) {
@@ -274,7 +274,7 @@ function OrderDetailPage() {
       needs_reclean: false,
       reclean_resolved_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success("تم إنهاء مرتجع التنظيف"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastRecleanResolved", "تم إنهاء مرتجع التنظيف")); load(); }
   }
 
   async function assignIroning() {
@@ -325,14 +325,14 @@ function OrderDetailPage() {
   }
 
   async function registerCustomerReturn(unit: ServiceUnit) {
-    if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error("تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط");
-    const typeRaw = prompt("نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى", "تنظيف");
+    if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error(t("orders.errorCsOnly", "تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط"));
+    const typeRaw = prompt(t("orders.returnTypePrompt", "نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى"), "تنظيف");
     if (typeRaw === null) return;
-    const t = typeRaw.trim();
-    const returnType = /كي/.test(t) ? "reiron" : /تصليح|repair/.test(t) ? "repair" : /اخرى|أخرى|other/.test(t) ? "other" : "reclean";
-    const reason = prompt("سبب المرتجع من العميل؟");
+    const tVal = typeRaw.trim();
+    const returnType = /كي/.test(tVal) ? "reiron" : /تصليح|repair/.test(tVal) ? "repair" : /اخرى|أخرى|other/.test(tVal) ? "other" : "reclean";
+    const reason = prompt(t("orders.returnReasonPrompt", "سبب المرتجع من العميل؟"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error("سبب المرتجع مطلوب");
+    if (reason.trim().length < 3) return toast.error(t("orders.errorReturnReasonRequired", "سبب المرتجع مطلوب"));
     const { error } = await supabase.rpc("register_customer_return", {
       _order_id: id,
       _service_unit_id: unit.id,
@@ -342,35 +342,35 @@ function OrderDetailPage() {
       _billable: false,
       _amount: 0,
     });
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل مرتجع العميل وربطه بالقطعة والمحطات"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastReturnRegistered", "تم تسجيل مرتجع العميل وربطه بالقطعة والمحطات")); load(); }
   }
 
   async function completeCustomerReturn(row: any) {
-    const note = prompt("ملاحظات إغلاق المرتجع؟", "تم الحل والتسليم للعميل");
+    const note = prompt(t("orders.returnCloseNotePrompt", "ملاحظات إغلاق المرتجع؟"), t("orders.returnCloseDefaultNote", "تم الحل والتسليم للعميل"));
     if (note === null) return;
     const { error } = await supabase.rpc("complete_customer_return", { _return_id: row.id, _notes: note });
-    if (error) toast.error(error.message); else { toast.success("تم إغلاق مرتجع العميل"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastReturnClosed", "تم إغلاق مرتجع العميل")); load(); }
   }
 
   async function cancelOrder() {
-    if (!hasRole("owner")) return toast.error("إلغاء الطلب بالكامل للمالك فقط");
-    const reason = prompt("سبب إلغاء الطلب بالكامل؟");
+    if (!hasRole("owner")) return toast.error(t("orders.errorOwnerOnly", "إلغاء الطلب بالكامل للمالك فقط"));
+    const reason = prompt(t("orders.cancelOrderPrompt", "سبب إلغاء الطلب بالكامل؟"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error("لا يمكن إلغاء الطلب بدون سبب واضح");
+    if (reason.trim().length < 3) return toast.error(t("orders.errorCancelReasonRequired", "لا يمكن إلغاء الطلب بدون سبب واضح"));
     const { error } = await supabase.rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
     if (!error) await supabase.rpc("record_operation_event", { _process_key: "order_cancelled", _process_name: "إلغاء طلب", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason: reason.trim(), total: Number(order.total ?? 0) }, _output: { cash_impact: false, journal_required: Number(order.total ?? 0) > 0, appears_in_report: true } }).then(() => null);
-    if (error) toast.error(error.message); else { toast.success("تم إلغاء الطلب وتسجيل السبب"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.toastOrderCancelled", "تم إلغاء الطلب وتسجيل السبب")); load(); }
   }
 
   async function overrideCloseOrder() {
-    if (!hasRole("owner", "ops_manager")) return toast.error("صلاحية مدير التشغيل أو المالك فقط");
-    const reason = prompt("سبب إغلاق الطلب بتجاوز التحقق؟", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً");
+    if (!hasRole("owner", "ops_manager")) return toast.error(t("orders.errorManagerOnly", "صلاحية مدير التشغيل أو المالك فقط"));
+    const reason = prompt(t("orders.overrideClosePrompt", "سبب إغلاق الطلب بتجاوز التحقق؟"), t("orders.overrideCloseDefaultReason", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً"));
     if (reason === null) return;
     const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
     if (!error) {
       await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `إغلاق بتجاوز التحقق: ${reason}` });
       await supabase.rpc("record_operation_event", { _process_key: "order_delivered_override", _process_name: "تسليم طلب بتجاوز", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/delivery", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason }, _output: { cash_impact: order.payment_status !== "paid", journal_required: order.payment_status !== "paid", appears_in_report: true } }).then(() => null);
-      toast.success("تم إغلاق الطلب بتجاوز التحقق");
+      toast.success(t("orders.toastOverrideClosed", "تم إغلاق الطلب بتجاوز التحقق"));
       load();
     } else toast.error(error.message);
   }
@@ -378,9 +378,9 @@ function OrderDetailPage() {
   function printLabels() {
     const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>Labels</title><style>
       @page{size:50mm 30mm;margin:2mm} body{font-family:Arial,sans-serif;margin:0;color:#111}.label{width:46mm;height:26mm;border:1px dashed #999;margin:1mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;text-align:center}.code{font-size:18px;font-weight:900}.name{font-size:13px;font-weight:700}.meta{font-size:10px;color:#444}
-    </style></head><body>${units.map((u) => `<div class="label"><div class="code">${u.label_code}</div><div class="name">${u.name}</div><div class="meta">طلب #${order.order_number} — ${order.customers?.full_name ?? ""}</div></div>`).join("")}</body></html>`;
+    </style></head><body>${units.map((u) => `<div class="label"><div class="code">${u.label_code}</div><div class="name">${u.name}</div><div class="meta">${t("order.orderNoShort", "طلب #")}${order.order_number} — ${order.customers?.full_name ?? ""}</div></div>`).join("")}</body></html>`;
     const w = window.open("", "_blank", "width=420,height=600");
-    if (!w) return toast.error("المتصفح منع فتح نافذة الطباعة");
+    if (!w) return toast.error(t("orders.errorPrintBlocked", "المتصفح منع فتح نافذة الطباعة"));
     w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
   }
 
@@ -470,7 +470,7 @@ function OrderDetailPage() {
                 <Input type="number" min={1} value={it.qty} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { qty: Math.max(1, Number(e.target.value)) })} />
                 <Input type="number" value={it.unit_price} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { unit_price: Number(e.target.value) })} />
                 <div className="font-black text-end">{(it.qty * it.unit_price).toLocaleString()} {t("common.egp")}</div>
-                {canEdit && <Button size="icon" variant="ghost" onClick={() => deleteInvoiceRow(idx)}><Trash2 className="w-4 h-4 text-red-600" /></Button>}
+                {canEdit && <Button size="icon" variant="ghost" onClick={() => deleteInvoiceItem(idx)}><Trash2 className="w-4 h-4 text-red-600" /></Button>}
               </div>
             ))}
           </div>

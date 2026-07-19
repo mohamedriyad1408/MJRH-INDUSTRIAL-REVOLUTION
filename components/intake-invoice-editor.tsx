@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from"react";
 import { supabase } from"@/integrations/supabase/client";
-import { useAuth } from"@/hooks/use-auth";
+import { useAuth } from"@/core/auth/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
 import { Button } from"@/components/ui/button";
 import { Input } from"@/components/ui/input";
@@ -11,7 +11,7 @@ import { toast } from"sonner";
 import { Loader2, Plus, Trash2, Receipt, Sparkles, Shirt, ShoppingBag, CheckCircle2, Save } from"lucide-react";
 import { fmtMoney } from"@/lib/format";
 import { type ActiveActor } from"@/components/station-actor-widget";
-import { DRY_TECH_CATALOG_SEED, ensureDryTechCatalogSeeded } from"@/lib/dry-tech-catalog";
+import { DRY_TECH_CATALOG_SEED_LENGTH, ensureDryTechCatalogSeeded } from"@/lib/dry-tech-catalog";
 import { PosCategoryTabs, type ServiceTypeFilter } from"@/components/pos-category-tabs";
 
 type ServiceItem = { id: string; name: string; unit_price: number; service_type: string; category?: string };
@@ -230,10 +230,10 @@ export function IntakeInvoiceEditorModal({ open, onOpenChange, orderId, pickupId
  const { data } = await supabase.from("service_items").select("id,name,unit_price,service_type").eq("tenant_id", tenantId).eq("is_active", true).order("name");
  setCatalog(((data ?? []) as any[]).map(x => ({ id: x.id, name: x.name, unit_price: Number(x.unit_price ?? 0), service_type: x.service_type })));
  setLoading(false);
- toast.success(`تم مزامنة وتحديث الكتالوج الكامل (${DRY_TECH_CATALOG_SEED.length} صنف من POS Touch)`);
+ toast.success(`تم مزامنة وتحديث الكتالوج الكامل (${DRY_TECH_CATALOG_SEED_LENGTH} صنف من POS Touch)`);
  }} className="h-7 text-[11px] border-teal-300 text-teal-800 bg-teal-50 hover:bg-teal-100 font-bold">
  <Sparkles className="w-3.5 h-3.5 ms-1 text-teal-600"/>
- <span> مزامنة كتالوج Dry Tech ({DRY_TECH_CATALOG_SEED.length} صنف)</span>
+ <span> مزامنة كتالوج Dry Tech ({DRY_TECH_CATALOG_SEED_LENGTH} صنف)</span>
  </Button>
  </div>
  <PosCategoryTabs activeTab={catTab} onSelect={setCatTab} items={catalog} compact={true} activeServiceType={serviceType} onSelectServiceType={setServiceType} />

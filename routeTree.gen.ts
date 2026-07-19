@@ -60,15 +60,20 @@ import { Route as TenantBillingRouteImport } from './routes/$tenant/billing'
 import { Route as TenantAccountingRouteImport } from './routes/$tenant/accounting'
 import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index'
 import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
+import { Route as TenantSettingsIndexRouteImport } from './routes/$tenant/settings/index'
 import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
 import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
 import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
 import { Route as AdminAdminTemplatesRouteImport } from './routes/_admin/admin/templates'
 import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
+import { Route as AdminAdminReportBuilderRouteImport } from './routes/_admin/admin/report-builder'
 import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
+import { Route as AdminAdminPlatformBuilderRouteImport } from './routes/_admin/admin/platform-builder'
 import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/admin/marketing-plan'
 import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
 import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
+import { Route as AdminAdminInputBuilderRouteImport } from './routes/_admin/admin/input-builder'
+import { Route as AdminAdminDemoLibraryRouteImport } from './routes/_admin/admin/demo-library'
 import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
 import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
 import { Route as AdminAdminBizDevRouteImport } from './routes/_admin/admin/biz-dev'
@@ -97,13 +102,16 @@ import { Route as TenantStaffAttendanceRouteImport } from './routes/$tenant/staf
 import { Route as TenantStaffIdRouteImport } from './routes/$tenant/staff/$id'
 import { Route as TenantSettingsWorkflowRouteImport } from './routes/$tenant/settings/workflow'
 import { Route as TenantSettingsRolesRouteImport } from './routes/$tenant/settings/roles'
+import { Route as TenantReportsBuilderRouteImport } from './routes/$tenant/reports/builder'
 import { Route as TenantPickupsNewRouteImport } from './routes/$tenant/pickups/new'
 import { Route as TenantOrdersNewRouteImport } from './routes/$tenant/orders/new'
 import { Route as TenantOrdersIdRouteImport } from './routes/$tenant/orders/$id'
 import { Route as TenantBranchesIdRouteImport } from './routes/$tenant/branches/$id'
 import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin/admin/users/index'
 import { Route as AdminAdminTenantsIndexRouteImport } from './routes/_admin/admin/tenants/index'
+import { Route as TenantSettingsWorkflowIndexRouteImport } from './routes/$tenant/settings/workflow/index'
 import { Route as AdminAdminTenantsIdRouteImport } from './routes/_admin/admin/tenants/$id'
+import { Route as TenantSettingsWorkflowStageIdFieldsRouteImport } from './routes/$tenant/settings/workflow/$stageId/fields'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -359,6 +367,11 @@ const TenantStaffIndexRoute = TenantStaffIndexRouteImport.update({
   path: '/staff/',
   getParentRoute: () => TenantRoute,
 } as any)
+const TenantSettingsIndexRoute = TenantSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TenantSettingsRoute,
+} as any)
 const TenantPickupsIndexRoute = TenantPickupsIndexRouteImport.update({
   id: '/pickups/',
   path: '/pickups/',
@@ -385,11 +398,22 @@ const AdminAdminTelemetryRoute = AdminAdminTelemetryRouteImport.update({
   path: '/admin/telemetry',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminReportBuilderRoute = AdminAdminReportBuilderRouteImport.update({
+  id: '/admin/report-builder',
+  path: '/admin/report-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminPlatformFeesRoute = AdminAdminPlatformFeesRouteImport.update({
   id: '/admin/platform-fees',
   path: '/admin/platform-fees',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdminPlatformBuilderRoute =
+  AdminAdminPlatformBuilderRouteImport.update({
+    id: '/admin/platform-builder',
+    path: '/admin/platform-builder',
+    getParentRoute: () => AdminRoute,
+  } as any)
 const AdminAdminMarketingPlanRoute = AdminAdminMarketingPlanRouteImport.update({
   id: '/admin/marketing-plan',
   path: '/admin/marketing-plan',
@@ -406,6 +430,16 @@ const AdminAdminInvestorRelationsRoute =
     path: '/admin/investor-relations',
     getParentRoute: () => AdminRoute,
   } as any)
+const AdminAdminInputBuilderRoute = AdminAdminInputBuilderRouteImport.update({
+  id: '/admin/input-builder',
+  path: '/admin/input-builder',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAdminDemoLibraryRoute = AdminAdminDemoLibraryRouteImport.update({
+  id: '/admin/demo-library',
+  path: '/admin/demo-library',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAdminCustomerSuccessRoute =
   AdminAdminCustomerSuccessRouteImport.update({
     id: '/admin/customer-success',
@@ -549,6 +583,11 @@ const TenantSettingsRolesRoute = TenantSettingsRolesRouteImport.update({
   path: '/roles',
   getParentRoute: () => TenantSettingsRoute,
 } as any)
+const TenantReportsBuilderRoute = TenantReportsBuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => TenantReportsRoute,
+} as any)
 const TenantPickupsNewRoute = TenantPickupsNewRouteImport.update({
   id: '/pickups/new',
   path: '/pickups/new',
@@ -579,11 +618,23 @@ const AdminAdminTenantsIndexRoute = AdminAdminTenantsIndexRouteImport.update({
   path: '/admin/tenants/',
   getParentRoute: () => AdminRoute,
 } as any)
+const TenantSettingsWorkflowIndexRoute =
+  TenantSettingsWorkflowIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TenantSettingsWorkflowRoute,
+  } as any)
 const AdminAdminTenantsIdRoute = AdminAdminTenantsIdRouteImport.update({
   id: '/admin/tenants/$id',
   path: '/admin/tenants/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const TenantSettingsWorkflowStageIdFieldsRoute =
+  TenantSettingsWorkflowStageIdFieldsRouteImport.update({
+    id: '/$stageId/fields',
+    path: '/$stageId/fields',
+    getParentRoute: () => TenantSettingsWorkflowRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -624,7 +675,7 @@ export interface FileRoutesByFullPath {
   '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRoute
+  '/$tenant/reports': typeof TenantReportsRouteWithChildren
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
   '/$tenant/settings': typeof TenantSettingsRouteWithChildren
@@ -638,8 +689,9 @@ export interface FileRoutesByFullPath {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
   '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRouteWithChildren
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
@@ -666,20 +718,27 @@ export interface FileRoutesByFullPath {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
+  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
+  '/$tenant/settings/': typeof TenantSettingsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
   '/admin/': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
   '/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/admin/users/': typeof AdminAdminUsersIndexRoute
+  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -720,10 +779,9 @@ export interface FileRoutesByTo {
   '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRoute
+  '/$tenant/reports': typeof TenantReportsRouteWithChildren
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
   '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
   '/$tenant/system-health': typeof TenantSystemHealthRoute
   '/$tenant/today': typeof TenantTodayRoute
@@ -734,8 +792,8 @@ export interface FileRoutesByTo {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
   '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
@@ -762,20 +820,27 @@ export interface FileRoutesByTo {
   '/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
+  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/admin/legal': typeof AdminAdminLegalRoute
   '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/admin/templates': typeof AdminAdminTemplatesRoute
   '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders': typeof TenantOrdersIndexRoute
   '/$tenant/pickups': typeof TenantPickupsIndexRoute
+  '/$tenant/settings': typeof TenantSettingsIndexRoute
   '/$tenant/staff': typeof TenantStaffIndexRoute
   '/admin': typeof AdminAdminIndexRoute
   '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowIndexRoute
   '/admin/tenants': typeof AdminAdminTenantsIndexRoute
   '/admin/users': typeof AdminAdminUsersIndexRoute
+  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -818,7 +883,7 @@ export interface FileRoutesById {
   '/$tenant/onboarding': typeof TenantOnboardingRoute
   '/$tenant/ops': typeof TenantOpsRoute
   '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRoute
+  '/$tenant/reports': typeof TenantReportsRouteWithChildren
   '/$tenant/search': typeof TenantSearchRoute
   '/$tenant/services': typeof TenantServicesRoute
   '/$tenant/settings': typeof TenantSettingsRouteWithChildren
@@ -832,8 +897,9 @@ export interface FileRoutesById {
   '/$tenant/orders/$id': typeof TenantOrdersIdRoute
   '/$tenant/orders/new': typeof TenantOrdersNewRoute
   '/$tenant/pickups/new': typeof TenantPickupsNewRoute
+  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
   '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRoute
+  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRouteWithChildren
   '/$tenant/staff/$id': typeof TenantStaffIdRoute
   '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
   '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
@@ -860,20 +926,27 @@ export interface FileRoutesById {
   '/_admin/admin/biz-dev': typeof AdminAdminBizDevRoute
   '/_admin/admin/business-plan': typeof AdminAdminBusinessPlanRoute
   '/_admin/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
+  '/_admin/admin/demo-library': typeof AdminAdminDemoLibraryRoute
+  '/_admin/admin/input-builder': typeof AdminAdminInputBuilderRoute
   '/_admin/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
   '/_admin/admin/legal': typeof AdminAdminLegalRoute
   '/_admin/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
+  '/_admin/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
   '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
+  '/_admin/admin/report-builder': typeof AdminAdminReportBuilderRoute
   '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
   '/_admin/admin/templates': typeof AdminAdminTemplatesRoute
   '/_admin/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
   '/$tenant/orders/': typeof TenantOrdersIndexRoute
   '/$tenant/pickups/': typeof TenantPickupsIndexRoute
+  '/$tenant/settings/': typeof TenantSettingsIndexRoute
   '/$tenant/staff/': typeof TenantStaffIndexRoute
   '/_admin/admin/': typeof AdminAdminIndexRoute
   '/_admin/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
+  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
   '/_admin/admin/tenants/': typeof AdminAdminTenantsIndexRoute
   '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
+  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -930,6 +1003,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/reports/builder'
     | '/$tenant/settings/roles'
     | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
@@ -958,20 +1032,27 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/demo-library'
+    | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
     | '/admin/marketing-plan'
+    | '/admin/platform-builder'
     | '/admin/platform-fees'
+    | '/admin/report-builder'
     | '/admin/telemetry'
     | '/admin/templates'
     | '/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
+    | '/$tenant/settings/'
     | '/$tenant/staff/'
     | '/admin/'
     | '/admin/tenants/$id'
+    | '/$tenant/settings/workflow/'
     | '/admin/tenants/'
     | '/admin/users/'
+    | '/$tenant/settings/workflow/$stageId/fields'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -1015,7 +1096,6 @@ export interface FileRouteTypes {
     | '/$tenant/reports'
     | '/$tenant/search'
     | '/$tenant/services'
-    | '/$tenant/settings'
     | '/$tenant/subscriptions'
     | '/$tenant/system-health'
     | '/$tenant/today'
@@ -1026,8 +1106,8 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/reports/builder'
     | '/$tenant/settings/roles'
-    | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
     | '/$tenant/staff/attendance'
     | '/$tenant/staff/fairness'
@@ -1054,20 +1134,27 @@ export interface FileRouteTypes {
     | '/admin/biz-dev'
     | '/admin/business-plan'
     | '/admin/customer-success'
+    | '/admin/demo-library'
+    | '/admin/input-builder'
     | '/admin/investor-relations'
     | '/admin/legal'
     | '/admin/marketing-plan'
+    | '/admin/platform-builder'
     | '/admin/platform-fees'
+    | '/admin/report-builder'
     | '/admin/telemetry'
     | '/admin/templates'
     | '/admin/workflow-builder'
     | '/$tenant/orders'
     | '/$tenant/pickups'
+    | '/$tenant/settings'
     | '/$tenant/staff'
     | '/admin'
     | '/admin/tenants/$id'
+    | '/$tenant/settings/workflow'
     | '/admin/tenants'
     | '/admin/users'
+    | '/$tenant/settings/workflow/$stageId/fields'
   id:
     | '__root__'
     | '/'
@@ -1123,6 +1210,7 @@ export interface FileRouteTypes {
     | '/$tenant/orders/$id'
     | '/$tenant/orders/new'
     | '/$tenant/pickups/new'
+    | '/$tenant/reports/builder'
     | '/$tenant/settings/roles'
     | '/$tenant/settings/workflow'
     | '/$tenant/staff/$id'
@@ -1151,20 +1239,27 @@ export interface FileRouteTypes {
     | '/_admin/admin/biz-dev'
     | '/_admin/admin/business-plan'
     | '/_admin/admin/customer-success'
+    | '/_admin/admin/demo-library'
+    | '/_admin/admin/input-builder'
     | '/_admin/admin/investor-relations'
     | '/_admin/admin/legal'
     | '/_admin/admin/marketing-plan'
+    | '/_admin/admin/platform-builder'
     | '/_admin/admin/platform-fees'
+    | '/_admin/admin/report-builder'
     | '/_admin/admin/telemetry'
     | '/_admin/admin/templates'
     | '/_admin/admin/workflow-builder'
     | '/$tenant/orders/'
     | '/$tenant/pickups/'
+    | '/$tenant/settings/'
     | '/$tenant/staff/'
     | '/_admin/admin/'
     | '/_admin/admin/tenants/$id'
+    | '/$tenant/settings/workflow/'
     | '/_admin/admin/tenants/'
     | '/_admin/admin/users/'
+    | '/$tenant/settings/workflow/$stageId/fields'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1543,6 +1638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantStaffIndexRouteImport
       parentRoute: typeof TenantRoute
     }
+    '/$tenant/settings/': {
+      id: '/$tenant/settings/'
+      path: '/'
+      fullPath: '/$tenant/settings/'
+      preLoaderRoute: typeof TenantSettingsIndexRouteImport
+      parentRoute: typeof TenantSettingsRoute
+    }
     '/$tenant/pickups/': {
       id: '/$tenant/pickups/'
       path: '/pickups'
@@ -1578,11 +1680,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminTelemetryRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/admin/report-builder': {
+      id: '/_admin/admin/report-builder'
+      path: '/admin/report-builder'
+      fullPath: '/admin/report-builder'
+      preLoaderRoute: typeof AdminAdminReportBuilderRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/admin/platform-fees': {
       id: '/_admin/admin/platform-fees'
       path: '/admin/platform-fees'
       fullPath: '/admin/platform-fees'
       preLoaderRoute: typeof AdminAdminPlatformFeesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/platform-builder': {
+      id: '/_admin/admin/platform-builder'
+      path: '/admin/platform-builder'
+      fullPath: '/admin/platform-builder'
+      preLoaderRoute: typeof AdminAdminPlatformBuilderRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/admin/marketing-plan': {
@@ -1604,6 +1720,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/investor-relations'
       fullPath: '/admin/investor-relations'
       preLoaderRoute: typeof AdminAdminInvestorRelationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/input-builder': {
+      id: '/_admin/admin/input-builder'
+      path: '/admin/input-builder'
+      fullPath: '/admin/input-builder'
+      preLoaderRoute: typeof AdminAdminInputBuilderRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/_admin/admin/demo-library': {
+      id: '/_admin/admin/demo-library'
+      path: '/admin/demo-library'
+      fullPath: '/admin/demo-library'
+      preLoaderRoute: typeof AdminAdminDemoLibraryRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_admin/admin/customer-success': {
@@ -1802,6 +1932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TenantSettingsRolesRouteImport
       parentRoute: typeof TenantSettingsRoute
     }
+    '/$tenant/reports/builder': {
+      id: '/$tenant/reports/builder'
+      path: '/builder'
+      fullPath: '/$tenant/reports/builder'
+      preLoaderRoute: typeof TenantReportsBuilderRouteImport
+      parentRoute: typeof TenantReportsRoute
+    }
     '/$tenant/pickups/new': {
       id: '/$tenant/pickups/new'
       path: '/pickups/new'
@@ -1844,12 +1981,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminTenantsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/$tenant/settings/workflow/': {
+      id: '/$tenant/settings/workflow/'
+      path: '/'
+      fullPath: '/$tenant/settings/workflow/'
+      preLoaderRoute: typeof TenantSettingsWorkflowIndexRouteImport
+      parentRoute: typeof TenantSettingsWorkflowRoute
+    }
     '/_admin/admin/tenants/$id': {
       id: '/_admin/admin/tenants/$id'
       path: '/admin/tenants/$id'
       fullPath: '/admin/tenants/$id'
       preLoaderRoute: typeof AdminAdminTenantsIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/$tenant/settings/workflow/$stageId/fields': {
+      id: '/$tenant/settings/workflow/$stageId/fields'
+      path: '/$stageId/fields'
+      fullPath: '/$tenant/settings/workflow/$stageId/fields'
+      preLoaderRoute: typeof TenantSettingsWorkflowStageIdFieldsRouteImport
+      parentRoute: typeof TenantSettingsWorkflowRoute
     }
   }
 }
@@ -1866,14 +2017,45 @@ const TenantBranchesRouteWithChildren = TenantBranchesRoute._addFileChildren(
   TenantBranchesRouteChildren,
 )
 
+interface TenantReportsRouteChildren {
+  TenantReportsBuilderRoute: typeof TenantReportsBuilderRoute
+}
+
+const TenantReportsRouteChildren: TenantReportsRouteChildren = {
+  TenantReportsBuilderRoute: TenantReportsBuilderRoute,
+}
+
+const TenantReportsRouteWithChildren = TenantReportsRoute._addFileChildren(
+  TenantReportsRouteChildren,
+)
+
+interface TenantSettingsWorkflowRouteChildren {
+  TenantSettingsWorkflowIndexRoute: typeof TenantSettingsWorkflowIndexRoute
+  TenantSettingsWorkflowStageIdFieldsRoute: typeof TenantSettingsWorkflowStageIdFieldsRoute
+}
+
+const TenantSettingsWorkflowRouteChildren: TenantSettingsWorkflowRouteChildren =
+  {
+    TenantSettingsWorkflowIndexRoute: TenantSettingsWorkflowIndexRoute,
+    TenantSettingsWorkflowStageIdFieldsRoute:
+      TenantSettingsWorkflowStageIdFieldsRoute,
+  }
+
+const TenantSettingsWorkflowRouteWithChildren =
+  TenantSettingsWorkflowRoute._addFileChildren(
+    TenantSettingsWorkflowRouteChildren,
+  )
+
 interface TenantSettingsRouteChildren {
   TenantSettingsRolesRoute: typeof TenantSettingsRolesRoute
-  TenantSettingsWorkflowRoute: typeof TenantSettingsWorkflowRoute
+  TenantSettingsWorkflowRoute: typeof TenantSettingsWorkflowRouteWithChildren
+  TenantSettingsIndexRoute: typeof TenantSettingsIndexRoute
 }
 
 const TenantSettingsRouteChildren: TenantSettingsRouteChildren = {
   TenantSettingsRolesRoute: TenantSettingsRolesRoute,
-  TenantSettingsWorkflowRoute: TenantSettingsWorkflowRoute,
+  TenantSettingsWorkflowRoute: TenantSettingsWorkflowRouteWithChildren,
+  TenantSettingsIndexRoute: TenantSettingsIndexRoute,
 }
 
 const TenantSettingsRouteWithChildren = TenantSettingsRoute._addFileChildren(
@@ -1908,7 +2090,7 @@ interface TenantRouteChildren {
   TenantOnboardingRoute: typeof TenantOnboardingRoute
   TenantOpsRoute: typeof TenantOpsRoute
   TenantReceivablesRoute: typeof TenantReceivablesRoute
-  TenantReportsRoute: typeof TenantReportsRoute
+  TenantReportsRoute: typeof TenantReportsRouteWithChildren
   TenantSearchRoute: typeof TenantSearchRoute
   TenantServicesRoute: typeof TenantServicesRoute
   TenantSettingsRoute: typeof TenantSettingsRouteWithChildren
@@ -1974,7 +2156,7 @@ const TenantRouteChildren: TenantRouteChildren = {
   TenantOnboardingRoute: TenantOnboardingRoute,
   TenantOpsRoute: TenantOpsRoute,
   TenantReceivablesRoute: TenantReceivablesRoute,
-  TenantReportsRoute: TenantReportsRoute,
+  TenantReportsRoute: TenantReportsRouteWithChildren,
   TenantSearchRoute: TenantSearchRoute,
   TenantServicesRoute: TenantServicesRoute,
   TenantSettingsRoute: TenantSettingsRouteWithChildren,
@@ -2020,10 +2202,14 @@ interface AdminRouteChildren {
   AdminAdminBizDevRoute: typeof AdminAdminBizDevRoute
   AdminAdminBusinessPlanRoute: typeof AdminAdminBusinessPlanRoute
   AdminAdminCustomerSuccessRoute: typeof AdminAdminCustomerSuccessRoute
+  AdminAdminDemoLibraryRoute: typeof AdminAdminDemoLibraryRoute
+  AdminAdminInputBuilderRoute: typeof AdminAdminInputBuilderRoute
   AdminAdminInvestorRelationsRoute: typeof AdminAdminInvestorRelationsRoute
   AdminAdminLegalRoute: typeof AdminAdminLegalRoute
   AdminAdminMarketingPlanRoute: typeof AdminAdminMarketingPlanRoute
+  AdminAdminPlatformBuilderRoute: typeof AdminAdminPlatformBuilderRoute
   AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
+  AdminAdminReportBuilderRoute: typeof AdminAdminReportBuilderRoute
   AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
   AdminAdminTemplatesRoute: typeof AdminAdminTemplatesRoute
   AdminAdminWorkflowBuilderRoute: typeof AdminAdminWorkflowBuilderRoute
@@ -2038,10 +2224,14 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAdminBizDevRoute: AdminAdminBizDevRoute,
   AdminAdminBusinessPlanRoute: AdminAdminBusinessPlanRoute,
   AdminAdminCustomerSuccessRoute: AdminAdminCustomerSuccessRoute,
+  AdminAdminDemoLibraryRoute: AdminAdminDemoLibraryRoute,
+  AdminAdminInputBuilderRoute: AdminAdminInputBuilderRoute,
   AdminAdminInvestorRelationsRoute: AdminAdminInvestorRelationsRoute,
   AdminAdminLegalRoute: AdminAdminLegalRoute,
   AdminAdminMarketingPlanRoute: AdminAdminMarketingPlanRoute,
+  AdminAdminPlatformBuilderRoute: AdminAdminPlatformBuilderRoute,
   AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
+  AdminAdminReportBuilderRoute: AdminAdminReportBuilderRoute,
   AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,
   AdminAdminTemplatesRoute: AdminAdminTemplatesRoute,
   AdminAdminWorkflowBuilderRoute: AdminAdminWorkflowBuilderRoute,
