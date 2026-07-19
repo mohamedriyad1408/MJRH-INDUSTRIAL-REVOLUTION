@@ -1,0 +1,53 @@
+{
+  "pageTitle": "Today Center",
+  "description": "Monitor daily performance, orders, financial reports and open operations.",
+  "refresh": "Refresh",
+  "copyEndOfDay": "Copy End-of-Day Report",
+  "endOfDayReport": "Save End-of-Day Report",
+  "kpi": {
+    "ordersToday": "Orders Today",
+    "deliveredToday": "Delivered Today",
+    "revenueToday": "Revenue Today",
+    "driverCollections": "Driver Collections",
+    "criticalIssues": "Critical Issues",
+    "cashClosing": "Cash Closing"
+  },
+  "warn": {
+    "cashClosingNotCompleted": "Cash closing not completed today",
+    "cashClosingDetail": "Closed: {closed} of {total}. Open cash closing and close all at once.",
+    "cashClosingBtn": "Cash Closing",
+    "lastClosingDiff": "Last closing difference",
+    "reviewDiff": "Review the reason."
+  },
+  "delayOrigin": "Delay Origins",
+  "needsAction": "Immediate Action Required",
+  "noCritical": "No critical items at the moment",
+  "latestReports": "Latest Saved Reports",
+  "noReports": "No reports saved yet",
+  "surgeMonitor": {
+    "title": "Continuous Surge & Pressure Monitor",
+    "description": "Real-time load balancing between incoming demand and processing capacity",
+    "normal": "Normal",
+    "normalPeak": "Light Peak",
+    "mediumPeak": "Medium Peak",
+    "severePeak": "Severe Peak",
+    "scheduledOrders": "scheduled jobs"
+  },
+  "card": {
+    "systemHealth": "System Health",
+    "systemHealthDetail": "Review foundations and open issues",
+    "orders": "Orders",
+    "ordersDetail": "Jobs without pieces, invoices, receipts",
+    "map": "Live Map",
+    "mapDetail": "Pickups, deliveries, couriers",
+    "safe": "Cash/Safe",
+    "safeDetail": "Review ins/outs and close today",
+    "reports": "Reports",
+    "reportsDetail": "Role-based deep analytics",
+    "receivables": "Receivables",
+    "receivablesDetail": "Ready unpaid and collections",
+    "issues": "Telemetry",
+    "issuesDetail": "Technical and operational logs"
+  },
+  "noAccess": "Today center for owner, ops manager and customer service only."
+}

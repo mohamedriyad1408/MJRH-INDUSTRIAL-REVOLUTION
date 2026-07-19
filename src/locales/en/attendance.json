@@ -1,0 +1,24 @@
+{
+  "pageTitle": "Live Station Attendance",
+  "subtitle": "Track staff availability at stations in real-time — Mawared Grade",
+  "checkInBtn": "Check-In at Station",
+  "checkOutBtn": "Check-Out",
+  "stats": {
+    "presentNow": "Present Now",
+    "atStations": "At Stations",
+    "onBreak": "On Break",
+    "totalToday": "Total Today"
+  },
+  "loading": "Syncing attendance data...",
+  "noData": "No staff checked-in yet today",
+  "colStaff": "Employee",
+  "colStation": "Station",
+  "colTime": "In Time",
+  "colDuration": "Duration",
+  "colStatus": "Status",
+  "accessDenied": "Attendance management available to owner and managers only.",
+  "toastCheckedIn": "Check-in successful at {station}",
+  "toastCheckedOut": "Check-out successful",
+  "selectStation": "Select Station",
+  "errorSelectStation": "Please select a station first"
+}

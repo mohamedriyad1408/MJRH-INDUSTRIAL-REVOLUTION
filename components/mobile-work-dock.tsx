@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -12,11 +12,9 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 type Task = { title: string; detail: string; href: string; count: number; tone?: "red" | "amber" | "teal" | "violet"; icon: React.ReactNode };
 
-const STATION_AR: Record<string, string> = { reception: "الاستقبال", cleaning: "الغسيل", drying_assembly: "التجفيف والتجميع", ironing: "الكي", packing: "التغليف", driver: "المندوب" };
-
 export function MobileWorkDock() {
   const { user, hasRole, tenantId } = useAuth();
-  const { dir } = useI18n();
+  const { dir, t } = useI18n();
   const [open, setOpen] = useState(false);
   const [employee, setEmployee] = useState<any>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -51,21 +49,21 @@ export function MobileWorkDock() {
 
   const tasks: Task[] = useMemo(() => {
     if (isManager) return [
-      { title: "شغّل اليوم", detail: "ابدأ/راقب/أنه اليوم بخطوات واضحة", href: "/daily-operations", count: counts.late + counts.unpaid, tone: counts.late ? "red" : "teal", icon: <Wand2 className="w-4 h-4" /> },
-      { title: "مركز اليوم", detail: "كل المشاكل المهمة في شاشة واحدة", href: "/today", count: counts.late + counts.ready + counts.pickups, tone: "amber", icon: <ClipboardList className="w-4 h-4" /> },
-      { title: "الخريطة", detail: "استلامات وتوصيلات ومناديب", href: "/live-map", count: counts.pickups + counts.ready, tone: "violet", icon: <Map className="w-4 h-4" /> },
+      { title: t("nav.daily-operations", "شغّل اليوم"), detail: t("today.runDayDetail", "ابدأ/راقب/أنه اليوم بخطوات واضحة"), href: "/daily-operations", count: counts.late + counts.unpaid, tone: counts.late ? "red" : "teal", icon: <Wand2 className="w-4 h-4" /> },
+      { title: t("nav.today", "مركز اليوم"), detail: t("today.description", "كل المشاكل المهمة في شاشة واحدة"), href: "/today", count: counts.late + counts.ready + counts.pickups, tone: "amber", icon: <ClipboardList className="w-4 h-4" /> },
+      { title: t("nav.live_map", "الخريطة"), detail: t("map.title", "استلامات وتوصيلات ومناديب"), href: "/live-map", count: counts.pickups + counts.ready, tone: "violet", icon: <Map className="w-4 h-4" /> },
     ];
     if (station === "reception") return [
-      { title: "طلب جديد", detail: "استقبل العميل وسجل القطع", href: "/orders/new", count: counts.received, tone: "teal", icon: <ClipboardList className="w-4 h-4" /> },
-      { title: "كل الطلبات", detail: "راجع الفواتير والجاهز", href: "/orders", count: counts.unpaid, tone: "amber", icon: <PackageCheck className="w-4 h-4" /> },
+      { title: t("orders.newJob", "طلب جديد"), detail: t("orders.newOrderSubtitle", "استقبل العميل وسجل القطع"), href: "/orders/new", count: counts.received, tone: "teal", icon: <ClipboardList className="w-4 h-4" /> },
+      { title: t("orders.allJobs", "كل الطلبات"), detail: t("order.invoiceReview", "راجع الفواتير والجاهز"), href: "/orders", count: counts.unpaid, tone: "amber", icon: <PackageCheck className="w-4 h-4" /> },
     ];
-    if (station === "cleaning") return [{ title: "مهام الغسيل", detail: "نظّف القطع ثم سلمها للتجفيف والتجميع", href: "/stations/cleaning", count: counts.received + counts.cleaning, tone: "teal", icon: <Sparkles className="w-4 h-4" /> }, { title: "التجفيف والتجميع", detail: "راجع المارك وجهز القطع للكي", href: "/stations/drying-assembly", count: counts.drying, tone: "violet", icon: <Wind className="w-4 h-4" /> }];
-    if (station === "drying_assembly") return [{ title: "التجفيف والتجميع", detail: "راجع المارك وجهز القطع للكي", href: "/stations/drying-assembly", count: counts.drying, tone: "violet", icon: <Wind className="w-4 h-4" /> }];
-    if (station === "ironing") return [{ title: "مهام الكي", detail: "قطعك الحالية والمنتظرة", href: "/stations/ironing", count: counts.ironing, tone: "violet", icon: <Shirt className="w-4 h-4" /> }];
-    if (station === "packing") return [{ title: "مهام التغليف", detail: "راجع القطع وجهزها للتسليم", href: "/stations/packing", count: counts.packing, tone: "amber", icon: <PackageCheck className="w-4 h-4" /> }];
-    if (station === "driver") return [{ title: "مهام المندوب", detail: "استلامات وتوصيلات اليوم", href: "/driver", count: counts.pickups + counts.ready, tone: "teal", icon: <Truck className="w-4 h-4" /> }];
-    return [{ title: "مهامي الآن", detail: "افتح صفحتك التشغيلية", href: "/today", count: counts.late, tone: "teal", icon: <CheckCircle2 className="w-4 h-4" /> }];
-  }, [isManager, station, counts]);
+    if (station === "cleaning") return [{ title: t("station.cleaning.cleanItems", "مهام الغسيل"), detail: t("station.cleaning.boardTitle", "نظّف القطع ثم سلمها للتجفيف والتجميع"), href: "/stations/cleaning", count: counts.received + counts.cleaning, tone: "teal", icon: <Sparkles className="w-4 h-4" /> }, { title: t("station.assembly.title", "التجفيف والتجميع"), detail: t("station.assembly.subtitle", "راجع المارك وجهز القطع للكي"), href: "/stations/drying-assembly", count: counts.drying, tone: "violet", icon: <Wind className="w-4 h-4" /> }];
+    if (station === "drying_assembly") return [{ title: t("station.assembly.title", "التجفيف والتجميع"), detail: t("station.assembly.subtitle", "راجع المارك وجهز القطع للكي"), href: "/stations/drying-assembly", count: counts.drying, tone: "violet", icon: <Wind className="w-4 h-4" /> }];
+    if (station === "ironing") return [{ title: t("station.ironing.managerTitle", "مهام الكي"), detail: t("station.ironing.myWorkSubtitle", "قطعك الحالية والمنتظرة"), href: "/stations/ironing", count: counts.ironing, tone: "violet", icon: <Shirt className="w-4 h-4" /> }];
+    if (station === "packing") return [{ title: t("station.packing.title", "مهام التغليف"), detail: t("station.packing.subtitle", "راجع القطع وجهزها للتسليم"), href: "/stations/packing", count: counts.packing, tone: "amber", icon: <PackageCheck className="w-4 h-4" /> }];
+    if (station === "driver") return [{ title: t("driver.pageTitle", "مهام المندوب"), detail: t("driver.nextAction.title", "استلامات وتوصيلات اليوم"), href: "/driver", count: counts.pickups + counts.ready, tone: "teal", icon: <Truck className="w-4 h-4" /> }];
+    return [{ title: t("common.myTasks", "مهامي الآن"), detail: t("common.openOps", "افتح صفحتك التشغيلية"), href: "/today", count: counts.late, tone: "teal", icon: <CheckCircle2 className="w-4 h-4" /> }];
+  }, [isManager, station, counts, t]);
 
   const total = tasks.reduce((s, t) => s + Number(t.count || 0), 0);
   if (!user) return null;
@@ -74,15 +72,15 @@ export function MobileWorkDock() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button className="h-14 rounded-full px-5 shadow-2xl bg-gradient-to-l from-violet-700 via-slate-900 to-teal-600 text-white border border-white/20">
-          <Wand2 className="w-5 h-5 ms-2 text-teal-200" /> مهامي الآن {total > 0 && <Badge className="me-2 bg-amber-400 text-slate-950">{total}</Badge>}
+          <Wand2 className="w-5 h-5 ms-2 text-teal-200" /> {t("common.myTasks", "مهامي الآن")} {total > 0 && <Badge className="me-2 bg-amber-400 text-slate-950">{total}</Badge>}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="rounded-t-3xl p-4 bg-gradient-to-br from-white to-teal-50 max-h-[82vh] overflow-auto" dir={dir}>
         <SheetHeader className="text-start space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <SheetTitle className="text-xl font-black">مهامك السريعة</SheetTitle>
-              <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{STATION_AR[station ?? ""] ?? "تشغيل اليوم"}</SheetDescription>
+              <SheetTitle className="text-xl font-black">{t("common.quickTasks", "مهامك السريعة")}</SheetTitle>
+              <SheetDescription>{employee?.full_name ? `${employee.full_name} — ` : ""}{t("station." + station, station)}</SheetDescription>
             </div>
             <LanguageSwitcher compact />
           </div>
@@ -95,7 +93,7 @@ export function MobileWorkDock() {
             </div>
           </Link>)}
         </div>
-        <div className="mt-4 rounded-3xl bg-slate-900 text-white p-4 text-center font-bold">ركز في المهمة الحالية، وكل خطوة بتقربنا من يوم أنجح</div>
+        <div className="mt-4 rounded-3xl bg-slate-900 text-white p-4 text-center font-bold">{t("common.focusNote", "ركز في المهمة الحالية، وكل خطوة بتقربنا من يوم أنجح")}</div>
       </SheetContent>
     </Sheet>
   </div>;

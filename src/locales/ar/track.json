@@ -1,0 +1,27 @@
+{
+  "title": "متابعة طلبك",
+  "subtitle": "Dry Tech — منصة تشغيل المشاريع الصناعية",
+  "notFound": "الطلب غير موجود",
+  "checkLink": "تأكد من رابط المتابعة",
+  "orderNumber": "رقم الطلب",
+  "total": "الإجمالي",
+  "items": "بنود الطلب",
+  "payment": "الدفع",
+  "paid": "تم تسجيل الدفع",
+  "invoiceReady": "الفاتورة جاهزة للدفع",
+  "invoiceReview": "الفاتورة قيد المراجعة النهائية",
+  "overpayment": "تم تسجيل زيادة",
+  "promised": "الموعد المتوقع للتسليم",
+  "cancelled": "تم إلغاء الطلب",
+  "step": {
+    "pickup_waiting": "في انتظار المندوب",
+    "pickup_assigned": "المندوب في الطريق",
+    "received": "دخل الاستقبال",
+    "cleaning": "تنظيف",
+    "ironing": "كي",
+    "packing": "تغليف",
+    "ready": "جاهز للتسليم",
+    "out_for_delivery": "خرج للتسليم",
+    "delivered": "تم التسليم"
+  }
+}

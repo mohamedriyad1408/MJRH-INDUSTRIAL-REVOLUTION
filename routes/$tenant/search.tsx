@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { useI18n } from "@/lib/i18n";
 import { fmtDate } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
@@ -279,21 +279,7 @@ function SearchResultsPage() {
   const totalCount = orders.length + customers.length + pieces.length + financials.length;
 
   const translateStatus = (st: string) => {
-    const map: Record<string, string> = {
-      open: "مفتوح",
-      received: "استقبال",
-      cleaning: "غسيل",
-      ironing: "كي",
-      drying_assembly: "تجفيف وتجميع",
-      packing: "تغليف",
-      qc: "فحص الجودة",
-      ready: "جاهز للتسليم",
-      out_for_delivery: "خرج للتسليم",
-      delivered: "تم التسليم",
-      cancelled: "ملغي",
-      completed: "مكتمل",
-    };
-    return map[st] || st;
+    return t("searchPage.status." + st, st);
   };
 
   const getStatusColor = (st: string) => {
@@ -356,7 +342,7 @@ function SearchResultsPage() {
                 type="button"
                 onClick={() => handleInputChange("")}
                 className="absolute end-16 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-2 rounded-lg transition"
-                title="مسح البحث"
+                title={t("searchPage.btnClear", "مسح البحث")}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -376,11 +362,11 @@ function SearchResultsPage() {
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs font-semibold text-slate-600">
             <span className="text-muted-foreground">{t("searchPage.tryExamplesLabel", "أمثلة سريعة للبحث:")}</span>
             {[
-              { label: "رقم طلب: 91", val: "91" },
-              { label: "رقم طلب: 34", val: "34" },
-              { label: "هاتف: 010", val: "010" },
-              { label: "كود قطعة: QR-", val: "QR-" },
-              { label: "اسم: محمد", val: "محمد" },
+              { label: t("searchPage.exampleOrder91", "رقم طلب: 91"), val: "91" },
+              { label: t("searchPage.exampleOrder34", "رقم طلب: 34"), val: "34" },
+              { label: t("searchPage.examplePhone", "هاتف: 010"), val: "010" },
+              { label: t("searchPage.exampleQr", "كود قطعة: QR-"), val: "QR-" },
+              { label: t("searchPage.exampleName", "اسم: محمد"), val: "محمد" },
             ].map((ex) => (
               <button
                 key={ex.val}
