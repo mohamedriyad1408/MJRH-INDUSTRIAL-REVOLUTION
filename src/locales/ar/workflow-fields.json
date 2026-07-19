@@ -1,0 +1,43 @@
+{
+  "pageTitle": "حقول المرحلة — {name}",
+  "pageSubtitle": "Input Builder per Stage — UI: /$tenant/settings/workflow/[stageId]/fields — زرار \"إضافة حقل\" + اختيار نوع بصري + تسمية عربي/إنجليزي + مطلوب/اختياري — Preview حي — تحقق server-side whitelist إلزامي — يستخدم نظام رفع الصور الموجود + dnd-kit لو احتاج ترتيب",
+  "addFieldTitle": "إضافة حقل",
+  "addFieldSubtitle": "قائمة بصرية، مش أسماء تقنية",
+  "labelAr": "تسمية عربي",
+  "labelEn": "Label EN",
+  "fieldType": "نوع الحقل",
+  "inputMethod": "طريقة الإدخال",
+  "optionsLabel": "خيارات (لـ select) مفصولة بفاصلة",
+  "optionsPlaceholder": "جيدة,متوسطة,تالفة",
+  "required": "مطلوب",
+  "addBtn": "إضافة حقل",
+  "livePreview": "Preview حي:",
+  "noLabel": "بدون تسمية",
+  "optionsPreview": "خيارات: {options}",
+  "fieldsListTitle": "الحقول في هذه المرحلة ({count})",
+  "fieldsListSubtitle": "تظهر فوراً في نموذج المرحلة وتُحفظ قيمتها في field_values",
+  "noFields": "لا توجد حقول — أضف حقل \"حالة الإطارات\" كـ DoD: مدير تينانت carwash يضيف حقل select لمرحلة inspection من الواجهة فقط، يظهر في النموذج، وتُحفظ قيمته",
+  "toastAdded": "تم إنشاء الحقل — يظهر فوراً في نموذج المرحلة (Preview حي مثل Google Forms)",
+  "toastDeleted": "تم الحذف",
+  "confirmDelete": "حذف الحقل؟",
+  "errorRequired": "المفتاح والتسمية مطلوبان",
+  "fieldTypes": {
+    "text": "نص",
+    "number": "رقم",
+    "date": "تاريخ",
+    "select": "اختيار",
+    "multiselect": "متعدد",
+    "photo": "صورة",
+    "signature": "توقيع",
+    "qr_scan": "مسح QR",
+    "file_upload": "ملف",
+    "checkbox": "Checkbox",
+    "rating": "تقييم"
+  },
+  "inputMethods": {
+    "manual": "يدوي",
+    "scan": "مسح QR/Barcode (html5-qrcode)",
+    "import_csv": "استيراد CSV (papaparse)",
+    "api_webhook": "Webhook API (pms-bridge)"
+  }
+}

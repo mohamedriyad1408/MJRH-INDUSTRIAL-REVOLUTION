@@ -1,0 +1,23 @@
+{
+  "pageTitle": "Staff Performance Scorecard",
+  "subtitle": "Form 6 - Industrial Grade Quality Metrics per Station",
+  "searchPlaceholder": "Search staff name...",
+  "filterAll": "All Performance",
+  "filterExcellent": "Perfect Quality",
+  "filterIssues": "Needs Review",
+  "stats": {
+    "totalUnits": "Pieces Done",
+    "avgQuality": "Quality Avg",
+    "efficiency": "Efficiency",
+    "totalStaff": "Total Staff"
+  },
+  "loading": "Aggregating performance data...",
+  "noData": "No performance data found for selected period",
+  "colStaff": "Employee",
+  "colStation": "Primary Station",
+  "colUnits": "Units",
+  "colQuality": "Quality",
+  "colEfficiency": "Eff",
+  "colStatus": "Status",
+  "accessDenied": "Performance scorecard available to owners only."
+}

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,25 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2, RefreshCw, Users } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/finance")({
   head: () => ({ meta: [{ title: "الحسابات - MJRH" }] }),
   component: FinancePage,
 });
 
-const EXPENSE_CATEGORIES = [
-  { value: "salaries", label: "Salaries" },
-  { value: "rent", label: "Rent" },
-  { value: "water", label: "Water" },
-  { value: "electricity", label: "Electricity" },
-  { value: "supplies", label: "Supplies" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "other", label: "Other" },
-];
-
 type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string; status?: string; source_type?: string | null; employee_id?: string | null };
-// Phase 2: Use employees instead of technicians
 type AdvanceRequest = { id: string; employee_id: string | null; employee_name: string; amount: number; reason: string | null; status: "pending"|"approved"|"rejected"; created_at: string; decided_at: string | null };
 type Employee = { id: string; full_name: string; monthly_salary?: number; commission_percent?: number };
 
@@ -44,13 +33,23 @@ function FinancePage() {
   const [revenue, setRevenue] = useState({ total: 0, paid: 0, unpaid: 0, count: 0 });
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [advances, setAdvances] = useState<AdvanceRequest[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]); // was: techs/technicians
+  const [employees, setEmployees] = useState<Employee[]>([]); 
   const [payrollSync, setPayrollSync] = useState<any>(null);
   const [syncingPayroll, setSyncingPayroll] = useState(false);
   const [range, setRange] = useState<"7d"|"30d"|"all">("30d");
   const [branches, setBranches] = useState<any[]>([]);
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
+
+  const EXPENSE_CATEGORIES = [
+    { value: "salaries", label: t("expense.cat.salaries") },
+    { value: "rent", label: t("expense.cat.rent") },
+    { value: "water", label: t("expense.cat.water") },
+    { value: "electricity", label: t("expense.cat.electricity") },
+    { value: "supplies", label: t("expense.cat.supplies") },
+    { value: "maintenance", label: t("expense.cat.maintenance") },
+    { value: "other", label: t("expense.cat.other") },
+  ];
 
   const fromDate = useMemo(() => {
     if (range === "all") return null;
@@ -61,10 +60,9 @@ function FinancePage() {
   async function load() {
     setLoading(true);
     try {
-      // الوضع السهل: أول ما صاحب العمل يفتح الحسابات، النظام يجهز رواتب الشهر كمصروفات آجلة بدون خطوات معقدة.
       const { data: payrollData, error: payrollError } = await supabase
         .rpc("sync_monthly_payroll_payables", { _month: new Date().toISOString().slice(0, 10) });
-      if (payrollError) toast.error(`تعذر تجهيز الرواتب: ${payrollError.message}`);
+      if (payrollError) toast.error(interpolate(t("finance.errorPayrollFailed"), { error: payrollError.message }));
       setPayrollSync(payrollData ?? null);
 
       const addBranch = (q: any) => branchId === "all" ? q : q.eq("branch_id", branchId);
@@ -119,7 +117,7 @@ function FinancePage() {
     setSyncingPayroll(false);
     if (error) return toast.error(error.message);
     setPayrollSync(data);
-    toast.success("تم تجهيز رواتب وعمولات الشهر كمصروفات آجلة");
+    toast.success(t("finance.toastPayrollSynced"));
     load();
   }
 
@@ -161,10 +159,10 @@ function FinancePage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label={t("finance.totalRevenue")} value={fmtMoney(revenue.total, t("common.egp"))} icon={<TrendingUp className="w-4 h-4" />} sub={`${revenue.count} طلب`} tone="success" />
+        <StatCard label={t("finance.totalRevenue")} value={fmtMoney(revenue.total, t("common.egp"))} icon={<TrendingUp className="w-4 h-4" />} sub={interpolate(t("finance.ordersCount"), { count: revenue.count })} tone="success" />
         <StatCard label={t("finance.collected")} value={fmtMoney(revenue.paid, t("common.egp"))} sub={`${t("finance.remaining")}: ${fmtMoney(revenue.unpaid, t("common.egp"))}`} />
         <StatCard label={t("finance.expenses")} value={fmtMoney(totalExpenses, t("common.egp"))} icon={<TrendingDown className="w-4 h-4" />} tone="warn" />
-        <StatCard label={t("finance.netProfit")} value={fmtMoney(netProfit, t("common.egp"))} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`سلف معتمدة: ${fmtMoney(approvedAdvancesTotal)}`} />
+        <StatCard label={t("finance.netProfit")} value={fmtMoney(netProfit, t("common.egp"))} icon={<Wallet className="w-4 h-4" />} tone={netProfit >= 0 ? "success" : "danger"} sub={`${t("finance.approvedAdvances")}: ${fmtMoney(approvedAdvancesTotal)}`} />
       </div>
 
       <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
@@ -185,13 +183,13 @@ function FinancePage() {
             <Stat title={t("finance.payrollPayable")} value={fmtMoney(payablePayroll)} />
             <Stat title={t("finance.advancesDeducted")} value={fmtMoney(approvedAdvancesTotal)} />
           </div>
-          {payrollSync && <div className="text-xs text-teal-700 font-bold">آخر مزامنة: {payrollSync.employees_count ?? 0} موظف · إجمالي رواتب الشهر {fmtMoney(Number(payrollSync.gross_total ?? 0))} · صافي بعد السلف {fmtMoney(Number(payrollSync.net_total ?? 0))}</div>}
+          {payrollSync && <div className="text-xs text-teal-700 font-bold">{interpolate(t("finance.lastSync"), { count: payrollSync.employees_count ?? 0, gross: fmtMoney(Number(payrollSync.gross_total ?? 0)), net: fmtMoney(Number(payrollSync.net_total ?? 0)) })}</div>}
         </CardContent>
       </Card>
 
       <Card className="border-blue-100 bg-blue-50/40">
         <CardContent className="p-3 text-sm text-blue-800">
-          ملاحظة: الرواتب الشهرية تظهر مرة واحدة من مسير الرواتب، والسلف تخصم من الصافي. بنود الرواتب الفنية القديمة أو المكررة لا تظهر في جدول المصروفات حتى لا تضاعف الرقم على صاحب العمل.
+          {t("finance.payrollNote")}
         </CardContent>
       </Card>
 
@@ -222,14 +220,14 @@ function FinancePage() {
                   {visibleExpenses.map((e) => (
                     <tr key={e.id} className="border-t">
                       <td className="p-3">{fmtDate(e.spent_at)}</td>
-                      <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{EXPENSE_CATEGORIES.find(c=>c.value===e.category)?.label ?? e.category}</Badge>{e.status === "payable" && <Badge variant="outline" className="border-amber-300 text-amber-700">آجل</Badge>}{e.source_type === "auto_payroll_line" && <Badge className="bg-teal-600">تلقائي</Badge>}</div></td>
-                      <td className="p-3 text-muted-foreground"><div>{e.description || "—"}</div><div className="text-[11px] text-teal-700">{(e as any).branches?.name ?? "بدون فرع"}{(e as any).cash_accounts?.name ? ` · ${(e as any).cash_accounts.name}` : ""}</div></td>
+                      <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{t("expense.cat." + e.category, e.category)}</Badge>{e.status === "payable" && <Badge variant="outline" className="border-amber-300 text-amber-700">{t("finance.payable")}</Badge>}{e.source_type === "auto_payroll_line" && <Badge className="bg-teal-600">{t("finance.automatic")}</Badge>}</div></td>
+                      <td className="p-3 text-muted-foreground"><div>{e.description || "—"}</div><div className="text-[11px] text-teal-700">{(e as any).branches?.name ?? t("finance.noBranch")}{(e as any).cash_accounts?.name ? ` · ${(e as any).cash_accounts.name}` : ""}</div></td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(e.amount)}</td>
                       {isOwner && <td className="p-3">
                         <Button size="icon" variant="ghost" onClick={async () => {
-                          if (!confirm("حذف المصروف؟")) return;
+                          if (!confirm(t("finance.deleteExpenseConfirm"))) return;
                           const { error } = await supabase.from("expenses").delete().eq("id", e.id);
-                          if (error) toast.error(error.message); else { toast.success("تم الحذف"); load(); }
+                          if (error) toast.error(error.message); else { toast.success(t("finance.toastDeleted")); load(); }
                         }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                       </td>}
                     </tr>
@@ -251,7 +249,7 @@ function FinancePage() {
                   <th className="text-end p-3">{t("common.amount")}</th>
                   <th className="text-start p-3">{t("common.reason")}</th>
                   <th className="text-start p-3">{t("common.status")}</th>
-                  {isOwner && <th className="p-3">إجراء</th>}
+                  {isOwner && <th className="p-3">{t("finance.action")}</th>}
                 </tr></thead>
                 <tbody>
                   {advances.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">{t("common.noRequests")}</td></tr>}
@@ -261,12 +259,12 @@ function FinancePage() {
                       <td className="p-3 font-medium">{a.employee_name}</td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(a.amount)}</td>
                       <td className="p-3 text-muted-foreground">{a.reason || "—"}</td>
-                      <td className="p-3"><AdvanceStatus s={a.status} /></td>
+                      <td className="p-3"><AdvanceStatus s={a.status} t={t} /></td>
                       {isOwner && <td className="p-3">
                         {a.status === "pending" ? (
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />{t("finance.approve")}</Button>
-                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />{t("finance.reject")}</Button>
+                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load, t)}><Check className="w-4 h-4 ms-1" />{t("finance.approve")}</Button>
+                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load, t)}><X className="w-4 h-4 ms-1" />{t("finance.reject")}</Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">{fmtDate(a.decided_at)}</span>}
                       </td>}
@@ -281,9 +279,9 @@ function FinancePage() {
         <TabsContent value="revenue">
           <Card><CardHeader><CardTitle className="text-base">{t("finance.revenueSummary")}</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-3 gap-4">
-            <Stat title="إجمالي الإيرادات" value={fmtMoney(revenue.total, t("common.egp"))} />
-            <Stat title="المحصّل" value={fmtMoney(revenue.paid, t("common.egp"))} />
-            <Stat title="المتبقي على العملاء" value={fmtMoney(revenue.unpaid)} />
+            <Stat title={t("finance.totalRevenue")} value={fmtMoney(revenue.total, t("common.egp"))} />
+            <Stat title={t("finance.collected")} value={fmtMoney(revenue.paid, t("common.egp"))} />
+            <Stat title={t("finance.remainingOnCustomers")} value={fmtMoney(revenue.unpaid)} />
           </CardContent></Card>
         </TabsContent>
       </Tabs>
@@ -291,10 +289,10 @@ function FinancePage() {
   );
 }
 
-async function decide(id: string, status: "approved"|"rejected", uid: string|undefined, reload: () => void) {
+async function decide(id: string, status: "approved"|"rejected", uid: string|undefined, reload: () => void, t: any) {
   const { error } = await supabase.from("employee_requests").update({ status, decided_by: uid, decided_at: new Date().toISOString() }).eq("id", id);
   if (error) toast.error(error.message);
-  else { toast.success(status === "approved" ? "تمت الموافقة" : "تم الرفض"); reload(); }
+  else { toast.success(status === "approved" ? t("finance.toastApproved") : t("finance.toastRejected")); reload(); }
 }
 
 function StatCard({ label, value, sub, icon, tone }: any) {
@@ -305,14 +303,23 @@ function Stat({ title, value }: { title: string; value: string }) {
   return <div className="p-4 rounded-lg border"><div className="text-xs text-muted-foreground">{title}</div><div className="text-lg font-bold mt-1">{value}</div></div>;
 }
 function Spinner() { return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>; }
-function AdvanceStatus({ s }: { s: string }) {
-  if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;
-  if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
-  return <Badge variant="destructive">مرفوض</Badge>;
+function AdvanceStatus({ s, t }: { s: string; t: any }) {
+  if (s === "pending") return <Badge variant="secondary">{t("finance.statusPending")}</Badge>;
+  if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.statusApproved")}</Badge>;
+  return <Badge variant="destructive">{t("finance.statusRejected")}</Badge>;
 }
 function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts, defaultBranchId }: { onCreated: () => void; userId?: string; tenantId?: string; branches: any[]; cashAccounts: any[]; defaultBranchId?: string }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
+  const EXPENSE_CATEGORIES = [
+    { value: "salaries", label: t("expense.cat.salaries") },
+    { value: "rent", label: t("expense.cat.rent") },
+    { value: "water", label: t("expense.cat.water") },
+    { value: "electricity", label: t("expense.cat.electricity") },
+    { value: "supplies", label: t("expense.cat.supplies") },
+    { value: "maintenance", label: t("expense.cat.maintenance") },
+    { value: "other", label: t("expense.cat.other") },
+  ];
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0].value);
   const [status, setStatus] = useState<"paid" | "payable">("paid");
   const [branchId, setBranchId] = useState(defaultBranchId ?? "");
@@ -322,9 +329,9 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
   useEffect(() => { if (open) setBranchId((old) => old || defaultBranchId || branches[0]?.id || ""); }, [open, defaultBranchId, branches]);
   useEffect(() => { if (status === "paid" && visibleSafes.length && !visibleSafes.some((c) => c.id === cashAccountId)) setCashAccountId(visibleSafes[0].id); }, [status, branchId, cashAccounts]);
   async function submit() {
-    const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
-    if (!branchId) { toast.error("اختار الفرع"); return; }
-    if (status === "paid" && !cashAccountId) { toast.error("اختار الخزنة التي دفعت المصروف"); return; }
+    const amt = Number(amount); if (!amt || amt <= 0) { toast.error(t("finance.errorInvalidAmount")); return; }
+    if (!branchId) { toast.error(t("finance.errorNoBranch")); return; }
+    if (status === "paid" && !cashAccountId) { toast.error(t("finance.errorNoSafe")); return; }
     setSaving(true);
     const { data: expense, error } = await supabase.from("expenses").insert({
       tenant_id: tenantId,
@@ -338,8 +345,6 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
       paid_at: status === "paid" ? new Date().toISOString() : null,
     }).select("id").single();
 
-    // لا نسجل حركة خزنة يدويًا هنا.
-    // قاعدة البيانات تقوم تلقائيًا بإنشاء حركة الخزنة والقيد المحاسبي عبر trg_expenses_financial_sync.
     if (!error && expense?.id) {
       await supabase.rpc("record_operation_event", {
         _process_key: "expense_created",
@@ -355,21 +360,21 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
       }).then(() => null);
     }
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف وسيتم إنشاء القيد وحركة الخزنة تلقائيًا"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success(t("finance.toastExpenseAdded")); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" />{t("finance.newExpense")}</Button></DialogTrigger>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addExpense")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>{t("common.branch")}</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder="اختار الفرع" /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>{t("common.category")}</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{t("common." + c.value, c.label)}</SelectItem>)}</SelectContent></Select></div>
-          <div><Label>{t("common.status")}</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">مدفوع الآن</SelectItem><SelectItem value="payable">آجل / مستحق</SelectItem></SelectContent></Select></div>
-          {status === "paid" && <div><Label>الخزنة التي دفعت</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder="اختار الخزنة" /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
+          <div><Label>{t("common.branch")}</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder={t("finance.errorNoBranch")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.category")}</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.status")}</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">{t("finance.paidNow")}</SelectItem><SelectItem value="payable">{t("finance.payableAccrued")}</SelectItem></SelectContent></Select></div>
+          {status === "paid" && <div><Label>{t("finance.safeThatPaid")}</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder={t("finance.errorNoSafe")} /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
           <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-          <div><Label>{t("common.description")} ({t("common.optional", "optional")})</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
+          <div><Label>{t("common.description")} ({t("common.optional")})</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
         </div>
-        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("common.save")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -379,23 +384,23 @@ function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employe
   const [open, setOpen] = useState(false);
   const [empId, setEmpId] = useState(""); const [amount, setAmount] = useState(""); const [reason, setReason] = useState(""); const [saving, setSaving] = useState(false);
   async function submit() {
-    const emp = employees.find((e) => e.id === empId); if (!emp) { toast.error("اختر موظف"); return; }
-    const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
+    const emp = employees.find((e) => e.id === empId); if (!emp) { toast.error(t("finance.errorChooseEmployee")); return; }
+    const amt = Number(amount); if (!amt || amt <= 0) { toast.error(t("finance.errorInvalidAmount")); return; }
     setSaving(true);
     const { error } = await supabase.from("employee_requests").insert({ employee_id: emp.id, type: "advance", amount: amt, reason: reason || null, created_by: userId, status: "pending" });
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إرسال الطلب"); setOpen(false); setAmount(""); setReason(""); setEmpId(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success(t("finance.toastAdvanceSent")); setOpen(false); setAmount(""); setReason(""); setEmpId(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4 ms-1" />{t("finance.advanceRequest")}</Button></DialogTrigger>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addAdvance")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>{t("common.employee")}</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder="اختر موظف" /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.employee")}</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder={t("finance.errorChooseEmployee")} /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-          <div><Label>{t("common.reason")} ({t("common.optional", "optional")})</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} /></div>
+          <div><Label>{t("common.reason")} ({t("common.optional")})</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} /></div>
         </div>
-        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إرسال للمالك"}</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("finance.sendToOwner")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

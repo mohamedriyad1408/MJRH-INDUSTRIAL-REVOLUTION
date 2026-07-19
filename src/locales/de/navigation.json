@@ -1,0 +1,10 @@
+{
+  "main": "Startseite",
+  "today": "Tageszentrum",
+  "dashboard": "Dashboard",
+  "orders": "Bestellungen",
+  "customers": "Kunden",
+  "staff": "Personal",
+  "finance": "Finanzen",
+  "settings": "Einstellungen"
+}

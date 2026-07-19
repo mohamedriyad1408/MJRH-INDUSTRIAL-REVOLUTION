@@ -1,0 +1,43 @@
+{
+  "pageTitle": "Stage Fields — {name}",
+  "pageSubtitle": "Input Builder per Stage — UI: /$tenant/settings/workflow/[stageId]/fields — Add Field + Visual Type + Label + Required/Optional — Live Preview — Whitelist validated",
+  "addFieldTitle": "Add Field",
+  "addFieldSubtitle": "Visual list, not technical names",
+  "labelAr": "Label Arabic",
+  "labelEn": "Label English",
+  "fieldType": "Field Type",
+  "inputMethod": "Input Method",
+  "optionsLabel": "Options (for select) comma-separated",
+  "optionsPlaceholder": "Good,Fair,Poor",
+  "required": "Required",
+  "addBtn": "Add Field",
+  "livePreview": "Live Preview:",
+  "noLabel": "No Label",
+  "optionsPreview": "Options: {options}",
+  "fieldsListTitle": "Fields in this stage ({count})",
+  "fieldsListSubtitle": "Appear instantly in stage form and values saved in field_values",
+  "noFields": "No fields — add a field (e.g. 'Tire Condition' for carwash inspection) from the UI",
+  "toastAdded": "Field created — appears instantly in stage form",
+  "toastDeleted": "Deleted",
+  "confirmDelete": "Delete field?",
+  "errorRequired": "Key and label are required",
+  "fieldTypes": {
+    "text": "Text",
+    "number": "Number",
+    "date": "Date",
+    "select": "Select",
+    "multiselect": "Multi-select",
+    "photo": "Photo",
+    "signature": "Signature",
+    "qr_scan": "QR Scan",
+    "file_upload": "File Upload",
+    "checkbox": "Checkbox",
+    "rating": "Rating"
+  },
+  "inputMethods": {
+    "manual": "Manual",
+    "scan": "QR/Barcode Scan",
+    "import_csv": "CSV Import",
+    "api_webhook": "API Webhook"
+  }
+}

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { fmtDate } from "@/lib/format";
 import { distanceKm, formatDistance, type LatLng } from "@/lib/geo";
 import { validateOrderMove } from "@/lib/station-workflow";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, interpolate } from "@/lib/i18n";
 import {
   Loader2, MapPin, Phone, Truck, CheckCircle2,
   PackageOpen, Zap, ArrowLeft, Navigation,
@@ -95,8 +95,8 @@ function DriverPage() {
   useEffect(() => { load(); }, [load]);
 
   async function updateMyLocation() {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
-    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم GPS");
+    if (!empId) return toast.error(t("driver.errorNoEmployee"));
+    if (!navigator.geolocation) return toast.error(t("driver.errorBrowserGps"));
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setMyLoc(loc);
@@ -108,8 +108,8 @@ function DriverPage() {
       await supabase.from("driver_location_log").insert({
         employee_id: empId, lat: loc.lat, lng: loc.lng, accuracy: pos.coords.accuracy,
       });
-      toast.success("تم تحديث موقعك");
-    }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
+      toast.success(t("driver.toastLocationUpdated"));
+    }, () => toast.error(t("driver.errorLocationFailed")), { enableHighAccuracy: true, timeout: 15000 });
   }
 
   useEffect(() => {
@@ -121,7 +121,7 @@ function DriverPage() {
 
   /* PICKUP: assign self */
   async function assignSelf(p: Pickup) {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف — تواصل مع المدير");
+    if (!empId) return toast.error(t("driver.errorNotLinked"));
     setActing(p.id);
     const { error } = await supabase
       .from("pickup_requests")
@@ -129,7 +129,7 @@ function DriverPage() {
       .eq("id", p.id);
     setActing(null);
     if (error) return toast.error(error.message);
-    toast.success("تم الإسناد لك");
+    toast.success(t("driver.toastAssigned"));
     load();
   }
 
@@ -137,7 +137,6 @@ function DriverPage() {
   async function confirmPickup(p: Pickup) {
     setActing(p.id);
 
-    // لو طلب العميل اتعمل من بوابة العميل، طلب الاستلام يكون مربوط بطلب جاهز ولا ننشئ طلب مكرر.
     if (p.converted_order_id) {
       const { data: ord, error: oe } = await supabase
         .from("orders")
@@ -149,12 +148,11 @@ function DriverPage() {
       await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString() }).eq("id", p.id);
       await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: `تم استلام الطلب من العميل بواسطة المندوب` });
       setActing(null);
-      toast.success(`تم استلام طلب #${ord.order_number} من العميل`);
+      toast.success(interpolate(t("driver.toastReceived"), { number: ord.order_number }));
       load();
       return;
     }
 
-    // طلب استلام يدوي بدون طلب سابق: ننشئ طلب جديد.
     let customerId: string | null = null;
     const { data: ex } = await supabase.from("customers").select("id").eq("phone", p.phone).maybeSingle();
     if (ex) customerId = ex.id;
@@ -168,16 +166,16 @@ function DriverPage() {
     await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
     await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
     setActing(null);
-    toast.success(`تم الاستلام! طلب #${ord.order_number} أُنشئ تلقائياً`);
+    toast.success(interpolate(t("driver.toastOrderCreated"), { number: ord.order_number }));
     load();
   }
 
   /* DELIVERY: start out_for_delivery */
   async function startDelivery(d: Delivery) {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
+    if (!empId) return toast.error(t("driver.errorNoEmployee"));
     const issue = deliveryIssues[d.id];
     if (issue && (issue.label || issue.reclean || issue.notQc)) {
-      return toast.error(`لا يمكن الخروج للتسليم: مارك ${issue.label} / مرتجع ${issue.reclean} / غير معتمد QC ${issue.notQc}`);
+      return toast.error(interpolate(t("driver.errorStartDelivery"), { label: issue.label, reclean: issue.reclean, qc: issue.notQc }));
     }
     setActing(d.id);
     const { error } = await supabase
@@ -194,7 +192,7 @@ function DriverPage() {
     }
     setActing(null);
     if (error) return toast.error(error.message);
-    toast.success("تم التحديث — خرجت للتسليم");
+    toast.success(t("driver.toastOutForDelivery"));
     load();
   }
 
@@ -202,18 +200,17 @@ function DriverPage() {
   async function confirmDelivery(d: Delivery) {
     const code = confirmCode[d.id] ?? "";
     const phone = d.customers?.phone ?? "";
-    if (!phone) return toast.error("لا يوجد رقم هاتف للعميل");
-    // validate: last 4 digits of phone
+    if (!phone) return toast.error(t("driver.errorNoPhone"));
     const last4 = phone.replace(/\D/g, "").slice(-4);
     if (code.trim() !== last4) {
-      return toast.error(`كود التأكيد خطأ — آخر 4 أرقام من هاتف العميل (${last4})`);
+      return toast.error(interpolate(t("driver.errorCodeWrong"), { code: last4 }));
     }
     let collected: number | null = null;
     if (d.payment_status !== "paid") {
-      const val = prompt(`المطلوب من العميل ${Number(d.total ?? 0).toLocaleString("en-US")} جنيه. اكتب المبلغ المحصل من العميل`);
+      const val = prompt(interpolate(t("driver.promptCollect"), { amount: Number(d.total ?? 0).toLocaleString("en-US") }));
       if (val === null) return;
       collected = Number(val || 0);
-      if (!collected || collected < Number(d.total ?? 0)) return toast.error("المبلغ المحصل أقل من المطلوب");
+      if (!collected || collected < Number(d.total ?? 0)) return toast.error(t("driver.errorUnderpaid"));
     }
     setActing(d.id);
     const { data: res, error } = await supabase.rpc("confirm_delivery_with_collection", { _order_id: d.id, _collected_amount: collected, _driver_employee_id: empId });
@@ -228,7 +225,8 @@ function DriverPage() {
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? "تأكيد تسليم مع تحصيل" : "تأكيد تسليم", _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
     const extra = Number(res?.overpayment ?? 0);
-    toast.success(extra > 0 ? `تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "تم التسليم بنجاح!");
+    if (extra > 0) toast.success(interpolate(t("driver.toastDeliveredTip"), { amount: extra }));
+    else toast.success(t("driver.toastDelivered"));
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });
     load();
   }
@@ -236,7 +234,7 @@ function DriverPage() {
   if (!allowed)
     return (
       <Card className="p-8 text-center text-muted-foreground">
-        هذه الصفحة للسائقين فقط.
+        {t("driver.accessDenied")}
       </Card>
     );
 
@@ -257,16 +255,15 @@ function DriverPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Truck className="w-6 h-6 text-primary" /> {t("nav./driver")}
+            <Truck className="w-6 h-6 text-primary" /> {t("driver.pageTitle")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t("stage.received")} : {pendingPickups.length + myPickups.length} ·
-            {t("stage.delivery")} : {myDeliveries.length}
+            {interpolate(t("driver.totalTasks"), { received: pendingPickups.length + myPickups.length, delivery: myDeliveries.length })}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={updateMyLocation}>GPS</Button>
-          <Button variant="outline" size="sm" onClick={load}>{t("common.refresh")}</Button>
+          <Button variant="secondary" size="sm" onClick={updateMyLocation}>{t("driver.gpsTitle")}</Button>
+          <Button variant="outline" size="sm" onClick={load}>{t("driver.refresh")}</Button>
         </div>
       </div>
 
@@ -281,7 +278,7 @@ function DriverPage() {
           }`}
         >
           <PackageOpen className="w-4 h-4 inline ms-1" />
-          {t("stage.received")} ({pendingPickups.length + myPickups.length})
+          {interpolate(t("driver.pickupsTab"), { count: pendingPickups.length + myPickups.length })}
         </button>
         <button
           onClick={() => setTab("deliveries")}
@@ -292,7 +289,7 @@ function DriverPage() {
           }`}
         >
           <Truck className="w-4 h-4 inline ms-1" />
-          {t("stage.delivery")} ({myDeliveries.length})
+          {interpolate(t("driver.deliveriesTab"), { count: myDeliveries.length })}
         </button>
       </div>
 
@@ -329,5 +326,3 @@ function DriverPage() {
     </div>
   );
 }
-
-

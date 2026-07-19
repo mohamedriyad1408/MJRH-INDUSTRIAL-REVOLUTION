@@ -45,7 +45,7 @@ function SignupPage() {
   // Step 1: Business info
   const [businessName, setBusinessName] = useState("");
   const [slug, setSlug] = useState("");
-  const [businessType, setBusinessType] = useState("laundry");
+  const [businessType] = useState("configured_by_wizard");
   const [currency, setCurrency] = useState<CurrencyCode>("EGP");
 
   // Step 2: Owner info
@@ -127,7 +127,7 @@ function SignupPage() {
             <Building2 className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-black">أنشئ مشروعك على MJRH</h1>
-          <p className="text-sm text-teal-100 mt-1">ابدأ إدارة مغسلتك أو مشروعك في دقائق</p>
+          <p className="text-sm text-teal-100 mt-1">أنشئ حسابك ومنظمتك، ثم سيبني معالج الإعداد نظام التشغيل بالكامل</p>
           {/* Steps indicator */}
           <div className="flex items-center justify-center gap-2 mt-4">
             {[1, 2, 3].map((s) => (
@@ -156,16 +156,8 @@ function SignupPage() {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">سيكون هذا رابط مشروعك الداخلي</p>
               </div>
-              <div>
-                <Label>نوع النشاط</Label>
-                <Select value={businessType} onValueChange={setBusinessType}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {BUSINESS_TYPES.map((bt) => (
-                      <SelectItem key={bt.value} value={bt.value}>{bt.label} — {bt.labelEn}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-3 rounded-xl bg-slate-50 border text-xs text-slate-700">
+                لا نختار صناعة هنا. بعد إنشاء الحساب سيظهر معالج MJRH Core Platform الإجباري ليجمع الصناعة، نوع النشاط، الأقسام، workflows، الماليات، الصلاحيات وكل الإعدادات كـ configuration.
               </div>
               <div>
                 <Label>العملة الأساسية</Label>
@@ -220,7 +212,7 @@ function SignupPage() {
               <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600" />
               </div>
-              <h2 className="text-xl font-black text-emerald-700">تم إنشاء مشروعك بنجاح! 🎉</h2>
+              <h2 className="text-xl font-black text-emerald-700">تم إنشاء الحساب والمنظمة بنجاح 🎉</h2>
               <div className="rounded-2xl bg-slate-50 border p-4 text-sm">
                 <div className="font-black text-lg">{businessName}</div>
                 <div className="text-muted-foreground mt-1">
@@ -231,8 +223,8 @@ function SignupPage() {
                 <Button variant="outline" className="flex-1" onClick={() => nav({ to: "/login" as any })}>
                   تسجيل الدخول
                 </Button>
-                <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => nav({ to: `/${result.slug}/today` as any })}>
-                  ابدأ التشغيل ←
+                <Button className="flex-1 bg-teal-600 hover:bg-teal-700" onClick={() => nav({ to: `/${result.slug}/onboarding` as any })}>
+                  افتح معالج الإعداد ←
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">إذا كان البريد يحتاج تأكيد، افحص صندوق بريدك</p>
