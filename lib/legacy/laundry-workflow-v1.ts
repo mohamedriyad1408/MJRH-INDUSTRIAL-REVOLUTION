@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /* ==========================================
- * 1. GARMENT TYPE ENGINE
+ * 1. GARMENT TYPE ENGINE — LAUNDRY ONLY
  * ========================================== */
 export type GarmentProfile = {
   code: string;
@@ -24,6 +24,24 @@ export const GARMENT_PROFILES: Record<string, GarmentProfile> = {
   blanket: { code: "blanket", nameKey: "garment.blanket", need_wash: true, need_dry: true, need_iron: false, need_dry_clean: false, need_qc: true, need_packaging: true, target_sla_mins: 360, max_sla_mins: 720 },
   carpet: { code: "carpet", nameKey: "garment.carpet", need_wash: true, need_dry: true, need_iron: false, need_dry_clean: false, need_qc: true, need_packaging: true, target_sla_mins: 480, max_sla_mins: 960 },
 };
+
+export const LEGACY_LAUNDRY_STAGES = [
+  "reception",
+  "cleaning",
+  "drying_assembly",
+  "ironing",
+  "packing",
+  "qc",
+  "delivery",
+] as const;
+
+export function isLaundryStage(stage: string): boolean {
+  return (LEGACY_LAUNDRY_STAGES as readonly string[]).includes(stage);
+}
+
+export function shouldSkipIroning(profile: GarmentProfile): boolean {
+  return !profile.need_iron;
+}
 
 /* ==========================================
  * 2. SUIT MANAGEMENT (GARMENT SET)
@@ -132,7 +150,6 @@ export async function createReworkOrder(originalOrderId: string, originalOrderNu
   const reworkSuffix = `-R${reworkIndex}`;
   const notes = `إعادة تشغيل للطلب #${originalOrderNumber} — السبب: ${reason}`;
   
-  // Clone order basic structure without modifying original order
   const { data: ord, error: fetchErr } = await supabase.from("orders").select("*").eq("id", originalOrderId).single();
   if (fetchErr) throw fetchErr;
 
@@ -142,7 +159,7 @@ export async function createReworkOrder(originalOrderId: string, originalOrderNu
     branch_id: ord.branch_id,
     order_type: ord.order_type,
     status: "received",
-    payment_status: "paid", // Rework is free/linked
+    payment_status: "paid",
     subtotal: 0, total: 0,
     notes,
   }).select().single();

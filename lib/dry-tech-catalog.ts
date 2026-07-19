@@ -7,6 +7,7 @@ export type DryTechItem = {
   category: "رجالي" | "حريمي" | "أطفال" | "تنظيف المفروشات" | "سجاد وموكيت" | "توصيل وخدمات";
 };
 
+// Default tabs for UI components that haven't transitioned to dynamic loading yet
 export const POS_CATEGORY_TABS = [
   { id: "all", label: "كافة الأصناف", icon: "" },
   { id: "رجالي", label: "رجالي", icon: "" },
@@ -17,197 +18,20 @@ export const POS_CATEGORY_TABS = [
   { id: "توصيل وخدمات", label: "توصيل وخدمات", icon: "" },
 ];
 
-export const DRY_TECH_CATALOG_SEED: DryTechItem[] = [
-  // 1. رجالي (Men's) - تنظيف وكي (both)
-  { name: "بدلة رجالي قطعتين دراي كلين", service_type: "both", unit_price: 250, category: "رجالي" },
-  { name: "بدلة رجالي 3قطع دراي كلين", service_type: "both", unit_price: 300, category: "رجالي" },
-  { name: "بدلة ميرى", service_type: "both", unit_price: 150, category: "رجالي" },
-  { name: "بالطو صوف دراي كلين", service_type: "both", unit_price: 180, category: "رجالي" },
-  { name: "بالطو طبي دراي", service_type: "both", unit_price: 60, category: "رجالي" },
-  { name: "جاكيت جلد دراي كلين", service_type: "both", unit_price: 150, category: "رجالي" },
-  { name: "جاكيت شمواه دراي كلين", service_type: "both", unit_price: 150, category: "رجالي" },
-  { name: "جاكيت بدلة", service_type: "both", unit_price: 120, category: "رجالي" },
-  { name: "جاكيت جينز", service_type: "both", unit_price: 120, category: "رجالي" },
-  { name: "سويتر دراي كلين", service_type: "both", unit_price: 100, category: "رجالي" },
-  { name: "بلوفر دراي كلين", service_type: "both", unit_price: 80, category: "رجالي" },
-  { name: "قميص دراي كلين", service_type: "both", unit_price: 50, category: "رجالي" },
-  { name: "بنطلون دراي كلين", service_type: "both", unit_price: 50, category: "رجالي" },
-  { name: "سويت شيرت دراي كلين", service_type: "both", unit_price: 70, category: "رجالي" },
-  { name: "تي شيرت دراي كلين", service_type: "both", unit_price: 45, category: "رجالي" },
-  { name: "ترنج رجالي", service_type: "both", unit_price: 85, category: "رجالي" },
-  { name: "عباية رجالي", service_type: "both", unit_price: 50, category: "رجالي" },
-  { name: "شورت دراي كلين", service_type: "both", unit_price: 40, category: "رجالي" },
-  { name: "بنتكور دراي كلين", service_type: "both", unit_price: 45, category: "رجالي" },
-  { name: "فانلة", service_type: "both", unit_price: 40, category: "رجالي" },
-  { name: "بوكسر دراي كلين", service_type: "both", unit_price: 25, category: "رجالي" },
-  { name: "كاب", service_type: "both", unit_price: 30, category: "رجالي" },
-  { name: "كوفية", service_type: "both", unit_price: 10, category: "رجالي" },
-  { name: "شراب", service_type: "both", unit_price: 20, category: "رجالي" },
-  { name: "حذاء دراي", service_type: "both", unit_price: 25, category: "رجالي" },
-  { name: "فيست دراي", service_type: "both", unit_price: 20, category: "رجالي" },
-  { name: "سديرى", service_type: "both", unit_price: 15, category: "رجالي" },
-  { name: "جيليه دراي", service_type: "both", unit_price: 13, category: "رجالي" },
-  { name: "كرفات / رابطة عنق", service_type: "both", unit_price: 25, category: "رجالي" },
-  { name: "روب رجالي دراي كلين", service_type: "both", unit_price: 70, category: "رجالي" },
+export const DRY_TECH_CATALOG_SEED_LENGTH = 173;
 
-  // 1. رجالي (Men's) - كي فقط (ironing)
-  { name: "بدلة رجالي قطعتين مكوى بخار", service_type: "ironing", unit_price: 80, category: "رجالي" },
-  { name: "بدلة رجالي 3 قطع مكوى بخار", service_type: "ironing", unit_price: 100, category: "رجالي" },
-  { name: "بدلة ميرى مكوى بخار", service_type: "ironing", unit_price: 60, category: "رجالي" },
-  { name: "بالطو صوف مكوى بخار", service_type: "ironing", unit_price: 70, category: "رجالي" },
-  { name: "بالطو طبي مكوى بخار", service_type: "ironing", unit_price: 25, category: "رجالي" },
-  { name: "جاكيت جلد مكوى بخار", service_type: "ironing", unit_price: 60, category: "رجالي" },
-  { name: "جاكيت شمواه مكوى بخار", service_type: "ironing", unit_price: 60, category: "رجالي" },
-  { name: "جاكيت بدلة مكوى بخار", service_type: "ironing", unit_price: 50, category: "رجالي" },
-  { name: "جاكيت جينز مكوى بخار", service_type: "ironing", unit_price: 50, category: "رجالي" },
-  { name: "سويتر مكوى بخار", service_type: "ironing", unit_price: 40, category: "رجالي" },
-  { name: "بلوفر مكوى بخار", service_type: "ironing", unit_price: 30, category: "رجالي" },
-  { name: "قميص مكوى بخار", service_type: "ironing", unit_price: 20, category: "رجالي" },
-  { name: "بنطلون مكوى بخار", service_type: "ironing", unit_price: 20, category: "رجالي" },
-  { name: "سويت شيرت مكوى بخار", service_type: "ironing", unit_price: 30, category: "رجالي" },
-  { name: "تي شيرت مكوى بخار", service_type: "ironing", unit_price: 20, category: "رجالي" },
-  { name: "ترنج رجالي مكوى بخار", service_type: "ironing", unit_price: 35, category: "رجالي" },
-  { name: "عباية رجالي مكوى بخار", service_type: "ironing", unit_price: 25, category: "رجالي" },
-  { name: "شورت مكوى بخار", service_type: "ironing", unit_price: 15, category: "رجالي" },
-  { name: "بنتكور مكوى بخار", service_type: "ironing", unit_price: 20, category: "رجالي" },
-  { name: "فانلة مكوى بخار", service_type: "ironing", unit_price: 15, category: "رجالي" },
-  { name: "بوكسر مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "كاب مكوى بخار", service_type: "ironing", unit_price: 15, category: "رجالي" },
-  { name: "كوفية مكوى بخار", service_type: "ironing", unit_price: 5, category: "رجالي" },
-  { name: "شراب مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "حذاء مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "فيست مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "سديرى مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "جيليه مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "كرفات / رابطة عنق مكوى بخار", service_type: "ironing", unit_price: 10, category: "رجالي" },
-  { name: "روب رجالي مكوى بخار", service_type: "ironing", unit_price: 30, category: "رجالي" },
-
-  // 2. حريمي (Women's) - تنظيف وكي (both)
-  { name: "فستان زفاف دراي كلين", service_type: "both", unit_price: 500, category: "حريمي" },
-  { name: "فستان سهرة دراي كلين", service_type: "both", unit_price: 250, category: "حريمي" },
-  { name: "فستان عادي دراي كلين", service_type: "both", unit_price: 120, category: "حريمي" },
-  { name: "فساتين سهرة طويل", service_type: "both", unit_price: 300, category: "حريمي" },
-  { name: "تايير حريمى 3قطع دراي كلين", service_type: "both", unit_price: 220, category: "حريمي" },
-  { name: "تايير حريمى قطعتين دراي كلين", service_type: "both", unit_price: 180, category: "حريمي" },
-  { name: "عباية حريمي دراي كلين", service_type: "both", unit_price: 100, category: "حريمي" },
-  { name: "تونيك حريمي دراي كلين", service_type: "both", unit_price: 80, category: "حريمي" },
-  { name: "بدلة كارتيه دراي كلين", service_type: "both", unit_price: 150, category: "حريمي" },
-  { name: "جلابية حريمي دراي كلين", service_type: "both", unit_price: 90, category: "حريمي" },
-  { name: "بيجامة حريمي دراي كلين", service_type: "both", unit_price: 70, category: "حريمي" },
-  { name: "جيب دراي كلين", service_type: "both", unit_price: 50, category: "حريمي" },
-  { name: "بلوزة حريمي طويل دراي كلين", service_type: "both", unit_price: 60, category: "حريمي" },
-  { name: "بلوزة حريمي قصير دراي كلين", service_type: "both", unit_price: 50, category: "حريمي" },
-  { name: "شال دراي كلين", service_type: "both", unit_price: 40, category: "حريمي" },
-  { name: "بدي حريمي دراي كلين", service_type: "both", unit_price: 35, category: "حريمي" },
-  { name: "طرحه دراي كلين", service_type: "both", unit_price: 25, category: "حريمي" },
-  { name: "شنطة", service_type: "both", unit_price: 60, category: "حريمي" },
-  { name: "شورت حريمي", service_type: "both", unit_price: 35, category: "حريمي" },
-  { name: "روب حريمي دراي كلين", service_type: "both", unit_price: 70, category: "حريمي" },
-
-  // 2. حريمي (Women's) - كي فقط (ironing)
-  { name: "فستان زفاف مكوى بخار", service_type: "ironing", unit_price: 200, category: "حريمي" },
-  { name: "فستان سهرة مكوى بخار", service_type: "ironing", unit_price: 100, category: "حريمي" },
-  { name: "فستان عادي مكوى بخار", service_type: "ironing", unit_price: 50, category: "حريمي" },
-  { name: "فساتين سهرة طويل مكوى بخار", service_type: "ironing", unit_price: 120, category: "حريمي" },
-  { name: "تايير حريمى 3قطع مكوى بخار", service_type: "ironing", unit_price: 90, category: "حريمي" },
-  { name: "تايير حريمى قطعتين مكوى بخار", service_type: "ironing", unit_price: 70, category: "حريمي" },
-  { name: "عباية حريمي مكوى بخار", service_type: "ironing", unit_price: 40, category: "حريمي" },
-  { name: "تونيك حريمي مكوى بخار", service_type: "ironing", unit_price: 30, category: "حريمي" },
-  { name: "بدلة كارتيه مكوى بخار", service_type: "ironing", unit_price: 60, category: "حريمي" },
-  { name: "جلابية حريمي مكوى بخار", service_type: "ironing", unit_price: 35, category: "حريمي" },
-  { name: "بيجامة حريمي مكوى بخار", service_type: "ironing", unit_price: 30, category: "حريمي" },
-  { name: "جيب مكوى بخار", service_type: "ironing", unit_price: 20, category: "حريمي" },
-  { name: "بلوزة حريمي طويل مكوى بخار", service_type: "ironing", unit_price: 25, category: "حريمي" },
-  { name: "بلوزة حريمي قصير مكوى بخار", service_type: "ironing", unit_price: 20, category: "حريمي" },
-  { name: "شال مكوى بخار", service_type: "ironing", unit_price: 15, category: "حريمي" },
-  { name: "بدي حريمي مكوى بخار", service_type: "ironing", unit_price: 15, category: "حريمي" },
-  { name: "طرحه مكوى بخار", service_type: "ironing", unit_price: 10, category: "حريمي" },
-  { name: "شنطة مكوى بخار", service_type: "ironing", unit_price: 20, category: "حريمي" },
-  { name: "شورت حريمي مكوى بخار", service_type: "ironing", unit_price: 15, category: "حريمي" },
-  { name: "روب حريمي مكوى بخار", service_type: "ironing", unit_price: 30, category: "حريمي" },
-
-  // 3. أطفال (Kids) - تنظيف وكي (both)
-  { name: "بدلة طفل 3 قطع دراي كلين", service_type: "both", unit_price: 100, category: "أطفال" },
-  { name: "بدلة طفل قطعتين دراي كلين", service_type: "both", unit_price: 80, category: "أطفال" },
-  { name: "ترنج طفل دراي كلين", service_type: "both", unit_price: 60, category: "أطفال" },
-  { name: "سويتر طفل دراي كلين", service_type: "both", unit_price: 50, category: "أطفال" },
-  { name: "فستان طفلة دراي كلين", service_type: "both", unit_price: 60, category: "أطفال" },
-  { name: "قميص طفل دراي كلين", service_type: "both", unit_price: 30, category: "أطفال" },
-  { name: "بنطلون طفل دراي كلين", service_type: "both", unit_price: 30, category: "أطفال" },
-  { name: "قطعة طفل صغيرة دراي كلين", service_type: "both", unit_price: 25, category: "أطفال" },
-
-  // 3. أطفال (Kids) - كي فقط (ironing)
-  { name: "بدلة طفل 3 قطع مكوى بخار", service_type: "ironing", unit_price: 40, category: "أطفال" },
-  { name: "بدلة طفل قطعتين مكوى بخار", service_type: "ironing", unit_price: 30, category: "أطفال" },
-  { name: "ترنج طفل مكوى بخار", service_type: "ironing", unit_price: 25, category: "أطفال" },
-  { name: "سويتر طفل مكوى بخار", service_type: "ironing", unit_price: 20, category: "أطفال" },
-  { name: "فستان طفلة مكوى بخار", service_type: "ironing", unit_price: 25, category: "أطفال" },
-  { name: "قميص طفل مكوى بخار", service_type: "ironing", unit_price: 15, category: "أطفال" },
-  { name: "بنطلون طفل مكوى بخار", service_type: "ironing", unit_price: 15, category: "أطفال" },
-  { name: "قطعة طفل صغيرة مكوى بخار", service_type: "ironing", unit_price: 10, category: "أطفال" },
-
-  // 4. مفروشات (Household & Linens) - تنظيف وكي (both)
-  { name: "انتريه كامل", service_type: "both", unit_price: 500, category: "تنظيف المفروشات" },
-  { name: "ستارة قطيفة", service_type: "both", unit_price: 200, category: "تنظيف المفروشات" },
-  { name: "لحاف كبير", service_type: "both", unit_price: 175, category: "تنظيف المفروشات" },
-  { name: "بطانية دبل", service_type: "both", unit_price: 155, category: "تنظيف المفروشات" },
-  { name: "لحاف عادي", service_type: "both", unit_price: 150, category: "تنظيف المفروشات" },
-  { name: "لحاف اطفال", service_type: "both", unit_price: 150, category: "تنظيف المفروشات" },
-  { name: "ستارة شيفون", service_type: "both", unit_price: 150, category: "تنظيف المفروشات" },
-  { name: "بطانية عادي", service_type: "both", unit_price: 140, category: "تنظيف المفروشات" },
-  { name: "كوفرته", service_type: "both", unit_price: 120, category: "تنظيف المفروشات" },
-  { name: "مفرش سفرة دراي كلين", service_type: "both", unit_price: 100, category: "تنظيف المفروشات" },
-  { name: "مخدة كبيرة", service_type: "both", unit_price: 100, category: "تنظيف المفروشات" },
-  { name: "كفر مرتبة دراي كلين", service_type: "both", unit_price: 80, category: "تنظيف المفروشات" },
-  { name: "بطانية طفل", service_type: "both", unit_price: 75, category: "تنظيف المفروشات" },
-  { name: "ملاية دراي كلين", service_type: "both", unit_price: 65, category: "تنظيف المفروشات" },
-  { name: "كفر كرسي انتريه", service_type: "both", unit_price: 60, category: "تنظيف المفروشات" },
-  { name: "فوطة كبيرة", service_type: "both", unit_price: 50, category: "تنظيف المفروشات" },
-  { name: "كيس مخدة دراي كلين", service_type: "both", unit_price: 35, category: "تنظيف المفروشات" },
-  { name: "فوطة وسط", service_type: "both", unit_price: 25, category: "تنظيف المفروشات" },
-  { name: "فوطة صغيرة", service_type: "both", unit_price: 25, category: "تنظيف المفروشات" },
-  { name: "شلتة كرسي", service_type: "both", unit_price: 20, category: "تنظيف المفروشات" },
-  { name: "مفرش سفرة صغير", service_type: "both", unit_price: 20, category: "تنظيف المفروشات" },
-  { name: "شلتة انتريه كبيرة", service_type: "both", unit_price: 15, category: "تنظيف المفروشات" },
-  { name: "مفرش", service_type: "both", unit_price: 15, category: "تنظيف المفروشات" },
-  { name: "شلتة انتريه وسط", service_type: "both", unit_price: 8, category: "تنظيف المفروشات" },
-  { name: "شلتة انتريه صغيرة", service_type: "both", unit_price: 8, category: "تنظيف المفروشات" },
-  { name: "فوطة", service_type: "both", unit_price: 7, category: "تنظيف المفروشات" },
-
-  // 4. مفروشات (Household & Linens) - كي فقط (ironing) للأصناف القابلة للكي
-  { name: "ستارة قطيفة مكوى بخار", service_type: "ironing", unit_price: 80, category: "تنظيف المفروشات" },
-  { name: "ستارة شيفون مكوى بخار", service_type: "ironing", unit_price: 60, category: "تنظيف المفروشات" },
-  { name: "كوفرته مكوى بخار", service_type: "ironing", unit_price: 50, category: "تنظيف المفروشات" },
-  { name: "مفرش سفرة مكوى بخار", service_type: "ironing", unit_price: 40, category: "تنظيف المفروشات" },
-  { name: "ملاية مكوى بخار", service_type: "ironing", unit_price: 25, category: "تنظيف المفروشات" },
-  { name: "كيس مخدة مكوى بخار", service_type: "ironing", unit_price: 15, category: "تنظيف المفروشات" },
-  { name: "مفرش سفرة صغير مكوى بخار", service_type: "ironing", unit_price: 10, category: "تنظيف المفروشات" },
-  { name: "مفرش مكوى بخار", service_type: "ironing", unit_price: 10, category: "تنظيف المفروشات" },
-
-  // 5. سجاد (Carpets & Rugs) - تنظيف وغسيل فقط (without ironing!)
-  { name: "تنظيف انتريه (مفروشات/سجاد)", service_type: "both", unit_price: 800, category: "سجاد وموكيت" },
-  { name: "سجاد حرير (المتر)", service_type: "both", unit_price: 70, category: "سجاد وموكيت" },
-  { name: "سجاد شمواه (المتر)", service_type: "both", unit_price: 70, category: "سجاد وموكيت" },
-  { name: "سجاد شاج (المتر)", service_type: "both", unit_price: 70, category: "سجاد وموكيت" },
-  { name: "كليم", service_type: "both", unit_price: 70, category: "سجاد وموكيت" },
-  { name: "سجاد عادي (المتر)", service_type: "both", unit_price: 60, category: "سجاد وموكيت" },
-  { name: "سجادة صغيرة", service_type: "both", unit_price: 50, category: "سجاد وموكيت" },
-  { name: "مشاية", service_type: "both", unit_price: 20, category: "سجاد وموكيت" },
-  { name: "مشاية حمام", service_type: "both", unit_price: 15, category: "سجاد وموكيت" },
-
-  // 6. توصيل وخدمات (Delivery & Special Services)
-  { name: "رسوم توصيل عادي", service_type: "cleaning", unit_price: 50, category: "توصيل وخدمات" },
-  { name: "رسوم توصيل سريع مستعجل", service_type: "cleaning", unit_price: 100, category: "توصيل وخدمات" },
-  { name: "رسوم توصيل مجزأ (بطانيات وسجاد)", service_type: "cleaning", unit_price: 25, category: "توصيل وخدمات" },
-  { name: "تغليف كيس منفرد لكل قطعة", service_type: "cleaning", unit_price: 5, category: "توصيل وخدمات" },
-  { name: "خدمة تعطير وتكييس فاخر", service_type: "cleaning", unit_price: 15, category: "توصيل وخدمات" },
-  { name: "خدمة استلام وتوصيل VIP", service_type: "cleaning", unit_price: 150, category: "توصيل وخدمات" },
-];
+export async function getCatalogData() {
+  const data = await import("../src/data/catalog.json");
+  return data.default;
+}
 
 export async function seedDryTechCatalog(tenantId: string) {
   const { data: existing } = await supabase.from("service_items").select("id").eq("tenant_id", tenantId).limit(1);
   if (existing && existing.length > 0) return { inserted: 0, reason: "catalog_exists" };
-  const rows = DRY_TECH_CATALOG_SEED.map((item) => ({
+
+  const { DRY_TECH_CATALOG_SEED } = await getCatalogData();
+
+  const rows = (DRY_TECH_CATALOG_SEED as DryTechItem[]).map((item) => ({
     tenant_id: tenantId,
     name: item.name,
     service_type: item.service_type as any,
