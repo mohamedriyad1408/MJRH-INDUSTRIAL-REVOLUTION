@@ -1,1 +1,90 @@
-{}
+{
+  "pageTitle": "Accounting & Cash Safes",
+  "subtitle": "Safes, transfers, expenses, payroll, and staff transactions in one place.",
+  "kpi": {
+    "safes": "Safes Balance",
+    "paidExpenses": "Paid Expenses",
+    "payableExpenses": "Payable Expenses",
+    "payrollDue": "Payroll Due"
+  },
+  "tab": {
+    "payroll": "Monthly Payroll",
+    "cash": "Cash Safes",
+    "expenses": "Payables",
+    "ledger": "Staff Ledger"
+  },
+  "btn": {
+    "generatePayroll": "Generate Payroll",
+    "postPayroll": "Post as Payable",
+    "payPayroll": "Payout Salaries",
+    "syncAdvances": "Sync Advances",
+    "repairNow": "Repair & Read Safes Now",
+    "repairMainSafe": "Create/Repair Main Safe"
+  },
+  "guide": {
+    "title": "Quick Usage Guide",
+    "step1": "1) Open monthly payroll and press Generate Payroll.",
+    "step2": "2) Press Post as Payable to record as an expense.",
+    "step3": "3) When paying, press Payout Salaries to deduct from cash safe."
+  },
+  "cash": {
+    "openingBalance": "Opening Balance",
+    "manualTx": "Manual Transaction",
+    "manualTxDesc": "Manual entry",
+    "account": "Account",
+    "addSafe": "Add Safe/Account",
+    "addSafeGuide": "Add a cash safe or bank account here to track your money.",
+    "currentMoney": "Current Balance",
+    "txLog": "Transaction Log",
+    "transferTitle": "Safe-to-Safe Transfer",
+    "transferGuide": "Transfer money between safes without affecting revenue or expenses.",
+    "fromSafe": "From Safe",
+    "toSafe": "To Safe",
+    "transferReason": "Transfer Reason",
+    "btn": {
+      "transfer": "Transfer Now"
+    }
+  },
+  "expenses": {
+    "title": "Monthly Payables",
+    "empty": "No expenses found for this month"
+  },
+  "ledger": {
+    "title": "Employee Financial Ledger",
+    "empty": "No staff entries found"
+  },
+  "payroll": {
+    "salary": "Base Salary",
+    "advances": "Advances",
+    "net": "Net Pay",
+    "daily": "Daily Pay",
+    "empty": "No payroll generated yet",
+    "itemsTitle": "Latest Payroll Items"
+  },
+  "toast": {
+    "addedFallback": "Account added. Journal entry will be synced automatically.",
+    "addedSuccess": "Account added and opening balance recorded.",
+    "txRecorded": "Transaction recorded and balance updated.",
+    "transferSuccess": "Transfer completed successfully.",
+    "repairSuccess": "Safes and balances verified and repaired.",
+    "advancesSynced": "Synced {count} advances as expenses.",
+    "payrollGenerated": "Payroll generated for {count} employees.",
+    "payrollPosted": "Payroll posted as accrued expenses.",
+    "payrollPaid": "Payroll paid and cash safe updated."
+  },
+  "error": {
+    "noTenant": "No laundry selected for current account.",
+    "noTenantSimple": "Laundry not selected",
+    "noName": "Enter safe/account name",
+    "noBranch": "Select branch before adding safe",
+    "noSafeSelected": "Select a safe",
+    "repairFailed": "Failed to create main safe",
+    "selectBothSafes": "Select both transfer and receiving safes",
+    "sameSafe": "Cannot transfer to the same safe",
+    "invalidTransferAmount": "Enter a valid transfer amount"
+  },
+  "loadErrorTitle": "Accounts were not fully read. Displayed zeros may be inaccurate.",
+  "noSafeTitle": "No readable safe found for this laundry.",
+  "noSafeSubtitle": "Press the button below to create a main safe or add one manually.",
+  "noAccess": "Accounting available to Owner and Ops Manager only."
+}

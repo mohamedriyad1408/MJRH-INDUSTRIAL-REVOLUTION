@@ -34,17 +34,17 @@ export function AppSidebar() {
 
  const legacyTenantGroups = [
   {
-  label: t("common.الرئيسية"),
+  label: t("nav.main"),
   items: [
-  { title: t("common.مركز_اليوم"), url: "/today", icon: CalendarCheck },
-  { title: t("common.لوحة_المالك"), url: "/dashboard", icon: LayoutDashboard },
+  { title: t("nav.today"), url: "/today", icon: CalendarCheck },
+  { title: t("nav.dashboard"), url: "/dashboard", icon: LayoutDashboard },
   ],
   },
   {
-  label: t("common.التشغيل"),
+  label: t("nav.operations"),
   items: [
-  { title: t("common.كل_العمليات"), url: "/orders", icon: ListOrdered },
-  { title: t("common.العملاء"), url: "/customers", icon: Users },
+  { title: t("nav.orders"), url: "/orders", icon: ListOrdered },
+  { title: t("nav.customers"), url: "/customers", icon: Users },
   ],
   }
  ];
@@ -129,14 +129,14 @@ export function AppSidebar() {
 
       {isSuperAdmin && (
         <SidebarGroup>
-          <SidebarGroupLabel className="text-slate-500 font-black uppercase text-[10px] tracking-widest px-4">Platform</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-500 font-black uppercase text-[10px] tracking-widest px-4">{t("nav.admin")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={path.includes("/admin")}>
                   <Link to="/admin" className="flex items-center gap-2 font-bold text-teal-400" onClick={() => setOpenMobile(false)}>
                     <ShieldCheck className="w-4 h-4" />
-                    <span>إدارة المنصة</span>
+                    <span>{t("nav.admin")}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
