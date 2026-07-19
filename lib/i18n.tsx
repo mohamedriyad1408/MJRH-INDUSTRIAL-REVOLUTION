@@ -3,6 +3,8 @@ import { internalTranslations } from "./i18n-internal";
 import { publicLanguagePacks } from "./i18n-public-packs";
 
 // Domain JSON imports
+import arCommon from "../src/locales/ar/common.json";
+import enCommon from "../src/locales/en/common.json";
 import arAccounting from "../src/locales/ar/accounting.json";
 import enAccounting from "../src/locales/en/accounting.json";
 import arToday from "../src/locales/ar/today.json";
@@ -81,6 +83,7 @@ const flatten = (obj: any, prefix = "") => {
 
 // Merge all JSON domains
 const domains: any = {
+  common: { ar: arCommon, en: enCommon },
   accounting: { ar: arAccounting, en: enAccounting },
   today: { ar: arToday, en: enToday },
   reports: { ar: arReports, en: enReports },
