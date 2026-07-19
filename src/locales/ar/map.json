@@ -1,0 +1,29 @@
+{
+  "title": "خريطة المراقبة الحية",
+  "geocoding": "جاري تحديد إحداثيات العناوين...",
+  "autoRefresh": "تحديث تلقائي كل 30 ثانية",
+  "pickup": "استلام",
+  "delivery": "توصيل",
+  "drivers": "مناديب",
+  "allBranches": "كل الفروع",
+  "drawRoute": "رسم خط السير",
+  "assignCouriers": "توزيع المناديب",
+  "routeHint": "تلميح: اضغط على النقاط لترتيب خط السير",
+  "noLocationWarning": "يوجد {count} طلبات بدون إحداثيات (ستظهر بعد الـ Geocoding)",
+  "driverNoLocationWarning": "يوجد {count} مناديب لم يحددوا موقعهم من التطبيق",
+  "selectedPoints": "النقاط المختارة بالترتيب:",
+  "loading": "جاري تحميل الخريطة...",
+  "pieces": "قطع",
+  "unknownLocation": "موقع غير محدد",
+  "selectedNumber": "ترتيبه:",
+  "noActive": "لا يوجد نشاط ميداني حالياً",
+  "accessDenied": "خريطة المراقبة للمالك ومدير التشغيل فقط.",
+  "status": {
+    "received": "تم الاستلام",
+    "cleaning": "في الغسيل",
+    "ironing": "في الكي",
+    "packing": "في التغليف",
+    "ready": "جاهز للتسليم",
+    "out_for_delivery": "خرج للتسليم"
+  }
+}

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { fmtMoney } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { getSurgeReportData } from "@/lib/scheduling-surge";
 import { resolveAppUrl } from "@/lib/utils";
 
 export const Route = createFileRoute("/$tenant/today")({
-  head: () => ({ meta: [{ title: "مركز اليوم" }] }),
+  head: () => ({ meta: [{ title: "Today Center" }] }),
   component: TodayCenter,
 });
 
@@ -122,15 +122,15 @@ function TodayCenter() {
       .reduce((m: Record<string, number>, o: any) => { m[o.status ?? "unknown"] = (m[o.status ?? "unknown"] ?? 0) + 1; return m; }, {});
 
     const issueDetails = [
-      ...(lateDetail.data ?? []).map((o: any) => ({ type: "متأخر", title: `طلب #${o.order_number}`, sub: o.customers?.full_name ?? "عميل", href: `/orders/${o.id}`, tone: "red", icon: AlertTriangle })),
-      ...(pickupDetail.data ?? []).map((p: any) => ({ type: "استلام", title: p.customer_name, sub: p.status === "pending" ? "بانتظار مندوب" : "مندوب في الطريق", href: "/live-map", tone: "blue", icon: Truck })),
-      ...(noDriverDetail.data ?? []).map((o: any) => ({ type: "مندوب", title: `طلب #${o.order_number}`, sub: "جاهز بلا مندوب", href: "/live-map", tone: "amber", icon: Truck, quick: "assignDrivers" })),
-      ...(recleanDetail.data ?? []).map((u: any) => ({ type: "مرتجع", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: RotateCcw })),
-      ...(qcDetail.data ?? []).map((u: any) => ({ type: "جودة", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: ShieldCheck })),
-      ...(labelDetail.data ?? []).map((u: any) => ({ type: "مارك", title: `${u.label_code} — ${u.name}`, sub: `طلب #${u.orders?.order_number ?? "?"} — ${u.label_status === "missing_label" ? "بدون مارك" : "غير واضح"}`, href: "/stations/drying-assembly", tone: "red", icon: AlertTriangle })),
-      ...(unpaidDetail.data ?? []).map((o: any) => ({ type: "دفع", title: `طلب #${o.order_number}`, sub: `${Number(o.total ?? 0).toLocaleString("en-US")} جنيه`, href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
-      ...(invoiceDetail.data ?? []).map((o: any) => ({ type: "فاتورة", title: `طلب #${o.order_number}`, sub: "تحتاج اعتماد", href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
-      ...(proofDetail.data ?? []).map((o: any) => ({ type: "إيصال", title: `طلب #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "أقل من المطلوب" : "قيد المراجعة", href: `/orders/${o.id}`, tone: "red", icon: CreditCard })),
+      ...(lateDetail.data ?? []).map((o: any) => ({ type: t("map.status.ready"), title: `Order #${o.order_number}`, sub: o.customers?.full_name ?? "customer", href: `/orders/${o.id}`, tone: "red", icon: AlertTriangle })),
+      ...(pickupDetail.data ?? []).map((p: any) => ({ type: t("map.status.received"), title: p.customer_name, sub: p.status === "pending" ? "Waiting for driver" : "Driver on way", href: "/live-map", tone: "blue", icon: Truck })),
+      ...(noDriverDetail.data ?? []).map((o: any) => ({ type: "Driver", title: `Order #${o.order_number}`, sub: "Ready no driver", href: "/live-map", tone: "amber", icon: Truck, quick: "assignDrivers" })),
+      ...(recleanDetail.data ?? []).map((u: any) => ({ type: "Reclean", title: `${u.label_code} — ${u.name}`, sub: `Order #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: RotateCcw })),
+      ...(qcDetail.data ?? []).map((u: any) => ({ type: "Quality", title: `${u.label_code} — ${u.name}`, sub: `Order #${u.orders?.order_number ?? "?"}`, href: `/orders/${u.order_id}`, tone: "red", icon: ShieldCheck })),
+      ...(labelDetail.data ?? []).map((u: any) => ({ type: "Label", title: `${u.label_code} — ${u.name}`, sub: `Order #${u.orders?.order_number ?? "?"} — ${u.label_status === "missing_label" ? "Missing label" : "Unclear"}`, href: "/stations/drying-assembly", tone: "red", icon: AlertTriangle })),
+      ...(unpaidDetail.data ?? []).map((o: any) => ({ type: "Payment", title: `Order #${o.order_number}`, sub: `${Number(o.total ?? 0).toLocaleString("en-US")} EGP`, href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
+      ...(invoiceDetail.data ?? []).map((o: any) => ({ type: "Invoice", title: `Order #${o.order_number}`, sub: "Needs final review", href: `/orders/${o.id}`, tone: "amber", icon: CreditCard })),
+      ...(proofDetail.data ?? []).map((o: any) => ({ type: "Proof", title: `Order #${o.order_number}`, sub: o.payment_verification_status === "underpaid" ? "Underpaid" : "Reviewing receipt", href: `/orders/${o.id}`, tone: "red", icon: CreditCard })),
     ];
     setDetails(issueDetails.slice(0, 12));
     setLatestReports(reportsRes.data ?? []);
@@ -180,116 +180,92 @@ function TodayCenter() {
     setAssigning(true);
     try {
       const r = await autoAssignDrivers();
-      toast.success(r.assigned ? `تم توزيع ${r.assigned} مهمة` : "لا توجد مهام قابلة للتوزيع الآن");
+      toast.success(r.assigned ? `Assigned ${r.assigned} tasks` : "No assignable tasks found");
       load();
-    } catch (e: any) { toast.error(e?.message ?? "تعذر التوزيع"); }
+    } catch (e: any) { toast.error(e?.message ?? "Error assigning tasks"); }
     finally { setAssigning(false); }
   }
 
   async function saveDailyReport() {
     if (!data) return;
-    const branchName = branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد";
+    const branchName = branchId === "all" ? "All Branches" : branches.find((b) => b.id === branchId)?.name ?? "Branch";
     const body = [
-      `مركز اليوم - ${branchName}`,
-      `طلبات اليوم: ${data.ordersToday}`,
-      `إيراد اليوم: ${fmtMoney(data.revenueToday)}`,
-      `داخل الخزنة: ${fmtMoney(data.cashIn)}`,
-      `خارج الخزنة: ${fmtMoney(data.cashOut)}`,
-      `طلبات متأخرة: ${data.lateOrders}`,
-      `استلامات مفتوحة: ${data.openPickups}`,
-      `مرتجعات غسيل: ${data.reclean}`,
-      `مشاكل جودة: ${data.qcIssues}`,
-      `مشاكل مارك/ليبل: ${data.labelIssues}`,
-      `جاهز غير مدفوع: ${data.unpaidReady}`,
-      `إقفالات خزنة اليوم: ${data.cashClosings}/${data.cashSafes}`,
+      `Today Hub - ${branchName}`,
+      `Orders Today: ${data.ordersToday}`,
+      `Revenue: ${fmtMoney(data.revenueToday)}`,
+      `Cash In: ${fmtMoney(data.cashIn)}`,
+      `Cash Out: ${fmtMoney(data.cashOut)}`,
+      `Late Orders: ${data.lateOrders}`,
+      `Open Pickups: ${data.openPickups}`,
+      `Recleans: ${data.reclean}`,
+      `QC Issues: ${data.qcIssues}`,
+      `Label Issues: ${data.labelIssues}`,
+      `Unpaid Ready: ${data.unpaidReady}`,
+      `Closings: ${data.cashClosings}/${data.cashSafes}`,
     ].join("\n");
     const { error } = await supabase.from("app_notifications").insert({
       audience: "owner",
-      title: "تقرير مركز اليوم",
+      title: "Today Center Report",
       body,
       href: "/today",
       tone: critical ? "warning" : "success",
     });
-    if (error) toast.error(error.message); else toast.success("تم حفظ تقرير مركز اليوم في التنبيهات");
-  }
-
-
-  function endOfDayReportText() {
-    if (!data) return "";
-    const today = new Date().toLocaleDateString("ar-EG");
-    const problems = details.length
-      ? details.map((d) => `- ${d.type}: ${d.title} — ${d.sub}`).join("\n")
-      : "لا توجد مشاكل عاجلة مفتوحة";
-    return [
-      `تقرير نهاية اليوم - ${today} - ${branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد"}`,
-      "",
-      "أولًا: الحركة",
-      `- طلبات اليوم: ${data.ordersToday}`,
-      `- تم تسليمها اليوم: ${data.deliveredToday}`,
-      `- طلبات نشطة: ${data.activeOrders}`,
-      `- طلبات متأخرة: ${data.lateOrders}`,
-      `- أسباب التأخير: ${Object.entries(data.delayByStage).map(([k,v]) => `${stageAr(k)} ${v}`).join("، ") || "لا يوجد"}`,
-      `- استلامات مفتوحة: ${data.openPickups}`,
-      `- توزيع الطلبات النشطة: ${Object.entries(data.stuckByStage).map(([k,v]) => `${stageAr(k)} ${v}`).join("، ") || "لا يوجد"}`,
-      "",
-      "ثانيًا: الماليات",
-      `- إيراد اليوم: ${fmtMoney(data.revenueToday)}`,
-      `- داخل الخزنة: ${fmtMoney(data.cashIn)}`,
-      `- خارج الخزنة: ${fmtMoney(data.cashOut)}`,
-      `- تحصيلات المندوبين: ${fmtMoney(data.driverCollections)}`,
-      `- بقشيش المندوبين: ${fmtMoney(data.driverTips)}`,
-      `- جاهز غير مدفوع: ${data.unpaidReady}`,
-      `- إقفال الخزنة: ${data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "تم لكل الخزن" : `لم يكتمل (${data.cashClosings}/${data.cashSafes})`}`,
-      data.lastClosingDiff !== null ? `- آخر فرق خزنة (${data.lastClosingAccount ?? "خزنة"}): ${fmtMoney(data.lastClosingDiff)}` : `- لا يوجد إقفال خزنة مسجل`,
-      "",
-      "ثالثًا: الجودة والتشغيل",
-      `- مرتجعات غسيل: ${data.reclean}`,
-      `- مشاكل جودة: ${data.qcIssues}`,
-      `- مشاكل مارك/ليبل: ${data.labelIssues}`,
-      `- فواتير تحتاج اعتماد: ${data.invoiceReview}`,
-      `- إيصالات تحتاج مراجعة: ${data.proofReview}`,
-      "",
-      "المشاكل المفتوحة:",
-      problems,
-    ].join("\n");
+    if (error) toast.error(error.message); else toast.success("Report saved to notifications");
   }
 
   async function copyEndOfDayReport() {
     if (!data) return;
-    await navigator.clipboard?.writeText(endOfDayReportText());
-    toast.success("تم نسخ تقرير نهاية اليوم");
+    const body = [
+      `End of Day Report - ${new Date().toLocaleDateString()} - ${branchId === "all" ? "All Branches" : branches.find((b) => b.id === branchId)?.name}`,
+      `- Orders Today: ${data.ordersToday}`,
+      `- Delivered Today: ${data.deliveredToday}`,
+      `- Active Orders: ${data.activeOrders}`,
+      `- Revenue: ${fmtMoney(data.revenueToday)}`,
+      `- Cash In: ${fmtMoney(data.cashIn)}`,
+      `- Cash Out: ${fmtMoney(data.cashOut)}`,
+      `- Unpaid Ready: ${data.unpaidReady}`,
+      `- Closings: ${data.cashClosings}/${data.cashSafes}`,
+    ].join("\n");
+    await navigator.clipboard?.writeText(body);
+    toast.success("Copied to clipboard");
   }
 
   async function saveEndOfDayReport() {
     if (!data) return;
-    const body = endOfDayReportText();
+    const body = [
+      `End of Day Summary - ${new Date().toLocaleDateString()}`,
+      `- Orders Today: ${data.ordersToday}`,
+      `- Revenue: ${fmtMoney(data.revenueToday)}`,
+      `- Cash In: ${fmtMoney(data.cashIn)}`,
+      `- Cash Out: ${fmtMoney(data.cashOut)}`,
+      `- Unpaid Ready: ${data.unpaidReady}`,
+    ].join("\n");
     const { error } = await supabase.from("app_notifications").insert({
       audience: "owner",
-      title: data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "تقرير نهاية اليوم" : "تقرير نهاية اليوم - الخزن لم تكتمل",
+      title: "End of Day Report",
       body,
-      href: data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? "/today" : "/cash-closing",
-      tone: !(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) || critical ? "warning" : "success",
+      href: "/today",
+      tone: "success",
     });
     if (error) toast.error(error.message);
-    else toast.success("تم حفظ تقرير نهاية اليوم في جرس التنبيهات");
+    else toast.success("End-of-day report saved");
   }
-
 
   async function copyReport(report: any) {
     await navigator.clipboard?.writeText(`${report.title}\n${report.body ?? ""}`);
-    toast.success("تم نسخ التقرير");
+    toast.success("Report copied");
   }
 
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">مركز اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("today.noAccess")}</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
   return <div className="space-y-5" dir={dir}>
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("nav./today")}</h1>
+        <h1 className="text-2xl font-black flex items-center gap-2"><CalendarCheck className="w-7 h-7 text-teal-600" />{t("today.pageTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("today.description")}</p>
       </div>
-      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("common.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("system.saveTodayReport")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>{t("today.copyEndOfDay")}</Button><Button onClick={saveEndOfDayReport}>{t("today.endOfDayReport")}</Button></div>
+      <div className="flex flex-wrap gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("today.allBranches", "All Branches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Button variant="outline" onClick={load}>{t("today.refresh")}</Button><Button variant="outline" onClick={saveDailyReport}><Bell className="w-4 h-4 ms-1" />{t("today.saveAlert", "Save Alert")}</Button><Button variant="outline" onClick={copyEndOfDayReport}>{t("today.copyEndOfDay")}</Button><Button onClick={saveEndOfDayReport}>{t("today.endOfDayReport")}</Button></div>
     </div>
 
     <div className="grid md:grid-cols-6 gap-3">
@@ -302,15 +278,15 @@ function TodayCenter() {
     </div>
 
     {!(data.cashSafes > 0 && data.cashClosings >= data.cashSafes) && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-3"><div><b>{t("today.warn.cashClosingNotCompleted")}</b><div className="text-xs mt-1">{t("today.warn.cashClosingDetail").replace("{closed}", String(data.cashClosings)).replace("{total}", String(data.cashSafes))}</div></div><Button asChild size="sm"><Link to={"/$tenant/cash-closing" as any}>{t("today.warn.cashClosingBtn")}</Link></Button></CardContent></Card>}
-    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>آخر إقفال خزنة فيه فرق:</b> {data.lastClosingAccount ?? "خزنة"} — {fmtMoney(data.lastClosingDiff, t("common.egp"))}. راجع سبب الفرق.</CardContent></Card>}
+    {data.lastClosingDiff !== null && data.lastClosingDiff !== 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-800"><b>{t("today.warn.lastClosingDiff")}:</b> {data.lastClosingAccount ?? t("account.type.cash")} — {fmtMoney(data.lastClosingDiff, t("common.egp"))}. {t("today.warn.reviewDiff")}</CardContent></Card>}
 
-    {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">من أين يأتي التأخير؟</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage)}: {count}</Badge>)}</CardContent></Card>}
+    {Object.keys(data.delayByStage).length > 0 && <Card className="border-amber-200 bg-amber-50/50"><CardHeader><CardTitle className="text-base">{t("today.delayOrigin")}</CardTitle></CardHeader><CardContent className="flex flex-wrap gap-2">{Object.entries(data.delayByStage).map(([stage, count]) => <Badge key={stage} variant="secondary" className="text-sm">{stageAr(stage, t)}: {count}</Badge>)}</CardContent></Card>}
 
     <Card>
       <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" />{t("today.needsAction")}</CardTitle></CardHeader>
       <CardContent className="space-y-2">
         {details.length === 0 && <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 font-bold text-center">{t("today.noCritical")}</div>}
-        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}توزيع الآن</Button>}</div>; return <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link>; })}
+        {details.map((d, i) => { const Icon = d.icon; const row = <div className={`rounded-xl border p-3 text-sm ${d.tone === "red" ? "bg-red-50 border-red-200 text-red-800" : d.tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-blue-50 border-blue-200 text-blue-800"}`}><div className="flex items-center justify-between gap-2"><span className="font-black flex items-center gap-2"><Icon className="w-4 h-4" />{d.title}</span><Badge variant="secondary">{d.type}</Badge></div><div className="text-xs mt-1 opacity-80">{d.sub}</div>{d.quick === "assignDrivers" && <Button size="sm" className="mt-2" disabled={assigning} onClick={(e) => { e.preventDefault(); runAssignDrivers(); }}>{assigning ? <Loader2 className="w-3 h-3 animate-spin ms-1" /> : null}Assign Now</Button>}</div>; return <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link>; })}
       </CardContent>
     </Card>
 
@@ -319,9 +295,9 @@ function TodayCenter() {
       <CardContent className="space-y-2">
         {latestReports.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">{t("today.noReports")}</div>}
         {latestReports.map((r) => <div key={r.id} className="rounded-xl border p-3 bg-white text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString("ar-EG")}</Badge></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{r.title}</div><Badge variant={r.tone === "warning" || r.tone === "danger" ? "destructive" : "secondary"}>{new Date(r.created_at).toLocaleDateString()}</Badge></div>
           <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground font-sans max-h-32 overflow-auto">{r.body}</pre>
-          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>نسخ</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={resolveAppUrl(r.href) as any}>فتح</Link></Button>}</div>
+          <div className="flex gap-2 mt-2"><Button size="sm" variant="outline" onClick={() => copyReport(r)}>Copy</Button>{r.href && <Button asChild size="sm" variant="ghost"><Link to={resolveAppUrl(r.href) as any}>Open</Link></Button>}</div>
         </div>)}
       </CardContent>
     </Card>
@@ -332,17 +308,17 @@ function TodayCenter() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
               <Clock className="w-5 h-5 text-teal-600" />
-              <span>مرصد كثافة المواعيد وأوقات الذروة الموزعة (Surge Load Monitor)</span>
+              <span>{t("today.surgeMonitor.title")}</span>
             </CardTitle>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 عادي: {surgeData.normalCount}</Badge>
-              <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 ذروة عادية: {surgeData.normalPeakCount}</Badge>
-              <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 ذروة متوسطة: {surgeData.mediumPeakCount}</Badge>
-              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">ذروة شديدة: {surgeData.severePeakCount}</Badge>
+              <Badge variant="outline" className="bg-emerald-50 text-emerald-800 font-bold">🟢 {t("today.surgeMonitor.normal")}: {surgeData.normalCount}</Badge>
+              <Badge variant="outline" className="bg-amber-50 text-amber-800 font-bold">🟡 {t("today.surgeMonitor.normalPeak")}: {surgeData.normalPeakCount}</Badge>
+              <Badge variant="outline" className="bg-orange-50 text-orange-800 font-bold">🟠 {t("today.surgeMonitor.mediumPeak")}: {surgeData.mediumPeakCount}</Badge>
+              <Badge variant="outline" className="bg-red-50 text-red-800 font-bold">{t("today.surgeMonitor.severePeak")}: {surgeData.severePeakCount}</Badge>
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            متابعة الضغط التشغيلي على فترات استلام وتسليم المندوب الموزعة على مدار اليوم وغداً (فترات ساعتين متصلتين).
+            {t("today.surgeMonitor.description")}
           </p>
         </CardHeader>
         <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
@@ -355,7 +331,7 @@ function TodayCenter() {
                 </Badge>
               </div>
               <div className={`text-[11px] font-bold ${st.colorClass}`}>
-                {st.count} طلبات مجدولة
+                {st.count} {t("today.surgeMonitor.scheduledOrders")}
               </div>
               <div className="text-[10px] text-slate-500 line-clamp-1">{st.label}</div>
             </div>
@@ -371,14 +347,21 @@ function TodayCenter() {
       <ActionCard title={t("today.card.safe")} detail={t("today.card.safeDetail")} to={"/$tenant/cash-closing" as any} icon={<Wallet />} count={data.cashSafes > 0 && data.cashClosings >= data.cashSafes ? 0 : 1} />
       <ActionCard title={t("today.card.reports")} detail={t("today.card.reportsDetail")} to={"/$tenant/reports" as any} icon={<BarChart3 />} />
       <ActionCard title={t("today.card.receivables")} detail={t("today.card.receivablesDetail")} to={"/$tenant/receivables" as any} icon={<Wallet />} count={data.unpaidReady} />
-      <ActionCard title="مرصد المشاكل والتعثرات" detail="مراقبة الأعطال والمختنقات ومتابعة التحديثات" to={"/$tenant/issues" as any} icon={<AlertTriangle className="text-amber-600 animate-pulse" />} />
+      <ActionCard title={t("today.card.issues")} detail={t("today.card.issuesDetail")} to={"/$tenant/issues" as any} icon={<AlertTriangle className="text-amber-600 animate-pulse" />} />
     </div>
   </div>;
 }
 
 
-function stageAr(s: string) {
-  return ({ received: "استقبال", cleaning: "غسيل", ironing: "كي", packing: "تغليف", ready: "جاهز", out_for_delivery: "توصيل" } as Record<string, string>)[s] ?? s;
+function stageAr(s: string, t: any) {
+  return ({
+    received: t("map.status.received"),
+    cleaning: t("map.status.cleaning"),
+    ironing: t("map.status.ironing"),
+    packing: t("map.status.packing"),
+    ready: t("map.status.ready"),
+    out_for_delivery: t("map.status.out_for_delivery")
+  } as Record<string, string>)[s] ?? s;
 }
 
 function Kpi({ label, value, warn = false }: { label: string; value: any; warn?: boolean }) {

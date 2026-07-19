@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
-import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/core/auth/useAuth";
+import { useI18n, interpolate } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,14 +56,17 @@ function formatTime(d?: string | null) {
   }
 }
 
-function calculateDuration(checkIn: string, checkOut?: string | null) {
+function calculateDuration(checkIn: string, checkOut?: string | null, t?: any) {
   try {
     const start = new Date(checkIn).getTime();
     const end = checkOut ? new Date(checkOut).getTime() : Date.now();
     const diffMinutes = Math.max(0, Math.floor((end - start) / (1000 * 60)));
     const hours = Math.floor(diffMinutes / 60);
     const mins = diffMinutes % 60;
-    return { hours, mins, text: `${hours} س و ${mins} د`, totalMinutes: diffMinutes };
+    const text = t 
+      ? interpolate(t("mawared.durationFormat", "{hours} س و {mins} د"), { hours, mins })
+      : `${hours} س و ${mins} د`;
+    return { hours, mins, text, totalMinutes: diffMinutes };
   } catch {
     return { hours: 0, mins: 0, text: "—", totalMinutes: 0 };
   }
@@ -133,7 +136,7 @@ function AttendanceMawaredPage() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "خطأ في تحميل البيانات");
+      toast.error(err?.message || t("common.error.loadFailed", "خطأ في تحميل البيانات"));
     } finally {
       setLoading(false);
     }
@@ -157,7 +160,7 @@ function AttendanceMawaredPage() {
   }
 
   async function checkInMyShift() {
-    if (!currentEmp) return toast.error("حسابك غير مربوط بموظف");
+    if (!currentEmp) return toast.error(t("attendance.errorNoEmpLink", "حسابك غير مربوط بموظف"));
     setBusyMyShift(true);
     const loc = await getLocation();
     const { error } = await supabase.from("employee_attendance").insert({
@@ -166,11 +169,11 @@ function AttendanceMawaredPage() {
       work_date: date,
       check_in_lat: loc.lat ?? null,
       check_in_lng: loc.lng ?? null,
-      notes: "تسجيل حضور شخصي بالهاتف / المتصفح",
+      notes: t("attendance.personalNotes", "تسجيل حضور شخصي بالهاتف / المتصفح"),
     });
     setBusyMyShift(false);
     if (error) return toast.error(error.message);
-    toast.success("تم تسجيل حضوري بنجاح");
+    toast.success(t("attendance.toastInSuccess", "تم تسجيل حضوري بنجاح"));
     loadData();
   }
 
@@ -185,7 +188,7 @@ function AttendanceMawaredPage() {
     }).eq("id", myOpenShift.id);
     setBusyMyShift(false);
     if (error) return toast.error(error.message);
-    toast.success("تم تسجيل انصرافي بنجاح");
+    toast.success(t("attendance.toastOutSuccess", "تم تسجيل انصرافي بنجاح"));
     loadData();
   }
 
@@ -203,8 +206,8 @@ function AttendanceMawaredPage() {
   const totalHoursFormatted = useMemo(() => {
     const hours = Math.floor(totalWorkedMinutes / 60);
     const mins = totalWorkedMinutes % 60;
-    return `${hours} س و ${mins} د`;
-  }, [totalWorkedMinutes]);
+    return interpolate(t("mawared.durationFormat", "{hours} س و {mins} د"), { hours, mins });
+  }, [totalWorkedMinutes, t]);
 
   const filteredRecords = useMemo(() => {
     let list = records;
@@ -235,7 +238,7 @@ function AttendanceMawaredPage() {
     setModalDate(date);
     setCheckInTime("09:00");
     setCheckOutTime("");
-    setNotes("تسجيل إداري عبر Mawared HR");
+    setNotes(t("mawared.adminNotes", "تسجيل إداري عبر Mawared HR"));
     setOpenModal(true);
   }
 

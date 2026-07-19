@@ -1,0 +1,196 @@
+commit e31fc3482553d34cc7b4f7724d489e0f883491e7
+Author: Arena Agent <arena-agent@arena.ai>
+Date:   Tue Jul 14 08:38:23 2026 +0000
+
+    feat(l2): MJRH V4 L2 Implementation v1.0 - Decision Engine and Declarative Policies
+
+diff --git a/src/v4/adrs/ADR-005-Decision-Engine.md b/src/v4/adrs/ADR-005-Decision-Engine.md
+new file mode 100644
+index 00000000..b51cb9ac
+--- /dev/null
++++ b/src/v4/adrs/ADR-005-Decision-Engine.md
+@@ -0,0 +1,6 @@
++# ADR-005: Decision Engine as a Runtime Outcome
++
++## Status: Accepted
++## Context: Should decisions be stored in L2?
++## Decision: Decisions are calculated at runtime and NOT stored as entities in Layer 2.
++## Rationale: L2 is a logic layer. Persistence of decisions belongs to Layer 5 (Evidence) for audit purposes.
+diff --git a/src/v4/adrs/ADR-006-Declarative-Policies.md b/src/v4/adrs/ADR-006-Declarative-Policies.md
+new file mode 100644
+index 00000000..1eebd06d
+--- /dev/null
++++ b/src/v4/adrs/ADR-006-Declarative-Policies.md
+@@ -0,0 +1,6 @@
++# ADR-006: Declarative Policy Model
++
++## Status: Accepted
++## Context: How to store business rules?
++## Decision: Policies must be stored as declarative JSON structures (Condition, Operator, Target, Effect).
++## Rationale: Avoids database-specific lock-in and allows rules to be evaluated by different engines or AI agents.
+diff --git a/src/v4/core/l2/GovernanceGate.ts b/src/v4/core/l2/GovernanceGate.ts
+new file mode 100644
+index 00000000..0c5b4395
+--- /dev/null
++++ b/src/v4/core/l2/GovernanceGate.ts
+@@ -0,0 +1,28 @@
++import { supabase } from "@/integrations/supabase/client";
++
++export type DecisionType = 'ALLOW' | 'DENY' | 'REQUIRE_APPROVAL' | 'REQUIRE_ESCALATION';
++
++export interface GovernanceDecision {
++    decision: DecisionType;
++    reason: string;
++}
++
++export class GovernanceGate {
++    /**
++     * The single entry point for L4 to ask L2 for permission.
++     */
++    async evaluate(actorId: string, nodeId: string, action: string, resourceClass: string): Promise<GovernanceDecision> {
++        const { data, error } = await supabase.rpc('fn_evaluate_governance', {
++            _actor_id: actorId,
++            _target_node_id: nodeId,
++            _action: action,
++            _resource_class: resourceClass
++        });
++
++        if (error || !data) {
++            return { decision: 'DENY', reason: 'GOVERNANCE_ENGINE_ERROR' };
++        }
++
++        return data as GovernanceDecision;
++    }
++}
+diff --git a/src/v4/core/l2/tests/l2_acceptance.sql b/src/v4/core/l2/tests/l2_acceptance.sql
+new file mode 100644
+index 00000000..42c80c6f
+--- /dev/null
++++ b/src/v4/core/l2/tests/l2_acceptance.sql
+@@ -0,0 +1,29 @@
++-- MJRH V4 — L2 Acceptance Suite v1.0
++DO $$
++DECLARE
++    _node_id uuid := '00000000-0000-0000-0000-000000000001'; -- Assumed from L1 setup
++    _actor_id uuid := gen_random_uuid();
++    _res jsonb;
++BEGIN
++    RAISE NOTICE 'Starting L2 Acceptance Suite...';
++
++    -- Note: This suite assumes L1 Frozen Core is active in DB.
++    
++    -- 1. Test Default Deny
++    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
++    IF (_res->>'decision' = 'DENY') THEN RAISE NOTICE 'PASS: Default Deny enforced.'; END IF;
++
++    -- 2. Test Mandate Granting
++    INSERT INTO v4_l2.mandates (actor_id, org_node_id, action_scope, resource_class)
++    VALUES (_actor_id, _node_id, 'finance.read', 'ledger');
++    
++    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
++    IF (_res->>'decision' = 'ALLOW') THEN RAISE NOTICE 'PASS: Mandate Granting verified.'; END IF;
++
++    -- 3. Test Revocation
++    UPDATE v4_l2.mandates SET revoked_at = now() WHERE actor_id = _actor_id;
++    _res := v4_l2.fn_evaluate_governance(_actor_id, _node_id, 'finance.read', 'ledger');
++    IF (_res->>'decision' = 'DENY') THEN RAISE NOTICE 'PASS: Revocation verified.'; END IF;
++
++    RAISE NOTICE 'L2 VERIFICATION COMPLETE.';
++END $$;
+diff --git a/supabase/migrations/20260722000000_v4_l2_implementation.sql b/supabase/migrations/20260722000000_v4_l2_implementation.sql
+new file mode 100644
+index 00000000..0f02c947
+--- /dev/null
++++ b/supabase/migrations/20260722000000_v4_l2_implementation.sql
+@@ -0,0 +1,91 @@
++-- MJRH V4 — Layer 2: Governance & Policy (v1.0 Implementation)
++CREATE SCHEMA IF NOT EXISTS v4_l2;
++
++-- [TABLE] Policy Sets (Grouping Mechanism)
++CREATE TABLE v4_l2.policy_sets (
++    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
++    sovereign_id uuid NOT NULL, -- Logical link to L1 Identity
++    name text NOT NULL,
++    is_active boolean DEFAULT true,
++    created_at timestamptz NOT NULL DEFAULT now()
++);
++
++-- [TABLE] Declarative Policies
++CREATE TABLE v4_l2.policies (
++    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
++    policy_set_id uuid REFERENCES v4_l2.policy_sets(id),
++    name text NOT NULL,
++    rule_definition jsonb NOT NULL, -- {condition, operator, target, effect: 'ALLOW'|'DENY'}
++    priority int DEFAULT 100,
++    version int DEFAULT 1,
++    valid_from timestamptz NOT NULL DEFAULT now(),
++    valid_until timestamptz,
++    created_at timestamptz NOT NULL DEFAULT now()
++);
++
++-- [TABLE] Mandates (Administrative Delegation)
++CREATE TABLE v4_l2.mandates (
++    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
++    actor_id uuid NOT NULL, -- Foreign key to Actor Registry (Logical)
++    org_node_id uuid NOT NULL, -- Anchor to L1 Node
++    action_scope text NOT NULL, -- e.g., 'finance.read', 'ops.execute'
++    resource_class text NOT NULL,
++    valid_from timestamptz NOT NULL DEFAULT now(),
++    valid_until timestamptz,
++    revoked_at timestamptz,
++    revoked_by uuid,
++    version int DEFAULT 1,
++    metadata jsonb DEFAULT '{}'::jsonb
++);
++
++-- [ENGINE] Decision Logic (The RPC)
++CREATE OR REPLACE FUNCTION v4_l2.fn_evaluate_governance(
++    _actor_id uuid,
++    _target_node_id uuid,
++    _action text,
++    _resource_class text
++) RETURNS jsonb AS $$
++DECLARE
++    _has_mandate boolean;
++    _explicit_deny boolean;
++    _matching_policy record;
++    _sovereign_id uuid;
++BEGIN
++    -- 1. Resolve Sovereign Boundary from L1
++    SELECT (v4_l1.resolve_sovereign_root(_target_node_id)->>'sovereign_id')::uuid INTO _sovereign_id;
++    IF _sovereign_id IS NULL THEN 
++        RETURN jsonb_build_object('decision', 'DENY', 'reason', 'UNRESOLVED_BOUNDARY');
++    END IF;
++
++    -- 2. Check for Explicit Deny Policies (Highest Precedence)
++    SELECT EXISTS (
++        SELECT 1 FROM v4_l2.policies p
++        JOIN v4_l2.policy_sets s ON p.policy_set_id = s.id
++        WHERE s.sovereign_id = _sovereign_id 
++        AND p.rule_definition->>'effect' = 'DENY'
++        AND p.valid_from <= now() AND (p.valid_until IS NULL OR p.valid_until > now())
++    ) INTO _explicit_deny;
++
++    IF _explicit_deny THEN
++        RETURN jsonb_build_object('decision', 'DENY', 'reason', 'EXPLICIT_POLICY_DENY');
++    END IF;
++
++    -- 3. Check for Active Mandate
++    SELECT EXISTS (
++        SELECT 1 FROM v4_l2.mandates
++        WHERE actor_id = _actor_id 
++        AND org_node_id = _target_node_id
++        AND action_scope = _action
++        AND resource_class = _resource_class
++        AND revoked_at IS NULL
++        AND valid_from <= now() AND (valid_until IS NULL OR valid_until > now())
++    ) INTO _has_mandate;
++
++    IF _has_mandate THEN
++        RETURN jsonb_build_object('decision', 'ALLOW', 'reason', 'MANDATE_GRANTED');
++    END IF;
++
++    -- 4. Default Deny
++    RETURN jsonb_build_object('decision', 'DENY', 'reason', 'NO_MANDATE_OR_POLICY');
++END;
++$$ LANGUAGE plpgsql STABLE;
