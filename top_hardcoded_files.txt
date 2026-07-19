@@ -1,0 +1,10 @@
+   1158 routes/customer-portal.tsx
+    808 routes/$tenant/staff/scorecard.tsx
+    662 components/tenant-marketing-analytics-tab.tsx
+    595 routes/$tenant/staff/attendance.tsx
+    582 routes/_admin/admin/tenants/index.tsx
+    581 components/ui/sidebar.tsx
+    565 routes/$tenant/search.tsx
+    561 routes/$tenant/services.tsx
+    473 routes/_admin/admin/telemetry.tsx
+    408 routes/_admin/admin/customer-success.tsx

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { TenantMarketingAnalyticsTab } from "@/components/tenant-marketing-analytics-tab";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";

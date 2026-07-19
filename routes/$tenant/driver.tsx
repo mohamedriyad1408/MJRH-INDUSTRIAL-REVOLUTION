@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { fmtDate } from "@/lib/format";
 import { distanceKm, formatDistance, type LatLng } from "@/lib/geo";
 import { validateOrderMove } from "@/lib/station-workflow";

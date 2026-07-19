@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from"react";
 import { supabase } from"@/integrations/supabase/client";
-import { useAuth } from"@/hooks/use-auth";
+import { useAuth } from"@/core/auth/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from"@/components/ui/dialog";
 import { Button } from"@/components/ui/button";
 import { Input } from"@/components/ui/input";

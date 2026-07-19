@@ -2,7 +2,7 @@ import { buildOrderIssues, OrderIssuePanel, OrderTimeline, returnTypeAr, returnS
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Loader2, Plus, Camera, CheckCircle2, AlertTriangle, Printer, Scale, Rot
 import { PrintInvoiceButton } from "@/components/print-invoice";
 import { StatusBadge } from "@/components/status-dot";
 import type { StatusLevel } from "@/components/status-dot";
-import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
+import { autoAssignIroningPieces } from "@/modules/laundry/ironing/assignment";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/$tenant/orders/$id")({

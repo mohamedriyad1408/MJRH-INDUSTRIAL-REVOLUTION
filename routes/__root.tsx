@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider } from "@/core/auth/useAuth";
 import { CurrencyProvider } from "@/hooks/use-currency";
 import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";

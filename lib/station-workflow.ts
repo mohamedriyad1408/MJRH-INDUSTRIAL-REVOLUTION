@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateTransitionV2 } from "@/lib/workflow-engine-v2";
+import { validateTransitionV2 } from "@/core/workflow/engine";
 
 // Legacy v1 implementation preserved exactly (was laundry hardcoded)
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";

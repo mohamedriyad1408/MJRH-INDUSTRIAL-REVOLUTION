@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sun, TrendingUp, Package, AlertTriangle } from "lucide-react";
 import { tone, getToneDictionary } from "@/lib/tone-dictionary";

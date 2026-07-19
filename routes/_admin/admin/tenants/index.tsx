@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { useServerFn } from "@/hooks/use-server-fn";
 import { supabase } from "@/integrations/supabase/client";
 import { adminApi } from "@/lib/admin-api";

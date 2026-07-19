@@ -4,7 +4,7 @@ import { resolveAppUrl } from "@/lib/utils";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/core/auth/useAuth";
 import { fmtMoney } from "@/lib/format";
 import { parseLatLng } from "@/lib/geo";
 import { Card, CardContent } from "@/components/ui/card";
