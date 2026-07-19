@@ -1,0 +1,27 @@
+{
+  "title": "Track your order",
+  "subtitle": "Dry Tech — Laundry Management",
+  "notFound": "Order not found",
+  "checkLink": "Please check the tracking link",
+  "orderNumber": "Order number",
+  "total": "Total",
+  "items": "Order items",
+  "payment": "Payment",
+  "paid": "Payment recorded",
+  "invoiceReady": "Invoice ready for payment",
+  "invoiceReview": "Invoice under final review",
+  "overpayment": "Extra payment recorded",
+  "promised": "Expected delivery",
+  "cancelled": "Order cancelled",
+  "step": {
+    "pickup_waiting": "Waiting for courier",
+    "pickup_assigned": "Courier on the way",
+    "received": "Received",
+    "cleaning": "Cleaning",
+    "ironing": "Ironing",
+    "packing": "Packing",
+    "ready": "Ready",
+    "out_for_delivery": "Out for delivery",
+    "delivered": "Delivered"
+  }
+}

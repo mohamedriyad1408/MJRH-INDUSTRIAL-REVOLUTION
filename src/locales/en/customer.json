@@ -1,0 +1,53 @@
+{
+  "title": "Customer Portal",
+  "tagline": "Order from home and track your laundry",
+  "phoneLabel": "Registered Phone Number",
+  "login": "Login",
+  "logout": "Logout",
+  "welcome": "Welcome",
+  "myOrders": "My Orders & Courier Track",
+  "newOrder": "New VIP Order +",
+  "noOrders": "No active orders yet",
+  "noOrdersSub": "Tap 'New VIP Order +' to create your first order.",
+  "previousOrders": "Archive & Previous Orders",
+  "submitOrder": "Submit Order &rarr;",
+  "orderSuccess": "Order received successfully as #{num}!",
+  "trackOrderBtn": "Track Your Order &rarr;",
+  "paymentConfirmedLive": "Payment confirmed instantly",
+  "pieceImageSaved": "Piece image documented",
+  "itemPhotoSaved": "Item photo saved to document condition",
+  "preferences": {
+    "title": "2. VIP Concierge Preferences & Ironing Instructions",
+    "subtitle": "These preferences appear clearly to our technicians and couriers",
+    "packaging": "Preferred packaging and folding style:",
+    "individualBags": "Individual protection bags:",
+    "individualBagsDesc": "Pack each item in a separate protection bag ({price} EGP per item)",
+    "ironingInstructions": "Custom Ironing Instructions:",
+    "ironingPlaceholder": "Type your special ironing preferences here...",
+    "splitDelivery": "Enable split delivery",
+    "splitDeliveryDesc": "If your order has both ironing and cleaning items, we can deliver ready items sooner."
+  },
+  "catalog": {
+    "title": "1. Select Catalog Services & Quantities",
+    "subtitle": "Real-time pricing and availability from the laundry"
+  },
+  "invoice": {
+    "estimatedTotal": "Estimated Total:",
+    "total": "Total",
+    "amountPaid": "Amount Paid",
+    "paymentReview": "Receipt Review",
+    "download": "Download Invoice"
+  },
+  "error": {
+    "invalidPhone": "Enter a valid phone number",
+    "notRegistered": "Number not registered — contact laundry to sign up",
+    "emptyOrder": "Select at least one service or add notes",
+    "invoiceNotReady": "Invoice not yet finalized",
+    "deliveryUpdate": "Error updating delivery slot"
+  },
+  "toast": {
+    "deliveryUpdate": "Delivery slot confirmed",
+    "pieceImageSaved": "Piece photo saved",
+    "itemPhotoSaved": "Item photo saved"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "badge": "Operational Control & Continuous Development",
+  "title": "Project Exception & Bottleneck Monitor",
+  "sub": "Monitor breakdowns and bottlenecks (stale orders, quality drops, or technical errors) to improve performance.",
+  "refresh": "Refresh Monitor",
+  "loading": "Scanning for project bottlenecks...",
+  "empty": "Excellent! Your project is running smoothly with no detected bottlenecks",
+  "accessDenied": "Access denied. Owner and Ops Manager only.",
+  "loadError": "Failed to load project issues log",
+  "hrMonitorTitle": "Live HR Station Staffing Monitor",
+  "totalPresent": "🟢 Total present now: {count} staff",
+  "present": "{count} present",
+  "vacant": "Vacant",
+  "stations": {
+    "reception": "Reception",
+    "cleaning": "Cleaning",
+    "assembly": "Drying & Assembly",
+    "ironing": "Ironing",
+    "packing": "Packing & QC",
+    "delivery": "Couriers"
+  },
+  "tabs": {
+    "all": "All Issues",
+    "operational": "Operational",
+    "technical": "Technical",
+    "financial": "Financial",
+    "customer": "Customer"
+  },
+  "types": {
+    "operational": "Operational",
+    "technical": "Technical",
+    "financial": "Financial",
+    "customer": "Customer"
+  },
+  "selfHealing": {
+    "note": "System self-healing detected: Resolved technical/script error automatically after verifying stability",
+    "toast": "Self-healing notification: System detected and resolved ({count}) technical issues automatically!"
+  },
+  "technical": {
+    "title": "[UI Error] {message}",
+    "description": "This error was sent automatically to platform admins for updates.",
+    "detailPath": "Occurred at path: {path}",
+    "detailDefault": "Operational error",
+    "unknown": "Unknown error"
+  },
+  "operational": {
+    "title": "[Reclean & Quality Drop] Item {name} in order #{order}",
+    "description": "Reason: ({reason}). Item at station: {stage}",
+    "detailLabel": "Label Code: {code}"
+  },
+  "customer": {
+    "title": "[Bottleneck / Delay] Order #{order} stuck in reception for over 24 hours",
+    "description": "Customer: {name} • Amount: {amount}",
+    "detail": "Action: Direct cleaning or reception station to process immediately.",
+    "unnamed": "Unnamed"
+  },
+  "financial": {
+    "title": "[Pending Financial Review] Order #{order} proof needs auditing",
+    "description": "Customer: {name} • Value: {amount}",
+    "customer": "customer",
+    "underpaid": "Paid amount less than invoice",
+    "instapayReview": "InstaPay receipt pending review"
+  },
+  "action": "Process Order"
+}
