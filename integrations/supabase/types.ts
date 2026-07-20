@@ -1098,7 +1098,6 @@ export type Database = {
           phone: string
           tenant_id: string | null
           updated_at: string
-          vip_preferences: Json | null
         }
         Insert: {
           address?: string | null
@@ -1114,7 +1113,6 @@ export type Database = {
           phone: string
           tenant_id?: string | null
           updated_at?: string
-          vip_preferences?: Json | null
         }
         Update: {
           address?: string | null
@@ -1130,7 +1128,6 @@ export type Database = {
           phone?: string
           tenant_id?: string | null
           updated_at?: string
-          vip_preferences?: Json | null
         }
         Relationships: [
           {
@@ -1637,7 +1634,6 @@ export type Database = {
       }
       employees: {
         Row: {
-          assigned_stations: string[] | null
           branch_id: string | null
           commission_percent: number
           created_at: string
@@ -1663,7 +1659,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          assigned_stations?: string[] | null
           branch_id?: string | null
           commission_percent?: number
           created_at?: string
@@ -1689,7 +1684,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          assigned_stations?: string[] | null
           branch_id?: string | null
           commission_percent?: number
           created_at?: string
@@ -1737,48 +1731,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      enterprise_deals: {
-        Row: {
-          account_name: string
-          acv_value: number | null
-          created_at: string | null
-          document_url: string | null
-          expected_close_date: string | null
-          facility_type: string
-          id: string
-          notes: string | null
-          package_tier: string
-          stage: string
-          tenant_id: string | null
-        }
-        Insert: {
-          account_name: string
-          acv_value?: number | null
-          created_at?: string | null
-          document_url?: string | null
-          expected_close_date?: string | null
-          facility_type: string
-          id?: string
-          notes?: string | null
-          package_tier?: string
-          stage?: string
-          tenant_id?: string | null
-        }
-        Update: {
-          account_name?: string
-          acv_value?: number | null
-          created_at?: string | null
-          document_url?: string | null
-          expected_close_date?: string | null
-          facility_type?: string
-          id?: string
-          notes?: string | null
-          package_tier?: string
-          stage?: string
-          tenant_id?: string | null
-        }
-        Relationships: []
       }
       equipment_assets: {
         Row: {
@@ -2608,114 +2560,6 @@ export type Database = {
           },
         ]
       }
-      legal_contracts: {
-        Row: {
-          contract_type: string
-          contract_value: number | null
-          counterparty: string
-          created_at: string | null
-          document_url: string | null
-          end_date: string | null
-          id: string
-          notes: string | null
-          start_date: string | null
-          status: string
-          tenant_id: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          contract_type: string
-          contract_value?: number | null
-          counterparty: string
-          created_at?: string | null
-          document_url?: string | null
-          end_date?: string | null
-          id?: string
-          notes?: string | null
-          start_date?: string | null
-          status?: string
-          tenant_id?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          contract_type?: string
-          contract_value?: number | null
-          counterparty?: string
-          created_at?: string | null
-          document_url?: string | null
-          end_date?: string | null
-          id?: string
-          notes?: string | null
-          start_date?: string | null
-          status?: string
-          tenant_id?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "legal_contracts_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenant_bootstrap_health"
-            referencedColumns: ["tenant_id"]
-          },
-          {
-            foreignKeyName: "legal_contracts_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      marketing_campaigns: {
-        Row: {
-          allocated_budget: number | null
-          campaign_name: string
-          channel: string
-          conversions: number | null
-          created_at: string | null
-          document_url: string | null
-          id: string
-          leads_generated: number | null
-          notes: string | null
-          spent_budget: number | null
-          status: string
-          tenant_id: string | null
-        }
-        Insert: {
-          allocated_budget?: number | null
-          campaign_name: string
-          channel?: string
-          conversions?: number | null
-          created_at?: string | null
-          document_url?: string | null
-          id?: string
-          leads_generated?: number | null
-          notes?: string | null
-          spent_budget?: number | null
-          status?: string
-          tenant_id?: string | null
-        }
-        Update: {
-          allocated_budget?: number | null
-          campaign_name?: string
-          channel?: string
-          conversions?: number | null
-          created_at?: string | null
-          document_url?: string | null
-          id?: string
-          leads_generated?: number | null
-          notes?: string | null
-          spent_budget?: number | null
-          status?: string
-          tenant_id?: string | null
-        }
-        Relationships: []
-      }
       operation_events: {
         Row: {
           actor_id: string | null
@@ -3194,10 +3038,8 @@ export type Database = {
           delivery_fee: number
           delivery_lat: number | null
           delivery_lng: number | null
-          delivery_slot: string | null
           discount_amount: number
           discount_percent: number
-          estimated_arrival_time: string | null
           id: string
           invoice_finalized_at: string | null
           is_test: boolean
@@ -3223,7 +3065,6 @@ export type Database = {
           pickup_at: string | null
           pickup_lat: number | null
           pickup_lng: number | null
-          pickup_slot: string | null
           promised_delivery_at: string | null
           public_token: string
           status: Database["public"]["Enums"]["order_status"]
@@ -3235,7 +3076,6 @@ export type Database = {
           updated_at: string
           urgent_fee: number
           urgent_fee_amount: number
-          vip_preferences: Json | null
         }
         Insert: {
           assigned_driver_employee_id?: string | null
@@ -3255,10 +3095,8 @@ export type Database = {
           delivery_fee?: number
           delivery_lat?: number | null
           delivery_lng?: number | null
-          delivery_slot?: string | null
           discount_amount?: number
           discount_percent?: number
-          estimated_arrival_time?: string | null
           id?: string
           invoice_finalized_at?: string | null
           is_test?: boolean
@@ -3284,7 +3122,6 @@ export type Database = {
           pickup_at?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
-          pickup_slot?: string | null
           promised_delivery_at?: string | null
           public_token?: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -3296,7 +3133,6 @@ export type Database = {
           updated_at?: string
           urgent_fee?: number
           urgent_fee_amount?: number
-          vip_preferences?: Json | null
         }
         Update: {
           assigned_driver_employee_id?: string | null
@@ -3316,10 +3152,8 @@ export type Database = {
           delivery_fee?: number
           delivery_lat?: number | null
           delivery_lng?: number | null
-          delivery_slot?: string | null
           discount_amount?: number
           discount_percent?: number
-          estimated_arrival_time?: string | null
           id?: string
           invoice_finalized_at?: string | null
           is_test?: boolean
@@ -3345,7 +3179,6 @@ export type Database = {
           pickup_at?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
-          pickup_slot?: string | null
           promised_delivery_at?: string | null
           public_token?: string
           status?: Database["public"]["Enums"]["order_status"]
@@ -3357,7 +3190,6 @@ export type Database = {
           updated_at?: string
           urgent_fee?: number
           urgent_fee_amount?: number
-          vip_preferences?: Json | null
         }
         Relationships: [
           {
@@ -3983,7 +3815,6 @@ export type Database = {
       }
       service_items: {
         Row: {
-          category: string | null
           category_id: string | null
           created_at: string
           id: string
@@ -3994,7 +3825,6 @@ export type Database = {
           unit_price: number
         }
         Insert: {
-          category?: string | null
           category_id?: string | null
           created_at?: string
           id?: string
@@ -4005,7 +3835,6 @@ export type Database = {
           unit_price?: number
         }
         Update: {
-          category?: string | null
           category_id?: string | null
           created_at?: string
           id?: string
@@ -4450,81 +4279,6 @@ export type Database = {
           },
         ]
       }
-      tenant_health_scores: {
-        Row: {
-          account_manager: string
-          account_name: string
-          created_at: string | null
-          health_score: number | null
-          id: string
-          last_qbr_date: string | null
-          next_check_date: string | null
-          notes: string | null
-          status: string
-          tenant_id: string | null
-        }
-        Insert: {
-          account_manager: string
-          account_name: string
-          created_at?: string | null
-          health_score?: number | null
-          id?: string
-          last_qbr_date?: string | null
-          next_check_date?: string | null
-          notes?: string | null
-          status?: string
-          tenant_id?: string | null
-        }
-        Update: {
-          account_manager?: string
-          account_name?: string
-          created_at?: string | null
-          health_score?: number | null
-          id?: string
-          last_qbr_date?: string | null
-          next_check_date?: string | null
-          notes?: string | null
-          status?: string
-          tenant_id?: string | null
-        }
-        Relationships: []
-      }
-      tenant_onboarding_projects: {
-        Row: {
-          account_name: string
-          assigned_engineer: string
-          created_at: string | null
-          id: string
-          notes: string | null
-          progress_pct: number | null
-          stage: string
-          target_live_date: string | null
-          tenant_id: string | null
-        }
-        Insert: {
-          account_name: string
-          assigned_engineer: string
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          progress_pct?: number | null
-          stage?: string
-          target_live_date?: string | null
-          tenant_id?: string | null
-        }
-        Update: {
-          account_name?: string
-          assigned_engineer?: string
-          created_at?: string | null
-          id?: string
-          notes?: string | null
-          progress_pct?: number | null
-          stage?: string
-          target_live_date?: string | null
-          tenant_id?: string | null
-        }
-        Relationships: []
-      }
       tenant_operating_zones: {
         Row: {
           created_at: string
@@ -4738,114 +4492,6 @@ export type Database = {
           },
         ]
       }
-      workflow_stages: {
-        Row: {
-          allowed_next_slugs: string[] | null
-          auto_move_on_complete: boolean | null
-          color: string | null
-          created_at: string | null
-          icon: string | null
-          id: string
-          is_active: boolean | null
-          is_final: boolean | null
-          is_initial: boolean | null
-          name: string
-          name_en: string | null
-          requires_assignment: boolean | null
-          slug: string
-          stage_order: number
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          allowed_next_slugs?: string[] | null
-          auto_move_on_complete?: boolean | null
-          color?: string | null
-          created_at?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_final?: boolean | null
-          is_initial?: boolean | null
-          name: string
-          name_en?: string | null
-          requires_assignment?: boolean | null
-          slug: string
-          stage_order?: number
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          allowed_next_slugs?: string[] | null
-          auto_move_on_complete?: boolean | null
-          color?: string | null
-          created_at?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_final?: boolean | null
-          is_initial?: boolean | null
-          name?: string
-          name_en?: string | null
-          requires_assignment?: boolean | null
-          slug?: string
-          stage_order?: number
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "workflow_stages_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenant_bootstrap_health"
-            referencedColumns: ["tenant_id"]
-          },
-          {
-            foreignKeyName: "workflow_stages_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      workflow_templates: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          icon: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          name_en: string
-          slug: string
-          stages: Json
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          name_en: string
-          slug: string
-          stages: Json
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          name_en?: string
-          slug?: string
-          stages?: Json
-        }
-        Relationships: []
-      }
     }
     Views: {
       delivery_readiness_audit: {
@@ -5046,13 +4692,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      table_row_counts: {
-        Row: {
-          row_count: number | null
-          table_name: string | null
-        }
-        Relationships: []
       }
       tenant_bootstrap_health: {
         Row: {
@@ -5308,10 +4947,6 @@ export type Database = {
         Args: { _data?: Json; _source_id: string; _source_type: string }
         Returns: string
       }
-      apply_workflow_template: {
-        Args: { _template_slug: string; _tenant_id: string }
-        Returns: number
-      }
       can_access_branch: {
         Args: { _branch_id: string; _tenant_id: string }
         Returns: boolean
@@ -5521,10 +5156,6 @@ export type Database = {
         Args: { _tenant_id: string }
         Returns: undefined
       }
-      ensure_default_workflow_for: {
-        Args: { _tenant_id: string }
-        Returns: undefined
-      }
       ensure_tenant_owner_employee: {
         Args: { _tenant_id: string }
         Returns: undefined
@@ -5576,21 +5207,6 @@ export type Database = {
           unit_price: number
         }[]
       }
-      get_workflow_stages: {
-        Args: { _tenant_id: string }
-        Returns: {
-          color: string
-          icon: string
-          id: string
-          is_final: boolean
-          is_initial: boolean
-          name: string
-          name_en: string
-          requires_assignment: boolean
-          slug: string
-          stage_order: number
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5623,17 +5239,6 @@ export type Database = {
         Returns: boolean
       }
       jwt_role: { Args: never; Returns: string }
-      list_active_tenants_public: {
-        Args: never
-        Returns: {
-          brand_color: string
-          business_type: string
-          logo_url: string
-          name: string
-          public_url: string
-          slug: string
-        }[]
-      }
       normalize_laundry_item_name: { Args: { _name: string }; Returns: string }
       pass_qc_unit: {
         Args: { _notes?: string; _unit_id: string }
@@ -5734,17 +5339,6 @@ export type Database = {
         Args: { _tenant_id: string; _tenant_name: string }
         Returns: undefined
       }
-      self_service_create_tenant: {
-        Args: {
-          _business_type?: string
-          _currency?: string
-          _name: string
-          _owner_full_name?: string
-          _slug: string
-          _user_id: string
-        }
-        Returns: string
-      }
       set_customer_delivery_choice: {
         Args: { _chosen: string; _token: string }
         Returns: undefined
@@ -5801,16 +5395,6 @@ export type Database = {
         | "employee"
         | "customer"
         | "courier"
-        | "cs_rep"
-        | "intake_rep"
-        | "receptionist"
-        | "sorter"
-        | "cleaning_tech"
-        | "assembly_tech"
-        | "ironing_tech"
-        | "packer"
-        | "qc_tech"
-        | "supervisor"
       employee_request_type:
         | "overtime"
         | "prayer"
@@ -5829,14 +5413,6 @@ export type Database = {
         | "receptionist"
         | "other"
         | "assembly_clerk"
-        | "cs_rep"
-        | "intake_rep"
-        | "sorter"
-        | "assembly_tech"
-        | "packer"
-        | "qc_tech"
-        | "courier"
-        | "supervisor"
       leave_status: "pending" | "approved" | "rejected"
       leave_type: "annual" | "sick" | "unpaid" | "emergency"
       order_status:
@@ -5871,11 +5447,6 @@ export type Database = {
         | "ironing"
         | "packing"
         | "delivery"
-        | "cs"
-        | "intake"
-        | "sorting"
-        | "drying-assembly"
-        | "qc"
       workstation:
         | "reception"
         | "cleaning"
@@ -6022,16 +5593,6 @@ export const Constants = {
         "employee",
         "customer",
         "courier",
-        "cs_rep",
-        "intake_rep",
-        "receptionist",
-        "sorter",
-        "cleaning_tech",
-        "assembly_tech",
-        "ironing_tech",
-        "packer",
-        "qc_tech",
-        "supervisor",
       ],
       employee_request_type: [
         "overtime",
@@ -6052,14 +5613,6 @@ export const Constants = {
         "receptionist",
         "other",
         "assembly_clerk",
-        "cs_rep",
-        "intake_rep",
-        "sorter",
-        "assembly_tech",
-        "packer",
-        "qc_tech",
-        "courier",
-        "supervisor",
       ],
       leave_status: ["pending", "approved", "rejected"],
       leave_type: ["annual", "sick", "unpaid", "emergency"],
@@ -6092,18 +5645,7 @@ export const Constants = {
         "advance",
         "leave",
       ],
-      station_type: [
-        "reception",
-        "cleaning",
-        "ironing",
-        "packing",
-        "delivery",
-        "cs",
-        "intake",
-        "sorting",
-        "drying-assembly",
-        "qc",
-      ],
+      station_type: ["reception", "cleaning", "ironing", "packing", "delivery"],
       workstation: [
         "reception",
         "cleaning",

@@ -4,13 +4,6 @@
 
  :root {
   --radius: 1rem;
-  /* iOS / Android safe-area exposed as CSS variables so flex/fixed layouts can
-     pad around notches, gesture bars, and rounded corners without breaking the
-     desktop layout. */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
   /* MJRH desktop brand: clean navy + teal + violet with warm cards */
   --background: oklch(0.975 0.012 230);
   --foreground: oklch(0.18 0.035 250);
@@ -97,110 +90,13 @@
   .no-print { display: none !important; }
 }
 
-/* 80mm Thermal Receipt Print Styles */
-@media print and (max-width: 80mm) {
-  @page {
-    size: 80mm auto;
-    margin: 2mm;
-  }
-  .print-area {
-    width: 76mm;
-    font-size: 9pt;
-    line-height: 1.3;
-    font-family: 'Courier New', monospace;
-  }
-  .print-area h1 { font-size: 12pt; text-align: center; margin-bottom: 2mm; }
-  .print-area h2 { font-size: 10pt; margin: 2mm 0 1mm; }
-  .print-area table { width: 100%; border-collapse: collapse; font-size: 8pt; }
-  .print-area table th,
-  .print-area table td { padding: 1mm 0; border-bottom: 1px dashed #000; }
-  .print-area table th { text-align: start; font-weight: bold; }
-  .print-area table td:last-child { text-align: end; }
-  .print-area .text-center { text-align: center; }
-  .print-area .text-end { text-align: end; }
-  .print-area .font-bold { font-weight: bold; }
-  .print-area .border-t { border-top: 1px solid #000; padding-top: 1mm; margin-top: 1mm; }
-  .print-area .barcode { text-align: center; margin: 2mm 0; }
-}
-
-/* A4 Invoice Print Styles */
-@media print and (min-width: 81mm) {
-  @page {
-    size: A4;
-    margin: 15mm;
-  }
-  .print-area {
-    font-size: 11pt;
-    line-height: 1.5;
-  }
-  .print-area h1 { font-size: 18pt; }
-  .print-area table { width: 100%; border-collapse: collapse; margin: 8pt 0; }
-  .print-area table th,
-  .print-area table td { padding: 4pt 6pt; border: 1px solid #ddd; }
-  .print-area table th { background: #f5f5f5; font-weight: bold; text-align: start; }
-  .print-area table td:last-child { text-align: end; }
-}
-
 @layer base {
-  html, body, #root {
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-  /* Respect iOS user's preferred text size (no forced override), keep smooth
-     momentum scrolling, and disable iOS tap highlight that overlaps brand
-     colors on the brand teal. */
-  html {
-    -webkit-text-size-adjust: 100%;
-    -webkit-tap-highlight-color: transparent;
-    scroll-behavior: smooth;
-  }
   body {
     background:
       radial-gradient(circle at top right, color-mix(in oklab, var(--primary) 18%, transparent), transparent 34rem),
       radial-gradient(circle at bottom left, color-mix(in oklab, var(--accent) 16%, transparent), transparent 32rem),
       linear-gradient(135deg, oklch(0.975 0.018 230), oklch(0.985 0.016 210) 42%, oklch(0.972 0.02 275));
     min-height: 100vh;
-    /* Enable momentum scrolling inside the webview on iOS Safari and Chrome
-       without changing desktop behavior. */
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: auto;
-  }
-}
-
-@media (max-width: 768px) {
-  table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-  .grid, .flex, .card, [class*="rounded-3xl"], [class*="rounded-2xl"], [class*="rounded-xl"] {
-    max-width: 100%;
-  }
-  .overflow-x-auto {
-    max-width: 100vw;
-  }
-  /* Touch-friendly controls: enforce a 44px minimum tap target for any
-     inline element that uses h-8/h-9 on desktop. We deliberately keep this
-     scoped to phone viewports so desktop layout stays identical. */
-  button:not([data-no-touch-expand]),
-  [role="button"]:not([data-no-touch-expand]),
-  a.app-touch-target {
-    min-height: 44px;
-  }
-  /* iOS / Android safe-area padding utility */
-  .safe-bottom {
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-  .safe-top {
-    padding-top: max(0.5rem, env(safe-area-inset-top));
-  }
-  /* Reduce motion for users who opt out */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.001ms !important;
-      transition-duration: 0.001ms !important;
-    }
   }
 }
 
@@ -238,46 +134,11 @@
     box-shadow: 0 18px 45px rgba(15, 23, 42, .06);
   }
 
-  .joy-card {
+  .joy-card, .rounded-3xl, [class*="rounded-2xl"] {
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease;
   }
-  .joy-card:hover {
+  .joy-card:hover, .rounded-3xl:hover {
     transform: translateY(-1px);
-  }
-
-  /* INDUSTRIAL LOGO ANIMATIONS */
-  @keyframes logo-float {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-4px) scale(1.02); }
-  }
-  @keyframes logo-glow {
-    0%, 100% { filter: drop-shadow(0 8px 20px rgba(13,148,136,0.2)); }
-    50% { filter: drop-shadow(0 12px 28px rgba(13,148,136,0.35)); }
-  }
-
-  .logo-animated {
-    animation: logo-float 4s ease-in-out infinite, logo-glow 4s ease-in-out infinite;
-    transition: transform 0.3s ease;
-  }
-  .logo-animated:hover {
-    animation-play-state: paused;
-    transform: scale(1.05) !important;
-  }
-
-  /* Fix: Only target true Dialog modals (radix-dialog-content), not Sheet (sidebar/tasks) which also has role="dialog" */
-  .radix-dialog-content {
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  @media (max-width: 640px) {
-    .radix-dialog-content {
-      width: calc(100vw - 28px) !important;
-      max-width: calc(100vw - 28px) !important;
-      left: 50% !important;
-      top: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      margin: 0 !important;
-    }
   }
   .app-main .bg-card, .app-main .rounded-xl.border, .app-main .rounded-2xl.border, .app-main .rounded-3xl.border {
     box-shadow: 0 16px 42px rgba(15, 23, 42, .055);

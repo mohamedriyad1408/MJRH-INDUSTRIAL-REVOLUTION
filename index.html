@@ -2,20 +2,15 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/mjrh-logo.png" />
     <link rel="apple-touch-icon" href="/mjrh-logo.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0d9488" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="MJRH" />
-    <title>MJRH — منظومة تشغيل المشاريع | Industrial Revolution</title>
-    <meta name="description" content="MJRH منظومة تشغيل SaaS متكاملة لأي مشروع تشغيلي — مغسلة، ورشة، غسيل سيارات، تنظيف، مطعم... إدارة العمليات، المراحل المخصصة، الفريق، الخزنة، المحاسبة، والتقارير." />
-    <meta name="keywords" content="منظومة تشغيل مشاريع, إدارة مشاريع, نظام تشغيل, MJRH, Industrial Revolution, مغسلة, ورشة, غسيل سيارات, تنظيف, مطعم, SaaS, ERP, عمليات" />
+    <title>MJRH — منظومة تشغيل المشاريع وإدارة المغاسل السحابية</title>
+    <meta name="description" content="MJRH هو نظام تشغيل SaaS متكامل متعدد المشاريع لإدارة وتشغيل المغاسل الذكية والمشاريع التجارية والصناعية والمتابعة الفورية للطلبات والعملاء والمراحل." />
+    <meta name="keywords" content="مغسلة, إدارة مغاسل, نظام تشغيل, MJRH, Dry Tech, زمزم, دراي تك, برنامج غسيل, تتبع طلبات, SaaS, POS, ERP" />
     <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="MJRH — منظومة تشغيل المشاريع | Industrial Revolution" />
-    <meta property="og:description" content="منصة واحدة تشغّل أي مشروع تشغيلي — من أول عملية لحد إقفال الخزنة. قوالب جاهزة، مراحل مخصصة، محاسبة تلقائية." />
+    <meta property="og:title" content="MJRH — منظومة تشغيل المشاريع وإدارة المغاسل" />
+    <meta property="og:description" content="نظام تشغيل سحابي متكامل يخدم المشاريع المستقلة، بوابة عملاء، متابعة طلبات، وحسابات يومية." />
     <meta property="og:url" content="https://mjrh.vercel.app" />
     <meta property="og:image" content="https://mjrh.vercel.app/mjrh-logo.png" />
     <meta property="og:type" content="website" />
@@ -26,13 +21,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/main.tsx"></script>
-    <script>
-      // Register PWA Service Worker
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
-        });
-      }
-    </script>
   </body>
 </html>

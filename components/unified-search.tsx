@@ -19,7 +19,7 @@ export function UnifiedSearch() {
     }
   }, [pathname]);
 
-  // Keyboard shortcuts (Ctrl+K orK or /) to focus search
+  // Keyboard shortcuts (Ctrl+K or ⌘K or /) to focus search
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
@@ -95,7 +95,7 @@ export function UnifiedSearch() {
         {/* Keyboard hint */}
         {!query && (
           <kbd className="hidden md:inline-flex h-5 select-none items-center gap-1 rounded bg-white px-1.5 font-mono text-[10px] font-medium text-slate-500 border absolute end-2 top-1/2 -translate-y-1/2 pointer-events-none">
-            {typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0 ? "K" : "Ctrl+K"}
+            {typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0 ? "⌘K" : "Ctrl+K"}
           </kbd>
         )}
 

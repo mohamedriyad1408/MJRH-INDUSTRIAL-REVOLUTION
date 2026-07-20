@@ -1,7 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateTransitionV2 } from "@/lib/workflow-engine-v2";
 
-// Legacy v1 implementation preserved exactly (was laundry hardcoded)
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
 type Unit = {
@@ -15,21 +13,13 @@ type Unit = {
   assembly_checked_at?: string | null;
 };
 
-async function validateOrderMoveLegacy(orderId: string, to: OrderStatus) {
+export async function validateOrderMove(orderId: string, to: OrderStatus) {
   const { data: order, error: oErr } = await supabase
     .from("orders")
-    .select("id,order_number,status,payment_status,payment_method,assigned_driver_employee_id,tenant_id")
+    .select("id,order_number,status,payment_status,payment_method,assigned_driver_employee_id")
     .eq("id", orderId)
     .single();
   if (oErr) return { ok: false, message: oErr.message };
-
-  // Check tenant version - if v2, this order should not be validated with legacy engine
-  // But for safety, if tenant is v2 and order is legacy, still allow? We check flag.
-  const { data: tenant } = await supabase.from("tenants").select("workflow_engine_version").eq("id", order.tenant_id).single();
-  if (tenant?.workflow_engine_version === 'v2') {
-    // This is a v1 order in a v2 tenant - still use legacy to avoid breaking open orders
-    // New orders for v2 should use work_orders table, not orders table
-  }
 
   const { data: rawUnits, error: uErr } = await supabase
     .from("service_units")
@@ -80,37 +70,3 @@ async function validateOrderMoveLegacy(orderId: string, to: OrderStatus) {
 
   return { ok: true, message: "" };
 }
-
-/**
- * Wrapper — decides v1 vs v2 based on tenant flag and table existence
- * - If orderId exists in work_orders (v2) → use v2 engine (DB-driven)
- * - Else fallback to v1 laundry engine (preserves existing production)
- */
-export async function validateOrderMove(orderId: string, to: OrderStatus | string) {
-  // Try to see if this ID is actually a work_order (v2)
-  const { data: workOrder } = await supabase
-    .from("work_orders")
-    .select("id, tenant_id, current_stage_id, workflow_id")
-    .eq("id", orderId)
-    .maybeSingle();
-
-  if (workOrder) {
-    // This is v2 work order — 'to' is actually a stage_id (uuid), not OrderStatus
-    // For v2 we expect to be stage_id
-    const result = await validateTransitionV2(workOrder.tenant_id, workOrder.id, to as string);
-    return result;
-  }
-
-  // Otherwise treat as v1 laundry order
-  return validateOrderMoveLegacy(orderId, to as OrderStatus);
-}
-
-/**
- * Explicit v2 validator for work_orders
- */
-export async function validateWorkOrderMove(tenantId: string, workOrderId: string, toStageId: string) {
-  return validateTransitionV2(tenantId, workOrderId, toStageId);
-}
-
-// Export legacy for tests that specifically test v1
-export { validateOrderMoveLegacy };

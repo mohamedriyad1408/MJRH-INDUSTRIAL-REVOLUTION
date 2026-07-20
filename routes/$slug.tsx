@@ -1,11 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Shirt, Users, UserPlus, LogIn, MapPin } from "lucide-react";
-
-const RESERVED_SLUGS = ["admin", "today", "orders", "customers", "staff", "stations", "finance", "accounting", "ledger", "receivables", "cash-closing", "budgets", "inventory", "billing", "crm", "services", "branches", "settings", "help", "system-health", "daily-operations", "ops", "cs", "manager", "driver", "live-map", "reports", "executive", "pickups", "search", "scorecard", "attendance", "dashboard"];
 
 export const Route = createFileRoute("/$slug")({
   head: () => ({ meta: [{ title: "مدخل المغسلة" }] }),
@@ -24,33 +22,10 @@ type Tenant = {
 
 function TenantEntryPage() {
   const { slug } = Route.useParams();
-  const nav = useNavigate();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (slug === "admin") {
-      nav({ to: "/admin/tenants" as any, replace: true });
-      return;
-    }
-    if (RESERVED_SLUGS.includes(slug)) {
-      supabase.auth.getUser().then(({ data: authData }) => {
-        if (!authData.user) {
-          nav({ to: "/login" });
-          return;
-        }
-        supabase.from("user_roles").select("role, tenant_id, tenants(slug)").eq("user_id", authData.user.id).then(({ data }: any) => {
-          const rows = data || [];
-          if (rows.some((r: any) => r.role === "super_admin")) {
-            nav({ to: "/admin/tenants" as any, replace: true });
-          } else {
-            const mySlug = rows.find((r: any) => r.tenants?.slug)?.tenants?.slug || "dry-tech";
-            nav({ to: `/${mySlug}/${slug}` as any, replace: true });
-          }
-        });
-      });
-      return;
-    }
     supabase
       .from("tenants")
       .select("id,name,slug,logo_url,brand_color,business_address,business_phone")
@@ -59,7 +34,7 @@ function TenantEntryPage() {
       .maybeSingle()
       .then(({ data }: any) => setTenant(data ?? null))
       .finally(() => setLoading(false));
-  }, [slug, nav]);
+  }, [slug]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>;
 

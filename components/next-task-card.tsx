@@ -23,7 +23,7 @@ interface NextTaskCardProps {
   emptyLabel?: string;
 }
 
-export function NextTaskCard({ task, loading, emptyLabel = "لا توجد مهام في الانتظار — أحسنت!" }: NextTaskCardProps) {
+export function NextTaskCard({ task, loading, emptyLabel = "لا توجد مهام في الانتظار — أحسنت! ✅" }: NextTaskCardProps) {
   if (loading) return (
     <Card className="border-dashed">
       <CardContent className="p-4 text-center text-sm text-muted-foreground">جاري التحميل...</CardContent>
@@ -52,7 +52,7 @@ export function NextTaskCard({ task, loading, emptyLabel = "لا توجد مها
             <p className="text-sm text-muted-foreground">طلب #{task.orderNumber} · {task.customerName}</p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            {task.isUrgent && <Badge className="bg-amber-500 text-white text-xs">عاجل</Badge>}
+            {task.isUrgent && <Badge className="bg-amber-500 text-white text-xs">⚡ عاجل</Badge>}
             {task.waitingMinutes && task.waitingMinutes > 30 && (
               <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
                 انتظر {task.waitingMinutes}د

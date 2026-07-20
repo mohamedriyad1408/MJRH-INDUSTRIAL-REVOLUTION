@@ -10,7 +10,6 @@ import { dueInfo } from "@/lib/geo";
 import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { toast } from "sonner";
 import { interpolate, useI18n } from "@/lib/i18n";
-import { resolveAppUrl } from "@/lib/utils";
 
 type AlertTone = "red" | "amber" | "blue";
 type AlertAudience = "owner" | "ops" | "cs" | "ironing" | "cleaning" | "packing" | "driver";
@@ -210,10 +209,10 @@ export function NotificationCenter() {
       <PopoverTrigger asChild>
         <Button variant="outline" size="icon" className="relative h-9 w-9 shrink-0">
           <Bell className="w-4 h-4" />
-          {count > 0 && <span className={`absolute -top-1 -end-1 h-5 min-w-5 rounded-full text-[10px] flex items-center justify-center px-1 text-white ${urgent ? "bg-red-600" : "bg-amber-500"}`}>{count}</span>}
+          {count > 0 && <span className={`absolute -top-1 -left-1 h-5 min-w-5 rounded-full text-[10px] flex items-center justify-center px-1 text-white ${urgent ? "bg-red-600" : "bg-amber-500"}`}>{count}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" side="bottom" sideOffset={8} collisionPadding={16} avoidCollisions={true} className="w-[calc(100vw-32px)] sm:w-96 md:w-[420px] p-0 shadow-2xl rounded-3xl border-2 border-slate-200/80 z-50 max-h-[85vh] overflow-hidden flex flex-col bg-white" dir={dir}>
+      <PopoverContent align="end" className="w-80 p-0" dir={dir}>
         <div className="p-3 border-b flex items-center justify-between">
           <div className="font-black flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> {t("notif.title")}</div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={load}><RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} /></Button>
@@ -238,7 +237,7 @@ export function NotificationCenter() {
               </div>
               <div className="mt-1 opacity-80 whitespace-pre-line pe-1">{a.detail}</div>
               {(a.href || a.appNotificationId) && <div className="flex gap-2 mt-2">
-                {a.href && <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={resolveAppUrl(a.href) as any}>{t("notif.open")}</Link></Button>}
+                {a.href && <Button asChild size="sm" variant="outline" className="h-7 text-[11px]"><Link to={a.href as any}>{t("notif.open")}</Link></Button>}
                 {a.quickAction && <Button size="sm" variant="default" className="h-7 text-[11px]" onClick={() => runQuickAction(a)}>{a.quickAction === "repairFinance" ? t("common.repair") : t("common.execute")}</Button>}
                 {a.appNotificationId && <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => markRead(a)}>{t("common.processed")}</Button>}
               </div>}

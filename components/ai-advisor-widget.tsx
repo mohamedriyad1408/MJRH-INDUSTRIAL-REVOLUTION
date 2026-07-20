@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
-import { resolveAppUrl } from "@/lib/utils";
 import { Sparkles, AlertTriangle, CheckCircle2, Info, RefreshCw, ArrowRight, ArrowLeft, Lightbulb, TrendingUp, Cpu } from "lucide-react";
 
 export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: string }) {
@@ -23,13 +22,13 @@ export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: strin
   });
 
   const categories: { key: AiInsightCategory | "all"; labelKey: string; icon: string }[] = [
-    { key: "all", labelKey: "ai.filter.all", icon: "" },
-    { key: "bottleneck", labelKey: "ai.filter.bottleneck", icon: "" },
-    { key: "sla", labelKey: "ai.filter.sla", icon: "" },
-    { key: "inventory", labelKey: "ai.filter.inventory", icon: "" },
-    { key: "maintenance", labelKey: "ai.filter.maintenance", icon: "" },
-    { key: "workforce", labelKey: "ai.filter.workforce", icon: "" },
-    { key: "finance", labelKey: "ai.filter.finance", icon: "" },
+    { key: "all", labelKey: "ai.filter.all", icon: "🌐" },
+    { key: "bottleneck", labelKey: "ai.filter.bottleneck", icon: "⏳" },
+    { key: "sla", labelKey: "ai.filter.sla", icon: "⚡" },
+    { key: "inventory", labelKey: "ai.filter.inventory", icon: "📦" },
+    { key: "maintenance", labelKey: "ai.filter.maintenance", icon: "🔧" },
+    { key: "workforce", labelKey: "ai.filter.workforce", icon: "👥" },
+    { key: "finance", labelKey: "ai.filter.finance", icon: "💰" },
   ];
 
   const filteredInsights = activeCategory === "all" ? insights : insights.filter((x) => x.category === activeCategory);
@@ -133,7 +132,7 @@ export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: strin
                     </div>
                   </div>
                   {insight.actionHref && (
-                    <Link to={resolveAppUrl(insight.actionHref) as any} className="shrink-0">
+                    <Link to={insight.actionHref} className="shrink-0">
                       <Button variant="ghost" size="sm" className="text-xs bg-white/60 hover:bg-white hover:text-teal-700 font-bold border border-slate-200/60 shadow-sm h-8 px-3 rounded-lg flex items-center gap-1 transition">
                         {t(insight.actionLabelKey ?? "common.open", "اتخذ إجراء")}
                         {dir === "rtl" ? <ArrowLeft className="w-3.5 h-3.5 ms-1" /> : <ArrowRight className="w-3.5 h-3.5 ms-1" />}
