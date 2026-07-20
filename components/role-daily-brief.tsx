@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { resolveAppUrl } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMoney } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,10 +57,9 @@ export function RoleDailyBrief({ role }: { role: Role }) {
     const orders = ordersRes.data ?? [];
     const expenses = expensesRes.data ?? [];
     const cash = cashRes.data ?? [];
-    const validOrders = orders.filter((o: any) => o.status !== "cancelled");
     setData({
-      ordersToday: validOrders.length,
-      revenueToday: validOrders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+      ordersToday: orders.length,
+      revenueToday: orders.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       expensesToday: expenses.reduce((s: number, e: any) => s + Number(e.amount ?? 0), 0),
       cashIn: cash.filter((x: any) => x.direction === "in").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
       cashOut: cash.filter((x: any) => x.direction === "out").reduce((s: number, x: any) => s + Number(x.amount ?? 0), 0),
@@ -140,7 +138,7 @@ export function RoleDailyBrief({ role }: { role: Role }) {
     <CardHeader><CardTitle className="text-base flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-teal-600" />{title}</span><span className="flex gap-2"><Button size="sm" variant="outline" onClick={copySummary}><ClipboardCopy className="w-3 h-3 ms-1" />{t("brief.copy")}</Button><Button size="sm" onClick={saveToNotifications}>{t("brief.saveAlert")}</Button></span></CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-3 gap-2">
       {rows.map((r) => <div key={r.title} className={`rounded-xl border p-3 bg-white ${r.warn ? "border-amber-200" : ""}`}><div className="text-xs text-muted-foreground">{r.title}</div><div className="font-black mt-1">{r.value}</div>{r.warn && <Badge variant="destructive" className="mt-2">{t("brief.review")}</Badge>}</div>)}
-      <Link to={resolveAppUrl(link) as any} className="md:col-span-3 text-xs text-teal-700 underline font-bold">{t("brief.openDashboard")}</Link>
+      <Link to={link as any} className="md:col-span-3 text-xs text-teal-700 underline font-bold">{t("brief.openDashboard")}</Link>
     </CardContent>
   </Card>;
 }

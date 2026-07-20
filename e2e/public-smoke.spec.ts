@@ -11,7 +11,7 @@ test.describe("public and auth-gated smoke tests", () => {
   test("login page renders without a black screen", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/login");
-      await expect(page.getByRole("heading", { name: /منظومة تشغيل المشاريع|نظام إدارة المغسلة/ })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /نظام إدارة المغسلة/ })).toBeVisible();
       await expect(page.locator('input[type="email"]')).toBeVisible();
       await expect(page.locator('input[type="password"]')).toBeVisible();
       await expect(page.getByRole("button", { name: "دخول" })).toBeVisible();

@@ -11,10 +11,9 @@ import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { interpolate, useI18n } from "@/lib/i18n";
-import { StationActorWidget, ActiveActor } from "@/components/station-actor-widget";
 
 type OrderStatus = "received" | "cleaning" | "ironing" | "packing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
-type Station = string;
+type Station = "reception" | "cleaning" | "ironing" | "packing" | "delivery";
 type Order = {
   id: string; order_number: number; status: OrderStatus; is_urgent: boolean;
   created_at: string; total: number; notes: string | null;
@@ -32,11 +31,10 @@ export function StationPage({
 }) {
   const { user, hasRole } = useAuth();
   const { t, dir } = useI18n();
-  const canMove = hasRole("ops_manager", "owner", "cs_manager", "employee", "courier", "receptionist", "sorter", "packer", "cleaning_tech", "ironing_tech", "qc_tech", "supervisor");
+  const canMove = hasRole("ops_manager", "owner", "cs_manager");
   const [rows, setRows] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [assignFor, setAssignFor] = useState<string | null>(null);
-  const [activeActor, setActiveActor] = useState<ActiveActor | null>(null);
 
   async function load() {
     setLoading(true);
@@ -58,7 +56,7 @@ export function StationPage({
     const { error } = await supabase.from("orders").update({ status: to }).eq("id", id);
     if (error) return toast.error(error.message);
     await supabase.from("order_status_history").insert({
-      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `محطة: ${title} — نفذه: ${activeActor?.full_name ?? "موظف المحطة"}`,
+      order_id: id, from_status: from, to_status: to, changed_by: user?.id, notes: `محطة: ${title}`,
     });
     if (to === "ironing") {
       try {
@@ -79,7 +77,6 @@ export function StationPage({
 
   return (
     <div className="space-y-4" dir={dir}>
-      <StationActorWidget stationId={station} stationLabel={title} onActorChange={setActiveActor} />
       <div>
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="text-sm text-muted-foreground">
