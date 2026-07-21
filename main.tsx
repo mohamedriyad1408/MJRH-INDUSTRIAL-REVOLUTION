@@ -21,3 +21,4 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>
 );
+console.log("MJRH_STABLE_VER_ID_12345");

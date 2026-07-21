@@ -105,14 +105,14 @@ export function AppSidebar() {
   const groups = isSuperAdmin ? [...adminGroups, ...tenantGroups] : tenantGroups;
 
   return (
-    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon" className="bg-white border-r border-slate-200">
+    <Sidebar data-mjrh-stable-id="STABLE_SIDEBAR_999" side={dir === "rtl" ? "right" : "left"} collapsible="icon" className="bg-white border-r border-slate-200">
       <SidebarHeader className="border-b border-slate-100 p-5 bg-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-50 p-1 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
             {tenant?.logo_url ? <img src={tenant.logo_url} className="w-full h-full object-cover rounded-lg" /> : <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />}
           </div>
           <div className="min-w-0">
-            <div className="font-black text-sm truncate tracking-tight text-slate-900">{tenant?.name || (isSuperAdmin ? "إدارة المنصة" : "MJRH")}</div>
+            <div className="font-black text-sm truncate tracking-tight text-slate-900">{tenant?.name || (isSuperAdmin ? "إدارة المنصة" : "MJRH")} - VER:STABLE</div>
             <div className="text-[10px] text-slate-400 font-bold truncate">{user?.email}</div>
           </div>
         </div>
