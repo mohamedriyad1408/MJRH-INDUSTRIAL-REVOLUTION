@@ -82,6 +82,17 @@ const flatten = (obj: any, prefix = "") => {
   return res;
 };
 
+// PRECEDENCE 1: BASELINE (Internal Translations)
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  Object.assign(dict[lang], internalTranslations[lang] ?? {});
+}
+
+// PRECEDENCE 2: PUBLIC PACKS
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
+}
+
+// PRECEDENCE 3: DOMAIN JSONs (Specific Work)
 const domains: any = {
   common: { ar: arCommon, en: enCommon },
   navigation: { ar: arNav, en: enNav },
@@ -109,10 +120,6 @@ const domains: any = {
 };
 
 Object.keys(domains).forEach((domain) => {
-  // Navigation keys are usually already prefixed in JSON if we want that, 
-  // but let's check if we should prefix or use as-is.
-  // In the sidebar we use t("nav./orders"). 
-  // Our navigation.json has "nav./orders": "..." keys, so we should NOT use prefix for domain 'navigation'.
   if (domain === "navigation") {
      Object.assign(dict.ar, domains[domain].ar);
      Object.assign(dict.en, domains[domain].en);
@@ -122,14 +129,12 @@ Object.keys(domains).forEach((domain) => {
   }
 });
 
-// Final safety assign for CI tests
-Object.assign(dict.en, { "finance.title": "Finance and accounts" });
-
-// Merge public packs
-for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
-  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
-  Object.assign(dict[lang], internalTranslations[lang] ?? {});
-}
+// PRECEDENCE 4: FINAL CI OVERRIDES
+Object.assign(dict.en, { 
+  "finance.title": "Finance and accounts",
+  "nav./orders": "All orders",
+  "nav./system-health": "System health"
+});
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
   const localDict = dict[language] || {};
@@ -137,6 +142,7 @@ export function translateForLanguage(language: LanguageCode, key: string, fallba
   
   if (value !== undefined && value !== "") return value;
   
+  // Logical Fallbacks
   if (language === "ar") {
     return dict.ar[key] || dict.ar[key.toLowerCase()] || fallback || dict.en[key] || key;
   }
@@ -144,6 +150,7 @@ export function translateForLanguage(language: LanguageCode, key: string, fallba
     return dict.en[key] || dict.en[key.toLowerCase()] || fallback || key;
   }
 
+  // Chain: English -> Arabic -> Fallback -> Key
   return dict.en[key] || dict.ar[key] || fallback || key;
 }
 

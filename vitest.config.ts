@@ -3,6 +3,7 @@ import path from 'path';
 
 export default defineConfig({
   test: {
+    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     globals: true,
   },
