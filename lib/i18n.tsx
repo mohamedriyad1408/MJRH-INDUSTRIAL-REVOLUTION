@@ -110,7 +110,7 @@ Object.keys(domains).forEach((domain) => {
   Object.assign(dict.en, flatten(domains[domain].en, domain));
 });
 
-// Explicitly add keys for Sidebar tests
+// Seed critical keys for tests and production
 const testKeysAr: Record<string, string> = {
   "navGroup.اللوحات": "اللوحات",
   "navGroup.الطلبات": "الطلبات",
@@ -179,28 +179,34 @@ const testKeysEn: Record<string, string> = {
   "nav./services": "Services",
   "nav./settings": "Settings",
   "nav./help": "Help",
+  "finance.title": "Finance and accounts",
 };
 
 Object.assign(dict.ar, testKeysAr);
 Object.assign(dict.en, testKeysEn);
 
-// Extra fixes for tests
-Object.assign(dict.en, {
-  "finance.title": "Finance and accounts"
-});
-
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
-  const local = dict[language]?.[key];
+  // 1. Direct hit in current language
+  const local = dict[language]?.[key] || dict[language]?.[key.toLowerCase()];
   if (local !== undefined && local !== "") return local;
   
-  if (language === "en") return dict.en?.[key] ?? fallback ?? key;
-  if (language === "ar") return fallback ?? dict.ar?.[key] ?? dict.en?.[key] ?? key;
-  
-  // For other languages, try public packs or internal
-  const pub = publicLanguagePacks[language]?.[key] || internalTranslations[language]?.[key];
-  if (pub) return pub;
+  // 2. Fallback for Arabic
+  if (language === "ar") {
+    const arVal = dict.ar[key] || dict.ar[key.toLowerCase()];
+    if (arVal) return arVal;
+    return fallback || dict.en[key] || dict.en[key.toLowerCase()] || key;
+  }
 
-  return dict.en?.[key] || dict.ar?.[key] || fallback || key;
+  // 3. Fallback for English
+  if (language === "en") {
+    return dict.en[key] || dict.en[key.toLowerCase()] || fallback || key;
+  }
+  
+  // 4. Fallback for other languages: try self -> English -> Arabic -> fallback -> key
+  const otherVal = publicLanguagePacks[language]?.[key] || internalTranslations[language]?.[key];
+  if (otherVal) return otherVal;
+
+  return dict.en[key] || dict.ar[key] || fallback || key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {
