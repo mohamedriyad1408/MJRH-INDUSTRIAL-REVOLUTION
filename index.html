@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-    <script>if ("serviceWorker" in navigator) { navigator.serviceWorker.getRegistrations().then(regs => { for(let reg of regs) reg.unregister(); }); }</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // 🚨 CRITICAL CACHE BUSTER 2.1.0 🚨
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+      }
+      const V = "2.1.0";
+      if (localStorage.getItem("app_v") !== V) {
+        localStorage.clear();
+        localStorage.setItem("app_v", V);
+        location.reload(true);
+      }
+    </script>
     <link rel="icon" type="image/png" href="/mjrh-logo.png" />
     <link rel="apple-touch-icon" href="/mjrh-logo.png" />
-    <title>MJRH STABLE — منظومة تشغيل المشاريع وإدارة المغاسل السحابية</title>
-    <meta name="description" content="MJRH هو نظام تشغيل SaaS متكامل متعدد المشاريع لإدارة وتشغيل المغاسل الذكية والمشاريع التجارية والصناعية والمتابعة الفورية للطلبات والعملاء والمراحل." />
-    <meta name="keywords" content="مغسلة, إدارة مغاسل, نظام تشغيل, MJRH, Dry Tech, زمزم, دراي تك, برنامج غسيل, تتبع طلبات, SaaS, POS, ERP" />
-    <meta name="robots" content="index, follow" />
-    <meta property="og:title" content="MJRH — منظومة تشغيل المشاريع وإدارة المغاسل" />
-    <meta property="og:description" content="نظام تشغيل سحابي متكامل يخدم المشاريع المستقلة، بوابة عملاء، متابعة طلبات، وحسابات يومية." />
-    <meta property="og:url" content="https://mjrh.vercel.app" />
-    <meta property="og:image" content="https://mjrh.vercel.app/mjrh-logo.png" />
-    <meta property="og:type" content="website" />
+    <title>MJRH STABLE — نظام تشغيل المغاسل</title>
+    <meta name="description" content="MJRH هو نظام تشغيل SaaS متكامل." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Cairo:wght@600;700;900&display=swap" />
