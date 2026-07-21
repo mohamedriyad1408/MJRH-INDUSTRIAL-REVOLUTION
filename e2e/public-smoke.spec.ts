@@ -8,27 +8,36 @@ async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
 }
 
 test.describe("public and auth-gated smoke tests", () => {
-  test("login page renders", async ({ page }) => {
+  test("login page renders correctly", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/login");
-      // Check for common elements in login page regardless of language
       await expect(page.locator('input[type="email"]')).toBeVisible();
       await expect(page.locator('input[type="password"]')).toBeVisible();
+      await expect(page.locator('button[type="submit"]')).toBeVisible();
     });
   });
 
-  test("protected app routes redirect", async ({ page }) => {
+  test("protected app routes redirect to login", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/dashboard");
       await page.waitForURL(/\/login/);
+      await expect(page.locator('input[type="email"]')).toBeVisible();
     });
   });
 
   test("customer portal loads", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/customer-portal?tenant=dry-tech");
-      // Look for any heading
-      await expect(page.locator("h1, h2").first()).toBeVisible();
+      // Verify something is rendered (e.g., a button or input)
+      await expect(page.locator("button, input").first()).toBeVisible();
+    });
+  });
+
+  test("tenant public entry page loads", async ({ page }) => {
+    await expectNoPageErrors(page, async () => {
+      await page.goto("/dry-tech");
+      // Check for presence of entry actions
+      await expect(page.locator("button, a").first()).toBeVisible();
     });
   });
 });
