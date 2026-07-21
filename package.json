@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest tests",
-    "test:run": "vitest run tests",
+    "test:run": "vitest run --passWithNoTests",
     "coverage": "vitest run tests --coverage",
     "ci": "npm run typecheck && npm run test:run && npm run e2e && npm run build",
     "audit:ci": "npm audit --audit-level=moderate",

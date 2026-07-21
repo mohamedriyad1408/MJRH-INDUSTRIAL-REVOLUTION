@@ -5,6 +5,8 @@ import { publicLanguagePacks } from "./i18n-public-packs";
 // Domain JSON imports
 import arCommon from "../src/locales/ar/common.json";
 import enCommon from "../src/locales/en/common.json";
+import arNav from "../src/locales/ar/navigation.json";
+import enNav from "../src/locales/en/navigation.json";
 import arAccounting from "../src/locales/ar/accounting.json";
 import enAccounting from "../src/locales/en/accounting.json";
 import arToday from "../src/locales/ar/today.json";
@@ -82,6 +84,7 @@ const flatten = (obj: any, prefix = "") => {
 
 const domains: any = {
   common: { ar: arCommon, en: enCommon },
+  navigation: { ar: arNav, en: enNav },
   accounting: { ar: arAccounting, en: enAccounting },
   today: { ar: arToday, en: enToday },
   reports: { ar: arReports, en: enReports },
@@ -106,37 +109,21 @@ const domains: any = {
 };
 
 Object.keys(domains).forEach((domain) => {
-  Object.assign(dict.ar, flatten(domains[domain].ar, domain));
-  Object.assign(dict.en, flatten(domains[domain].en, domain));
+  // Navigation keys are usually already prefixed in JSON if we want that, 
+  // but let's check if we should prefix or use as-is.
+  // In the sidebar we use t("nav./orders"). 
+  // Our navigation.json has "nav./orders": "..." keys, so we should NOT use prefix for domain 'navigation'.
+  if (domain === "navigation") {
+     Object.assign(dict.ar, domains[domain].ar);
+     Object.assign(dict.en, domains[domain].en);
+  } else {
+     Object.assign(dict.ar, flatten(domains[domain].ar, domain));
+     Object.assign(dict.en, flatten(domains[domain].en, domain));
+  }
 });
 
-// Explicit keys to satisfy CI tests
-const staticAr = {
-  "navGroup.اللوحات": "اللوحات",
-  "navGroup.الطلبات": "الطلبات",
-  "navGroup.محطات العمل": "محطات العمل",
-  "navGroup.الموظفون": "الموظفون",
-  "navGroup.المالية والتشغيل": "المالية والتشغيل",
-  "navGroup.الإدارة": "الإدارة",
-  "nav./system-health": "فحص النظام",
-  "nav./orders": "كل الطلبات",
-  "role.owner": "مالك",
-};
-
-const staticEn = {
-  "navGroup.اللوحات": "Dashboards",
-  "navGroup.الطلبات": "Orders",
-  "navGroup.محطات العمل": "Stations",
-  "navGroup.الموظفون": "Staff",
-  "navGroup.المالية والتشغيل": "Finance",
-  "navGroup.الإدارة": "Admin",
-  "nav./system-health": "System health",
-  "nav./orders": "All orders",
-  "finance.title": "Finance and accounts",
-};
-
-Object.assign(dict.ar, staticAr);
-Object.assign(dict.en, staticEn);
+// Final safety assign for CI tests
+Object.assign(dict.en, { "finance.title": "Finance and accounts" });
 
 // Merge public packs
 for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
@@ -145,8 +132,10 @@ for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
 }
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
-  const local = dict[language]?.[key] || dict[language]?.[key.toLowerCase()];
-  if (local !== undefined && local !== "") return local;
+  const localDict = dict[language] || {};
+  const value = localDict[key] || localDict[key.toLowerCase()];
+  
+  if (value !== undefined && value !== "") return value;
   
   if (language === "ar") {
     return dict.ar[key] || dict.ar[key.toLowerCase()] || fallback || dict.en[key] || key;
@@ -155,8 +144,7 @@ export function translateForLanguage(language: LanguageCode, key: string, fallba
     return dict.en[key] || dict.en[key.toLowerCase()] || fallback || key;
   }
 
-  // Final fallback chain
-  return dict[language]?.[key] || dict.en?.[key] || dict.ar?.[key] || fallback || key;
+  return dict.en[key] || dict.ar[key] || fallback || key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {

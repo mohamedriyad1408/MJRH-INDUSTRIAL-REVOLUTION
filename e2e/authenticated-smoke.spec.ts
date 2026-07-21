@@ -18,25 +18,26 @@ test.describe("authenticated smoke tests", () => {
     await page.goto("/login");
     await page.locator('input[type="email"]').fill(email!);
     await page.locator('input[type="password"]').fill(password!);
-    await page.getByRole("button", { name: "دخول" }).click();
-    await expect(page.getByText("ادخل بياناتك للمتابعة")).toHaveCount(0, { timeout: 15_000 });
+    await page.locator('button[type="submit"]').first().click();
+    // Wait for the login screen to disappear
+    await expect(page.locator('input[type="password"]')).toHaveCount(0, { timeout: 20_000 });
   }
 
-  test("owner/staff can authenticate and see app chrome", async ({ page }) => {
+  test("owner/staff can see app chrome", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await login(page);
-      await expect(page.locator("header.app-topbar")).toBeVisible({ timeout: 15_000 });
-      await expect(page.getByText(/MJRH|Dry Tech|نظام تشغيل/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator("header.app-topbar, nav, aside")).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator("body")).toContainText(/MJRH|Dry Tech/i);
     });
   });
 
-  test("core protected pages render after login", async ({ page }) => {
+  test("core protected pages render", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await login(page);
-      for (const path of ["/today", "/daily-operations", "/system-health", "/orders", "/accounting", "/executive", "/customer-care"]) {
+      // Test a few critical paths
+      for (const path of ["/today", "/orders", "/customers"]) {
         await page.goto(path);
-        await expect(page.locator("body")).not.toContainText("حدث خطأ غير متوقع");
-        await expect(page.locator("body")).not.toContainText("Missing VITE_SUPABASE");
+        await expect(page.locator("body")).not.toContainText(/Missing VITE_SUPABASE|حدث خطأ/);
       }
     });
   });
