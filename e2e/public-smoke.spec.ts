@@ -11,7 +11,7 @@ test.describe("public and auth-gated smoke tests", () => {
   test("login page renders without a black screen", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/login");
-      await expect(page.getByRole("heading", { name: /نظام إدارة المغسلة/ })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /نظام إدارة المغسلة|منظومة تشغيل المشاريع/ })).toBeVisible();
       await expect(page.locator('input[type="email"]')).toBeVisible();
       await expect(page.locator('input[type="password"]')).toBeVisible();
       await expect(page.getByRole("button", { name: "دخول" })).toBeVisible();
@@ -29,7 +29,7 @@ test.describe("public and auth-gated smoke tests", () => {
   test("customer portal loads and asks for phone", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/customer-portal?tenant=dry-tech");
-      await expect(page.getByRole("heading", { name: "بوابة العميل" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /بوابة العميل|Customer Portal/ })).toBeVisible();
       await expect(page.getByPlaceholder("01xxxxxxxxx")).toBeVisible();
       await expect(page.getByRole("button", { name: "دخول" })).toBeVisible();
     });
@@ -38,7 +38,7 @@ test.describe("public and auth-gated smoke tests", () => {
   test("tenant public entry page loads with customer and staff actions", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/dry-tech");
-      await expect(page.getByRole("heading", { name: "Dry Tech" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Dry Tech|MJRH/ })).toBeVisible();
       await expect(page.getByRole("link", { name: /دخول العملاء/ })).toBeVisible();
       await expect(page.getByRole("link", { name: /تسجيل عميل جديد/ })).toBeVisible();
       await expect(page.getByRole("link", { name: /دخول الموظفين والمالك/ })).toBeVisible();

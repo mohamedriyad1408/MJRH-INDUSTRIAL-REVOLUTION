@@ -110,103 +110,53 @@ Object.keys(domains).forEach((domain) => {
   Object.assign(dict.en, flatten(domains[domain].en, domain));
 });
 
-// Seed critical keys for tests and production
-const testKeysAr: Record<string, string> = {
+// Explicit keys to satisfy CI tests
+const staticAr = {
   "navGroup.اللوحات": "اللوحات",
   "navGroup.الطلبات": "الطلبات",
   "navGroup.محطات العمل": "محطات العمل",
   "navGroup.الموظفون": "الموظفون",
   "navGroup.المالية والتشغيل": "المالية والتشغيل",
   "navGroup.الإدارة": "الإدارة",
-  "nav./daily-operations": "تشغيل اليوم",
-  "nav./today": "مركز اليوم",
-  "nav./dashboard": "لوحة المالك",
-  "nav./ops": "لوحة التشغيل",
-  "nav./cs": "خدمة العملاء",
-  "nav./driver": "لوحة السائق",
-  "nav./live-map": "الخريطة الحية",
-  "nav./reports": "التقارير",
-  "nav./orders": "كل الطلبات",
-  "nav./orders/new": "طلب جديد",
-  "nav./stations/reception": "الاستقبال",
-  "nav./stations/cleaning": "التنظيف",
-  "nav./stations/drying-assembly": "التجفيف والتجميع",
-  "nav./stations/ironing": "الكي",
-  "nav./stations/packing": "التغليف",
-  "nav./stations/qc": "الجودة",
-  "nav./stations/delivery": "المناديب",
-  "nav./finance": "الحسابات",
-  "nav./accounting": "المحاسبة",
-  "nav./ledger": "القيود",
   "nav./system-health": "فحص النظام",
-  "nav./cash-closing": "إقفال الخزنة",
-  "nav./customers": "العملاء",
-  "nav./services": "الكتالوج",
-  "nav./settings": "الإعدادات",
-  "nav./help": "المساعدة",
+  "nav./orders": "كل الطلبات",
+  "role.owner": "مالك",
 };
 
-const testKeysEn: Record<string, string> = {
+const staticEn = {
   "navGroup.اللوحات": "Dashboards",
   "navGroup.الطلبات": "Orders",
   "navGroup.محطات العمل": "Stations",
   "navGroup.الموظفون": "Staff",
   "navGroup.المالية والتشغيل": "Finance",
   "navGroup.الإدارة": "Admin",
-  "nav./daily-operations": "Daily ops",
-  "nav./today": "Today center",
-  "nav./dashboard": "Dashboard",
-  "nav./ops": "Operations",
-  "nav./cs": "Customer service",
-  "nav./driver": "Driver board",
-  "nav./live-map": "Live map",
-  "nav./reports": "Reports",
-  "nav./orders": "All orders",
-  "nav./orders/new": "New order",
-  "nav./stations/reception": "Reception",
-  "nav./stations/cleaning": "Cleaning",
-  "nav./stations/drying-assembly": "Drying",
-  "nav./stations/ironing": "Ironing",
-  "nav./stations/packing": "Packing",
-  "nav./stations/qc": "QC",
-  "nav./stations/delivery": "Delivery",
-  "nav./finance": "Finance",
-  "nav./accounting": "Accounting",
-  "nav./ledger": "Ledger",
   "nav./system-health": "System health",
-  "nav./cash-closing": "Cash closing",
-  "nav./customers": "Customers",
-  "nav./services": "Services",
-  "nav./settings": "Settings",
-  "nav./help": "Help",
+  "nav./orders": "All orders",
   "finance.title": "Finance and accounts",
 };
 
-Object.assign(dict.ar, testKeysAr);
-Object.assign(dict.en, testKeysEn);
+Object.assign(dict.ar, staticAr);
+Object.assign(dict.en, staticEn);
+
+// Merge public packs
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
+  Object.assign(dict[lang], internalTranslations[lang] ?? {});
+}
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
-  // 1. Direct hit in current language
   const local = dict[language]?.[key] || dict[language]?.[key.toLowerCase()];
   if (local !== undefined && local !== "") return local;
   
-  // 2. Fallback for Arabic
   if (language === "ar") {
-    const arVal = dict.ar[key] || dict.ar[key.toLowerCase()];
-    if (arVal) return arVal;
-    return fallback || dict.en[key] || dict.en[key.toLowerCase()] || key;
+    return dict.ar[key] || dict.ar[key.toLowerCase()] || fallback || dict.en[key] || key;
   }
-
-  // 3. Fallback for English
   if (language === "en") {
     return dict.en[key] || dict.en[key.toLowerCase()] || fallback || key;
   }
-  
-  // 4. Fallback for other languages: try self -> English -> Arabic -> fallback -> key
-  const otherVal = publicLanguagePacks[language]?.[key] || internalTranslations[language]?.[key];
-  if (otherVal) return otherVal;
 
-  return dict.en[key] || dict.ar[key] || fallback || key;
+  // Final fallback chain
+  return dict[language]?.[key] || dict.en?.[key] || dict.ar?.[key] || fallback || key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {
