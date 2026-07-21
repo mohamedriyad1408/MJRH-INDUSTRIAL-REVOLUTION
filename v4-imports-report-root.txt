@@ -1,0 +1,10 @@
+تقرير استيرادات V4 - Tue Jul 21 06:03:20 UTC 2026
+----------------------------------------
+--- 1. استيرادات من 'core' ---
+./lib/i18n.tsx:22:import arScorecard from "../src/locales/ar/scorecard.json";
+./lib/i18n.tsx:23:import enScorecard from "../src/locales/en/scorecard.json";
+--- 2. استيرادات من 'modules' ---
+--- 3. استيرادات من 'routes' (V4) ---
+--- 4. استيرادات دوال L3 (fn_evaluate_readiness) ---
+--- 5. استيرادات Golden Minds ---
+----------------------------------------

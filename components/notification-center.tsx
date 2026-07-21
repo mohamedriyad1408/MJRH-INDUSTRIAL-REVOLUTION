@@ -131,8 +131,8 @@ export function NotificationCenter() {
     });
 
     // Station-specific operational alerts
-    if (myAudiences.includes("ironing")) {
-      const { data } = await supabase.from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId || "").is("ironing_completed_at", null).limit(10);
+    if (myAudiences.includes("ironing") && empId) {
+      const { data } = await supabase.from("service_units").select("id,label_code,name,order_id,orders(order_number)").eq("assigned_ironing_employee_id", empId).is("ironing_completed_at", null).limit(10);
       (data ?? []).slice(0, 5).forEach((u: any) => next.push({ kind: "computed", category: "ops", id: `my-iron-${u.id}`, audience: ["ironing"], tone: "blue", title: interpolate(t("notif.waitingIroning"), { label: u.label_code }), detail: `${t("order.orderNo", "طلب #{order}").replace("{order}", String(u.orders?.order_number ?? "?"))} — ${u.name} — ${u.reclean_reason ?? t("order.reclean")}`, icon: <Shirt className="w-4 h-4" />, href: "/stations/ironing" }));
     }
 
