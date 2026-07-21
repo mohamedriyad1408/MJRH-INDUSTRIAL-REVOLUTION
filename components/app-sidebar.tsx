@@ -102,11 +102,10 @@ export function AppSidebar() {
     }
   }, [tenantId]);
 
-  // ✅ Fixed Super Admin logic: explicitly show both groups
   const groups = isSuperAdmin ? [...adminGroups, ...tenantGroups] : tenantGroups;
 
   return (
-    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon" className="bg-white border-r border-slate-200 shadow-none">
+    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon" className="bg-white border-r border-slate-200">
       <SidebarHeader className="border-b border-slate-100 p-5 bg-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-50 p-1 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
