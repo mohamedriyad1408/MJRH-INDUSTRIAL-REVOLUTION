@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { resolveAppUrl } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,8 +54,8 @@ export function HealthCard({ c, fixingKey, repairing, fixCheck }: { c: Check; fi
     <div className="flex items-center justify-between gap-2"><div className="font-black">{c.title}</div><Badge variant={c.severity === "danger" ? "destructive" : "secondary"}>{c.count}</Badge></div>
     <div className="text-xs text-muted-foreground">{c.fix}</div>
     {c.error && <div className="rounded-lg bg-white/70 border border-red-100 px-2 py-1 text-xs text-red-700 break-words">{t("system.readingError")} {c.error}</div>}
-    {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => { const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>; return d.href ? <Link key={i} to={resolveAppUrl(d.href) as any}>{row}</Link> : <div key={i}>{row}</div>; })}</div> : null}
-    <div className="flex gap-2 pt-1">{c.href && <Button asChild size="sm" variant="outline"><Link to={resolveAppUrl(c.href) as any}>{t("common.openFixLocation")}</Link></Button>}{canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("common.quickFix")}</Button>}</div>
+    {c.details?.length ? <div className="space-y-1">{c.details.map((d, i) => { const row = <div className="rounded-lg bg-white/70 border px-2 py-1 text-xs"><div className="font-bold">{d.label}</div>{d.sub && <div className="text-muted-foreground">{d.sub}</div>}</div>; return d.href ? <Link key={i} to={d.href as any}>{row}</Link> : <div key={i}>{row}</div>; })}</div> : null}
+    <div className="flex gap-2 pt-1">{c.href && <Button asChild size="sm" variant="outline"><Link to={c.href as any}>{t("common.openFixLocation")}</Link></Button>}{canAutoFix && <Button size="sm" onClick={() => fixCheck(c.key)} disabled={fixingKey === c.key || repairing}>{fixingKey === c.key ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Wrench className="w-4 h-4 ms-1" />}{t("common.quickFix")}</Button>}</div>
   </CardContent></Card>;
 }
 

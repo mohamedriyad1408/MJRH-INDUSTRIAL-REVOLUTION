@@ -24,17 +24,6 @@ export async function reportClientError(error: unknown, options: ReportOptions =
     const message = sanitizeErrorText(error);
     if (!message || shouldThrottle(message)) return;
 
-    // Do not spam client_error_logs with routine Vercel deployment chunk load errors
-    const lowerMsg = message.toLowerCase();
-    if (
-      lowerMsg.includes("mime type") ||
-      lowerMsg.includes("dynamically imported module") ||
-      lowerMsg.includes("loading chunk") ||
-      lowerMsg.includes("importing a module script")
-    ) {
-      return;
-    }
-
     const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } } as any));
     const user = sessionData?.session?.user ?? null;
     let tenantId: string | null = null;

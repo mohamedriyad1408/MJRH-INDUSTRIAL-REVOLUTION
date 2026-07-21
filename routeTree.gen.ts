@@ -10,117 +10,76 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LandingRouteImport } from './routes/landing'
 import { Route as CustomerPortalRouteImport } from './routes/customer-portal'
-import { Route as AdminRouteImport } from './routes/_admin'
-import { Route as TenantRouteImport } from './routes/$tenant'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as JoinSlugRouteImport } from './routes/join.$slug'
-import { Route as TenantWorkOrdersRouteImport } from './routes/$tenant/work-orders'
-import { Route as TenantTodayRouteImport } from './routes/$tenant/today'
-import { Route as TenantSystemHealthRouteImport } from './routes/$tenant/system-health'
-import { Route as TenantSubscriptionsRouteImport } from './routes/$tenant/subscriptions'
-import { Route as TenantSettingsRouteImport } from './routes/$tenant/settings'
-import { Route as TenantServicesRouteImport } from './routes/$tenant/services'
-import { Route as TenantSearchRouteImport } from './routes/$tenant/search'
-import { Route as TenantReportsRouteImport } from './routes/$tenant/reports'
-import { Route as TenantReceivablesRouteImport } from './routes/$tenant/receivables'
-import { Route as TenantOpsRouteImport } from './routes/$tenant/ops'
-import { Route as TenantOnboardingRouteImport } from './routes/$tenant/onboarding'
-import { Route as TenantMarketplaceRouteImport } from './routes/$tenant/marketplace'
-import { Route as TenantMarketingRouteImport } from './routes/$tenant/marketing'
-import { Route as TenantManagerRouteImport } from './routes/$tenant/manager'
-import { Route as TenantLiveMapRouteImport } from './routes/$tenant/live-map'
-import { Route as TenantLegalRouteImport } from './routes/$tenant/legal'
-import { Route as TenantLedgerRouteImport } from './routes/$tenant/ledger'
-import { Route as TenantIssuesRouteImport } from './routes/$tenant/issues'
-import { Route as TenantInventoryRouteImport } from './routes/$tenant/inventory'
-import { Route as TenantHelpRouteImport } from './routes/$tenant/help'
-import { Route as TenantFinanceRouteImport } from './routes/$tenant/finance'
-import { Route as TenantExecutiveRouteImport } from './routes/$tenant/executive'
-import { Route as TenantDriverRouteImport } from './routes/$tenant/driver'
-import { Route as TenantDemoRouteImport } from './routes/$tenant/demo'
-import { Route as TenantDashboardRouteImport } from './routes/$tenant/dashboard'
-import { Route as TenantDailyOperationsRouteImport } from './routes/$tenant/daily-operations'
-import { Route as TenantCustomersRouteImport } from './routes/$tenant/customers'
-import { Route as TenantCustomerCareRouteImport } from './routes/$tenant/customer-care'
-import { Route as TenantCsRouteImport } from './routes/$tenant/cs'
-import { Route as TenantCrmRouteImport } from './routes/$tenant/crm'
-import { Route as TenantCashClosingRouteImport } from './routes/$tenant/cash-closing'
-import { Route as TenantBudgetsRouteImport } from './routes/$tenant/budgets'
-import { Route as TenantBranchesRouteImport } from './routes/$tenant/branches'
-import { Route as TenantBillingRouteImport } from './routes/$tenant/billing'
-import { Route as TenantAccountingRouteImport } from './routes/$tenant/accounting'
-import { Route as AdminAdminIndexRouteImport } from './routes/_admin/admin/index'
-import { Route as TenantStaffIndexRouteImport } from './routes/$tenant/staff/index'
-import { Route as TenantSettingsIndexRouteImport } from './routes/$tenant/settings/index'
-import { Route as TenantPickupsIndexRouteImport } from './routes/$tenant/pickups/index'
-import { Route as TenantOrdersIndexRouteImport } from './routes/$tenant/orders/index'
-import { Route as AdminAdminWorkflowBuilderRouteImport } from './routes/_admin/admin/workflow-builder'
-import { Route as AdminAdminTemplatesRouteImport } from './routes/_admin/admin/templates'
-import { Route as AdminAdminTelemetryRouteImport } from './routes/_admin/admin/telemetry'
-import { Route as AdminAdminReportBuilderRouteImport } from './routes/_admin/admin/report-builder'
-import { Route as AdminAdminPlatformFeesRouteImport } from './routes/_admin/admin/platform-fees'
-import { Route as AdminAdminPlatformBuilderRouteImport } from './routes/_admin/admin/platform-builder'
-import { Route as AdminAdminMarketingPlanRouteImport } from './routes/_admin/admin/marketing-plan'
-import { Route as AdminAdminLegalRouteImport } from './routes/_admin/admin/legal'
-import { Route as AdminAdminInvestorRelationsRouteImport } from './routes/_admin/admin/investor-relations'
-import { Route as AdminAdminInputBuilderRouteImport } from './routes/_admin/admin/input-builder'
-import { Route as AdminAdminDemoLibraryRouteImport } from './routes/_admin/admin/demo-library'
-import { Route as AdminAdminCustomerSuccessRouteImport } from './routes/_admin/admin/customer-success'
-import { Route as AdminAdminBusinessPlanRouteImport } from './routes/_admin/admin/business-plan'
-import { Route as AdminAdminBizDevRouteImport } from './routes/_admin/admin/biz-dev'
-import { Route as AdminAdminBillingRouteImport } from './routes/_admin/admin/billing'
-import { Route as TenantStationsSortingRouteImport } from './routes/$tenant/stations/sorting'
-import { Route as TenantStationsReceptionRouteImport } from './routes/$tenant/stations/reception'
-import { Route as TenantStationsQcRouteImport } from './routes/$tenant/stations/qc'
-import { Route as TenantStationsPackingRouteImport } from './routes/$tenant/stations/packing'
-import { Route as TenantStationsIroningRouteImport } from './routes/$tenant/stations/ironing'
-import { Route as TenantStationsIntakeRouteImport } from './routes/$tenant/stations/intake'
-import { Route as TenantStationsDryingAssemblyRouteImport } from './routes/$tenant/stations/drying-assembly'
-import { Route as TenantStationsDeliveryRouteImport } from './routes/$tenant/stations/delivery'
-import { Route as TenantStationsCsRouteImport } from './routes/$tenant/stations/cs'
-import { Route as TenantStationsCleaningRouteImport } from './routes/$tenant/stations/cleaning'
-import { Route as TenantStationsStageRouteImport } from './routes/$tenant/stations/$stage'
-import { Route as TenantStaffUsersRouteImport } from './routes/$tenant/staff/users'
-import { Route as TenantStaffScorecardRouteImport } from './routes/$tenant/staff/scorecard'
-import { Route as TenantStaffScheduleRouteImport } from './routes/$tenant/staff/schedule'
-import { Route as TenantStaffSalariesRouteImport } from './routes/$tenant/staff/salaries'
-import { Route as TenantStaffRequestsRouteImport } from './routes/$tenant/staff/requests'
-import { Route as TenantStaffNewRouteImport } from './routes/$tenant/staff/new'
-import { Route as TenantStaffLeavesRouteImport } from './routes/$tenant/staff/leaves'
-import { Route as TenantStaffIroningPayrollRouteImport } from './routes/$tenant/staff/ironing-payroll'
-import { Route as TenantStaffFairnessRouteImport } from './routes/$tenant/staff/fairness'
-import { Route as TenantStaffAttendanceRouteImport } from './routes/$tenant/staff/attendance'
-import { Route as TenantStaffIdRouteImport } from './routes/$tenant/staff/$id'
-import { Route as TenantSettingsWorkflowRouteImport } from './routes/$tenant/settings/workflow'
-import { Route as TenantSettingsRolesRouteImport } from './routes/$tenant/settings/roles'
-import { Route as TenantReportsBuilderRouteImport } from './routes/$tenant/reports/builder'
-import { Route as TenantPickupsNewRouteImport } from './routes/$tenant/pickups/new'
-import { Route as TenantOrdersNewRouteImport } from './routes/$tenant/orders/new'
-import { Route as TenantOrdersIdRouteImport } from './routes/$tenant/orders/$id'
-import { Route as TenantBranchesIdRouteImport } from './routes/$tenant/branches/$id'
-import { Route as AdminAdminUsersIndexRouteImport } from './routes/_admin/admin/users/index'
-import { Route as AdminAdminTenantsIndexRouteImport } from './routes/_admin/admin/tenants/index'
-import { Route as TenantSettingsWorkflowIndexRouteImport } from './routes/$tenant/settings/workflow/index'
-import { Route as AdminAdminTenantsIdRouteImport } from './routes/_admin/admin/tenants/$id'
-import { Route as TenantSettingsWorkflowStageIdFieldsRouteImport } from './routes/$tenant/settings/workflow/$stageId/fields'
+import { Route as AppTodayRouteImport } from './routes/_app/today'
+import { Route as AppSystemHealthRouteImport } from './routes/_app/system-health'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppServicesRouteImport } from './routes/_app/services'
+import { Route as AppSearchRouteImport } from './routes/_app/search'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
+import { Route as AppReceivablesRouteImport } from './routes/_app/receivables'
+import { Route as AppOpsRouteImport } from './routes/_app/ops'
+import { Route as AppManagerRouteImport } from './routes/_app/manager'
+import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
+import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
+import { Route as AppInventoryRouteImport } from './routes/_app/inventory'
+import { Route as AppHelpRouteImport } from './routes/_app/help'
+import { Route as AppFinanceRouteImport } from './routes/_app/finance'
+import { Route as AppExecutiveRouteImport } from './routes/_app/executive'
+import { Route as AppDriverRouteImport } from './routes/_app/driver'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppDailyOperationsRouteImport } from './routes/_app/daily-operations'
+import { Route as AppCustomersRouteImport } from './routes/_app/customers'
+import { Route as AppCustomerCareRouteImport } from './routes/_app/customer-care'
+import { Route as AppCsRouteImport } from './routes/_app/cs'
+import { Route as AppCrmRouteImport } from './routes/_app/crm'
+import { Route as AppCashClosingRouteImport } from './routes/_app/cash-closing'
+import { Route as AppBudgetsRouteImport } from './routes/_app/budgets'
+import { Route as AppBranchesRouteImport } from './routes/_app/branches'
+import { Route as AppBillingRouteImport } from './routes/_app/billing'
+import { Route as AppAccountingRouteImport } from './routes/_app/accounting'
+import { Route as AppStaffIndexRouteImport } from './routes/_app/staff/index'
+import { Route as AppPickupsIndexRouteImport } from './routes/_app/pickups/index'
+import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
+import { Route as AppStationsReceptionRouteImport } from './routes/_app/stations/reception'
+import { Route as AppStationsQcRouteImport } from './routes/_app/stations/qc'
+import { Route as AppStationsPackingRouteImport } from './routes/_app/stations/packing'
+import { Route as AppStationsIroningRouteImport } from './routes/_app/stations/ironing'
+import { Route as AppStationsDryingAssemblyRouteImport } from './routes/_app/stations/drying-assembly'
+import { Route as AppStationsDeliveryRouteImport } from './routes/_app/stations/delivery'
+import { Route as AppStationsCleaningRouteImport } from './routes/_app/stations/cleaning'
+import { Route as AppStaffUsersRouteImport } from './routes/_app/staff/users'
+import { Route as AppStaffScorecardRouteImport } from './routes/_app/staff/scorecard'
+import { Route as AppStaffScheduleRouteImport } from './routes/_app/staff/schedule'
+import { Route as AppStaffSalariesRouteImport } from './routes/_app/staff/salaries'
+import { Route as AppStaffRequestsRouteImport } from './routes/_app/staff/requests'
+import { Route as AppStaffNewRouteImport } from './routes/_app/staff/new'
+import { Route as AppStaffLeavesRouteImport } from './routes/_app/staff/leaves'
+import { Route as AppStaffIroningPayrollRouteImport } from './routes/_app/staff/ironing-payroll'
+import { Route as AppStaffAttendanceRouteImport } from './routes/_app/staff/attendance'
+import { Route as AppStaffIdRouteImport } from './routes/_app/staff/$id'
+import { Route as AppPickupsNewRouteImport } from './routes/_app/pickups/new'
+import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
+import { Route as AppOrdersIdRouteImport } from './routes/_app/orders/$id'
+import { Route as AppBranchesIdRouteImport } from './routes/_app/branches/$id'
+import { Route as AppAdminPlatformFeesRouteImport } from './routes/_app/admin/platform-fees'
+import { Route as AppAdminBillingRouteImport } from './routes/_app/admin/billing'
+import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
+import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
+import { Route as AppAdminTenantsIdRouteImport } from './routes/_app/admin/tenants/$id'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -131,11 +90,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MarketplaceRoute = MarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -153,13 +107,8 @@ const CustomerPortalRoute = CustomerPortalRouteImport.update({
   path: '/customer-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/_admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TenantRoute = TenantRouteImport.update({
-  id: '/$tenant',
-  path: '/$tenant',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugRoute = SlugRouteImport.update({
@@ -182,1098 +131,711 @@ const JoinSlugRoute = JoinSlugRouteImport.update({
   path: '/join/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TenantWorkOrdersRoute = TenantWorkOrdersRouteImport.update({
-  id: '/work-orders',
-  path: '/work-orders',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantTodayRoute = TenantTodayRouteImport.update({
+const AppTodayRoute = AppTodayRouteImport.update({
   id: '/today',
   path: '/today',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSystemHealthRoute = TenantSystemHealthRouteImport.update({
+const AppSystemHealthRoute = AppSystemHealthRouteImport.update({
   id: '/system-health',
   path: '/system-health',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSubscriptionsRoute = TenantSubscriptionsRouteImport.update({
-  id: '/subscriptions',
-  path: '/subscriptions',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantSettingsRoute = TenantSettingsRouteImport.update({
+const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantServicesRoute = TenantServicesRouteImport.update({
+const AppServicesRoute = AppServicesRouteImport.update({
   id: '/services',
   path: '/services',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSearchRoute = TenantSearchRouteImport.update({
+const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantReportsRoute = TenantReportsRouteImport.update({
+const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantReceivablesRoute = TenantReceivablesRouteImport.update({
+const AppReceivablesRoute = AppReceivablesRouteImport.update({
   id: '/receivables',
   path: '/receivables',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantOpsRoute = TenantOpsRouteImport.update({
+const AppOpsRoute = AppOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantOnboardingRoute = TenantOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantMarketplaceRoute = TenantMarketplaceRouteImport.update({
-  id: '/marketplace',
-  path: '/marketplace',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantMarketingRoute = TenantMarketingRouteImport.update({
-  id: '/marketing',
-  path: '/marketing',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantManagerRoute = TenantManagerRouteImport.update({
+const AppManagerRoute = AppManagerRouteImport.update({
   id: '/manager',
   path: '/manager',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantLiveMapRoute = TenantLiveMapRouteImport.update({
+const AppLiveMapRoute = AppLiveMapRouteImport.update({
   id: '/live-map',
   path: '/live-map',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantLegalRoute = TenantLegalRouteImport.update({
-  id: '/legal',
-  path: '/legal',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantLedgerRoute = TenantLedgerRouteImport.update({
+const AppLedgerRoute = AppLedgerRouteImport.update({
   id: '/ledger',
   path: '/ledger',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantIssuesRoute = TenantIssuesRouteImport.update({
-  id: '/issues',
-  path: '/issues',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantInventoryRoute = TenantInventoryRouteImport.update({
+const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantHelpRoute = TenantHelpRouteImport.update({
+const AppHelpRoute = AppHelpRouteImport.update({
   id: '/help',
   path: '/help',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantFinanceRoute = TenantFinanceRouteImport.update({
+const AppFinanceRoute = AppFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantExecutiveRoute = TenantExecutiveRouteImport.update({
+const AppExecutiveRoute = AppExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantDriverRoute = TenantDriverRouteImport.update({
+const AppDriverRoute = AppDriverRouteImport.update({
   id: '/driver',
   path: '/driver',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantDemoRoute = TenantDemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantDashboardRoute = TenantDashboardRouteImport.update({
+const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantDailyOperationsRoute = TenantDailyOperationsRouteImport.update({
+const AppDailyOperationsRoute = AppDailyOperationsRouteImport.update({
   id: '/daily-operations',
   path: '/daily-operations',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantCustomersRoute = TenantCustomersRouteImport.update({
+const AppCustomersRoute = AppCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantCustomerCareRoute = TenantCustomerCareRouteImport.update({
+const AppCustomerCareRoute = AppCustomerCareRouteImport.update({
   id: '/customer-care',
   path: '/customer-care',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantCsRoute = TenantCsRouteImport.update({
+const AppCsRoute = AppCsRouteImport.update({
   id: '/cs',
   path: '/cs',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantCrmRoute = TenantCrmRouteImport.update({
+const AppCrmRoute = AppCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantCashClosingRoute = TenantCashClosingRouteImport.update({
+const AppCashClosingRoute = AppCashClosingRouteImport.update({
   id: '/cash-closing',
   path: '/cash-closing',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantBudgetsRoute = TenantBudgetsRouteImport.update({
+const AppBudgetsRoute = AppBudgetsRouteImport.update({
   id: '/budgets',
   path: '/budgets',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantBranchesRoute = TenantBranchesRouteImport.update({
+const AppBranchesRoute = AppBranchesRouteImport.update({
   id: '/branches',
   path: '/branches',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantBillingRoute = TenantBillingRouteImport.update({
+const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantAccountingRoute = TenantAccountingRouteImport.update({
+const AppAccountingRoute = AppAccountingRouteImport.update({
   id: '/accounting',
   path: '/accounting',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AdminAdminIndexRoute = AdminAdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const TenantStaffIndexRoute = TenantStaffIndexRouteImport.update({
+const AppStaffIndexRoute = AppStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSettingsIndexRoute = TenantSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => TenantSettingsRoute,
-} as any)
-const TenantPickupsIndexRoute = TenantPickupsIndexRouteImport.update({
+const AppPickupsIndexRoute = AppPickupsIndexRouteImport.update({
   id: '/pickups/',
   path: '/pickups/',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantOrdersIndexRoute = TenantOrdersIndexRouteImport.update({
+const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AdminAdminWorkflowBuilderRoute =
-  AdminAdminWorkflowBuilderRouteImport.update({
-    id: '/admin/workflow-builder',
-    path: '/admin/workflow-builder',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminAdminTemplatesRoute = AdminAdminTemplatesRouteImport.update({
-  id: '/admin/templates',
-  path: '/admin/templates',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminTelemetryRoute = AdminAdminTelemetryRouteImport.update({
-  id: '/admin/telemetry',
-  path: '/admin/telemetry',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminReportBuilderRoute = AdminAdminReportBuilderRouteImport.update({
-  id: '/admin/report-builder',
-  path: '/admin/report-builder',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminPlatformFeesRoute = AdminAdminPlatformFeesRouteImport.update({
-  id: '/admin/platform-fees',
-  path: '/admin/platform-fees',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminPlatformBuilderRoute =
-  AdminAdminPlatformBuilderRouteImport.update({
-    id: '/admin/platform-builder',
-    path: '/admin/platform-builder',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminAdminMarketingPlanRoute = AdminAdminMarketingPlanRouteImport.update({
-  id: '/admin/marketing-plan',
-  path: '/admin/marketing-plan',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminLegalRoute = AdminAdminLegalRouteImport.update({
-  id: '/admin/legal',
-  path: '/admin/legal',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminInvestorRelationsRoute =
-  AdminAdminInvestorRelationsRouteImport.update({
-    id: '/admin/investor-relations',
-    path: '/admin/investor-relations',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminAdminInputBuilderRoute = AdminAdminInputBuilderRouteImport.update({
-  id: '/admin/input-builder',
-  path: '/admin/input-builder',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminDemoLibraryRoute = AdminAdminDemoLibraryRouteImport.update({
-  id: '/admin/demo-library',
-  path: '/admin/demo-library',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminCustomerSuccessRoute =
-  AdminAdminCustomerSuccessRouteImport.update({
-    id: '/admin/customer-success',
-    path: '/admin/customer-success',
-    getParentRoute: () => AdminRoute,
-  } as any)
-const AdminAdminBusinessPlanRoute = AdminAdminBusinessPlanRouteImport.update({
-  id: '/admin/business-plan',
-  path: '/admin/business-plan',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminBizDevRoute = AdminAdminBizDevRouteImport.update({
-  id: '/admin/biz-dev',
-  path: '/admin/biz-dev',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAdminBillingRoute = AdminAdminBillingRouteImport.update({
-  id: '/admin/billing',
-  path: '/admin/billing',
-  getParentRoute: () => AdminRoute,
-} as any)
-const TenantStationsSortingRoute = TenantStationsSortingRouteImport.update({
-  id: '/stations/sorting',
-  path: '/stations/sorting',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantStationsReceptionRoute = TenantStationsReceptionRouteImport.update({
+const AppStationsReceptionRoute = AppStationsReceptionRouteImport.update({
   id: '/stations/reception',
   path: '/stations/reception',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsQcRoute = TenantStationsQcRouteImport.update({
+const AppStationsQcRoute = AppStationsQcRouteImport.update({
   id: '/stations/qc',
   path: '/stations/qc',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsPackingRoute = TenantStationsPackingRouteImport.update({
+const AppStationsPackingRoute = AppStationsPackingRouteImport.update({
   id: '/stations/packing',
   path: '/stations/packing',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsIroningRoute = TenantStationsIroningRouteImport.update({
+const AppStationsIroningRoute = AppStationsIroningRouteImport.update({
   id: '/stations/ironing',
   path: '/stations/ironing',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsIntakeRoute = TenantStationsIntakeRouteImport.update({
-  id: '/stations/intake',
-  path: '/stations/intake',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantStationsDryingAssemblyRoute =
-  TenantStationsDryingAssemblyRouteImport.update({
+const AppStationsDryingAssemblyRoute =
+  AppStationsDryingAssemblyRouteImport.update({
     id: '/stations/drying-assembly',
     path: '/stations/drying-assembly',
-    getParentRoute: () => TenantRoute,
+    getParentRoute: () => AppRoute,
   } as any)
-const TenantStationsDeliveryRoute = TenantStationsDeliveryRouteImport.update({
+const AppStationsDeliveryRoute = AppStationsDeliveryRouteImport.update({
   id: '/stations/delivery',
   path: '/stations/delivery',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsCsRoute = TenantStationsCsRouteImport.update({
-  id: '/stations/cs',
-  path: '/stations/cs',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantStationsCleaningRoute = TenantStationsCleaningRouteImport.update({
+const AppStationsCleaningRoute = AppStationsCleaningRouteImport.update({
   id: '/stations/cleaning',
   path: '/stations/cleaning',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStationsStageRoute = TenantStationsStageRouteImport.update({
-  id: '/stations/$stage',
-  path: '/stations/$stage',
-  getParentRoute: () => TenantRoute,
-} as any)
-const TenantStaffUsersRoute = TenantStaffUsersRouteImport.update({
+const AppStaffUsersRoute = AppStaffUsersRouteImport.update({
   id: '/staff/users',
   path: '/staff/users',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffScorecardRoute = TenantStaffScorecardRouteImport.update({
+const AppStaffScorecardRoute = AppStaffScorecardRouteImport.update({
   id: '/staff/scorecard',
   path: '/staff/scorecard',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffScheduleRoute = TenantStaffScheduleRouteImport.update({
+const AppStaffScheduleRoute = AppStaffScheduleRouteImport.update({
   id: '/staff/schedule',
   path: '/staff/schedule',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffSalariesRoute = TenantStaffSalariesRouteImport.update({
+const AppStaffSalariesRoute = AppStaffSalariesRouteImport.update({
   id: '/staff/salaries',
   path: '/staff/salaries',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffRequestsRoute = TenantStaffRequestsRouteImport.update({
+const AppStaffRequestsRoute = AppStaffRequestsRouteImport.update({
   id: '/staff/requests',
   path: '/staff/requests',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffNewRoute = TenantStaffNewRouteImport.update({
+const AppStaffNewRoute = AppStaffNewRouteImport.update({
   id: '/staff/new',
   path: '/staff/new',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffLeavesRoute = TenantStaffLeavesRouteImport.update({
+const AppStaffLeavesRoute = AppStaffLeavesRouteImport.update({
   id: '/staff/leaves',
   path: '/staff/leaves',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffIroningPayrollRoute =
-  TenantStaffIroningPayrollRouteImport.update({
-    id: '/staff/ironing-payroll',
-    path: '/staff/ironing-payroll',
-    getParentRoute: () => TenantRoute,
-  } as any)
-const TenantStaffFairnessRoute = TenantStaffFairnessRouteImport.update({
-  id: '/staff/fairness',
-  path: '/staff/fairness',
-  getParentRoute: () => TenantRoute,
+const AppStaffIroningPayrollRoute = AppStaffIroningPayrollRouteImport.update({
+  id: '/staff/ironing-payroll',
+  path: '/staff/ironing-payroll',
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffAttendanceRoute = TenantStaffAttendanceRouteImport.update({
+const AppStaffAttendanceRoute = AppStaffAttendanceRouteImport.update({
   id: '/staff/attendance',
   path: '/staff/attendance',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantStaffIdRoute = TenantStaffIdRouteImport.update({
+const AppStaffIdRoute = AppStaffIdRouteImport.update({
   id: '/staff/$id',
   path: '/staff/$id',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSettingsWorkflowRoute = TenantSettingsWorkflowRouteImport.update({
-  id: '/workflow',
-  path: '/workflow',
-  getParentRoute: () => TenantSettingsRoute,
-} as any)
-const TenantSettingsRolesRoute = TenantSettingsRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => TenantSettingsRoute,
-} as any)
-const TenantReportsBuilderRoute = TenantReportsBuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
-  getParentRoute: () => TenantReportsRoute,
-} as any)
-const TenantPickupsNewRoute = TenantPickupsNewRouteImport.update({
+const AppPickupsNewRoute = AppPickupsNewRouteImport.update({
   id: '/pickups/new',
   path: '/pickups/new',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantOrdersNewRoute = TenantOrdersNewRouteImport.update({
+const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
   id: '/orders/new',
   path: '/orders/new',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantOrdersIdRoute = TenantOrdersIdRouteImport.update({
+const AppOrdersIdRoute = AppOrdersIdRouteImport.update({
   id: '/orders/$id',
   path: '/orders/$id',
-  getParentRoute: () => TenantRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantBranchesIdRoute = TenantBranchesIdRouteImport.update({
+const AppBranchesIdRoute = AppBranchesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
-  getParentRoute: () => TenantBranchesRoute,
+  getParentRoute: () => AppBranchesRoute,
 } as any)
-const AdminAdminUsersIndexRoute = AdminAdminUsersIndexRouteImport.update({
+const AppAdminPlatformFeesRoute = AppAdminPlatformFeesRouteImport.update({
+  id: '/admin/platform-fees',
+  path: '/admin/platform-fees',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminBillingRoute = AppAdminBillingRouteImport.update({
+  id: '/admin/billing',
+  path: '/admin/billing',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminUsersIndexRoute = AppAdminUsersIndexRouteImport.update({
   id: '/admin/users/',
   path: '/admin/users/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const AdminAdminTenantsIndexRoute = AdminAdminTenantsIndexRouteImport.update({
+const AppAdminTenantsIndexRoute = AppAdminTenantsIndexRouteImport.update({
   id: '/admin/tenants/',
   path: '/admin/tenants/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSettingsWorkflowIndexRoute =
-  TenantSettingsWorkflowIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => TenantSettingsWorkflowRoute,
-  } as any)
-const AdminAdminTenantsIdRoute = AdminAdminTenantsIdRouteImport.update({
+const AppAdminTenantsIdRoute = AppAdminTenantsIdRouteImport.update({
   id: '/admin/tenants/$id',
   path: '/admin/tenants/$id',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AppRoute,
 } as any)
-const TenantSettingsWorkflowStageIdFieldsRoute =
-  TenantSettingsWorkflowStageIdFieldsRouteImport.update({
-    id: '/$stageId/fields',
-    path: '/$stageId/fields',
-    getParentRoute: () => TenantSettingsWorkflowRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/$tenant': typeof TenantRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/marketplace': typeof MarketplaceRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
-  '/$tenant/accounting': typeof TenantAccountingRoute
-  '/$tenant/billing': typeof TenantBillingRoute
-  '/$tenant/branches': typeof TenantBranchesRouteWithChildren
-  '/$tenant/budgets': typeof TenantBudgetsRoute
-  '/$tenant/cash-closing': typeof TenantCashClosingRoute
-  '/$tenant/crm': typeof TenantCrmRoute
-  '/$tenant/cs': typeof TenantCsRoute
-  '/$tenant/customer-care': typeof TenantCustomerCareRoute
-  '/$tenant/customers': typeof TenantCustomersRoute
-  '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
-  '/$tenant/dashboard': typeof TenantDashboardRoute
-  '/$tenant/demo': typeof TenantDemoRoute
-  '/$tenant/driver': typeof TenantDriverRoute
-  '/$tenant/executive': typeof TenantExecutiveRoute
-  '/$tenant/finance': typeof TenantFinanceRoute
-  '/$tenant/help': typeof TenantHelpRoute
-  '/$tenant/inventory': typeof TenantInventoryRoute
-  '/$tenant/issues': typeof TenantIssuesRoute
-  '/$tenant/ledger': typeof TenantLedgerRoute
-  '/$tenant/legal': typeof TenantLegalRoute
-  '/$tenant/live-map': typeof TenantLiveMapRoute
-  '/$tenant/manager': typeof TenantManagerRoute
-  '/$tenant/marketing': typeof TenantMarketingRoute
-  '/$tenant/marketplace': typeof TenantMarketplaceRoute
-  '/$tenant/onboarding': typeof TenantOnboardingRoute
-  '/$tenant/ops': typeof TenantOpsRoute
-  '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRouteWithChildren
-  '/$tenant/search': typeof TenantSearchRoute
-  '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
-  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
-  '/$tenant/system-health': typeof TenantSystemHealthRoute
-  '/$tenant/today': typeof TenantTodayRoute
-  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
+  '/accounting': typeof AppAccountingRoute
+  '/billing': typeof AppBillingRoute
+  '/branches': typeof AppBranchesRouteWithChildren
+  '/budgets': typeof AppBudgetsRoute
+  '/cash-closing': typeof AppCashClosingRoute
+  '/crm': typeof AppCrmRoute
+  '/cs': typeof AppCsRoute
+  '/customer-care': typeof AppCustomerCareRoute
+  '/customers': typeof AppCustomersRoute
+  '/daily-operations': typeof AppDailyOperationsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/driver': typeof AppDriverRoute
+  '/executive': typeof AppExecutiveRoute
+  '/finance': typeof AppFinanceRoute
+  '/help': typeof AppHelpRoute
+  '/inventory': typeof AppInventoryRoute
+  '/ledger': typeof AppLedgerRoute
+  '/live-map': typeof AppLiveMapRoute
+  '/manager': typeof AppManagerRoute
+  '/ops': typeof AppOpsRoute
+  '/receivables': typeof AppReceivablesRoute
+  '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
+  '/services': typeof AppServicesRoute
+  '/settings': typeof AppSettingsRoute
+  '/system-health': typeof AppSystemHealthRoute
+  '/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
-  '/$tenant/branches/$id': typeof TenantBranchesIdRoute
-  '/$tenant/orders/$id': typeof TenantOrdersIdRoute
-  '/$tenant/orders/new': typeof TenantOrdersNewRoute
-  '/$tenant/pickups/new': typeof TenantPickupsNewRoute
-  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
-  '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRouteWithChildren
-  '/$tenant/staff/$id': typeof TenantStaffIdRoute
-  '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
-  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
-  '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
-  '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
-  '/$tenant/staff/new': typeof TenantStaffNewRoute
-  '/$tenant/staff/requests': typeof TenantStaffRequestsRoute
-  '/$tenant/staff/salaries': typeof TenantStaffSalariesRoute
-  '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
-  '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
-  '/$tenant/staff/users': typeof TenantStaffUsersRoute
-  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
-  '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
-  '/$tenant/stations/cs': typeof TenantStationsCsRoute
-  '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
-  '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
-  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
-  '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
-  '/$tenant/stations/packing': typeof TenantStationsPackingRoute
-  '/$tenant/stations/qc': typeof TenantStationsQcRoute
-  '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
-  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
-  '/admin/billing': typeof AdminAdminBillingRoute
-  '/admin/biz-dev': typeof AdminAdminBizDevRoute
-  '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
-  '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
-  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
-  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
-  '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
-  '/admin/legal': typeof AdminAdminLegalRoute
-  '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
-  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
-  '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
-  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
-  '/admin/telemetry': typeof AdminAdminTelemetryRoute
-  '/admin/templates': typeof AdminAdminTemplatesRoute
-  '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
-  '/$tenant/orders/': typeof TenantOrdersIndexRoute
-  '/$tenant/pickups/': typeof TenantPickupsIndexRoute
-  '/$tenant/settings/': typeof TenantSettingsIndexRoute
-  '/$tenant/staff/': typeof TenantStaffIndexRoute
-  '/admin/': typeof AdminAdminIndexRoute
-  '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
-  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
-  '/admin/tenants/': typeof AdminAdminTenantsIndexRoute
-  '/admin/users/': typeof AdminAdminUsersIndexRoute
-  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
+  '/admin/billing': typeof AppAdminBillingRoute
+  '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/branches/$id': typeof AppBranchesIdRoute
+  '/orders/$id': typeof AppOrdersIdRoute
+  '/orders/new': typeof AppOrdersNewRoute
+  '/pickups/new': typeof AppPickupsNewRoute
+  '/staff/$id': typeof AppStaffIdRoute
+  '/staff/attendance': typeof AppStaffAttendanceRoute
+  '/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
+  '/staff/leaves': typeof AppStaffLeavesRoute
+  '/staff/new': typeof AppStaffNewRoute
+  '/staff/requests': typeof AppStaffRequestsRoute
+  '/staff/salaries': typeof AppStaffSalariesRoute
+  '/staff/schedule': typeof AppStaffScheduleRoute
+  '/staff/scorecard': typeof AppStaffScorecardRoute
+  '/staff/users': typeof AppStaffUsersRoute
+  '/stations/cleaning': typeof AppStationsCleaningRoute
+  '/stations/delivery': typeof AppStationsDeliveryRoute
+  '/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
+  '/stations/ironing': typeof AppStationsIroningRoute
+  '/stations/packing': typeof AppStationsPackingRoute
+  '/stations/qc': typeof AppStationsQcRoute
+  '/stations/reception': typeof AppStationsReceptionRoute
+  '/orders/': typeof AppOrdersIndexRoute
+  '/pickups/': typeof AppPickupsIndexRoute
+  '/staff/': typeof AppStaffIndexRoute
+  '/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/admin/tenants/': typeof AppAdminTenantsIndexRoute
+  '/admin/users/': typeof AppAdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/$tenant': typeof TenantRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/marketplace': typeof MarketplaceRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
-  '/$tenant/accounting': typeof TenantAccountingRoute
-  '/$tenant/billing': typeof TenantBillingRoute
-  '/$tenant/branches': typeof TenantBranchesRouteWithChildren
-  '/$tenant/budgets': typeof TenantBudgetsRoute
-  '/$tenant/cash-closing': typeof TenantCashClosingRoute
-  '/$tenant/crm': typeof TenantCrmRoute
-  '/$tenant/cs': typeof TenantCsRoute
-  '/$tenant/customer-care': typeof TenantCustomerCareRoute
-  '/$tenant/customers': typeof TenantCustomersRoute
-  '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
-  '/$tenant/dashboard': typeof TenantDashboardRoute
-  '/$tenant/demo': typeof TenantDemoRoute
-  '/$tenant/driver': typeof TenantDriverRoute
-  '/$tenant/executive': typeof TenantExecutiveRoute
-  '/$tenant/finance': typeof TenantFinanceRoute
-  '/$tenant/help': typeof TenantHelpRoute
-  '/$tenant/inventory': typeof TenantInventoryRoute
-  '/$tenant/issues': typeof TenantIssuesRoute
-  '/$tenant/ledger': typeof TenantLedgerRoute
-  '/$tenant/legal': typeof TenantLegalRoute
-  '/$tenant/live-map': typeof TenantLiveMapRoute
-  '/$tenant/manager': typeof TenantManagerRoute
-  '/$tenant/marketing': typeof TenantMarketingRoute
-  '/$tenant/marketplace': typeof TenantMarketplaceRoute
-  '/$tenant/onboarding': typeof TenantOnboardingRoute
-  '/$tenant/ops': typeof TenantOpsRoute
-  '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRouteWithChildren
-  '/$tenant/search': typeof TenantSearchRoute
-  '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
-  '/$tenant/system-health': typeof TenantSystemHealthRoute
-  '/$tenant/today': typeof TenantTodayRoute
-  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
+  '/accounting': typeof AppAccountingRoute
+  '/billing': typeof AppBillingRoute
+  '/branches': typeof AppBranchesRouteWithChildren
+  '/budgets': typeof AppBudgetsRoute
+  '/cash-closing': typeof AppCashClosingRoute
+  '/crm': typeof AppCrmRoute
+  '/cs': typeof AppCsRoute
+  '/customer-care': typeof AppCustomerCareRoute
+  '/customers': typeof AppCustomersRoute
+  '/daily-operations': typeof AppDailyOperationsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/driver': typeof AppDriverRoute
+  '/executive': typeof AppExecutiveRoute
+  '/finance': typeof AppFinanceRoute
+  '/help': typeof AppHelpRoute
+  '/inventory': typeof AppInventoryRoute
+  '/ledger': typeof AppLedgerRoute
+  '/live-map': typeof AppLiveMapRoute
+  '/manager': typeof AppManagerRoute
+  '/ops': typeof AppOpsRoute
+  '/receivables': typeof AppReceivablesRoute
+  '/reports': typeof AppReportsRoute
+  '/search': typeof AppSearchRoute
+  '/services': typeof AppServicesRoute
+  '/settings': typeof AppSettingsRoute
+  '/system-health': typeof AppSystemHealthRoute
+  '/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
-  '/$tenant/branches/$id': typeof TenantBranchesIdRoute
-  '/$tenant/orders/$id': typeof TenantOrdersIdRoute
-  '/$tenant/orders/new': typeof TenantOrdersNewRoute
-  '/$tenant/pickups/new': typeof TenantPickupsNewRoute
-  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
-  '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/staff/$id': typeof TenantStaffIdRoute
-  '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
-  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
-  '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
-  '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
-  '/$tenant/staff/new': typeof TenantStaffNewRoute
-  '/$tenant/staff/requests': typeof TenantStaffRequestsRoute
-  '/$tenant/staff/salaries': typeof TenantStaffSalariesRoute
-  '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
-  '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
-  '/$tenant/staff/users': typeof TenantStaffUsersRoute
-  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
-  '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
-  '/$tenant/stations/cs': typeof TenantStationsCsRoute
-  '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
-  '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
-  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
-  '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
-  '/$tenant/stations/packing': typeof TenantStationsPackingRoute
-  '/$tenant/stations/qc': typeof TenantStationsQcRoute
-  '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
-  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
-  '/admin/billing': typeof AdminAdminBillingRoute
-  '/admin/biz-dev': typeof AdminAdminBizDevRoute
-  '/admin/business-plan': typeof AdminAdminBusinessPlanRoute
-  '/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
-  '/admin/demo-library': typeof AdminAdminDemoLibraryRoute
-  '/admin/input-builder': typeof AdminAdminInputBuilderRoute
-  '/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
-  '/admin/legal': typeof AdminAdminLegalRoute
-  '/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
-  '/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
-  '/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
-  '/admin/report-builder': typeof AdminAdminReportBuilderRoute
-  '/admin/telemetry': typeof AdminAdminTelemetryRoute
-  '/admin/templates': typeof AdminAdminTemplatesRoute
-  '/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
-  '/$tenant/orders': typeof TenantOrdersIndexRoute
-  '/$tenant/pickups': typeof TenantPickupsIndexRoute
-  '/$tenant/settings': typeof TenantSettingsIndexRoute
-  '/$tenant/staff': typeof TenantStaffIndexRoute
-  '/admin': typeof AdminAdminIndexRoute
-  '/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowIndexRoute
-  '/admin/tenants': typeof AdminAdminTenantsIndexRoute
-  '/admin/users': typeof AdminAdminUsersIndexRoute
-  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
+  '/admin/billing': typeof AppAdminBillingRoute
+  '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/branches/$id': typeof AppBranchesIdRoute
+  '/orders/$id': typeof AppOrdersIdRoute
+  '/orders/new': typeof AppOrdersNewRoute
+  '/pickups/new': typeof AppPickupsNewRoute
+  '/staff/$id': typeof AppStaffIdRoute
+  '/staff/attendance': typeof AppStaffAttendanceRoute
+  '/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
+  '/staff/leaves': typeof AppStaffLeavesRoute
+  '/staff/new': typeof AppStaffNewRoute
+  '/staff/requests': typeof AppStaffRequestsRoute
+  '/staff/salaries': typeof AppStaffSalariesRoute
+  '/staff/schedule': typeof AppStaffScheduleRoute
+  '/staff/scorecard': typeof AppStaffScorecardRoute
+  '/staff/users': typeof AppStaffUsersRoute
+  '/stations/cleaning': typeof AppStationsCleaningRoute
+  '/stations/delivery': typeof AppStationsDeliveryRoute
+  '/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
+  '/stations/ironing': typeof AppStationsIroningRoute
+  '/stations/packing': typeof AppStationsPackingRoute
+  '/stations/qc': typeof AppStationsQcRoute
+  '/stations/reception': typeof AppStationsReceptionRoute
+  '/orders': typeof AppOrdersIndexRoute
+  '/pickups': typeof AppPickupsIndexRoute
+  '/staff': typeof AppStaffIndexRoute
+  '/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/admin/tenants': typeof AppAdminTenantsIndexRoute
+  '/admin/users': typeof AppAdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
-  '/$tenant': typeof TenantRouteWithChildren
-  '/_admin': typeof AdminRouteWithChildren
+  '/_app': typeof AppRouteWithChildren
   '/customer-portal': typeof CustomerPortalRoute
   '/landing': typeof LandingRoute
   '/login': typeof LoginRoute
-  '/marketplace': typeof MarketplaceRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
-  '/$tenant/accounting': typeof TenantAccountingRoute
-  '/$tenant/billing': typeof TenantBillingRoute
-  '/$tenant/branches': typeof TenantBranchesRouteWithChildren
-  '/$tenant/budgets': typeof TenantBudgetsRoute
-  '/$tenant/cash-closing': typeof TenantCashClosingRoute
-  '/$tenant/crm': typeof TenantCrmRoute
-  '/$tenant/cs': typeof TenantCsRoute
-  '/$tenant/customer-care': typeof TenantCustomerCareRoute
-  '/$tenant/customers': typeof TenantCustomersRoute
-  '/$tenant/daily-operations': typeof TenantDailyOperationsRoute
-  '/$tenant/dashboard': typeof TenantDashboardRoute
-  '/$tenant/demo': typeof TenantDemoRoute
-  '/$tenant/driver': typeof TenantDriverRoute
-  '/$tenant/executive': typeof TenantExecutiveRoute
-  '/$tenant/finance': typeof TenantFinanceRoute
-  '/$tenant/help': typeof TenantHelpRoute
-  '/$tenant/inventory': typeof TenantInventoryRoute
-  '/$tenant/issues': typeof TenantIssuesRoute
-  '/$tenant/ledger': typeof TenantLedgerRoute
-  '/$tenant/legal': typeof TenantLegalRoute
-  '/$tenant/live-map': typeof TenantLiveMapRoute
-  '/$tenant/manager': typeof TenantManagerRoute
-  '/$tenant/marketing': typeof TenantMarketingRoute
-  '/$tenant/marketplace': typeof TenantMarketplaceRoute
-  '/$tenant/onboarding': typeof TenantOnboardingRoute
-  '/$tenant/ops': typeof TenantOpsRoute
-  '/$tenant/receivables': typeof TenantReceivablesRoute
-  '/$tenant/reports': typeof TenantReportsRouteWithChildren
-  '/$tenant/search': typeof TenantSearchRoute
-  '/$tenant/services': typeof TenantServicesRoute
-  '/$tenant/settings': typeof TenantSettingsRouteWithChildren
-  '/$tenant/subscriptions': typeof TenantSubscriptionsRoute
-  '/$tenant/system-health': typeof TenantSystemHealthRoute
-  '/$tenant/today': typeof TenantTodayRoute
-  '/$tenant/work-orders': typeof TenantWorkOrdersRoute
+  '/_app/accounting': typeof AppAccountingRoute
+  '/_app/billing': typeof AppBillingRoute
+  '/_app/branches': typeof AppBranchesRouteWithChildren
+  '/_app/budgets': typeof AppBudgetsRoute
+  '/_app/cash-closing': typeof AppCashClosingRoute
+  '/_app/crm': typeof AppCrmRoute
+  '/_app/cs': typeof AppCsRoute
+  '/_app/customer-care': typeof AppCustomerCareRoute
+  '/_app/customers': typeof AppCustomersRoute
+  '/_app/daily-operations': typeof AppDailyOperationsRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/driver': typeof AppDriverRoute
+  '/_app/executive': typeof AppExecutiveRoute
+  '/_app/finance': typeof AppFinanceRoute
+  '/_app/help': typeof AppHelpRoute
+  '/_app/inventory': typeof AppInventoryRoute
+  '/_app/ledger': typeof AppLedgerRoute
+  '/_app/live-map': typeof AppLiveMapRoute
+  '/_app/manager': typeof AppManagerRoute
+  '/_app/ops': typeof AppOpsRoute
+  '/_app/receivables': typeof AppReceivablesRoute
+  '/_app/reports': typeof AppReportsRoute
+  '/_app/search': typeof AppSearchRoute
+  '/_app/services': typeof AppServicesRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/system-health': typeof AppSystemHealthRoute
+  '/_app/today': typeof AppTodayRoute
   '/join/$slug': typeof JoinSlugRoute
   '/track/$token': typeof TrackTokenRoute
-  '/$tenant/branches/$id': typeof TenantBranchesIdRoute
-  '/$tenant/orders/$id': typeof TenantOrdersIdRoute
-  '/$tenant/orders/new': typeof TenantOrdersNewRoute
-  '/$tenant/pickups/new': typeof TenantPickupsNewRoute
-  '/$tenant/reports/builder': typeof TenantReportsBuilderRoute
-  '/$tenant/settings/roles': typeof TenantSettingsRolesRoute
-  '/$tenant/settings/workflow': typeof TenantSettingsWorkflowRouteWithChildren
-  '/$tenant/staff/$id': typeof TenantStaffIdRoute
-  '/$tenant/staff/attendance': typeof TenantStaffAttendanceRoute
-  '/$tenant/staff/fairness': typeof TenantStaffFairnessRoute
-  '/$tenant/staff/ironing-payroll': typeof TenantStaffIroningPayrollRoute
-  '/$tenant/staff/leaves': typeof TenantStaffLeavesRoute
-  '/$tenant/staff/new': typeof TenantStaffNewRoute
-  '/$tenant/staff/requests': typeof TenantStaffRequestsRoute
-  '/$tenant/staff/salaries': typeof TenantStaffSalariesRoute
-  '/$tenant/staff/schedule': typeof TenantStaffScheduleRoute
-  '/$tenant/staff/scorecard': typeof TenantStaffScorecardRoute
-  '/$tenant/staff/users': typeof TenantStaffUsersRoute
-  '/$tenant/stations/$stage': typeof TenantStationsStageRoute
-  '/$tenant/stations/cleaning': typeof TenantStationsCleaningRoute
-  '/$tenant/stations/cs': typeof TenantStationsCsRoute
-  '/$tenant/stations/delivery': typeof TenantStationsDeliveryRoute
-  '/$tenant/stations/drying-assembly': typeof TenantStationsDryingAssemblyRoute
-  '/$tenant/stations/intake': typeof TenantStationsIntakeRoute
-  '/$tenant/stations/ironing': typeof TenantStationsIroningRoute
-  '/$tenant/stations/packing': typeof TenantStationsPackingRoute
-  '/$tenant/stations/qc': typeof TenantStationsQcRoute
-  '/$tenant/stations/reception': typeof TenantStationsReceptionRoute
-  '/$tenant/stations/sorting': typeof TenantStationsSortingRoute
-  '/_admin/admin/billing': typeof AdminAdminBillingRoute
-  '/_admin/admin/biz-dev': typeof AdminAdminBizDevRoute
-  '/_admin/admin/business-plan': typeof AdminAdminBusinessPlanRoute
-  '/_admin/admin/customer-success': typeof AdminAdminCustomerSuccessRoute
-  '/_admin/admin/demo-library': typeof AdminAdminDemoLibraryRoute
-  '/_admin/admin/input-builder': typeof AdminAdminInputBuilderRoute
-  '/_admin/admin/investor-relations': typeof AdminAdminInvestorRelationsRoute
-  '/_admin/admin/legal': typeof AdminAdminLegalRoute
-  '/_admin/admin/marketing-plan': typeof AdminAdminMarketingPlanRoute
-  '/_admin/admin/platform-builder': typeof AdminAdminPlatformBuilderRoute
-  '/_admin/admin/platform-fees': typeof AdminAdminPlatformFeesRoute
-  '/_admin/admin/report-builder': typeof AdminAdminReportBuilderRoute
-  '/_admin/admin/telemetry': typeof AdminAdminTelemetryRoute
-  '/_admin/admin/templates': typeof AdminAdminTemplatesRoute
-  '/_admin/admin/workflow-builder': typeof AdminAdminWorkflowBuilderRoute
-  '/$tenant/orders/': typeof TenantOrdersIndexRoute
-  '/$tenant/pickups/': typeof TenantPickupsIndexRoute
-  '/$tenant/settings/': typeof TenantSettingsIndexRoute
-  '/$tenant/staff/': typeof TenantStaffIndexRoute
-  '/_admin/admin/': typeof AdminAdminIndexRoute
-  '/_admin/admin/tenants/$id': typeof AdminAdminTenantsIdRoute
-  '/$tenant/settings/workflow/': typeof TenantSettingsWorkflowIndexRoute
-  '/_admin/admin/tenants/': typeof AdminAdminTenantsIndexRoute
-  '/_admin/admin/users/': typeof AdminAdminUsersIndexRoute
-  '/$tenant/settings/workflow/$stageId/fields': typeof TenantSettingsWorkflowStageIdFieldsRoute
+  '/_app/admin/billing': typeof AppAdminBillingRoute
+  '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
+  '/_app/branches/$id': typeof AppBranchesIdRoute
+  '/_app/orders/$id': typeof AppOrdersIdRoute
+  '/_app/orders/new': typeof AppOrdersNewRoute
+  '/_app/pickups/new': typeof AppPickupsNewRoute
+  '/_app/staff/$id': typeof AppStaffIdRoute
+  '/_app/staff/attendance': typeof AppStaffAttendanceRoute
+  '/_app/staff/ironing-payroll': typeof AppStaffIroningPayrollRoute
+  '/_app/staff/leaves': typeof AppStaffLeavesRoute
+  '/_app/staff/new': typeof AppStaffNewRoute
+  '/_app/staff/requests': typeof AppStaffRequestsRoute
+  '/_app/staff/salaries': typeof AppStaffSalariesRoute
+  '/_app/staff/schedule': typeof AppStaffScheduleRoute
+  '/_app/staff/scorecard': typeof AppStaffScorecardRoute
+  '/_app/staff/users': typeof AppStaffUsersRoute
+  '/_app/stations/cleaning': typeof AppStationsCleaningRoute
+  '/_app/stations/delivery': typeof AppStationsDeliveryRoute
+  '/_app/stations/drying-assembly': typeof AppStationsDryingAssemblyRoute
+  '/_app/stations/ironing': typeof AppStationsIroningRoute
+  '/_app/stations/packing': typeof AppStationsPackingRoute
+  '/_app/stations/qc': typeof AppStationsQcRoute
+  '/_app/stations/reception': typeof AppStationsReceptionRoute
+  '/_app/orders/': typeof AppOrdersIndexRoute
+  '/_app/pickups/': typeof AppPickupsIndexRoute
+  '/_app/staff/': typeof AppStaffIndexRoute
+  '/_app/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/_app/admin/tenants/': typeof AppAdminTenantsIndexRoute
+  '/_app/admin/users/': typeof AppAdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/$slug'
-    | '/$tenant'
     | '/customer-portal'
     | '/landing'
     | '/login'
-    | '/marketplace'
     | '/privacy'
     | '/reset-password'
-    | '/signup'
     | '/terms'
-    | '/$tenant/accounting'
-    | '/$tenant/billing'
-    | '/$tenant/branches'
-    | '/$tenant/budgets'
-    | '/$tenant/cash-closing'
-    | '/$tenant/crm'
-    | '/$tenant/cs'
-    | '/$tenant/customer-care'
-    | '/$tenant/customers'
-    | '/$tenant/daily-operations'
-    | '/$tenant/dashboard'
-    | '/$tenant/demo'
-    | '/$tenant/driver'
-    | '/$tenant/executive'
-    | '/$tenant/finance'
-    | '/$tenant/help'
-    | '/$tenant/inventory'
-    | '/$tenant/issues'
-    | '/$tenant/ledger'
-    | '/$tenant/legal'
-    | '/$tenant/live-map'
-    | '/$tenant/manager'
-    | '/$tenant/marketing'
-    | '/$tenant/marketplace'
-    | '/$tenant/onboarding'
-    | '/$tenant/ops'
-    | '/$tenant/receivables'
-    | '/$tenant/reports'
-    | '/$tenant/search'
-    | '/$tenant/services'
-    | '/$tenant/settings'
-    | '/$tenant/subscriptions'
-    | '/$tenant/system-health'
-    | '/$tenant/today'
-    | '/$tenant/work-orders'
+    | '/accounting'
+    | '/billing'
+    | '/branches'
+    | '/budgets'
+    | '/cash-closing'
+    | '/crm'
+    | '/cs'
+    | '/customer-care'
+    | '/customers'
+    | '/daily-operations'
+    | '/dashboard'
+    | '/driver'
+    | '/executive'
+    | '/finance'
+    | '/help'
+    | '/inventory'
+    | '/ledger'
+    | '/live-map'
+    | '/manager'
+    | '/ops'
+    | '/receivables'
+    | '/reports'
+    | '/search'
+    | '/services'
+    | '/settings'
+    | '/system-health'
+    | '/today'
     | '/join/$slug'
     | '/track/$token'
-    | '/$tenant/branches/$id'
-    | '/$tenant/orders/$id'
-    | '/$tenant/orders/new'
-    | '/$tenant/pickups/new'
-    | '/$tenant/reports/builder'
-    | '/$tenant/settings/roles'
-    | '/$tenant/settings/workflow'
-    | '/$tenant/staff/$id'
-    | '/$tenant/staff/attendance'
-    | '/$tenant/staff/fairness'
-    | '/$tenant/staff/ironing-payroll'
-    | '/$tenant/staff/leaves'
-    | '/$tenant/staff/new'
-    | '/$tenant/staff/requests'
-    | '/$tenant/staff/salaries'
-    | '/$tenant/staff/schedule'
-    | '/$tenant/staff/scorecard'
-    | '/$tenant/staff/users'
-    | '/$tenant/stations/$stage'
-    | '/$tenant/stations/cleaning'
-    | '/$tenant/stations/cs'
-    | '/$tenant/stations/delivery'
-    | '/$tenant/stations/drying-assembly'
-    | '/$tenant/stations/intake'
-    | '/$tenant/stations/ironing'
-    | '/$tenant/stations/packing'
-    | '/$tenant/stations/qc'
-    | '/$tenant/stations/reception'
-    | '/$tenant/stations/sorting'
     | '/admin/billing'
-    | '/admin/biz-dev'
-    | '/admin/business-plan'
-    | '/admin/customer-success'
-    | '/admin/demo-library'
-    | '/admin/input-builder'
-    | '/admin/investor-relations'
-    | '/admin/legal'
-    | '/admin/marketing-plan'
-    | '/admin/platform-builder'
     | '/admin/platform-fees'
-    | '/admin/report-builder'
-    | '/admin/telemetry'
-    | '/admin/templates'
-    | '/admin/workflow-builder'
-    | '/$tenant/orders/'
-    | '/$tenant/pickups/'
-    | '/$tenant/settings/'
-    | '/$tenant/staff/'
-    | '/admin/'
+    | '/branches/$id'
+    | '/orders/$id'
+    | '/orders/new'
+    | '/pickups/new'
+    | '/staff/$id'
+    | '/staff/attendance'
+    | '/staff/ironing-payroll'
+    | '/staff/leaves'
+    | '/staff/new'
+    | '/staff/requests'
+    | '/staff/salaries'
+    | '/staff/schedule'
+    | '/staff/scorecard'
+    | '/staff/users'
+    | '/stations/cleaning'
+    | '/stations/delivery'
+    | '/stations/drying-assembly'
+    | '/stations/ironing'
+    | '/stations/packing'
+    | '/stations/qc'
+    | '/stations/reception'
+    | '/orders/'
+    | '/pickups/'
+    | '/staff/'
     | '/admin/tenants/$id'
-    | '/$tenant/settings/workflow/'
     | '/admin/tenants/'
     | '/admin/users/'
-    | '/$tenant/settings/workflow/$stageId/fields'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$slug'
-    | '/$tenant'
     | '/customer-portal'
     | '/landing'
     | '/login'
-    | '/marketplace'
     | '/privacy'
     | '/reset-password'
-    | '/signup'
     | '/terms'
-    | '/$tenant/accounting'
-    | '/$tenant/billing'
-    | '/$tenant/branches'
-    | '/$tenant/budgets'
-    | '/$tenant/cash-closing'
-    | '/$tenant/crm'
-    | '/$tenant/cs'
-    | '/$tenant/customer-care'
-    | '/$tenant/customers'
-    | '/$tenant/daily-operations'
-    | '/$tenant/dashboard'
-    | '/$tenant/demo'
-    | '/$tenant/driver'
-    | '/$tenant/executive'
-    | '/$tenant/finance'
-    | '/$tenant/help'
-    | '/$tenant/inventory'
-    | '/$tenant/issues'
-    | '/$tenant/ledger'
-    | '/$tenant/legal'
-    | '/$tenant/live-map'
-    | '/$tenant/manager'
-    | '/$tenant/marketing'
-    | '/$tenant/marketplace'
-    | '/$tenant/onboarding'
-    | '/$tenant/ops'
-    | '/$tenant/receivables'
-    | '/$tenant/reports'
-    | '/$tenant/search'
-    | '/$tenant/services'
-    | '/$tenant/subscriptions'
-    | '/$tenant/system-health'
-    | '/$tenant/today'
-    | '/$tenant/work-orders'
+    | '/accounting'
+    | '/billing'
+    | '/branches'
+    | '/budgets'
+    | '/cash-closing'
+    | '/crm'
+    | '/cs'
+    | '/customer-care'
+    | '/customers'
+    | '/daily-operations'
+    | '/dashboard'
+    | '/driver'
+    | '/executive'
+    | '/finance'
+    | '/help'
+    | '/inventory'
+    | '/ledger'
+    | '/live-map'
+    | '/manager'
+    | '/ops'
+    | '/receivables'
+    | '/reports'
+    | '/search'
+    | '/services'
+    | '/settings'
+    | '/system-health'
+    | '/today'
     | '/join/$slug'
     | '/track/$token'
-    | '/$tenant/branches/$id'
-    | '/$tenant/orders/$id'
-    | '/$tenant/orders/new'
-    | '/$tenant/pickups/new'
-    | '/$tenant/reports/builder'
-    | '/$tenant/settings/roles'
-    | '/$tenant/staff/$id'
-    | '/$tenant/staff/attendance'
-    | '/$tenant/staff/fairness'
-    | '/$tenant/staff/ironing-payroll'
-    | '/$tenant/staff/leaves'
-    | '/$tenant/staff/new'
-    | '/$tenant/staff/requests'
-    | '/$tenant/staff/salaries'
-    | '/$tenant/staff/schedule'
-    | '/$tenant/staff/scorecard'
-    | '/$tenant/staff/users'
-    | '/$tenant/stations/$stage'
-    | '/$tenant/stations/cleaning'
-    | '/$tenant/stations/cs'
-    | '/$tenant/stations/delivery'
-    | '/$tenant/stations/drying-assembly'
-    | '/$tenant/stations/intake'
-    | '/$tenant/stations/ironing'
-    | '/$tenant/stations/packing'
-    | '/$tenant/stations/qc'
-    | '/$tenant/stations/reception'
-    | '/$tenant/stations/sorting'
     | '/admin/billing'
-    | '/admin/biz-dev'
-    | '/admin/business-plan'
-    | '/admin/customer-success'
-    | '/admin/demo-library'
-    | '/admin/input-builder'
-    | '/admin/investor-relations'
-    | '/admin/legal'
-    | '/admin/marketing-plan'
-    | '/admin/platform-builder'
     | '/admin/platform-fees'
-    | '/admin/report-builder'
-    | '/admin/telemetry'
-    | '/admin/templates'
-    | '/admin/workflow-builder'
-    | '/$tenant/orders'
-    | '/$tenant/pickups'
-    | '/$tenant/settings'
-    | '/$tenant/staff'
-    | '/admin'
+    | '/branches/$id'
+    | '/orders/$id'
+    | '/orders/new'
+    | '/pickups/new'
+    | '/staff/$id'
+    | '/staff/attendance'
+    | '/staff/ironing-payroll'
+    | '/staff/leaves'
+    | '/staff/new'
+    | '/staff/requests'
+    | '/staff/salaries'
+    | '/staff/schedule'
+    | '/staff/scorecard'
+    | '/staff/users'
+    | '/stations/cleaning'
+    | '/stations/delivery'
+    | '/stations/drying-assembly'
+    | '/stations/ironing'
+    | '/stations/packing'
+    | '/stations/qc'
+    | '/stations/reception'
+    | '/orders'
+    | '/pickups'
+    | '/staff'
     | '/admin/tenants/$id'
-    | '/$tenant/settings/workflow'
     | '/admin/tenants'
     | '/admin/users'
-    | '/$tenant/settings/workflow/$stageId/fields'
   id:
     | '__root__'
     | '/'
     | '/$slug'
-    | '/$tenant'
-    | '/_admin'
+    | '/_app'
     | '/customer-portal'
     | '/landing'
     | '/login'
-    | '/marketplace'
     | '/privacy'
     | '/reset-password'
-    | '/signup'
     | '/terms'
-    | '/$tenant/accounting'
-    | '/$tenant/billing'
-    | '/$tenant/branches'
-    | '/$tenant/budgets'
-    | '/$tenant/cash-closing'
-    | '/$tenant/crm'
-    | '/$tenant/cs'
-    | '/$tenant/customer-care'
-    | '/$tenant/customers'
-    | '/$tenant/daily-operations'
-    | '/$tenant/dashboard'
-    | '/$tenant/demo'
-    | '/$tenant/driver'
-    | '/$tenant/executive'
-    | '/$tenant/finance'
-    | '/$tenant/help'
-    | '/$tenant/inventory'
-    | '/$tenant/issues'
-    | '/$tenant/ledger'
-    | '/$tenant/legal'
-    | '/$tenant/live-map'
-    | '/$tenant/manager'
-    | '/$tenant/marketing'
-    | '/$tenant/marketplace'
-    | '/$tenant/onboarding'
-    | '/$tenant/ops'
-    | '/$tenant/receivables'
-    | '/$tenant/reports'
-    | '/$tenant/search'
-    | '/$tenant/services'
-    | '/$tenant/settings'
-    | '/$tenant/subscriptions'
-    | '/$tenant/system-health'
-    | '/$tenant/today'
-    | '/$tenant/work-orders'
+    | '/_app/accounting'
+    | '/_app/billing'
+    | '/_app/branches'
+    | '/_app/budgets'
+    | '/_app/cash-closing'
+    | '/_app/crm'
+    | '/_app/cs'
+    | '/_app/customer-care'
+    | '/_app/customers'
+    | '/_app/daily-operations'
+    | '/_app/dashboard'
+    | '/_app/driver'
+    | '/_app/executive'
+    | '/_app/finance'
+    | '/_app/help'
+    | '/_app/inventory'
+    | '/_app/ledger'
+    | '/_app/live-map'
+    | '/_app/manager'
+    | '/_app/ops'
+    | '/_app/receivables'
+    | '/_app/reports'
+    | '/_app/search'
+    | '/_app/services'
+    | '/_app/settings'
+    | '/_app/system-health'
+    | '/_app/today'
     | '/join/$slug'
     | '/track/$token'
-    | '/$tenant/branches/$id'
-    | '/$tenant/orders/$id'
-    | '/$tenant/orders/new'
-    | '/$tenant/pickups/new'
-    | '/$tenant/reports/builder'
-    | '/$tenant/settings/roles'
-    | '/$tenant/settings/workflow'
-    | '/$tenant/staff/$id'
-    | '/$tenant/staff/attendance'
-    | '/$tenant/staff/fairness'
-    | '/$tenant/staff/ironing-payroll'
-    | '/$tenant/staff/leaves'
-    | '/$tenant/staff/new'
-    | '/$tenant/staff/requests'
-    | '/$tenant/staff/salaries'
-    | '/$tenant/staff/schedule'
-    | '/$tenant/staff/scorecard'
-    | '/$tenant/staff/users'
-    | '/$tenant/stations/$stage'
-    | '/$tenant/stations/cleaning'
-    | '/$tenant/stations/cs'
-    | '/$tenant/stations/delivery'
-    | '/$tenant/stations/drying-assembly'
-    | '/$tenant/stations/intake'
-    | '/$tenant/stations/ironing'
-    | '/$tenant/stations/packing'
-    | '/$tenant/stations/qc'
-    | '/$tenant/stations/reception'
-    | '/$tenant/stations/sorting'
-    | '/_admin/admin/billing'
-    | '/_admin/admin/biz-dev'
-    | '/_admin/admin/business-plan'
-    | '/_admin/admin/customer-success'
-    | '/_admin/admin/demo-library'
-    | '/_admin/admin/input-builder'
-    | '/_admin/admin/investor-relations'
-    | '/_admin/admin/legal'
-    | '/_admin/admin/marketing-plan'
-    | '/_admin/admin/platform-builder'
-    | '/_admin/admin/platform-fees'
-    | '/_admin/admin/report-builder'
-    | '/_admin/admin/telemetry'
-    | '/_admin/admin/templates'
-    | '/_admin/admin/workflow-builder'
-    | '/$tenant/orders/'
-    | '/$tenant/pickups/'
-    | '/$tenant/settings/'
-    | '/$tenant/staff/'
-    | '/_admin/admin/'
-    | '/_admin/admin/tenants/$id'
-    | '/$tenant/settings/workflow/'
-    | '/_admin/admin/tenants/'
-    | '/_admin/admin/users/'
-    | '/$tenant/settings/workflow/$stageId/fields'
+    | '/_app/admin/billing'
+    | '/_app/admin/platform-fees'
+    | '/_app/branches/$id'
+    | '/_app/orders/$id'
+    | '/_app/orders/new'
+    | '/_app/pickups/new'
+    | '/_app/staff/$id'
+    | '/_app/staff/attendance'
+    | '/_app/staff/ironing-payroll'
+    | '/_app/staff/leaves'
+    | '/_app/staff/new'
+    | '/_app/staff/requests'
+    | '/_app/staff/salaries'
+    | '/_app/staff/schedule'
+    | '/_app/staff/scorecard'
+    | '/_app/staff/users'
+    | '/_app/stations/cleaning'
+    | '/_app/stations/delivery'
+    | '/_app/stations/drying-assembly'
+    | '/_app/stations/ironing'
+    | '/_app/stations/packing'
+    | '/_app/stations/qc'
+    | '/_app/stations/reception'
+    | '/_app/orders/'
+    | '/_app/pickups/'
+    | '/_app/staff/'
+    | '/_app/admin/tenants/$id'
+    | '/_app/admin/tenants/'
+    | '/_app/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SlugRoute: typeof SlugRoute
-  TenantRoute: typeof TenantRouteWithChildren
-  AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
   CustomerPortalRoute: typeof CustomerPortalRoute
   LandingRoute: typeof LandingRoute
   LoginRoute: typeof LoginRoute
-  MarketplaceRoute: typeof MarketplaceRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   JoinSlugRoute: typeof JoinSlugRoute
   TrackTokenRoute: typeof TrackTokenRoute
@@ -1288,13 +850,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -1307,13 +862,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/marketplace': {
-      id: '/marketplace'
-      path: '/marketplace'
-      fullPath: '/marketplace'
-      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1337,18 +885,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_admin': {
-      id: '/_admin'
+    '/_app': {
+      id: '/_app'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$tenant': {
-      id: '/$tenant'
-      path: '/$tenant'
-      fullPath: '/$tenant'
-      preLoaderRoute: typeof TenantRouteImport
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$slug': {
@@ -1379,882 +920,540 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$tenant/work-orders': {
-      id: '/$tenant/work-orders'
-      path: '/work-orders'
-      fullPath: '/$tenant/work-orders'
-      preLoaderRoute: typeof TenantWorkOrdersRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/today': {
-      id: '/$tenant/today'
+    '/_app/today': {
+      id: '/_app/today'
       path: '/today'
-      fullPath: '/$tenant/today'
-      preLoaderRoute: typeof TenantTodayRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/today'
+      preLoaderRoute: typeof AppTodayRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/system-health': {
-      id: '/$tenant/system-health'
+    '/_app/system-health': {
+      id: '/_app/system-health'
       path: '/system-health'
-      fullPath: '/$tenant/system-health'
-      preLoaderRoute: typeof TenantSystemHealthRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/system-health'
+      preLoaderRoute: typeof AppSystemHealthRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/subscriptions': {
-      id: '/$tenant/subscriptions'
-      path: '/subscriptions'
-      fullPath: '/$tenant/subscriptions'
-      preLoaderRoute: typeof TenantSubscriptionsRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/settings': {
-      id: '/$tenant/settings'
+    '/_app/settings': {
+      id: '/_app/settings'
       path: '/settings'
-      fullPath: '/$tenant/settings'
-      preLoaderRoute: typeof TenantSettingsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/services': {
-      id: '/$tenant/services'
+    '/_app/services': {
+      id: '/_app/services'
       path: '/services'
-      fullPath: '/$tenant/services'
-      preLoaderRoute: typeof TenantServicesRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/services'
+      preLoaderRoute: typeof AppServicesRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/search': {
-      id: '/$tenant/search'
+    '/_app/search': {
+      id: '/_app/search'
       path: '/search'
-      fullPath: '/$tenant/search'
-      preLoaderRoute: typeof TenantSearchRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/reports': {
-      id: '/$tenant/reports'
+    '/_app/reports': {
+      id: '/_app/reports'
       path: '/reports'
-      fullPath: '/$tenant/reports'
-      preLoaderRoute: typeof TenantReportsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/receivables': {
-      id: '/$tenant/receivables'
+    '/_app/receivables': {
+      id: '/_app/receivables'
       path: '/receivables'
-      fullPath: '/$tenant/receivables'
-      preLoaderRoute: typeof TenantReceivablesRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/receivables'
+      preLoaderRoute: typeof AppReceivablesRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/ops': {
-      id: '/$tenant/ops'
+    '/_app/ops': {
+      id: '/_app/ops'
       path: '/ops'
-      fullPath: '/$tenant/ops'
-      preLoaderRoute: typeof TenantOpsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/ops'
+      preLoaderRoute: typeof AppOpsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/onboarding': {
-      id: '/$tenant/onboarding'
-      path: '/onboarding'
-      fullPath: '/$tenant/onboarding'
-      preLoaderRoute: typeof TenantOnboardingRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/marketplace': {
-      id: '/$tenant/marketplace'
-      path: '/marketplace'
-      fullPath: '/$tenant/marketplace'
-      preLoaderRoute: typeof TenantMarketplaceRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/marketing': {
-      id: '/$tenant/marketing'
-      path: '/marketing'
-      fullPath: '/$tenant/marketing'
-      preLoaderRoute: typeof TenantMarketingRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/manager': {
-      id: '/$tenant/manager'
+    '/_app/manager': {
+      id: '/_app/manager'
       path: '/manager'
-      fullPath: '/$tenant/manager'
-      preLoaderRoute: typeof TenantManagerRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/manager'
+      preLoaderRoute: typeof AppManagerRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/live-map': {
-      id: '/$tenant/live-map'
+    '/_app/live-map': {
+      id: '/_app/live-map'
       path: '/live-map'
-      fullPath: '/$tenant/live-map'
-      preLoaderRoute: typeof TenantLiveMapRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/live-map'
+      preLoaderRoute: typeof AppLiveMapRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/legal': {
-      id: '/$tenant/legal'
-      path: '/legal'
-      fullPath: '/$tenant/legal'
-      preLoaderRoute: typeof TenantLegalRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/ledger': {
-      id: '/$tenant/ledger'
+    '/_app/ledger': {
+      id: '/_app/ledger'
       path: '/ledger'
-      fullPath: '/$tenant/ledger'
-      preLoaderRoute: typeof TenantLedgerRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/ledger'
+      preLoaderRoute: typeof AppLedgerRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/issues': {
-      id: '/$tenant/issues'
-      path: '/issues'
-      fullPath: '/$tenant/issues'
-      preLoaderRoute: typeof TenantIssuesRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/inventory': {
-      id: '/$tenant/inventory'
+    '/_app/inventory': {
+      id: '/_app/inventory'
       path: '/inventory'
-      fullPath: '/$tenant/inventory'
-      preLoaderRoute: typeof TenantInventoryRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/help': {
-      id: '/$tenant/help'
+    '/_app/help': {
+      id: '/_app/help'
       path: '/help'
-      fullPath: '/$tenant/help'
-      preLoaderRoute: typeof TenantHelpRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/help'
+      preLoaderRoute: typeof AppHelpRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/finance': {
-      id: '/$tenant/finance'
+    '/_app/finance': {
+      id: '/_app/finance'
       path: '/finance'
-      fullPath: '/$tenant/finance'
-      preLoaderRoute: typeof TenantFinanceRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/finance'
+      preLoaderRoute: typeof AppFinanceRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/executive': {
-      id: '/$tenant/executive'
+    '/_app/executive': {
+      id: '/_app/executive'
       path: '/executive'
-      fullPath: '/$tenant/executive'
-      preLoaderRoute: typeof TenantExecutiveRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/executive'
+      preLoaderRoute: typeof AppExecutiveRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/driver': {
-      id: '/$tenant/driver'
+    '/_app/driver': {
+      id: '/_app/driver'
       path: '/driver'
-      fullPath: '/$tenant/driver'
-      preLoaderRoute: typeof TenantDriverRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/driver'
+      preLoaderRoute: typeof AppDriverRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/demo': {
-      id: '/$tenant/demo'
-      path: '/demo'
-      fullPath: '/$tenant/demo'
-      preLoaderRoute: typeof TenantDemoRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/dashboard': {
-      id: '/$tenant/dashboard'
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
       path: '/dashboard'
-      fullPath: '/$tenant/dashboard'
-      preLoaderRoute: typeof TenantDashboardRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/daily-operations': {
-      id: '/$tenant/daily-operations'
+    '/_app/daily-operations': {
+      id: '/_app/daily-operations'
       path: '/daily-operations'
-      fullPath: '/$tenant/daily-operations'
-      preLoaderRoute: typeof TenantDailyOperationsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/daily-operations'
+      preLoaderRoute: typeof AppDailyOperationsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/customers': {
-      id: '/$tenant/customers'
+    '/_app/customers': {
+      id: '/_app/customers'
       path: '/customers'
-      fullPath: '/$tenant/customers'
-      preLoaderRoute: typeof TenantCustomersRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/customers'
+      preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/customer-care': {
-      id: '/$tenant/customer-care'
+    '/_app/customer-care': {
+      id: '/_app/customer-care'
       path: '/customer-care'
-      fullPath: '/$tenant/customer-care'
-      preLoaderRoute: typeof TenantCustomerCareRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/customer-care'
+      preLoaderRoute: typeof AppCustomerCareRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/cs': {
-      id: '/$tenant/cs'
+    '/_app/cs': {
+      id: '/_app/cs'
       path: '/cs'
-      fullPath: '/$tenant/cs'
-      preLoaderRoute: typeof TenantCsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/cs'
+      preLoaderRoute: typeof AppCsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/crm': {
-      id: '/$tenant/crm'
+    '/_app/crm': {
+      id: '/_app/crm'
       path: '/crm'
-      fullPath: '/$tenant/crm'
-      preLoaderRoute: typeof TenantCrmRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/crm'
+      preLoaderRoute: typeof AppCrmRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/cash-closing': {
-      id: '/$tenant/cash-closing'
+    '/_app/cash-closing': {
+      id: '/_app/cash-closing'
       path: '/cash-closing'
-      fullPath: '/$tenant/cash-closing'
-      preLoaderRoute: typeof TenantCashClosingRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/cash-closing'
+      preLoaderRoute: typeof AppCashClosingRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/budgets': {
-      id: '/$tenant/budgets'
+    '/_app/budgets': {
+      id: '/_app/budgets'
       path: '/budgets'
-      fullPath: '/$tenant/budgets'
-      preLoaderRoute: typeof TenantBudgetsRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/budgets'
+      preLoaderRoute: typeof AppBudgetsRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/branches': {
-      id: '/$tenant/branches'
+    '/_app/branches': {
+      id: '/_app/branches'
       path: '/branches'
-      fullPath: '/$tenant/branches'
-      preLoaderRoute: typeof TenantBranchesRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/branches'
+      preLoaderRoute: typeof AppBranchesRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/billing': {
-      id: '/$tenant/billing'
+    '/_app/billing': {
+      id: '/_app/billing'
       path: '/billing'
-      fullPath: '/$tenant/billing'
-      preLoaderRoute: typeof TenantBillingRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/billing'
+      preLoaderRoute: typeof AppBillingRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/accounting': {
-      id: '/$tenant/accounting'
+    '/_app/accounting': {
+      id: '/_app/accounting'
       path: '/accounting'
-      fullPath: '/$tenant/accounting'
-      preLoaderRoute: typeof TenantAccountingRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/accounting'
+      preLoaderRoute: typeof AppAccountingRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/': {
-      id: '/_admin/admin/'
-      path: '/admin'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminAdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/$tenant/staff/': {
-      id: '/$tenant/staff/'
+    '/_app/staff/': {
+      id: '/_app/staff/'
       path: '/staff'
-      fullPath: '/$tenant/staff/'
-      preLoaderRoute: typeof TenantStaffIndexRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/staff/'
+      preLoaderRoute: typeof AppStaffIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/settings/': {
-      id: '/$tenant/settings/'
-      path: '/'
-      fullPath: '/$tenant/settings/'
-      preLoaderRoute: typeof TenantSettingsIndexRouteImport
-      parentRoute: typeof TenantSettingsRoute
-    }
-    '/$tenant/pickups/': {
-      id: '/$tenant/pickups/'
+    '/_app/pickups/': {
+      id: '/_app/pickups/'
       path: '/pickups'
-      fullPath: '/$tenant/pickups/'
-      preLoaderRoute: typeof TenantPickupsIndexRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/pickups/'
+      preLoaderRoute: typeof AppPickupsIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/orders/': {
-      id: '/$tenant/orders/'
+    '/_app/orders/': {
+      id: '/_app/orders/'
       path: '/orders'
-      fullPath: '/$tenant/orders/'
-      preLoaderRoute: typeof TenantOrdersIndexRouteImport
-      parentRoute: typeof TenantRoute
+      fullPath: '/orders/'
+      preLoaderRoute: typeof AppOrdersIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/workflow-builder': {
-      id: '/_admin/admin/workflow-builder'
-      path: '/admin/workflow-builder'
-      fullPath: '/admin/workflow-builder'
-      preLoaderRoute: typeof AdminAdminWorkflowBuilderRouteImport
-      parentRoute: typeof AdminRoute
+    '/_app/stations/reception': {
+      id: '/_app/stations/reception'
+      path: '/stations/reception'
+      fullPath: '/stations/reception'
+      preLoaderRoute: typeof AppStationsReceptionRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/templates': {
-      id: '/_admin/admin/templates'
-      path: '/admin/templates'
-      fullPath: '/admin/templates'
-      preLoaderRoute: typeof AdminAdminTemplatesRouteImport
-      parentRoute: typeof AdminRoute
+    '/_app/stations/qc': {
+      id: '/_app/stations/qc'
+      path: '/stations/qc'
+      fullPath: '/stations/qc'
+      preLoaderRoute: typeof AppStationsQcRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/telemetry': {
-      id: '/_admin/admin/telemetry'
-      path: '/admin/telemetry'
-      fullPath: '/admin/telemetry'
-      preLoaderRoute: typeof AdminAdminTelemetryRouteImport
-      parentRoute: typeof AdminRoute
+    '/_app/stations/packing': {
+      id: '/_app/stations/packing'
+      path: '/stations/packing'
+      fullPath: '/stations/packing'
+      preLoaderRoute: typeof AppStationsPackingRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/report-builder': {
-      id: '/_admin/admin/report-builder'
-      path: '/admin/report-builder'
-      fullPath: '/admin/report-builder'
-      preLoaderRoute: typeof AdminAdminReportBuilderRouteImport
-      parentRoute: typeof AdminRoute
+    '/_app/stations/ironing': {
+      id: '/_app/stations/ironing'
+      path: '/stations/ironing'
+      fullPath: '/stations/ironing'
+      preLoaderRoute: typeof AppStationsIroningRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/platform-fees': {
-      id: '/_admin/admin/platform-fees'
+    '/_app/stations/drying-assembly': {
+      id: '/_app/stations/drying-assembly'
+      path: '/stations/drying-assembly'
+      fullPath: '/stations/drying-assembly'
+      preLoaderRoute: typeof AppStationsDryingAssemblyRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stations/delivery': {
+      id: '/_app/stations/delivery'
+      path: '/stations/delivery'
+      fullPath: '/stations/delivery'
+      preLoaderRoute: typeof AppStationsDeliveryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/stations/cleaning': {
+      id: '/_app/stations/cleaning'
+      path: '/stations/cleaning'
+      fullPath: '/stations/cleaning'
+      preLoaderRoute: typeof AppStationsCleaningRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/users': {
+      id: '/_app/staff/users'
+      path: '/staff/users'
+      fullPath: '/staff/users'
+      preLoaderRoute: typeof AppStaffUsersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/scorecard': {
+      id: '/_app/staff/scorecard'
+      path: '/staff/scorecard'
+      fullPath: '/staff/scorecard'
+      preLoaderRoute: typeof AppStaffScorecardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/schedule': {
+      id: '/_app/staff/schedule'
+      path: '/staff/schedule'
+      fullPath: '/staff/schedule'
+      preLoaderRoute: typeof AppStaffScheduleRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/salaries': {
+      id: '/_app/staff/salaries'
+      path: '/staff/salaries'
+      fullPath: '/staff/salaries'
+      preLoaderRoute: typeof AppStaffSalariesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/requests': {
+      id: '/_app/staff/requests'
+      path: '/staff/requests'
+      fullPath: '/staff/requests'
+      preLoaderRoute: typeof AppStaffRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/new': {
+      id: '/_app/staff/new'
+      path: '/staff/new'
+      fullPath: '/staff/new'
+      preLoaderRoute: typeof AppStaffNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/leaves': {
+      id: '/_app/staff/leaves'
+      path: '/staff/leaves'
+      fullPath: '/staff/leaves'
+      preLoaderRoute: typeof AppStaffLeavesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/ironing-payroll': {
+      id: '/_app/staff/ironing-payroll'
+      path: '/staff/ironing-payroll'
+      fullPath: '/staff/ironing-payroll'
+      preLoaderRoute: typeof AppStaffIroningPayrollRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/attendance': {
+      id: '/_app/staff/attendance'
+      path: '/staff/attendance'
+      fullPath: '/staff/attendance'
+      preLoaderRoute: typeof AppStaffAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/staff/$id': {
+      id: '/_app/staff/$id'
+      path: '/staff/$id'
+      fullPath: '/staff/$id'
+      preLoaderRoute: typeof AppStaffIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/pickups/new': {
+      id: '/_app/pickups/new'
+      path: '/pickups/new'
+      fullPath: '/pickups/new'
+      preLoaderRoute: typeof AppPickupsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders/new': {
+      id: '/_app/orders/new'
+      path: '/orders/new'
+      fullPath: '/orders/new'
+      preLoaderRoute: typeof AppOrdersNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/orders/$id': {
+      id: '/_app/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof AppOrdersIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/branches/$id': {
+      id: '/_app/branches/$id'
+      path: '/$id'
+      fullPath: '/branches/$id'
+      preLoaderRoute: typeof AppBranchesIdRouteImport
+      parentRoute: typeof AppBranchesRoute
+    }
+    '/_app/admin/platform-fees': {
+      id: '/_app/admin/platform-fees'
       path: '/admin/platform-fees'
       fullPath: '/admin/platform-fees'
-      preLoaderRoute: typeof AdminAdminPlatformFeesRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AppAdminPlatformFeesRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/platform-builder': {
-      id: '/_admin/admin/platform-builder'
-      path: '/admin/platform-builder'
-      fullPath: '/admin/platform-builder'
-      preLoaderRoute: typeof AdminAdminPlatformBuilderRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/marketing-plan': {
-      id: '/_admin/admin/marketing-plan'
-      path: '/admin/marketing-plan'
-      fullPath: '/admin/marketing-plan'
-      preLoaderRoute: typeof AdminAdminMarketingPlanRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/legal': {
-      id: '/_admin/admin/legal'
-      path: '/admin/legal'
-      fullPath: '/admin/legal'
-      preLoaderRoute: typeof AdminAdminLegalRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/investor-relations': {
-      id: '/_admin/admin/investor-relations'
-      path: '/admin/investor-relations'
-      fullPath: '/admin/investor-relations'
-      preLoaderRoute: typeof AdminAdminInvestorRelationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/input-builder': {
-      id: '/_admin/admin/input-builder'
-      path: '/admin/input-builder'
-      fullPath: '/admin/input-builder'
-      preLoaderRoute: typeof AdminAdminInputBuilderRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/demo-library': {
-      id: '/_admin/admin/demo-library'
-      path: '/admin/demo-library'
-      fullPath: '/admin/demo-library'
-      preLoaderRoute: typeof AdminAdminDemoLibraryRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/customer-success': {
-      id: '/_admin/admin/customer-success'
-      path: '/admin/customer-success'
-      fullPath: '/admin/customer-success'
-      preLoaderRoute: typeof AdminAdminCustomerSuccessRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/business-plan': {
-      id: '/_admin/admin/business-plan'
-      path: '/admin/business-plan'
-      fullPath: '/admin/business-plan'
-      preLoaderRoute: typeof AdminAdminBusinessPlanRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/biz-dev': {
-      id: '/_admin/admin/biz-dev'
-      path: '/admin/biz-dev'
-      fullPath: '/admin/biz-dev'
-      preLoaderRoute: typeof AdminAdminBizDevRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_admin/admin/billing': {
-      id: '/_admin/admin/billing'
+    '/_app/admin/billing': {
+      id: '/_app/admin/billing'
       path: '/admin/billing'
       fullPath: '/admin/billing'
-      preLoaderRoute: typeof AdminAdminBillingRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AppAdminBillingRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/stations/sorting': {
-      id: '/$tenant/stations/sorting'
-      path: '/stations/sorting'
-      fullPath: '/$tenant/stations/sorting'
-      preLoaderRoute: typeof TenantStationsSortingRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/reception': {
-      id: '/$tenant/stations/reception'
-      path: '/stations/reception'
-      fullPath: '/$tenant/stations/reception'
-      preLoaderRoute: typeof TenantStationsReceptionRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/qc': {
-      id: '/$tenant/stations/qc'
-      path: '/stations/qc'
-      fullPath: '/$tenant/stations/qc'
-      preLoaderRoute: typeof TenantStationsQcRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/packing': {
-      id: '/$tenant/stations/packing'
-      path: '/stations/packing'
-      fullPath: '/$tenant/stations/packing'
-      preLoaderRoute: typeof TenantStationsPackingRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/ironing': {
-      id: '/$tenant/stations/ironing'
-      path: '/stations/ironing'
-      fullPath: '/$tenant/stations/ironing'
-      preLoaderRoute: typeof TenantStationsIroningRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/intake': {
-      id: '/$tenant/stations/intake'
-      path: '/stations/intake'
-      fullPath: '/$tenant/stations/intake'
-      preLoaderRoute: typeof TenantStationsIntakeRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/drying-assembly': {
-      id: '/$tenant/stations/drying-assembly'
-      path: '/stations/drying-assembly'
-      fullPath: '/$tenant/stations/drying-assembly'
-      preLoaderRoute: typeof TenantStationsDryingAssemblyRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/delivery': {
-      id: '/$tenant/stations/delivery'
-      path: '/stations/delivery'
-      fullPath: '/$tenant/stations/delivery'
-      preLoaderRoute: typeof TenantStationsDeliveryRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/cs': {
-      id: '/$tenant/stations/cs'
-      path: '/stations/cs'
-      fullPath: '/$tenant/stations/cs'
-      preLoaderRoute: typeof TenantStationsCsRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/cleaning': {
-      id: '/$tenant/stations/cleaning'
-      path: '/stations/cleaning'
-      fullPath: '/$tenant/stations/cleaning'
-      preLoaderRoute: typeof TenantStationsCleaningRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/stations/$stage': {
-      id: '/$tenant/stations/$stage'
-      path: '/stations/$stage'
-      fullPath: '/$tenant/stations/$stage'
-      preLoaderRoute: typeof TenantStationsStageRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/users': {
-      id: '/$tenant/staff/users'
-      path: '/staff/users'
-      fullPath: '/$tenant/staff/users'
-      preLoaderRoute: typeof TenantStaffUsersRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/scorecard': {
-      id: '/$tenant/staff/scorecard'
-      path: '/staff/scorecard'
-      fullPath: '/$tenant/staff/scorecard'
-      preLoaderRoute: typeof TenantStaffScorecardRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/schedule': {
-      id: '/$tenant/staff/schedule'
-      path: '/staff/schedule'
-      fullPath: '/$tenant/staff/schedule'
-      preLoaderRoute: typeof TenantStaffScheduleRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/salaries': {
-      id: '/$tenant/staff/salaries'
-      path: '/staff/salaries'
-      fullPath: '/$tenant/staff/salaries'
-      preLoaderRoute: typeof TenantStaffSalariesRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/requests': {
-      id: '/$tenant/staff/requests'
-      path: '/staff/requests'
-      fullPath: '/$tenant/staff/requests'
-      preLoaderRoute: typeof TenantStaffRequestsRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/new': {
-      id: '/$tenant/staff/new'
-      path: '/staff/new'
-      fullPath: '/$tenant/staff/new'
-      preLoaderRoute: typeof TenantStaffNewRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/leaves': {
-      id: '/$tenant/staff/leaves'
-      path: '/staff/leaves'
-      fullPath: '/$tenant/staff/leaves'
-      preLoaderRoute: typeof TenantStaffLeavesRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/ironing-payroll': {
-      id: '/$tenant/staff/ironing-payroll'
-      path: '/staff/ironing-payroll'
-      fullPath: '/$tenant/staff/ironing-payroll'
-      preLoaderRoute: typeof TenantStaffIroningPayrollRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/fairness': {
-      id: '/$tenant/staff/fairness'
-      path: '/staff/fairness'
-      fullPath: '/$tenant/staff/fairness'
-      preLoaderRoute: typeof TenantStaffFairnessRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/attendance': {
-      id: '/$tenant/staff/attendance'
-      path: '/staff/attendance'
-      fullPath: '/$tenant/staff/attendance'
-      preLoaderRoute: typeof TenantStaffAttendanceRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/staff/$id': {
-      id: '/$tenant/staff/$id'
-      path: '/staff/$id'
-      fullPath: '/$tenant/staff/$id'
-      preLoaderRoute: typeof TenantStaffIdRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/settings/workflow': {
-      id: '/$tenant/settings/workflow'
-      path: '/workflow'
-      fullPath: '/$tenant/settings/workflow'
-      preLoaderRoute: typeof TenantSettingsWorkflowRouteImport
-      parentRoute: typeof TenantSettingsRoute
-    }
-    '/$tenant/settings/roles': {
-      id: '/$tenant/settings/roles'
-      path: '/roles'
-      fullPath: '/$tenant/settings/roles'
-      preLoaderRoute: typeof TenantSettingsRolesRouteImport
-      parentRoute: typeof TenantSettingsRoute
-    }
-    '/$tenant/reports/builder': {
-      id: '/$tenant/reports/builder'
-      path: '/builder'
-      fullPath: '/$tenant/reports/builder'
-      preLoaderRoute: typeof TenantReportsBuilderRouteImport
-      parentRoute: typeof TenantReportsRoute
-    }
-    '/$tenant/pickups/new': {
-      id: '/$tenant/pickups/new'
-      path: '/pickups/new'
-      fullPath: '/$tenant/pickups/new'
-      preLoaderRoute: typeof TenantPickupsNewRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/orders/new': {
-      id: '/$tenant/orders/new'
-      path: '/orders/new'
-      fullPath: '/$tenant/orders/new'
-      preLoaderRoute: typeof TenantOrdersNewRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/orders/$id': {
-      id: '/$tenant/orders/$id'
-      path: '/orders/$id'
-      fullPath: '/$tenant/orders/$id'
-      preLoaderRoute: typeof TenantOrdersIdRouteImport
-      parentRoute: typeof TenantRoute
-    }
-    '/$tenant/branches/$id': {
-      id: '/$tenant/branches/$id'
-      path: '/$id'
-      fullPath: '/$tenant/branches/$id'
-      preLoaderRoute: typeof TenantBranchesIdRouteImport
-      parentRoute: typeof TenantBranchesRoute
-    }
-    '/_admin/admin/users/': {
-      id: '/_admin/admin/users/'
+    '/_app/admin/users/': {
+      id: '/_app/admin/users/'
       path: '/admin/users'
       fullPath: '/admin/users/'
-      preLoaderRoute: typeof AdminAdminUsersIndexRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AppAdminUsersIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/_admin/admin/tenants/': {
-      id: '/_admin/admin/tenants/'
+    '/_app/admin/tenants/': {
+      id: '/_app/admin/tenants/'
       path: '/admin/tenants'
       fullPath: '/admin/tenants/'
-      preLoaderRoute: typeof AdminAdminTenantsIndexRouteImport
-      parentRoute: typeof AdminRoute
+      preLoaderRoute: typeof AppAdminTenantsIndexRouteImport
+      parentRoute: typeof AppRoute
     }
-    '/$tenant/settings/workflow/': {
-      id: '/$tenant/settings/workflow/'
-      path: '/'
-      fullPath: '/$tenant/settings/workflow/'
-      preLoaderRoute: typeof TenantSettingsWorkflowIndexRouteImport
-      parentRoute: typeof TenantSettingsWorkflowRoute
-    }
-    '/_admin/admin/tenants/$id': {
-      id: '/_admin/admin/tenants/$id'
+    '/_app/admin/tenants/$id': {
+      id: '/_app/admin/tenants/$id'
       path: '/admin/tenants/$id'
       fullPath: '/admin/tenants/$id'
-      preLoaderRoute: typeof AdminAdminTenantsIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/$tenant/settings/workflow/$stageId/fields': {
-      id: '/$tenant/settings/workflow/$stageId/fields'
-      path: '/$stageId/fields'
-      fullPath: '/$tenant/settings/workflow/$stageId/fields'
-      preLoaderRoute: typeof TenantSettingsWorkflowStageIdFieldsRouteImport
-      parentRoute: typeof TenantSettingsWorkflowRoute
+      preLoaderRoute: typeof AppAdminTenantsIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
 
-interface TenantBranchesRouteChildren {
-  TenantBranchesIdRoute: typeof TenantBranchesIdRoute
+interface AppBranchesRouteChildren {
+  AppBranchesIdRoute: typeof AppBranchesIdRoute
 }
 
-const TenantBranchesRouteChildren: TenantBranchesRouteChildren = {
-  TenantBranchesIdRoute: TenantBranchesIdRoute,
+const AppBranchesRouteChildren: AppBranchesRouteChildren = {
+  AppBranchesIdRoute: AppBranchesIdRoute,
 }
 
-const TenantBranchesRouteWithChildren = TenantBranchesRoute._addFileChildren(
-  TenantBranchesRouteChildren,
+const AppBranchesRouteWithChildren = AppBranchesRoute._addFileChildren(
+  AppBranchesRouteChildren,
 )
 
-interface TenantReportsRouteChildren {
-  TenantReportsBuilderRoute: typeof TenantReportsBuilderRoute
+interface AppRouteChildren {
+  AppAccountingRoute: typeof AppAccountingRoute
+  AppBillingRoute: typeof AppBillingRoute
+  AppBranchesRoute: typeof AppBranchesRouteWithChildren
+  AppBudgetsRoute: typeof AppBudgetsRoute
+  AppCashClosingRoute: typeof AppCashClosingRoute
+  AppCrmRoute: typeof AppCrmRoute
+  AppCsRoute: typeof AppCsRoute
+  AppCustomerCareRoute: typeof AppCustomerCareRoute
+  AppCustomersRoute: typeof AppCustomersRoute
+  AppDailyOperationsRoute: typeof AppDailyOperationsRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppDriverRoute: typeof AppDriverRoute
+  AppExecutiveRoute: typeof AppExecutiveRoute
+  AppFinanceRoute: typeof AppFinanceRoute
+  AppHelpRoute: typeof AppHelpRoute
+  AppInventoryRoute: typeof AppInventoryRoute
+  AppLedgerRoute: typeof AppLedgerRoute
+  AppLiveMapRoute: typeof AppLiveMapRoute
+  AppManagerRoute: typeof AppManagerRoute
+  AppOpsRoute: typeof AppOpsRoute
+  AppReceivablesRoute: typeof AppReceivablesRoute
+  AppReportsRoute: typeof AppReportsRoute
+  AppSearchRoute: typeof AppSearchRoute
+  AppServicesRoute: typeof AppServicesRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppSystemHealthRoute: typeof AppSystemHealthRoute
+  AppTodayRoute: typeof AppTodayRoute
+  AppAdminBillingRoute: typeof AppAdminBillingRoute
+  AppAdminPlatformFeesRoute: typeof AppAdminPlatformFeesRoute
+  AppOrdersIdRoute: typeof AppOrdersIdRoute
+  AppOrdersNewRoute: typeof AppOrdersNewRoute
+  AppPickupsNewRoute: typeof AppPickupsNewRoute
+  AppStaffIdRoute: typeof AppStaffIdRoute
+  AppStaffAttendanceRoute: typeof AppStaffAttendanceRoute
+  AppStaffIroningPayrollRoute: typeof AppStaffIroningPayrollRoute
+  AppStaffLeavesRoute: typeof AppStaffLeavesRoute
+  AppStaffNewRoute: typeof AppStaffNewRoute
+  AppStaffRequestsRoute: typeof AppStaffRequestsRoute
+  AppStaffSalariesRoute: typeof AppStaffSalariesRoute
+  AppStaffScheduleRoute: typeof AppStaffScheduleRoute
+  AppStaffScorecardRoute: typeof AppStaffScorecardRoute
+  AppStaffUsersRoute: typeof AppStaffUsersRoute
+  AppStationsCleaningRoute: typeof AppStationsCleaningRoute
+  AppStationsDeliveryRoute: typeof AppStationsDeliveryRoute
+  AppStationsDryingAssemblyRoute: typeof AppStationsDryingAssemblyRoute
+  AppStationsIroningRoute: typeof AppStationsIroningRoute
+  AppStationsPackingRoute: typeof AppStationsPackingRoute
+  AppStationsQcRoute: typeof AppStationsQcRoute
+  AppStationsReceptionRoute: typeof AppStationsReceptionRoute
+  AppOrdersIndexRoute: typeof AppOrdersIndexRoute
+  AppPickupsIndexRoute: typeof AppPickupsIndexRoute
+  AppStaffIndexRoute: typeof AppStaffIndexRoute
+  AppAdminTenantsIdRoute: typeof AppAdminTenantsIdRoute
+  AppAdminTenantsIndexRoute: typeof AppAdminTenantsIndexRoute
+  AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
 }
 
-const TenantReportsRouteChildren: TenantReportsRouteChildren = {
-  TenantReportsBuilderRoute: TenantReportsBuilderRoute,
+const AppRouteChildren: AppRouteChildren = {
+  AppAccountingRoute: AppAccountingRoute,
+  AppBillingRoute: AppBillingRoute,
+  AppBranchesRoute: AppBranchesRouteWithChildren,
+  AppBudgetsRoute: AppBudgetsRoute,
+  AppCashClosingRoute: AppCashClosingRoute,
+  AppCrmRoute: AppCrmRoute,
+  AppCsRoute: AppCsRoute,
+  AppCustomerCareRoute: AppCustomerCareRoute,
+  AppCustomersRoute: AppCustomersRoute,
+  AppDailyOperationsRoute: AppDailyOperationsRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppDriverRoute: AppDriverRoute,
+  AppExecutiveRoute: AppExecutiveRoute,
+  AppFinanceRoute: AppFinanceRoute,
+  AppHelpRoute: AppHelpRoute,
+  AppInventoryRoute: AppInventoryRoute,
+  AppLedgerRoute: AppLedgerRoute,
+  AppLiveMapRoute: AppLiveMapRoute,
+  AppManagerRoute: AppManagerRoute,
+  AppOpsRoute: AppOpsRoute,
+  AppReceivablesRoute: AppReceivablesRoute,
+  AppReportsRoute: AppReportsRoute,
+  AppSearchRoute: AppSearchRoute,
+  AppServicesRoute: AppServicesRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppSystemHealthRoute: AppSystemHealthRoute,
+  AppTodayRoute: AppTodayRoute,
+  AppAdminBillingRoute: AppAdminBillingRoute,
+  AppAdminPlatformFeesRoute: AppAdminPlatformFeesRoute,
+  AppOrdersIdRoute: AppOrdersIdRoute,
+  AppOrdersNewRoute: AppOrdersNewRoute,
+  AppPickupsNewRoute: AppPickupsNewRoute,
+  AppStaffIdRoute: AppStaffIdRoute,
+  AppStaffAttendanceRoute: AppStaffAttendanceRoute,
+  AppStaffIroningPayrollRoute: AppStaffIroningPayrollRoute,
+  AppStaffLeavesRoute: AppStaffLeavesRoute,
+  AppStaffNewRoute: AppStaffNewRoute,
+  AppStaffRequestsRoute: AppStaffRequestsRoute,
+  AppStaffSalariesRoute: AppStaffSalariesRoute,
+  AppStaffScheduleRoute: AppStaffScheduleRoute,
+  AppStaffScorecardRoute: AppStaffScorecardRoute,
+  AppStaffUsersRoute: AppStaffUsersRoute,
+  AppStationsCleaningRoute: AppStationsCleaningRoute,
+  AppStationsDeliveryRoute: AppStationsDeliveryRoute,
+  AppStationsDryingAssemblyRoute: AppStationsDryingAssemblyRoute,
+  AppStationsIroningRoute: AppStationsIroningRoute,
+  AppStationsPackingRoute: AppStationsPackingRoute,
+  AppStationsQcRoute: AppStationsQcRoute,
+  AppStationsReceptionRoute: AppStationsReceptionRoute,
+  AppOrdersIndexRoute: AppOrdersIndexRoute,
+  AppPickupsIndexRoute: AppPickupsIndexRoute,
+  AppStaffIndexRoute: AppStaffIndexRoute,
+  AppAdminTenantsIdRoute: AppAdminTenantsIdRoute,
+  AppAdminTenantsIndexRoute: AppAdminTenantsIndexRoute,
+  AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,
 }
 
-const TenantReportsRouteWithChildren = TenantReportsRoute._addFileChildren(
-  TenantReportsRouteChildren,
-)
-
-interface TenantSettingsWorkflowRouteChildren {
-  TenantSettingsWorkflowIndexRoute: typeof TenantSettingsWorkflowIndexRoute
-  TenantSettingsWorkflowStageIdFieldsRoute: typeof TenantSettingsWorkflowStageIdFieldsRoute
-}
-
-const TenantSettingsWorkflowRouteChildren: TenantSettingsWorkflowRouteChildren =
-  {
-    TenantSettingsWorkflowIndexRoute: TenantSettingsWorkflowIndexRoute,
-    TenantSettingsWorkflowStageIdFieldsRoute:
-      TenantSettingsWorkflowStageIdFieldsRoute,
-  }
-
-const TenantSettingsWorkflowRouteWithChildren =
-  TenantSettingsWorkflowRoute._addFileChildren(
-    TenantSettingsWorkflowRouteChildren,
-  )
-
-interface TenantSettingsRouteChildren {
-  TenantSettingsRolesRoute: typeof TenantSettingsRolesRoute
-  TenantSettingsWorkflowRoute: typeof TenantSettingsWorkflowRouteWithChildren
-  TenantSettingsIndexRoute: typeof TenantSettingsIndexRoute
-}
-
-const TenantSettingsRouteChildren: TenantSettingsRouteChildren = {
-  TenantSettingsRolesRoute: TenantSettingsRolesRoute,
-  TenantSettingsWorkflowRoute: TenantSettingsWorkflowRouteWithChildren,
-  TenantSettingsIndexRoute: TenantSettingsIndexRoute,
-}
-
-const TenantSettingsRouteWithChildren = TenantSettingsRoute._addFileChildren(
-  TenantSettingsRouteChildren,
-)
-
-interface TenantRouteChildren {
-  TenantAccountingRoute: typeof TenantAccountingRoute
-  TenantBillingRoute: typeof TenantBillingRoute
-  TenantBranchesRoute: typeof TenantBranchesRouteWithChildren
-  TenantBudgetsRoute: typeof TenantBudgetsRoute
-  TenantCashClosingRoute: typeof TenantCashClosingRoute
-  TenantCrmRoute: typeof TenantCrmRoute
-  TenantCsRoute: typeof TenantCsRoute
-  TenantCustomerCareRoute: typeof TenantCustomerCareRoute
-  TenantCustomersRoute: typeof TenantCustomersRoute
-  TenantDailyOperationsRoute: typeof TenantDailyOperationsRoute
-  TenantDashboardRoute: typeof TenantDashboardRoute
-  TenantDemoRoute: typeof TenantDemoRoute
-  TenantDriverRoute: typeof TenantDriverRoute
-  TenantExecutiveRoute: typeof TenantExecutiveRoute
-  TenantFinanceRoute: typeof TenantFinanceRoute
-  TenantHelpRoute: typeof TenantHelpRoute
-  TenantInventoryRoute: typeof TenantInventoryRoute
-  TenantIssuesRoute: typeof TenantIssuesRoute
-  TenantLedgerRoute: typeof TenantLedgerRoute
-  TenantLegalRoute: typeof TenantLegalRoute
-  TenantLiveMapRoute: typeof TenantLiveMapRoute
-  TenantManagerRoute: typeof TenantManagerRoute
-  TenantMarketingRoute: typeof TenantMarketingRoute
-  TenantMarketplaceRoute: typeof TenantMarketplaceRoute
-  TenantOnboardingRoute: typeof TenantOnboardingRoute
-  TenantOpsRoute: typeof TenantOpsRoute
-  TenantReceivablesRoute: typeof TenantReceivablesRoute
-  TenantReportsRoute: typeof TenantReportsRouteWithChildren
-  TenantSearchRoute: typeof TenantSearchRoute
-  TenantServicesRoute: typeof TenantServicesRoute
-  TenantSettingsRoute: typeof TenantSettingsRouteWithChildren
-  TenantSubscriptionsRoute: typeof TenantSubscriptionsRoute
-  TenantSystemHealthRoute: typeof TenantSystemHealthRoute
-  TenantTodayRoute: typeof TenantTodayRoute
-  TenantWorkOrdersRoute: typeof TenantWorkOrdersRoute
-  TenantOrdersIdRoute: typeof TenantOrdersIdRoute
-  TenantOrdersNewRoute: typeof TenantOrdersNewRoute
-  TenantPickupsNewRoute: typeof TenantPickupsNewRoute
-  TenantStaffIdRoute: typeof TenantStaffIdRoute
-  TenantStaffAttendanceRoute: typeof TenantStaffAttendanceRoute
-  TenantStaffFairnessRoute: typeof TenantStaffFairnessRoute
-  TenantStaffIroningPayrollRoute: typeof TenantStaffIroningPayrollRoute
-  TenantStaffLeavesRoute: typeof TenantStaffLeavesRoute
-  TenantStaffNewRoute: typeof TenantStaffNewRoute
-  TenantStaffRequestsRoute: typeof TenantStaffRequestsRoute
-  TenantStaffSalariesRoute: typeof TenantStaffSalariesRoute
-  TenantStaffScheduleRoute: typeof TenantStaffScheduleRoute
-  TenantStaffScorecardRoute: typeof TenantStaffScorecardRoute
-  TenantStaffUsersRoute: typeof TenantStaffUsersRoute
-  TenantStationsStageRoute: typeof TenantStationsStageRoute
-  TenantStationsCleaningRoute: typeof TenantStationsCleaningRoute
-  TenantStationsCsRoute: typeof TenantStationsCsRoute
-  TenantStationsDeliveryRoute: typeof TenantStationsDeliveryRoute
-  TenantStationsDryingAssemblyRoute: typeof TenantStationsDryingAssemblyRoute
-  TenantStationsIntakeRoute: typeof TenantStationsIntakeRoute
-  TenantStationsIroningRoute: typeof TenantStationsIroningRoute
-  TenantStationsPackingRoute: typeof TenantStationsPackingRoute
-  TenantStationsQcRoute: typeof TenantStationsQcRoute
-  TenantStationsReceptionRoute: typeof TenantStationsReceptionRoute
-  TenantStationsSortingRoute: typeof TenantStationsSortingRoute
-  TenantOrdersIndexRoute: typeof TenantOrdersIndexRoute
-  TenantPickupsIndexRoute: typeof TenantPickupsIndexRoute
-  TenantStaffIndexRoute: typeof TenantStaffIndexRoute
-}
-
-const TenantRouteChildren: TenantRouteChildren = {
-  TenantAccountingRoute: TenantAccountingRoute,
-  TenantBillingRoute: TenantBillingRoute,
-  TenantBranchesRoute: TenantBranchesRouteWithChildren,
-  TenantBudgetsRoute: TenantBudgetsRoute,
-  TenantCashClosingRoute: TenantCashClosingRoute,
-  TenantCrmRoute: TenantCrmRoute,
-  TenantCsRoute: TenantCsRoute,
-  TenantCustomerCareRoute: TenantCustomerCareRoute,
-  TenantCustomersRoute: TenantCustomersRoute,
-  TenantDailyOperationsRoute: TenantDailyOperationsRoute,
-  TenantDashboardRoute: TenantDashboardRoute,
-  TenantDemoRoute: TenantDemoRoute,
-  TenantDriverRoute: TenantDriverRoute,
-  TenantExecutiveRoute: TenantExecutiveRoute,
-  TenantFinanceRoute: TenantFinanceRoute,
-  TenantHelpRoute: TenantHelpRoute,
-  TenantInventoryRoute: TenantInventoryRoute,
-  TenantIssuesRoute: TenantIssuesRoute,
-  TenantLedgerRoute: TenantLedgerRoute,
-  TenantLegalRoute: TenantLegalRoute,
-  TenantLiveMapRoute: TenantLiveMapRoute,
-  TenantManagerRoute: TenantManagerRoute,
-  TenantMarketingRoute: TenantMarketingRoute,
-  TenantMarketplaceRoute: TenantMarketplaceRoute,
-  TenantOnboardingRoute: TenantOnboardingRoute,
-  TenantOpsRoute: TenantOpsRoute,
-  TenantReceivablesRoute: TenantReceivablesRoute,
-  TenantReportsRoute: TenantReportsRouteWithChildren,
-  TenantSearchRoute: TenantSearchRoute,
-  TenantServicesRoute: TenantServicesRoute,
-  TenantSettingsRoute: TenantSettingsRouteWithChildren,
-  TenantSubscriptionsRoute: TenantSubscriptionsRoute,
-  TenantSystemHealthRoute: TenantSystemHealthRoute,
-  TenantTodayRoute: TenantTodayRoute,
-  TenantWorkOrdersRoute: TenantWorkOrdersRoute,
-  TenantOrdersIdRoute: TenantOrdersIdRoute,
-  TenantOrdersNewRoute: TenantOrdersNewRoute,
-  TenantPickupsNewRoute: TenantPickupsNewRoute,
-  TenantStaffIdRoute: TenantStaffIdRoute,
-  TenantStaffAttendanceRoute: TenantStaffAttendanceRoute,
-  TenantStaffFairnessRoute: TenantStaffFairnessRoute,
-  TenantStaffIroningPayrollRoute: TenantStaffIroningPayrollRoute,
-  TenantStaffLeavesRoute: TenantStaffLeavesRoute,
-  TenantStaffNewRoute: TenantStaffNewRoute,
-  TenantStaffRequestsRoute: TenantStaffRequestsRoute,
-  TenantStaffSalariesRoute: TenantStaffSalariesRoute,
-  TenantStaffScheduleRoute: TenantStaffScheduleRoute,
-  TenantStaffScorecardRoute: TenantStaffScorecardRoute,
-  TenantStaffUsersRoute: TenantStaffUsersRoute,
-  TenantStationsStageRoute: TenantStationsStageRoute,
-  TenantStationsCleaningRoute: TenantStationsCleaningRoute,
-  TenantStationsCsRoute: TenantStationsCsRoute,
-  TenantStationsDeliveryRoute: TenantStationsDeliveryRoute,
-  TenantStationsDryingAssemblyRoute: TenantStationsDryingAssemblyRoute,
-  TenantStationsIntakeRoute: TenantStationsIntakeRoute,
-  TenantStationsIroningRoute: TenantStationsIroningRoute,
-  TenantStationsPackingRoute: TenantStationsPackingRoute,
-  TenantStationsQcRoute: TenantStationsQcRoute,
-  TenantStationsReceptionRoute: TenantStationsReceptionRoute,
-  TenantStationsSortingRoute: TenantStationsSortingRoute,
-  TenantOrdersIndexRoute: TenantOrdersIndexRoute,
-  TenantPickupsIndexRoute: TenantPickupsIndexRoute,
-  TenantStaffIndexRoute: TenantStaffIndexRoute,
-}
-
-const TenantRouteWithChildren =
-  TenantRoute._addFileChildren(TenantRouteChildren)
-
-interface AdminRouteChildren {
-  AdminAdminBillingRoute: typeof AdminAdminBillingRoute
-  AdminAdminBizDevRoute: typeof AdminAdminBizDevRoute
-  AdminAdminBusinessPlanRoute: typeof AdminAdminBusinessPlanRoute
-  AdminAdminCustomerSuccessRoute: typeof AdminAdminCustomerSuccessRoute
-  AdminAdminDemoLibraryRoute: typeof AdminAdminDemoLibraryRoute
-  AdminAdminInputBuilderRoute: typeof AdminAdminInputBuilderRoute
-  AdminAdminInvestorRelationsRoute: typeof AdminAdminInvestorRelationsRoute
-  AdminAdminLegalRoute: typeof AdminAdminLegalRoute
-  AdminAdminMarketingPlanRoute: typeof AdminAdminMarketingPlanRoute
-  AdminAdminPlatformBuilderRoute: typeof AdminAdminPlatformBuilderRoute
-  AdminAdminPlatformFeesRoute: typeof AdminAdminPlatformFeesRoute
-  AdminAdminReportBuilderRoute: typeof AdminAdminReportBuilderRoute
-  AdminAdminTelemetryRoute: typeof AdminAdminTelemetryRoute
-  AdminAdminTemplatesRoute: typeof AdminAdminTemplatesRoute
-  AdminAdminWorkflowBuilderRoute: typeof AdminAdminWorkflowBuilderRoute
-  AdminAdminIndexRoute: typeof AdminAdminIndexRoute
-  AdminAdminTenantsIdRoute: typeof AdminAdminTenantsIdRoute
-  AdminAdminTenantsIndexRoute: typeof AdminAdminTenantsIndexRoute
-  AdminAdminUsersIndexRoute: typeof AdminAdminUsersIndexRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminAdminBillingRoute: AdminAdminBillingRoute,
-  AdminAdminBizDevRoute: AdminAdminBizDevRoute,
-  AdminAdminBusinessPlanRoute: AdminAdminBusinessPlanRoute,
-  AdminAdminCustomerSuccessRoute: AdminAdminCustomerSuccessRoute,
-  AdminAdminDemoLibraryRoute: AdminAdminDemoLibraryRoute,
-  AdminAdminInputBuilderRoute: AdminAdminInputBuilderRoute,
-  AdminAdminInvestorRelationsRoute: AdminAdminInvestorRelationsRoute,
-  AdminAdminLegalRoute: AdminAdminLegalRoute,
-  AdminAdminMarketingPlanRoute: AdminAdminMarketingPlanRoute,
-  AdminAdminPlatformBuilderRoute: AdminAdminPlatformBuilderRoute,
-  AdminAdminPlatformFeesRoute: AdminAdminPlatformFeesRoute,
-  AdminAdminReportBuilderRoute: AdminAdminReportBuilderRoute,
-  AdminAdminTelemetryRoute: AdminAdminTelemetryRoute,
-  AdminAdminTemplatesRoute: AdminAdminTemplatesRoute,
-  AdminAdminWorkflowBuilderRoute: AdminAdminWorkflowBuilderRoute,
-  AdminAdminIndexRoute: AdminAdminIndexRoute,
-  AdminAdminTenantsIdRoute: AdminAdminTenantsIdRoute,
-  AdminAdminTenantsIndexRoute: AdminAdminTenantsIndexRoute,
-  AdminAdminUsersIndexRoute: AdminAdminUsersIndexRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SlugRoute: SlugRoute,
-  TenantRoute: TenantRouteWithChildren,
-  AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
   CustomerPortalRoute: CustomerPortalRoute,
   LandingRoute: LandingRoute,
   LoginRoute: LoginRoute,
-  MarketplaceRoute: MarketplaceRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
   JoinSlugRoute: JoinSlugRoute,
   TrackTokenRoute: TrackTokenRoute,

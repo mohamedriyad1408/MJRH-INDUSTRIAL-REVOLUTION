@@ -60,7 +60,7 @@ function TrackPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-teal-50 flex items-center justify-center p-4" dir={dir}>
       <div className="w-full max-w-md space-y-4">
         <div className="text-center">
-          <div className="text-3xl mb-2"></div>
+          <div className="text-3xl mb-2">👕</div>
           <h1 className="text-2xl font-bold text-slate-800">{t("track.title")}</h1>
           <p className="text-sm text-slate-500">{t("track.subtitle")}</p><div className="mt-3 flex justify-center"><LanguageSwitcher compact /></div>
         </div>
@@ -71,7 +71,7 @@ function TrackPage() {
               <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-teal-600" /></div>
             ) : !order ? (
               <div className="text-center py-6">
-                <div className="text-4xl mb-3"></div>
+                <div className="text-4xl mb-3">🔍</div>
                 <p className="font-bold">{t("track.notFound")}</p>
                 <p className="text-sm text-muted-foreground mt-1">{t("track.checkLink")}</p>
               </div>
@@ -106,7 +106,7 @@ function TrackPage() {
                       </div>;
                     })}
                   </div>
-                ) : <div className="text-center py-4"><div className="text-3xl mb-2"></div><p className="font-bold text-red-600">{t("track.cancelled")}</p></div>}
+                ) : <div className="text-center py-4"><div className="text-3xl mb-2">❌</div><p className="font-bold text-red-600">{t("track.cancelled")}</p></div>}
 
                 {items.length > 0 && <div className="rounded-xl border bg-white p-3 space-y-1">
                   <div className="font-black text-sm mb-2">{t("track.items")}</div>

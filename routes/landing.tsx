@@ -4,241 +4,118 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Check, Building2, Factory, Hotel, Hospital, Utensils, Boxes, Shield, Zap, Layers, Globe, Users, Store } from "lucide-react";
+import { ArrowLeft, BarChart3, Calculator, CheckCircle2, ClipboardList, Map, ShieldCheck, Shirt, Sparkles, Truck, Users, WalletCards } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
-  head: () => ({ meta: [{ title: "MJRH — Industrial Revolution" }] }),
+  head: () => ({ meta: [{ title: "MJRH — نظام تشغيل المغاسل" }] }),
   component: LandingPage,
 });
 
+const featureDefs = [
+  { titleKey: "landing.f1Title", textKey: "landing.f1Text", icon: <ClipboardList className="w-5 h-5" /> },
+  { titleKey: "landing.f2Title", textKey: "landing.f2Text", icon: <Sparkles className="w-5 h-5" /> },
+  { titleKey: "landing.f3Title", textKey: "landing.f3Text", icon: <Shirt className="w-5 h-5" /> },
+  { titleKey: "landing.f4Title", textKey: "landing.f4Text", icon: <Map className="w-5 h-5" /> },
+  { titleKey: "landing.f5Title", textKey: "landing.f5Text", icon: <Calculator className="w-5 h-5" /> },
+  { titleKey: "landing.f6Title", textKey: "landing.f6Text", icon: <Users className="w-5 h-5" /> },
+  { titleKey: "landing.f7Title", textKey: "landing.f7Text", icon: <ShieldCheck className="w-5 h-5" /> },
+  { titleKey: "landing.f8Title", textKey: "landing.f8Text", icon: <CheckCircle2 className="w-5 h-5" /> },
+];
 function LandingPage() {
   const { t, dir } = useI18n();
-  const [templates, setTemplates] = useState<any[]>([]);
-
-  useEffect(() => {
-    supabase.from("workflow_templates").select("*").eq("is_active", true).eq("is_featured", true).limit(6).then(({ data }: any) => {
-      if (data) setTemplates(data);
-    });
-  }, []);
-
+  const steps = ["landing.step1", "landing.step2", "landing.step3", "landing.step4", "landing.step5", "landing.step6"];
+  const features = featureDefs.map((f) => ({ ...f, title: t(f.titleKey), text: t(f.textKey) }));
   return (
-    <div className="min-h-screen bg-white text-slate-900" dir={dir}>
-      {/* HEADER - Clean, minimal */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-        <div className="mx-auto max-w-6xl px-6 h-[68px] flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden">
-                <img src="/icon-512.png" alt="MJRH" className="h-6 w-6 object-contain logo-animated" />
-              </div>
-              <div>
-                <div className="font-black text-[15px] tracking-tight">MJRH</div>
-                <div className="text-[10px] text-slate-500 -mt-1 tracking-widest font-bold">INDUSTRIAL REVOLUTION</div>
-              </div>
-            </Link>
-            <nav className="hidden md:flex items-center gap-6 text-[13px] font-medium text-slate-600">
-              <a href="#platform" className="hover:text-slate-900">{t("landing.navPlatform")}</a>
-              <a href="#solutions" className="hover:text-slate-900">{t("landing.navSolutions")}</a>
-              <a href="#enterprise" className="hover:text-slate-900">{t("landing.navEnterprise")}</a>
-            </nav>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#99f6e4,transparent_28rem),radial-gradient(circle_at_bottom_left,#ddd6fe,transparent_30rem),linear-gradient(135deg,#f8fafc,#eef2ff)]" dir={dir}>
+      <header className="mx-auto max-w-7xl px-4 py-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-14 w-14 rounded-2xl bg-white p-1 shadow-md border border-slate-200/80 flex items-center justify-center overflow-hidden shrink-0">
+            <img src="/mjrh-logo.png" alt="MJRH Logo" className="h-full w-full object-contain" />
           </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher compact />
-            <Button asChild variant="ghost" size="sm" className="hidden sm:flex"><Link to="/login">{t("landing.login")}</Link></Button>
-            <Button asChild size="sm" className="bg-slate-900 hover:bg-black text-white rounded-full px-5">
-              <Link to="/login">{t("landing.ctaStartNow")}</Link>
-            </Button>
+          <div>
+            <div className="font-black text-xl text-slate-900 tracking-tight">MJRH</div>
+            <div className="text-xs text-slate-500 font-semibold">Industrial Revolution for Laundry Operations</div>
           </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <LanguageSwitcher compact />
+          <Button asChild variant="outline"><Link to="/login">{t("landing.login")}</Link></Button>
+          <Button asChild><a href="https://wa.me/201130804784" target="_blank" rel="noreferrer">{t("landing.requestDemo")}</a></Button>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6">
-        {/* HERO */}
-        <section className="pt-16 pb-12 md:pt-24 md:pb-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              {t("landing.badge")}
+      <main className="mx-auto max-w-7xl px-4 pb-16">
+        <section className="grid lg:grid-cols-[1.1fr_.9fr] gap-8 items-center py-8 md:py-14">
+          <div className="space-y-6">
+            <div className="mb-4">
+              <img src="/mjrh-logo.png" alt="MJRH INDUSTRIAL REVOLUTION" className="h-44 sm:h-56 md:h-64 object-contain drop-shadow-2xl hover:scale-[1.03] transition-transform duration-500" />
             </div>
-
-            <h1 className="text-[40px] md:text-[56px] font-black tracking-[-0.03em] leading-[0.95]">
+            <Badge className="bg-teal-600 text-white px-3 py-1 font-bold shadow-xs">{t("landing.badge")}</Badge>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-950 leading-tight">
               {t("landing.heroTitle")}
             </h1>
-
-            <p className="text-[17px] leading-8 text-slate-600 max-w-[48ch]">
+            <p className="text-lg text-slate-600 leading-8 max-w-2xl">
               {t("landing.heroText")}
             </p>
-
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full bg-slate-900 hover:bg-black h-12 px-7">
-                <Link to="/">{t("landing.ctaExploreProjects")} <ArrowLeft className="w-4 h-4 ms-2" /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full h-12 px-6">
-                <Link to="/login">{t("landing.ctaEnterPlatform")}</Link>
-              </Button>
+              <Button asChild size="lg"><a href="https://wa.me/201130804784?text=عايز%20تجربة%20MJRH" target="_blank" rel="noreferrer">{t("landing.ctaDemo")} <ArrowLeft className="w-4 h-4" /></a></Button>
+              <Button asChild size="lg" variant="outline"><a href="/customer-portal?tenant=dry-tech">{t("landing.ctaPortal")}</a></Button>
             </div>
-
-            <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-slate-500">
-              <span className="flex items-center gap-2"><Hotel className="w-3.5 h-3.5" /> {t("landing.trustedHotelsShort")}</span>
-              <span className="flex items-center gap-2"><Hospital className="w-3.5 h-3.5" /> {t("landing.trustedHospitalsShort")}</span>
-              <span className="flex items-center gap-2"><Utensils className="w-3.5 h-3.5" /> {t("landing.trustedRestaurantsShort")}</span>
-              <span className="flex items-center gap-2"><Factory className="w-3.5 h-3.5" /> {t("landing.trustedFactoriesShort")}</span>
+            <div className="flex flex-wrap gap-2 text-sm text-slate-600">
+              {steps.map((s, i) => <span key={s} className="rounded-full border bg-white/70 px-3 py-1">{i + 1}. {t(s)}</span>)}
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-br from-teal-100 via-violet-100 to-amber-100 rounded-[2rem] blur-2xl opacity-60" />
-            <Card className="relative shadow-2xl border-0 rounded-[1.5rem] overflow-hidden bg-white">
-              <div className="p-2">
-                <img src="/hero-workflow.png" alt="MJRH Workflow" className="w-full rounded-[1rem] object-contain bg-slate-50 logo-animated" />
+          <Card className="border-0 shadow-2xl bg-slate-950 text-white overflow-hidden">
+            <CardContent className="p-6 space-y-4">
+              <div className="rounded-3xl bg-gradient-to-br from-teal-500/30 to-violet-600/30 border border-white/10 p-5">
+                <div className="text-sm text-teal-100">{t("landing.readiness")}</div>
+                <div className="text-6xl font-black mt-2">100%</div>
+                <div className="text-xs text-white/60 mt-2">{t("landing.readinessText")}</div>
               </div>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="font-bold text-sm">{t("landing.enterpriseCore")}</div>
-                  <Badge variant="outline" className="text-[10px]">{t("landing.liveBadge")}</Badge>
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-3 text-center">
-                  <div><div className="text-xl font-black">{t("landing.branchCount")}</div><div className="text-[10px] text-slate-500">{t("landing.branchLabel")}</div></div>
-                  <div className="border-x"><div className="text-xl font-black">{t("landing.companiesCount")}</div><div className="text-[10px] text-slate-500">{t("landing.companiesLabel")}</div></div>
-                  <div><div className="text-xl font-black">{t("landing.customCount")}</div><div className="text-[10px] text-slate-500">{t("landing.customLabel")}</div></div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* TRUSTED STRIP */}
-        <section className="py-8 border-y border-slate-100">
-          <div className="flex flex-wrap items-center justify-between gap-6 text-sm">
-            <span className="text-slate-400 font-medium">{t("landing.trustedLabel")}</span>
-            <div className="flex flex-wrap gap-8 font-bold text-slate-700">
-              <span className="flex items-center gap-2"><Building2 className="w-4 h-4" /> {t("landing.trusted7Star")}</span>
-              <span className="flex items-center gap-2"><Hospital className="w-4 h-4" /> {t("landing.trustedHospitals")}</span>
-              <span className="flex items-center gap-2"><Utensils className="w-4 h-4" /> {t("landing.trustedChains")}</span>
-              <span className="flex items-center gap-2"><Boxes className="w-4 h-4" /> {t("landing.trustedFactoriesWorkshops")}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* MARKETPLACE PREVIEW */}
-        <section className="py-12">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-black flex items-center gap-2"><Store className="w-5 h-5" /> {t("landing.marketplaceTitle")}</h2>
-              <p className="text-sm text-slate-600 mt-1">{t("landing.marketplaceSubtitle")}</p>
-            </div>
-            <Button asChild variant="outline" size="sm" className="rounded-full"><Link to="/marketplace">{t("landing.viewMarketplace")} <ArrowLeft className="w-3 h-3 ms-1" /></Link></Button>
-          </div>
-          <div className="grid md:grid-cols-3 gap-4">
-            {templates.map((tpl: any) => (
-              <Card key={tpl.id} className="hover:shadow-lg transition-all border">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-xl">{tpl.icon}</div>
-                    <div>
-                      <div className="font-bold text-sm">{tpl.name}</div>
-                      <div className="text-[11px] text-slate-500">{tpl.category} • {tpl.stages?.length} stages</div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 mt-3 line-clamp-2">{tpl.description}</p>
-                  <div className="mt-3 flex gap-1 flex-wrap">
-                    {tpl.stages?.slice(0,3).map((s:any,i:number) => (
-                      <span key={i} className="text-[10px] px-2 py-1 rounded-full bg-slate-100 border">{s.icon} {s.name}</span>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* FEATURES */}
-        <section id="platform" className="py-16">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-black tracking-tight">{t("landing.featuresTitle")}</h2>
-            <p className="text-slate-600 mt-3">{t("landing.featuresSubtitle")}</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
-            <Feature icon={<Layers />} title={t("landing.featureCustomStagesTitle")} desc={t("landing.featureCustomStagesDesc")} />
-            <Feature icon={<Users />} title={t("landing.featureTeamRolesTitle")} desc={t("landing.featureTeamRolesDesc")} />
-            <Feature icon={<Shield />} title={t("landing.featureCashAccountingTitle")} desc={t("landing.featureCashAccountingDesc")} />
-            <Feature icon={<Globe />} title={t("landing.featureMultiBranchTitle")} desc={t("landing.featureMultiBranchDesc")} />
-            <Feature icon={<Zap />} title={t("landing.featureSmartDistributionTitle")} desc={t("landing.featureSmartDistributionDesc")} />
-            <Feature icon={<Boxes />} title={t("landing.featureInventoryServicesTitle")} desc={t("landing.featureInventoryServicesDesc")} />
-          </div>
-        </section>
-
-        {/* ENTERPRISE */}
-        <section id="enterprise" className="py-16">
-          <Card className="bg-slate-900 text-white border-0 rounded-[2rem] overflow-hidden">
-            <CardContent className="p-8 md:p-10 grid md:grid-cols-2 gap-10 items-center">
-              <div className="space-y-5">
-                <Badge className="bg-white/10 text-white border-white/20">{t("landing.enterpriseBadge")}</Badge>
-                <h3 className="text-3xl font-black leading-tight whitespace-pre-line">{t("landing.enterpriseTitle")}</h3>
-                <p className="text-white/60 leading-7">{t("landing.enterpriseDesc")}</p>
-                <ul className="space-y-2 text-sm">
-                  <Li>{t("landing.enterpriseLi1")}</Li>
-                  <Li>{t("landing.enterpriseLi2")}</Li>
-                  <Li>{t("landing.enterpriseLi3")}</Li>
-                  <Li>{t("landing.enterpriseLi4")}</Li>
-                </ul>
-              </div>
-              <div className="bg-white rounded-2xl p-4">
-                <img src="/hero-workflow.png" alt="Enterprise" className="w-full" />
+              <div className="grid grid-cols-2 gap-3">
+                <Mini icon={<Truck />} title={t("nav./stations/delivery")} value={t("landing.f4Text")} />
+                <Mini icon={<WalletCards />} title={t("landing.cash")} value={t("landing.cashText")} />
+                <Mini icon={<BarChart3 />} title={t("landing.reports")} value={t("landing.reportsText")} />
+                <Mini icon={<ShieldCheck />} title="APDO" value={t("landing.apdoText")} />
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* CTA */}
-        <section className="py-12 text-center">
-          <h2 className="text-3xl font-black">{t("landing.ctaReadyTitle")}</h2>
-          <p className="text-slate-600 mt-2">{t("landing.ctaReadySubtitle")}</p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Button asChild size="lg" className="rounded-full bg-slate-900 h-12 px-8"><Link to="/">{t("landing.ctaExplore")}</Link></Button>
-            <Button asChild size="lg" variant="outline" className="rounded-full h-12"><Link to="/login">{t("landing.ctaLoginPlatform")}</Link></Button>
+        <section className="py-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black">{t("landing.toolsTitle")}</h2>
+            <p className="text-slate-600 mt-2">{t("landing.toolsText")}</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {features.map((f) => <Card key={f.title} className="bg-white/80 backdrop-blur"><CardContent className="p-5 space-y-3"><div className="h-11 w-11 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center">{f.icon}</div><div className="font-black">{f.title}</div><p className="text-sm text-slate-600 leading-6">{f.text}</p></CardContent></Card>)}
           </div>
         </section>
 
-        <footer className="py-10 border-t border-slate-100">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-                <img src="/icon-512.png" alt="MJRH" className="h-5 w-5 object-contain logo-animated" />
-              </div>
-              <div>
-                <div className="font-black">MJRH INDUSTRIAL REVOLUTION</div>
-                <div className="text-xs text-slate-500">© {new Date().getFullYear()} BY MUHAMMAD RIYAD</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-6 text-slate-500">
-              <Link to="/privacy" className="hover:text-slate-900">{t("landing.footerPrivacy")}</Link>
-              <Link to="/terms" className="hover:text-slate-900">{t("landing.footerTerms")}</Link>
-              <Link to="/login" className="hover:text-slate-900 font-bold">{t("landing.footerLogin")}</Link>
-            </div>
+        <section className="py-8 grid lg:grid-cols-3 gap-4">
+          <Plan title="Pilot" price={t("landing.planPilot")} popularLabel={t("landing.popular")} lines={["One laundry", "Live operation", "Initial training", "Direct support"]} />
+          <Plan title="Growth" price={t("landing.planGrowth")} popularLabel={t("landing.popular")} highlight lines={["Multiple branches", `${t("landing.cash")} + ${t("landing.reports")}`, t("landing.customerPortal"), "Daily operations"]} />
+          <Plan title="Enterprise" price={t("landing.planEnterprise")} popularLabel={t("landing.popular")} lines={["Customization", "Integrations", "Advanced training", "Priority support"]} />
+        </section>
+
+        <footer className="py-8 text-center text-sm text-slate-500 space-y-2 font-medium">
+          <div className="flex items-center justify-center gap-2">
+            <img src="/mjrh-logo.png" alt="MJRH" className="h-6 w-6 object-contain" />
+            <span className="font-black text-slate-900 tracking-wide">© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION</span>
           </div>
-          <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-            <div>{t("landing.footerEnterpriseOS")}</div>
-            <a href="tel:+201130804784" className="font-bold hover:text-slate-900">+20 113 080 4784</a>
-          </div>
+          <div className="font-semibold text-slate-500">BY MUHAMMAD RIYAD</div>
+          <div className="mt-2 flex justify-center gap-4"><Link to="/privacy" className="hover:underline">{t("legal.privacyTitle")}</Link><Link to="/terms" className="hover:underline">{t("legal.termsTitle")}</Link><Link to="/login" className="hover:underline font-bold text-slate-700">{t("landing.login")}</Link></div>
         </footer>
       </main>
     </div>
   );
 }
 
-function Feature({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
-  return (
-    <div className="space-y-3">
-      <div className="h-10 w-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">{icon}</div>
-      <div className="font-bold">{title}</div>
-      <div className="text-sm text-slate-600 leading-6">{desc}</div>
-    </div>
-  );
+function Mini({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
+  return <div className="rounded-2xl bg-white/8 border border-white/10 p-4"><div className="text-teal-200 [&_svg]:w-5 [&_svg]:h-5">{icon}</div><div className="font-black mt-2">{title}</div><div className="text-xs text-white/60">{value}</div></div>;
 }
 
-function Li({ children }: { children: React.ReactNode }) {
-  return <li className="flex gap-2"><Check className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />{children}</li>;
+function Plan({ title, price, lines, highlight = false, popularLabel }: { title: string; price: string; lines: string[]; highlight?: boolean; popularLabel: string }) {
+  return <Card className={highlight ? "border-teal-300 bg-teal-50 shadow-xl" : "bg-white/80"}><CardContent className="p-6 space-y-4"><div className="flex items-center justify-between"><div className="font-black text-xl">{title}</div>{highlight && <Badge className="bg-teal-600">{popularLabel}</Badge>}</div><div className="text-3xl font-black">{price}</div><ul className="space-y-2 text-sm text-slate-600">{lines.map((l) => <li key={l} className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-teal-600 mt-0.5" />{l}</li>)}</ul></CardContent></Card>;
 }

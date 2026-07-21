@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 
-type Station = string;
+type Station = "reception" | "cleaning" | "drying_assembly" | "ironing" | "packing" | "delivery";
 
 export function AssignEmployeeDialog({
   open, onOpenChange, orderId, station, onAssigned,

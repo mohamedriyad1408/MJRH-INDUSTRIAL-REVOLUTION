@@ -45,6 +45,8 @@ import arTrack from "../src/locales/ar/track.json";
 import enTrack from "../src/locales/en/track.json";
 import arLanding from "../src/locales/ar/landing.json";
 import enLanding from "../src/locales/en/landing.json";
+import arOperations from "../src/locales/ar/operations.json";
+import enOperations from "../src/locales/en/operations.json";
 
 export type LanguageCode = "ar" | "en" | "fr" | "it" | "es" | "de" | "zh" | "ja" | "pt";
 
@@ -61,15 +63,7 @@ export const SUPPORTED_LANGUAGES: { code: LanguageCode; nativeName: string; engl
 ];
 
 const dict: Record<LanguageCode, Record<string, string>> = {
-  ar: {},
-  en: {},
-  fr: {},
-  it: {},
-  es: {},
-  de: {},
-  zh: {},
-  ja: {},
-  pt: {},
+  ar: {}, en: {}, fr: {}, it: {}, es: {}, de: {}, zh: {}, ja: {}, pt: {},
 };
 
 const flatten = (obj: any, prefix = "") => {
@@ -85,7 +79,6 @@ const flatten = (obj: any, prefix = "") => {
   return res;
 };
 
-// Merge all JSON domains
 const domains: any = {
   common: { ar: arCommon, en: enCommon },
   accounting: { ar: arAccounting, en: enAccounting },
@@ -108,6 +101,7 @@ const domains: any = {
   "workflow-fields": { ar: arWFFields, en: enWFFields },
   track: { ar: arTrack, en: enTrack },
   landing: { ar: arLanding, en: enLanding },
+  operations: { ar: arOperations, en: enOperations },
 };
 
 Object.keys(domains).forEach((domain) => {
@@ -115,93 +109,18 @@ Object.keys(domains).forEach((domain) => {
   Object.assign(dict.en, flatten(domains[domain].en, domain));
 });
 
-const navEnglishBase: Record<string, string> = {
-  "nav.main": "Main",
-  "nav.today": "Today Center",
-  "nav.dashboard": "Owner Dashboard",
-  "nav.operations": "Operations",
-  "nav.orders": "All Orders",
-  "nav.customers": "Customers",
-  "nav.live_map": "Live Map",
-  "nav.reports": "Reports & BI",
-  "nav.staff": "Staff",
-  "nav.finance": "Finance",
-  "nav.settings": "Settings",
-  "nav.help": "Help Center",
-  "nav.admin": "Admin Panel",
-};
-
-const navArabicBase: Record<string, string> = {
-  "nav.main": "الرئيسية",
-  "nav.today": "مركز اليوم",
-  "nav.dashboard": "لوحة المالك",
-  "nav.operations": "التشغيل",
-  "nav.orders": "كل العمليات",
-  "nav.customers": "العملاء",
-  "nav.live_map": "خريطة المراقبة",
-  "nav.reports": "التقارير والذكاء",
-  "nav.staff": "الموظفون",
-  "nav.finance": "المالية",
-  "nav.settings": "الإعدادات",
-  "nav.help": "دليل الاستخدام",
-  "nav.admin": "إدارة المنصة",
-};
-
-Object.assign(dict.ar, navArabicBase);
-Object.assign(dict.en, navEnglishBase);
-
-// Base app translations
-Object.assign(dict.ar, {
-  "common.language": "اللغة",
-  "common.loading": "جاري التحميل",
-  "common.save": "حفظ",
-  "common.open": "فتح",
-  "common.back": "عودة",
-  "common.egp": "ج.م",
-  "app.tagline": "منظومة تشغيل المشاريع التشغيلية",
-  "app.portal": "بوابة العميل",
-  "app.signOut": "خروج",
-});
-
-Object.assign(dict.en, {
-  "common.language": "Language",
-  "common.loading": "Loading",
-  "common.save": "Save",
-  "common.open": "Open",
-  "common.back": "Back",
-  "common.egp": "EGP",
-  "app.tagline": "Industrial Operations OS",
-  "app.portal": "Customer Portal",
-  "app.signOut": "Sign Out",
-});
-
-// Load other packs
-for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
-  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
-  Object.assign(dict[lang], internalTranslations[lang] ?? {});
-}
-
-// Fallback logic to ensure critical keys have values even in non-AR/EN languages
-const criticalKeys = ["track.title", "customer.title", "landing.heroTitle", "system.title"];
-for (const lang in dict) {
-  const l = lang as LanguageCode;
-  for (const key of criticalKeys) {
-    if (!dict[l][key]) dict[l][key] = dict.en[key] || dict.ar[key] || key;
-  }
-}
-
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
-  const local = dict[language]?.[key];
+  const local = dict[language]?.[key] || dict[language]?.[key.toLowerCase()];
   if (local !== undefined && local !== "") return local;
   
-  // Try finding by lowercase key
-  const lowerKey = key.toLowerCase();
-  if (dict[language]?.[lowerKey]) return dict[language][lowerKey];
-
-  if (language === "en") return dict.en?.[key] ?? fallback ?? key;
-  if (language === "ar") return fallback ?? dict.ar?.[key] ?? dict.en?.[key] ?? key;
+  if (language === "en") return dict.en?.[key] || dict.en?.[key.toLowerCase()] || fallback || key;
+  if (language === "ar") return fallback || dict.ar?.[key] || dict.ar?.[key.toLowerCase()] || dict.en?.[key] || key;
   
-  return dict[language]?.[key] || dict.en?.[key] || dict.ar?.[key] || fallback || key;
+  // Load from public packs or internal as last resort
+  const pub = publicLanguagePacks[language]?.[key] || internalTranslations[language]?.[key];
+  if (pub) return pub;
+
+  return dict.en?.[key] || dict.ar?.[key] || fallback || key;
 }
 
 export function interpolate(template: string, values: Record<string, string | number | null | undefined> = {}) {

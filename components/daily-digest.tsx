@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sun, TrendingUp, Package, AlertTriangle } from "lucide-react";
 import { tone, getToneDictionary } from "@/lib/tone-dictionary";
@@ -27,10 +27,10 @@ export function DailyDigest() {
     ]).then(([{ data: orders }]) => {
       const os = orders ?? [];
       setData({
-        todayOrders: os.filter((o: any) => o.status !== "cancelled").length,
+        todayOrders: os.length,
         readyUnits: os.filter((o: any) => o.status === "ready").length,
         lateCount: os.filter((o: any) => o.promised_delivery_at && o.promised_delivery_at < new Date().toISOString() && !["delivered","cancelled"].includes(o.status)).length,
-        netToday: os.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
+        netToday: os.reduce((s: number, o: any) => s + Number(o.total ?? 0), 0),
       });
     });
   }, []);
@@ -42,7 +42,7 @@ export function DailyDigest() {
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Sun className="w-4 h-4 text-teal-200" />
-          <span className="text-sm font-bold text-teal-100">{greeting}</span>
+          <span className="text-sm font-bold text-teal-100">{greeting} 👋</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-white/10 rounded-lg p-2">

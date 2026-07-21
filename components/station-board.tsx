@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/core/auth/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { fmtDate, ORDER_STATUS_AR } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Zap, ArrowLeft, UserPlus, PlayCircle, CheckCircle2, Trophy } from "lucide-react";
 import { AssignEmployeeDialog } from "@/components/assign-employee-dialog";
-import { autoAssignIroningPieces } from "@/modules/laundry/ironing/assignment";
+import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { interpolate, useI18n } from "@/lib/i18n";
 
@@ -98,7 +98,7 @@ export function StationBoard({
             <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? t("station.common.startNow") : interpolate(t("station.common.readyToMove"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })}</div>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline"><Link to={"/$tenant/orders/$id" as any} params={{ id: nextTask.id } as any}>{t("station.common.openOrder")}</Link></Button>
+            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>{t("station.common.openOrder")}</Link></Button>
             {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />{t("station.common.start")}</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.common.finishMove")}</Button>)}
           </div>
         </CardContent>

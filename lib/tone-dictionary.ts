@@ -15,7 +15,7 @@ export const DEFAULT_TONE_AR = {
   performance_drop: "ملاحظة: إنتاجية محطة {stage} أقل من المعتاد اليوم",
 
   // Daily digest
-  tasks_completed: "أنجزت {count} مهمة اليوم",
+  tasks_completed: "أنجزت {count} مهمة اليوم 🎉",
   tasks_completed_team: "الفريق أنجز {count} مهمة اليوم",
   performance_top: "أنت ضمن أفضل {pct}% هذا الأسبوع",
   daily_net: "صافي اليوم: {amount} ج",
@@ -25,7 +25,7 @@ export const DEFAULT_TONE_AR = {
   next_task_title: "المهمة التالية",
   next_task_scan_in: "Scan لبدء العمل",
   next_task_scan_out: "Scan لإنهاء وتسليم للمحطة التالية",
-  next_task_empty: "لا توجد مهام في الانتظار — أحسنت!",
+  next_task_empty: "لا توجد مهام في الانتظار — أحسنت! ✅",
 
   // Status labels
   status_on_time: "في الموعد",

@@ -20,8 +20,7 @@ async function login(page: Page, language: "ar" | "fr") {
   await page.locator('input[type="email"]').fill(email!);
   await page.locator('input[type="password"]').fill(password!);
   await page.locator('button[type="submit"]').click();
-  // Allow more time for initial dashboard load
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30_000 });
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15_000 });
 }
 
 test.describe("authenticated i18n smoke", () => {
@@ -34,10 +33,10 @@ test.describe("authenticated i18n smoke", () => {
       await page.goto("/system-health");
       await expect(page.locator("html")).toHaveAttribute("lang", "ar");
       await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-      // Use regex to be more flexible with exact strings
-      await expect(page.locator("body")).toContainText(/الرئيسية|اليوم|لوحة/);
-      await expect(page.locator("body")).toContainText(/المالية|التشغيل/);
+      await expect(page.locator("body")).toContainText("فحص النظام");
+      await expect(page.locator("body")).toContainText("المالية والتشغيل");
       await expect(page.locator("body")).not.toContainText("System health");
+      await expect(page.locator("body")).not.toContainText("Finance & operations");
     });
   });
 
@@ -48,8 +47,8 @@ test.describe("authenticated i18n smoke", () => {
       await page.goto("/system-health");
       await expect(page.locator("html")).toHaveAttribute("lang", "fr");
       await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
-      // French should have French or at least not English fallback
-      await expect(page.locator("body")).toContainText(/Santé|Système|Projets|Plateforme|Principale/);
+      await expect(page.locator("body")).toContainText("Santé système");
+      await expect(page.locator("body")).toContainText("Finance & opérations");
       await expect(page.locator("body")).not.toContainText("System health");
     });
   });

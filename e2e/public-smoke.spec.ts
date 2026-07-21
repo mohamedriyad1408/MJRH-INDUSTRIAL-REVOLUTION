@@ -11,17 +11,17 @@ test.describe("public and auth-gated smoke tests", () => {
   test("login page renders without a black screen", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/login");
-      await expect(page.getByRole("heading", { name: /منظومة تشغيل المشاريع|نظام إدارة المغسلة|MJRH/ })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /نظام إدارة المغسلة/ })).toBeVisible();
       await expect(page.locator('input[type="email"]')).toBeVisible();
       await expect(page.locator('input[type="password"]')).toBeVisible();
-      await expect(page.getByRole("button", { name: /دخول|Sign In/ })).toBeVisible();
+      await expect(page.getByRole("button", { name: "دخول" })).toBeVisible();
     });
   });
 
   test("protected app routes redirect or render login for anonymous users", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/dashboard");
-      await expect(page.getByText(/ادخل بياناتك للمتابعة|Enter your credentials/)).toBeVisible();
+      await expect(page.getByText("ادخل بياناتك للمتابعة")).toBeVisible();
       await expect(page).toHaveURL(/\/login/);
     });
   });
@@ -29,10 +29,9 @@ test.describe("public and auth-gated smoke tests", () => {
   test("customer portal loads and asks for phone", async ({ page }) => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/customer-portal?tenant=dry-tech");
-      // Title changed to "بوابة العميل الملكية"
-      await expect(page.getByRole("heading", { name: /بوابة العميل|Customer Portal/ })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "بوابة العميل" })).toBeVisible();
       await expect(page.getByPlaceholder("01xxxxxxxxx")).toBeVisible();
-      await expect(page.getByRole("button", { name: /دخول|Login/ })).toBeVisible();
+      await expect(page.getByRole("button", { name: "دخول" })).toBeVisible();
     });
   });
 
@@ -40,9 +39,9 @@ test.describe("public and auth-gated smoke tests", () => {
     await expectNoPageErrors(page, async () => {
       await page.goto("/dry-tech");
       await expect(page.getByRole("heading", { name: "Dry Tech" })).toBeVisible();
-      await expect(page.getByRole("link", { name: /دخول العملاء|Customer Login/ })).toBeVisible();
-      await expect(page.getByRole("link", { name: /تسجيل عميل جديد|Join as customer/ })).toBeVisible();
-      await expect(page.getByRole("link", { name: /دخول الموظفين والمالك|Staff Login/ })).toBeVisible();
+      await expect(page.getByRole("link", { name: /دخول العملاء/ })).toBeVisible();
+      await expect(page.getByRole("link", { name: /تسجيل عميل جديد/ })).toBeVisible();
+      await expect(page.getByRole("link", { name: /دخول الموظفين والمالك/ })).toBeVisible();
     });
   });
 });
