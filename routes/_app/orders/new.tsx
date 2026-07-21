@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  Loader2, Trash2, ArrowRight, LocateFixed, Search, UserPlus, Sparkles,
+  Loader2, Trash2, ArrowRight, LocateFixed, Search, Sparkles,
   Shirt, Package, Scissors, Truck, Receipt, CreditCard, Zap, Plus, Minus,
 } from "lucide-react";
 
@@ -48,10 +48,10 @@ function complexityForName(name: string) {
 function phoneDigits(v: string) { return (v || "").replace(/\D/g, ""); }
 
 const FILTERS: { id: ServiceFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: "all", label: "الكل", icon: Sparkles },
-  { id: "cleaning", label: "تصليح", icon: Scissors },
-  { id: "ironing", label: "كي", icon: Shirt },
-  { id: "both", label: "غسيل + كي", icon: Package },
+  { id: "all", label: "all", icon: Sparkles },
+  { id: "cleaning", label: "repair", icon: Scissors },
+  { id: "ironing", label: "ironing", icon: Shirt },
+  { id: "both", label: "washIron", icon: Package },
 ];
 
 function NewOrderPage() {
@@ -110,12 +110,12 @@ function NewOrderPage() {
 
   useEffect(() => {
     if (!customerSearch || customer) { setCustomerMatches([]); return; }
-    const t = setTimeout(async () => {
+    const tSearch = setTimeout(async () => {
       const { data } = await supabase.from("customers").select("id, full_name, phone, address, lat, lng, location_url")
         .or(`full_name.ilike.%${customerSearch}%,phone.ilike.%${customerSearch}%`).limit(8);
       setCustomerMatches((data ?? []) as Customer[]);
     }, 180);
-    return () => clearTimeout(t);
+    return () => clearTimeout(tSearch);
   }, [customerSearch, customer]);
 
   const filteredServices = useMemo(() => {
@@ -127,7 +127,7 @@ function NewOrderPage() {
     });
   }, [services, filter, serviceSearch]);
 
-  if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.</Card>;
+  if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">{t("orders.noCreateAccess", "صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.")}</Card>;
 
   function addService(svcId: string) {
     const svc = services.find((s) => s.id === svcId);
@@ -161,7 +161,7 @@ function NewOrderPage() {
   function applyArea(areaId: string, kind: "pickup" | "delivery" = "delivery") {
     const area = areas.find((a) => a.id === areaId);
     if (!area) return;
-    const suffix = area.area_type === "compound" ? `كمبوند ${area.name}` : area.name;
+    const suffix = area.area_type === "compound" ? `${t("common.compound", "كمبوند")} ${area.name}` : area.name;
     if (kind === "pickup") {
       setPickupAddress((x) => x ? `${x} - ${suffix}` : suffix);
       if (area.lat && area.lng) setPickupLoc({ lat: String(area.lat), lng: String(area.lng) });
@@ -170,7 +170,7 @@ function NewOrderPage() {
       if (area.lat && area.lng) setDeliveryLoc({ lat: String(area.lat), lng: String(area.lng) });
     }
     if (area.default_delivery_fee) setDeliveryFee(String(area.default_delivery_fee));
-    toast.success(`تم اختيار ${area.name}`);
+    toast.success(`${t("orders.areaSelected", "تم اختيار")} ${area.name}`);
   }
 
   function fillLocation(kind: "pickup" | "delivery") {
@@ -179,27 +179,27 @@ function NewOrderPage() {
     if (parsed) {
       if (kind === "pickup") setPickupLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
       else setDeliveryLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
-      toast.success("تم استخراج الإحداثيات");
+      toast.success(t("orders.locExtracted", "تم استخراج الإحداثيات"));
       return;
     }
-    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم تحديد الموقع");
+    if (!navigator.geolocation) return toast.error(t("orders.noGps", "المتصفح لا يدعم تحديد الموقع"));
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude.toFixed(7), lng: pos.coords.longitude.toFixed(7) };
         if (kind === "pickup") setPickupLoc(loc); else setDeliveryLoc(loc);
-        toast.success("تم تحديد الموقع الحالي");
+        toast.success(t("orders.locDone", "تم تحديد الموقع الحالي"));
       },
-      () => toast.error("تعذر تحديد الموقع"),
+      () => toast.error(t("orders.locError", "تعذر تحديد الموقع")),
       { enableHighAccuracy: true, timeout: 15000 }
     );
   }
 
   async function submit() {
-    if (!customer && !newCustomer.full_name) { toast.error("اختار عميل أو أضف عميل جديد"); return; }
+    if (!customer && !newCustomer.full_name) { toast.error(t("orders.errCustomer", "اختار عميل أو أضف عميل جديد")); return; }
     const effectivePhone = customer?.phone ?? newCustomer.phone;
-    if (phoneDigits(effectivePhone).length < 11) { toast.error("رقم الهاتف يجب أن يكون 11 رقم على الأقل"); return; }
-    if (!items.length) { toast.error("أضف قطعة أو خدمة واحدة على الأقل"); return; }
-    if (!branchId) { toast.error("اختار الفرع قبل إنشاء الطلب"); return; }
+    if (phoneDigits(effectivePhone).length < 11) { toast.error(t("orders.errPhone", "رقم الهاتف يجب أن يكون 11 رقم على الأقل")); return; }
+    if (!items.length) { toast.error(t("orders.errItems", "أضف قطعة أو خدمة واحدة على الأقل")); return; }
+    if (!branchId) { toast.error(t("orders.errBranch", "اختار الفرع قبل إنشاء الطلب")); return; }
     setSaving(true);
 
     let customerId = customer?.id;
@@ -257,35 +257,36 @@ function NewOrderPage() {
           is_shirt_like: isShirtLikeName(it.name),
           status: "received",
           current_stage: "received",
+          tenant_id: tenantId,
         });
         unitNo += 1;
       }
     }
     if (units.length) {
       const { error: uErr } = await supabase.from("service_units").insert(units);
-      if (uErr) toast.error(`تم إنشاء الطلب لكن تعذر ترقيم القطع: ${uErr.message}`);
+      if (uErr) toast.error(`${t("orders.errUnits", "تم إنشاء الطلب لكن تعذر ترقيم القطع")}: ${uErr.message}`);
     }
 
     await supabase.rpc("record_operation_event", { _process_key: "order_created", _process_name: "إنشاء طلب", _source_type: "order", _source_id: order!.id, _branch_id: branchId, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: false, _data: { customer_id: customerId, order_type: orderType, pieces: units.length, items: items.length, total, payment_status: paymentStatus }, _output: { cash_impact: paymentStatus === "paid", journal_required: paymentStatus === "paid", appears_in_report: true } }).then(() => null);
-    toast.success("تم إنشاء الطلب وترقيم القطع");
+    toast.success(t("orders.orderCreated", "تم إنشاء الطلب وترقيم القطع"));
     nav({ to: "/orders/$id", params: { id: order!.id } });
   }
 
   return (
-    <div className="min-h-[calc(100vh-6rem)] -m-4 md:-m-6 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white" dir="rtl">
+    <div className="min-h-[calc(100vh-6rem)] -m-4 md:-m-6 bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 text-white" dir={dir}>
       <div className="p-3 md:p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Button asChild variant="secondary" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("orders.orderNo", "Order")} جديدة</h1>
-              <p className="text-xs md:text-sm text-teal-100/80">شاشة POS سريعة — اختار العميل، اضغط الخدمات، أنشئ الطلب</p>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("orders.newOrder", "طلب جديد")}</h1>
+              <p className="text-xs md:text-sm text-teal-100/80">{t("orders.posSubtitle", "شاشة POS سريعة — اختار العميل، اضغط الخدمات، أنشئ الطلب")}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} قطعة</Badge>
-            <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/30 px-3 py-1">{shirtCount} قميص/بلوزة</Badge>
-            {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> مستعجل</Badge>}
+            <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} {t("order.pieces", "قطعة")}</Badge>
+            <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/30 px-3 py-1">{shirtCount} {t("orders.shirts", "قميص/بلوزة")}</Badge>
+            {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> {t("dashboard.kpi.urgent", "مستعجل")}</Badge>}
           </div>
         </div>
 
@@ -295,14 +296,14 @@ function NewOrderPage() {
             <Card className="bg-black/40 border-white/10 text-white shadow-2xl backdrop-blur">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="font-black text-lg flex items-center gap-2"><Receipt className="w-5 h-5 text-teal-300" /> الفاتورة</div>
-                  <Button variant="ghost" size="sm" className="text-red-200 hover:text-red-100" onClick={() => setItems([])} disabled={!items.length}>مسح</Button>
+                  <div className="font-black text-lg flex items-center gap-2"><Receipt className="w-5 h-5 text-teal-300" /> {t("orders.invoice", "الفاتورة")}</div>
+                  <Button variant="ghost" size="sm" className="text-red-200 hover:text-red-100" onClick={() => setItems([])} disabled={!items.length}>{t("common.clear", "مسح")}</Button>
                 </div>
 
                 <div className="space-y-2 max-h-[42vh] overflow-y-auto pe-1">
                   {!items.length && (
                     <div className="rounded-2xl border border-dashed border-white/20 p-8 text-center text-sm text-slate-300">
-                      اضغط على أي خدمة لإضافتها هنا
+                      {t("orders.clickToAdd", "اضغط على أي خدمة لإضافتها هنا")}
                     </div>
                   )}
                   {items.map((it, idx) => (
@@ -325,25 +326,25 @@ function NewOrderPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2 text-sm">
-                  <Row label="المجموع الفرعي" value={fmtMoney(subtotal, t("common.egp"))} />
-                  {isUrgent && <Row label="رسوم استعجال" value={fmtMoney(urgentFee)} />}
-                  {orderType === "delivery" && <Row label="توصيل" value={fmtMoney(delivery)} />}
-                  {disc > 0 && <Row label={`خصم ${discPct}%`} value={`- ${fmtMoney(disc, t("common.egp"))}`} />}
-                  {settings.tax_percent > 0 && <Row label={`ضريبة ${settings.tax_percent}%`} value={fmtMoney(tax, t("common.egp"))} />}
+                  <Row label={t("order.subtotal", "المجموع الفرعي")} value={fmtMoney(subtotal, t("common.egp"))} />
+                  {isUrgent && <Row label={t("settings.urgentFee", "رسوم استعجال")} value={fmtMoney(urgentFee)} />}
+                  {orderType === "delivery" && <Row label={t("stage.delivery", "توصيل")} value={fmtMoney(delivery)} />}
+                  {disc > 0 && <Row label={`${t("orders.discount", "خصم")} ${discPct}%`} value={`- ${fmtMoney(disc, t("common.egp"))}`} />}
+                  {settings.tax_percent > 0 && <Row label={`${t("settings.taxPercent", "ضريبة")} ${settings.tax_percent}%`} value={fmtMoney(tax, t("common.egp"))} />}
                   <div className="border-t border-white/10 pt-3 mt-3 flex justify-between items-center">
-                    <span className="text-xl font-black">الإجمالي</span>
+                    <span className="text-xl font-black">{t("common.total", "الإجمالي")}</span>
                     <span className="text-3xl font-black text-teal-200">{fmtMoney(total, t("common.egp"))}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant={paymentStatus === "paid" ? "default" : "outline"} onClick={() => setPaymentStatus("paid")} className={paymentStatus === "paid" ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>مدفوع</Button>
-                  <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>آجل</Button>
+                  <Button type="button" variant={paymentStatus === "paid" ? "default" : "outline"} onClick={() => setPaymentStatus("paid")} className={paymentStatus === "paid" ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.paid", "مدفوع")}</Button>
+                  <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.unpaid", "آجل")}</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">إلغاء</Link></Button>
+                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">{t("common.cancel", "إلغاء")}</Link></Button>
                   <Button onClick={submit} disabled={saving} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black h-12">
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "إنشاء الطلب"}
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("orders.createBtn", "إنشاء الطلب")}
                   </Button>
                 </div>
               </CardContent>
@@ -356,18 +357,18 @@ function NewOrderPage() {
               <CardContent className="p-4 space-y-4">
                 <div className="grid lg:grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-slate-100 p-3 space-y-2">
-                    <div className="flex items-center gap-2 font-black"><Search className="w-4 h-4 text-teal-600" /> العميل</div>
+                    <div className="flex items-center gap-2 font-black"><Search className="w-4 h-4 text-teal-600" /> {t("customer.title", "العميل")}</div>
                     {customer ? (
                       <div className="flex justify-between items-center p-3 rounded-xl bg-white border">
                         <div>
                           <div className="font-black">{customer.full_name}</div>
                           <div className="text-xs text-slate-500">{customer.phone}</div>{customer.address && <div className="text-xs text-slate-500 mt-1">{customer.address}</div>}
                         </div>
-                        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { if (customer.address) { setPickupAddress(customer.address); setDeliveryAddress(customer.address); } if (customer.lat && customer.lng) { const loc = { lat: String(customer.lat), lng: String(customer.lng) }; setPickupLoc(loc); setDeliveryLoc(loc); } toast.success("تم ملء بيانات العميل"); }}>استخدم العنوان</Button><Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>تغيير</Button></div>
+                        <div className="flex gap-1"><Button size="sm" variant="ghost" onClick={() => { if (customer.address) { setPickupAddress(customer.address); setDeliveryAddress(customer.address); } if (customer.lat && customer.lng) { const loc = { lat: String(customer.lat), lng: String(customer.lng) }; setPickupLoc(loc); setDeliveryLoc(loc); } toast.success(t("orders.custDataApplied", "تم ملء بيانات العميل")); }}>{t("orders.useAddr", "استخدم العنوان")}</Button><Button size="sm" variant="ghost" onClick={() => { setCustomer(null); setCustomerSearch(""); }}>{t("common.change", "تغيير")}</Button></div>
                       </div>
                     ) : (
                       <>
-                        <Input placeholder="ابحث بالاسم أو الهاتف" value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="bg-white" />
+                        <Input placeholder={t("orders.searchPlaceholder", "ابحث بالاسم أو الهاتف")} value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="bg-white" />
                         {customerMatches.length > 0 && (
                           <div className="rounded-xl border bg-white divide-y overflow-hidden">
                             {customerMatches.map((c) => (
@@ -378,65 +379,65 @@ function NewOrderPage() {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
-                          <Input placeholder={t("login.fullName")} value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
-                          <Input placeholder={t("common.phone")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
-                          <Input className="col-span-2 bg-white" placeholder={t("common.address")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
+                          <Input placeholder={t("login.fullName", "الاسم الكامل")} value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
+                          <Input placeholder={t("common.phone", "الهاتف")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
+                          <Input className="col-span-2 bg-white" placeholder={t("common.address", "العنوان")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
                         </div>
                       </>
                     )}
                   </div>
 
                   <div className="rounded-2xl bg-slate-100 p-3 space-y-3">
-                    <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> {t("orders.payment")}</div>
+                    <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> {t("orders.payment", "الدفع")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       <Select value={branchId} onValueChange={setBranchId}>
-                        <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch", "الفرع")} /></SelectTrigger>
                         <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="walk_in">{t("orders.walkin")}</SelectItem><SelectItem value="delivery">{t("stage.delivery")}</SelectItem></SelectContent>
+                        <SelectContent><SelectItem value="walk_in">{t("orders.walkin", "داخلي")}</SelectItem><SelectItem value="delivery">{t("stage.delivery", "توصيل")}</SelectItem></SelectContent>
                       </Select>
                       <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cash">{t("orders.cash")}</SelectItem><SelectItem value="instapay">InstaPay</SelectItem>
-                          <SelectItem value="cod_cash">دفع عند الاستلام - نقدي</SelectItem><SelectItem value="cod_instapay">دفع عند الاستلام - InstaPay</SelectItem>
+                          <SelectItem value="cash">{t("orders.cash", "نقدي")}</SelectItem><SelectItem value="instapay">InstaPay</SelectItem>
+                          <SelectItem value="cod_cash">{t("method.cod_cash", "دفع عند الاستلام - نقدي")}</SelectItem><SelectItem value="cod_instapay">{t("method.cod_instapay", "دفع عند الاستلام - InstaPay")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent")}</label>
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent", "مستعجل")}</label>
                       
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {isUrgent && <Input type="number" placeholder="استعجال" value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
-                      <Input type="number" placeholder="خصم %" value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="bg-white" />
-                      {orderType === "delivery" && <Input type="number" placeholder="توصيل" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
+                      {isUrgent && <Input type="number" placeholder={t("settings.urgentFee", "استعجال")} value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
+                      <Input type="number" placeholder={t("orders.discount", "خصم %")} value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="bg-white" />
+                      {orderType === "delivery" && <Input type="number" placeholder={t("settings.deliveryFee", "توصيل")} value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
                     </div>
                   </div>
                 </div>
 
                 {orderType === "delivery" && (
                   <div className="rounded-2xl bg-teal-50 border border-teal-100 p-3 space-y-3">
-                    <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> {t("orders.deliveryAddress")}</div>
+                    <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> {t("orders.deliveryAddress", "عنوان التوصيل")}</div>
                     <div className="grid md:grid-cols-2 gap-2">
                       <Select onValueChange={(v) => applyArea(v, "pickup") }>
-                        <SelectTrigger><SelectValue placeholder={t("orders.pickupArea")} /></SelectTrigger>
-                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
+                        <SelectTrigger><SelectValue placeholder={t("orders.pickupArea", "منطقة الاستلام")} /></SelectTrigger>
+                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select onValueChange={(v) => applyArea(v, "delivery") }>
-                        <SelectTrigger><SelectValue placeholder={t("orders.deliveryArea")} /></SelectTrigger>
-                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? "كمبوند" : a.area_type === "street" ? "شارع" : "منطقة"}</SelectItem>)}</SelectContent>
+                        <SelectTrigger><SelectValue placeholder={t("orders.deliveryArea", "منطقة التسليم")} /></SelectTrigger>
+                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="grid lg:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Input placeholder={t("orders.pickupAddress")} value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
+                        <Input placeholder={t("orders.pickupAddress", "عنوان الاستلام بالتفصيل")} value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
                         <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                       <div className="space-y-2">
-                        <Input placeholder={t("orders.deliveryAddress")} value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+                        <Input placeholder={t("orders.deliveryAddress", "عنوان التسليم بالتفصيل")} value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
                         <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                     </div>
@@ -449,12 +450,12 @@ function NewOrderPage() {
               <CardContent className="p-4 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="font-black text-xl">{t("orders.quickServices")}</div>
-                    <div className="text-xs text-slate-500">{t("orders.quickServicesDetail")}</div>
+                    <div className="font-black text-xl">{t("orders.quickServices", "خدمات سريعة")}</div>
+                    <div className="text-xs text-slate-500">{t("orders.quickServicesDetail", "اختر من الكتالوج لإضافة بنود للفاتورة")}</div>
                   </div>
                   <div className="relative w-full md:w-72">
-                    <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input className="pr-9" placeholder={t("orders.searchService")} value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
+                    <Search className={`w-4 h-4 absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-slate-400`} />
+                    <Input className={dir === 'rtl' ? "pr-9" : "pl-9"} placeholder={t("orders.searchService", "ابحث عن خدمة...")} value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
                   </div>
                 </div>
 
@@ -462,7 +463,7 @@ function NewOrderPage() {
                   {FILTERS.map((f) => {
                     const Icon = f.icon;
                     const active = filter === f.id;
-                    const label = f.id === "all" ? t("notif.filter.all") : f.id === "cleaning" ? t("common.repair") : f.id === "ironing" ? t("stage.ironing") : t("stage.cleaning") + " + " + t("stage.ironing");
+                    const label = t(`common.${f.label}`, f.label);
                     return <button key={f.id} onClick={() => setFilter(f.id)} className={`rounded-2xl p-3 border text-sm font-black transition ${active ? "bg-teal-600 text-white border-teal-600 shadow-lg" : "bg-slate-50 hover:bg-slate-100"}`}><Icon className="w-4 h-4 mx-auto mb-1" />{label}</button>;
                   })}
                 </div>
@@ -475,17 +476,17 @@ function NewOrderPage() {
                         <Plus className="w-5 h-5 text-teal-600 opacity-60 group-hover:opacity-100" />
                       </div>
                       <div className="mt-3 flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? "تنظيف + كي" : s.service_type === "ironing" ? "كي" : "تصليح"}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{s.service_type === "both" ? t("common.washIron") : s.service_type === "ironing" ? t("common.ironOnly") : t("common.repair")}</Badge>
                         <div className="font-black text-teal-700">{fmtMoney(s.unit_price, t("common.egp"))}</div>
                       </div>
                     </button>
                   ))}
-                  {!filteredServices.length && <div className="col-span-full text-center text-slate-500 p-10">{t("orders.noServices")}</div>}
+                  {!filteredServices.length && <div className="col-span-full text-center text-slate-500 p-10">{t("orders.noServices", "لا توجد خدمات مطابقة")}</div>}
                 </div>
 
                 <div>
-                  <Label className="text-slate-700">{t("order.notes")}</Label>
-                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("order.notes")} />
+                  <Label className="text-slate-700">{t("order.notes", "ملاحظات")}</Label>
+                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("order.notes", "أي ملاحظات إضافية على الطلب...")} />
                 </div>
               </CardContent>
             </Card>
@@ -495,4 +496,3 @@ function NewOrderPage() {
     </div>
   );
 }
-

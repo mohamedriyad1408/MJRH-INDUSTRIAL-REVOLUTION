@@ -82,17 +82,7 @@ const flatten = (obj: any, prefix = "") => {
   return res;
 };
 
-// PRECEDENCE 1: BASELINE (Internal Translations)
-for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
-  Object.assign(dict[lang], internalTranslations[lang] ?? {});
-}
-
-// PRECEDENCE 2: PUBLIC PACKS
-for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
-  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
-}
-
-// PRECEDENCE 3: DOMAIN JSONs (Specific Work)
+// 1. Initial Domain JSON Merge
 const domains: any = {
   common: { ar: arCommon, en: enCommon },
   navigation: { ar: arNav, en: enNav },
@@ -129,12 +119,22 @@ Object.keys(domains).forEach((domain) => {
   }
 });
 
-// PRECEDENCE 4: FINAL CI OVERRIDES
-Object.assign(dict.en, { 
-  "finance.title": "Finance and accounts",
-  "nav./orders": "All orders",
-  "nav./system-health": "System health"
-});
+// 2. Pre-assign other languages with English baseline
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  if (lang !== "en" && lang !== "ar") {
+    Object.assign(dict[lang], dict.en);
+  }
+}
+
+// 3. Layer Public Packs on top
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  Object.assign(dict[lang], publicLanguagePacks[lang] ?? {});
+}
+
+// 4. Final internalTranslations (last priority)
+for (const lang of SUPPORTED_LANGUAGES.map((x) => x.code)) {
+  Object.assign(dict[lang], internalTranslations[lang] ?? {});
+}
 
 export function translateForLanguage(language: LanguageCode, key: string, fallback?: string) {
   const localDict = dict[language] || {};
@@ -142,7 +142,6 @@ export function translateForLanguage(language: LanguageCode, key: string, fallba
   
   if (value !== undefined && value !== "") return value;
   
-  // Logical Fallbacks
   if (language === "ar") {
     return dict.ar[key] || dict.ar[key.toLowerCase()] || fallback || dict.en[key] || key;
   }
@@ -179,7 +178,7 @@ function detectLanguage(): LanguageCode {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<LanguageCode>(() => detectLanguage());
-  const meta = SUPPORTED_LANGUAGES.find((x) => x.code === language) ?? SUPPORTED_LANGUAGES[0];
+  const meta = SUPPORTED_LANGUAGES.find((code) => code.code === language) ?? SUPPORTED_LANGUAGES[0];
 
   useEffect(() => {
     if (typeof document !== "undefined") {

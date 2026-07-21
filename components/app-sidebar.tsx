@@ -22,10 +22,10 @@ const adminGroups = [
   {
     label: "إدارة المنصة",
     items: [
-      { title: "المغاسل", url: "/admin/tenants", icon: Building2 },
+      { title: "المشاريع", url: "/admin/tenants", icon: Building2 },
       { title: "كل المستخدمين", url: "/admin/users", icon: Crown },
-      { title: "رسوم تشغيل المنصة", url: "/admin/platform-fees", icon: Banknote },
-      { title: "فواتير SaaS", url: "/admin/billing", icon: ReceiptText },
+      { title: "رسوم التشغيل", url: "/admin/platform-fees", icon: Banknote },
+      { title: "الفواتير", url: "/admin/billing", icon: ReceiptText },
     ],
   },
 ];
@@ -34,15 +34,13 @@ const tenantGroups = [
   {
     label: "اللوحات",
     items: [
-      { title: "البحث", url: "/search", icon: Search },
-      { title: "تشغيل اليوم", url: "/daily-operations", icon: PlayCircle },
       { title: "مركز اليوم", url: "/today", icon: CalendarCheck },
+      { title: "التشغيل اليومي", url: "/daily-operations", icon: PlayCircle },
       { title: "لوحة المالك", url: "/dashboard", icon: LayoutDashboard },
-      { title: "التنفيذيين", url: "/executive", icon: BarChart3 },
-      { title: "لوحة التشغيل", url: "/ops", icon: ShieldCheck },
+      { title: "التشغيل", url: "/ops", icon: ShieldCheck },
       { title: "خدمة العملاء", url: "/cs", icon: Headphones },
-      { title: "خريطة المراقبة", url: "/live-map", icon: Navigation },
       { title: "التقارير", url: "/reports", icon: BarChart3 },
+      { title: "البحث", url: "/search", icon: Search },
     ],
   },
   {
@@ -57,6 +55,7 @@ const tenantGroups = [
     items: [
       { title: "الاستقبال", url: "/stations/reception", icon: Inbox },
       { title: "التنظيف", url: "/stations/cleaning", icon: Sparkles },
+      { title: "التجفيف", url: "/stations/drying-assembly", icon: Wind },
       { title: "الكي", url: "/stations/ironing", icon: Shirt },
       { title: "التغليف", url: "/stations/packing", icon: Package },
       { title: "الجودة", url: "/stations/qc", icon: ShieldCheck },
@@ -68,8 +67,7 @@ const tenantGroups = [
     items: [
       { title: "الحضور", url: "/staff/attendance", icon: Clock },
       { title: "التقييم", url: "/staff/scorecard", icon: Target },
-      { title: "قائمة الموظفين", url: "/staff", icon: BriefcaseBusiness },
-      { title: "جدول العمل", url: "/staff/schedule", icon: Clock },
+      { title: "كل الموظفين", url: "/staff", icon: BriefcaseBusiness },
     ],
   },
   {
@@ -93,39 +91,49 @@ const tenantGroups = [
 
 export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { roles, user, signOut, isSuperAdmin } = useAuth();
+  const { roles, user, signOut, isSuperAdmin, tenantId } = useAuth();
   const { dir, t } = useI18n();
   const { setOpenMobile } = useSidebar();
+  const [tenant, setTenant] = useState<any>(null);
 
+  useEffect(() => {
+    if (tenantId) {
+      supabase.from("tenants").select("name,logo_url").eq("id", tenantId).maybeSingle().then(({ data }: any) => setTenant(data));
+    }
+  }, [tenantId]);
+
+  // ✅ Fixed Super Admin logic: explicitly show both groups
   const groups = isSuperAdmin ? [...adminGroups, ...tenantGroups] : tenantGroups;
 
   return (
-    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4 bg-white">
+    <Sidebar side={dir === "rtl" ? "right" : "left"} collapsible="icon" className="bg-white border-r border-slate-200 shadow-none">
+      <SidebarHeader className="border-b border-slate-100 p-5 bg-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white p-0.5 shadow-xs border border-sidebar-border flex items-center justify-center shrink-0 overflow-hidden">
-            <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />
+          <div className="w-10 h-10 rounded-xl bg-slate-50 p-1 border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+            {tenant?.logo_url ? <img src={tenant.logo_url} className="w-full h-full object-cover rounded-lg" /> : <img src="/mjrh-logo.png" alt="MJRH" className="w-full h-full object-contain" />}
           </div>
           <div className="min-w-0">
-            <div className="font-black text-sm truncate tracking-tight text-slate-900">MJRH STABLE</div>
-            <div className="text-[10px] opacity-70 truncate">{user?.email}</div>
+            <div className="font-black text-sm truncate tracking-tight text-slate-900">{tenant?.name || (isSuperAdmin ? "إدارة المنصة" : "MJRH")}</div>
+            <div className="text-[10px] text-slate-400 font-bold truncate">{user?.email}</div>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-white">
         {groups.map((g) => (
           <SidebarGroup key={g.label}>
-            <SidebarGroupLabel>{t(`navGroup.${g.label}`, g.label)}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-slate-400 font-black px-4 py-2 uppercase tracking-widest text-[9px] opacity-70">
+              {t(`navGroup.${g.label}`, g.label)}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {g.items.map((item) => {
                   const active = path === item.url || path.startsWith(item.url + "/");
                   return (
                     <SidebarMenuItem key={item.url}>
-                      <SidebarMenuButton asChild isActive={active}>
-                        <Link to={item.url} className="flex items-center gap-2" onClick={() => setOpenMobile(false)}>
-                          <item.icon className="w-4 h-4 shrink-0" />
-                          <span>{t(`nav.${item.url}`, item.title)}</span>
+                      <SidebarMenuButton asChild isActive={active} className={active ? "bg-teal-50 text-teal-700 font-bold border-r-4 border-teal-500 rounded-none" : "text-slate-600 hover:bg-slate-50"}>
+                        <Link to={item.url} className="flex items-center gap-3 px-4 py-2" onClick={() => setOpenMobile(false)}>
+                          <item.icon className={`w-4 h-4 shrink-0 ${active ? "text-teal-600" : "text-slate-400"}`} />
+                          <span className="truncate">{t(`nav.${item.url}`, item.title)}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -136,10 +144,10 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t border-slate-100 p-4 bg-slate-50/50">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => signOut()}>
+            <SidebarMenuButton onClick={() => signOut()} className="text-slate-500 hover:text-red-600 hover:bg-red-50">
               <LogOut className="w-4 h-4" /><span>{t("app.signOut", "Sign Out")}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
