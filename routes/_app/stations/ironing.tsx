@@ -12,7 +12,7 @@ import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/ironing")({
-  head: () => ({ meta: [{ title: "الكي" }] }),
+  head: () => ({ meta: [{ title: "Ironing - MJRH" }] }),
   component: IroningRoute,
 });
 
@@ -85,8 +85,8 @@ function IroningManagerPage() {
         presentEmployees = Math.max(presentEmployees, r.employees);
         if (r.message) lastMessage = r.message;
       }
-      if (total) toast.success(`تم توزيع ${total} قطعة على ${presentEmployees} فني كي حاضر`);
-      else toast.info(lastMessage || "لا توجد قطع غير موزعة أو لا يوجد فني كي حاضر الآن");
+      if (total) toast.success(interpolate(t("stations.ironing.toastDistribute"), { total, present: presentEmployees }));
+      else toast.info(lastMessage || t("stations.ironing.toastNoDistribute"));
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي");
@@ -97,12 +97,12 @@ function IroningManagerPage() {
 
   async function transferTasks(fromId: string) {
     const toId = transferTo[fromId];
-    if (!toId || toId === fromId) return toast.error("اختر الفني البديل");
+    if (!toId || toId === fromId) return toast.error(t("stations.ironing.errSelectTech"));
     const { error } = await supabase.from("service_units").update({
       assigned_ironing_employee_id: toId,
       ironing_assigned_at: new Date().toISOString(),
     }).eq("assigned_ironing_employee_id", fromId).is("ironing_completed_at", null).in("service_type", ["cleaning", "ironing", "both"]).in("current_stage", ["ironing", "ironing_done"]);
-    if (error) toast.error(error.message); else { toast.success("تم نقل مهام الفني"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.ironing.toastTransfer")); load(); }
   }
 
   const stats = useMemo(() => {
@@ -237,15 +237,15 @@ function IroningWorkerPage() {
       current_stage: "ironing_done",
       ironing_completed_at: new Date().toISOString(),
     }).eq("id", u.id);
-    if (error) toast.error(error.message); else { toast.success(`تم كي ${u.label_code}`); load(); }
+    if (error) toast.error(error.message); else { toast.success(interpolate(t("stations.ironing.toastDone"), { code: u.label_code })); load(); }
   }
 
   async function markReclean(u: Unit) {
-    const reason = prompt("سبب رجوع القطعة للتنظيف؟ لن يتم الرجوع بدون سبب واضح", u.reclean_reason ?? "");
+    const reason = prompt(t("stations.ironing.promptReclean"), u.reclean_reason ?? "");
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error("سبب المرتجع مطلوب");
+    if (reason.trim().length < 3) return toast.error(t("stations.ironing.errRecleanReason"));
     const { error } = await supabase.rpc("register_reclean_return", { _unit_id: u.id, _reason: reason.trim(), _photo_url: null });
-    if (error) toast.error(error.message); else { toast.success("تم إرسال القطعة للغسيل، وسترجع لك بعد تنظيفها"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.ironing.toastToCleaning")); load(); }
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin" /></div>;

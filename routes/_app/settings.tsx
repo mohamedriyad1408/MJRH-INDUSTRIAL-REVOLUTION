@@ -11,7 +11,7 @@ import { Loader2, Save } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/settings")({
-  head: () => ({ meta: [{ title: "الإعدادات" }] }),
+  head: () => ({ meta: [{ title: "Settings - MJRH" }] }),
   component: SettingsPage,
 });
 
@@ -33,7 +33,7 @@ function SettingsPage() {
       setS(data as S);
     } else {
       // إنشاء صف افتراضي لهذه المغسلة
-      const def: S = { business_name: "مغسلة", currency: "EGP", urgent_service_fee: 0, default_delivery_fee: 0, tax_percent: 0 };
+      const def: S = { business_name: t("settings.defaultName", "مغسلة"), currency: "EGP", urgent_service_fee: 0, default_delivery_fee: 0, tax_percent: 0 };
       await supabase.from("app_settings").insert({ tenant_id: tenantId, ...def });
       setS(def);
     }

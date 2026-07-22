@@ -37,6 +37,10 @@
     "empty": "لم يتم توليد أي مسير رواتب بعد"
   },
   "cash": {
+    "mainSafe": "الخزنة الرئيسية",
+    "internalTransfer": "تحويل داخلي",
+    "manualDeposit": "إيداع يدوي",
+    "manualWithdraw": "سحب يدوي",
     "addSafe": "إضافة خزنة أو حساب",
     "addSafeGuide": "اكتب اسم الخزنة والفلوس الموجودة فيها الآن. النظام سيضيفها للرصيد ويسجل قيد افتتاحي تلقائيًا.",
     "currentMoney": "الفلوس الموجودة الآن",
@@ -59,7 +63,33 @@
   },
   "ledger": {
     "title": "دفتر حسابات الموظفين",
-    "empty": "لا توجد قيود موظفين"
+    "empty": "لا توجد قيود موظفين",
+    "entry": {
+      "salary_accrual": "استحقاق راتب",
+      "commission_accrual": "استحقاق عمولة",
+      "advance": "سلفة",
+      "advance_deduction": "خصم سلفة",
+      "salary_payment": "صرف راتب",
+      "adjustment": "تسوية"
+    }
+  },
+  "account": {
+    "type": {
+      "cash": "خزنة",
+      "bank": "بنك",
+      "wallet": "محفظة"
+    }
+  },
+  "expense": {
+    "cat": {
+      "salaries": "رواتب",
+      "rent": "إيجار",
+      "water": "مياه",
+      "electricity": "كهرباء",
+      "supplies": "خامات",
+      "maintenance": "صيانة",
+      "other": "أخرى"
+    }
   },
   "loadErrorTitle": "الحسابات لم تُقرأ بشكل كامل، لذلك الأصفار الحالية ليست نتيجة مالية مؤكدة.",
   "noSafeTitle": "لا توجد خزنة مقروءة لهذه المغسلة.",

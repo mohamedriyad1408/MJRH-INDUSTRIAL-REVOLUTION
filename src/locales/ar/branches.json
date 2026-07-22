@@ -1,0 +1,16 @@
+{
+  "pageTitle": "نقاط التشغيل",
+  "btnNew": "نقطة جديدة",
+  "active": "نشطة",
+  "inactive": "موقوفة",
+  "btnDashboard": "شاشة الفرع",
+  "empty": "لا توجد نقاط تشغيل",
+  "titleNew": "نقطة جديدة",
+  "labelName": "الاسم *",
+  "labelAddress": "العنوان",
+  "labelPhone": "التليفون",
+  "btnSave": "حفظ",
+  "errName": "الاسم مطلوب",
+  "ownerOnly": "صلاحية مالك المغسلة فقط.",
+  "toastSaved": "تم الحفظ"
+}

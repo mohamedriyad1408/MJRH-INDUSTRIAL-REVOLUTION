@@ -129,5 +129,34 @@
   "errorNoBranch": "Select branch first",
   "toastOrderCreated": "Order created and items numbered",
   "errorNumbering": "Order created but failed to number items: {error}",
-  "noAccess": "Access limited to Reception, CS, and Owners."
+  "noAccess": "Access limited to Reception, CS, and Owners.",
+  "finalInvoiceMsg": "Your final invoice from MJRH for order #{order_number}: {total} EGP. Track link: {url}",
+  "allOrders": "All Orders",
+  "newOrder": "New Order",
+  "allStatuses": "All Statuses",
+  "searchPlaceholder": "Order # / Name / Phone...",
+  "badge": {
+    "openPickup": "Open Pickup",
+    "noPieces": "No Pieces",
+    "reclean": "Reclean",
+    "qc": "QC",
+    "paymentReview": "Payment Review"
+  },
+  "filter": {
+    "all": "All",
+    "openPickup": "Open Pickups",
+    "noPieces": "No Pieces",
+    "reclean": "Returns",
+    "qc": "QC Issues",
+    "invoiceReview": "Invoice Review",
+    "paymentReview": "Payment Review",
+    "readyUnpaid": "Ready Unpaid"
+  },
+  "qc": {
+    "success": "QC updated successfully",
+    "error": "QC update failed",
+    "notesPlaceholder": "Optional notes about garment condition...",
+    "pass": "Pass",
+    "fail": "Fail"
+  }
 }

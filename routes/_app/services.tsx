@@ -16,7 +16,7 @@ import { Loader2, Plus, Trash2, Save, Tags } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/services")({
-  head: () => ({ meta: [{ title: "كتالوج الخدمات" }] }),
+  head: () => ({ meta: [{ title: "Services - MJRH" }] }),
   component: ServicesPage,
 });
 

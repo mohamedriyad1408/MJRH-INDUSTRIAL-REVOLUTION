@@ -17,7 +17,7 @@ import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2, Refr
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/finance")({
-  head: () => ({ meta: [{ title: "الحسابات - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Finance - MJRH" }] }),
   component: FinancePage,
 });
 
@@ -119,7 +119,7 @@ function FinancePage() {
     setSyncingPayroll(false);
     if (error) return toast.error(error.message);
     setPayrollSync(data);
-    toast.success("تم تجهيز رواتب وعمولات الشهر كمصروفات آجلة");
+    toast.success(t("finance.toastSyncSuccess"));
     load();
   }
 
@@ -265,8 +265,8 @@ function FinancePage() {
                       {isOwner && <td className="p-3">
                         {a.status === "pending" ? (
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />{t("finance.approve")}</Button>
-                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />{t("finance.reject")}</Button>
+                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />{t("finance.approve", "اعتماد")}</Button>
+                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />{t("finance.reject", "رفض")}</Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">{fmtDate(a.decided_at)}</span>}
                       </td>}
@@ -294,7 +294,7 @@ function FinancePage() {
 async function decide(id: string, status: "approved"|"rejected", uid: string|undefined, reload: () => void) {
   const { error } = await supabase.from("employee_requests").update({ status, decided_by: uid, decided_at: new Date().toISOString() }).eq("id", id);
   if (error) toast.error(error.message);
-  else { toast.success(status === "approved" ? "تمت الموافقة" : "تم الرفض"); reload(); }
+  else { toast.success(status === "approved" ? t("finance.toastApproved", "تمت الموافقة") : t("finance.toastRejected", "تم الرفض")); reload(); }
 }
 
 function StatCard({ label, value, sub, icon, tone }: any) {
@@ -306,9 +306,9 @@ function Stat({ title, value }: { title: string; value: string }) {
 }
 function Spinner() { return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>; }
 function AdvanceStatus({ s }: { s: string }) {
-  if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;
-  if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
-  return <Badge variant="destructive">مرفوض</Badge>;
+  if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
+  if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
+  return <Badge variant="destructive">{t("finance.rejected")}</Badge>;
 }
 function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts, defaultBranchId }: { onCreated: () => void; userId?: string; tenantId?: string; branches: any[]; cashAccounts: any[]; defaultBranchId?: string }) {
   const { t } = useI18n();
@@ -322,9 +322,9 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
   useEffect(() => { if (open) setBranchId((old) => old || defaultBranchId || branches[0]?.id || ""); }, [open, defaultBranchId, branches]);
   useEffect(() => { if (status === "paid" && visibleSafes.length && !visibleSafes.some((c) => c.id === cashAccountId)) setCashAccountId(visibleSafes[0].id); }, [status, branchId, cashAccounts]);
   async function submit() {
-    const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
-    if (!branchId) { toast.error("اختار الفرع"); return; }
-    if (status === "paid" && !cashAccountId) { toast.error("اختار الخزنة التي دفعت المصروف"); return; }
+    const amt = Number(amount); if (!amt || amt <= 0) { toast.error(t("finance.errReqFields")); return; }
+    if (!branchId) { toast.error(t("inventory.errBranch")); return; }
+    if (status === "paid" && !cashAccountId) { toast.error(t("accounting.error.noSafeSelected")); return; }
     setSaving(true);
     const { data: expense, error } = await supabase.from("expenses").insert({
       tenant_id: tenantId,
@@ -355,7 +355,7 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
       }).then(() => null);
     }
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إضافة المصروف وسيتم إنشاء القيد وحركة الخزنة تلقائيًا"); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success(t("finance.toastExpenseSuccess")); setOpen(false); setAmount(""); setDescription(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -379,12 +379,12 @@ function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employe
   const [open, setOpen] = useState(false);
   const [empId, setEmpId] = useState(""); const [amount, setAmount] = useState(""); const [reason, setReason] = useState(""); const [saving, setSaving] = useState(false);
   async function submit() {
-    const emp = employees.find((e) => e.id === empId); if (!emp) { toast.error("اختر موظف"); return; }
-    const amt = Number(amount); if (!amt || amt <= 0) { toast.error("أدخل مبلغ صحيح"); return; }
+    const emp = employees.find((e) => e.id === empId); if (!emp) { toast.error(t("attendance.selectEmployee")); return; }
+    const amt = Number(amount); if (!amt || amt <= 0) { toast.error(t("finance.errReqFields")); return; }
     setSaving(true);
     const { error } = await supabase.from("employee_requests").insert({ employee_id: emp.id, type: "advance", amount: amt, reason: reason || null, created_by: userId, status: "pending" });
     setSaving(false);
-    if (error) toast.error(error.message); else { toast.success("تم إرسال الطلب"); setOpen(false); setAmount(""); setReason(""); setEmpId(""); onCreated(); }
+    if (error) toast.error(error.message); else { toast.success(t("finance.toastAdvanceSuccess")); setOpen(false); setAmount(""); setReason(""); setEmpId(""); onCreated(); }
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>

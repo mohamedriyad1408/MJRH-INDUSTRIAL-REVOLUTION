@@ -67,5 +67,32 @@
   "water": "مياه",
   "electricity": "كهرباء",
   "supplies": "خامات",
-  "maintenance": "صيانة"
+  "maintenance": "صيانة",
+  "garment": {
+    "shirt": "قميص",
+    "blouse": "بلوزة",
+    "pants": "بنطلون",
+    "jacket": "جاكيت",
+    "suit": "بدلة",
+    "abaya": "عباية",
+    "dress": "فستان",
+    "tshirt": "تيشيرت",
+    "skirt": "جيبة",
+    "coat": "معطف",
+    "other": "أخرى"
+  },
+  "qcPassed": "QC ناجح",
+  "qcFailed": "QC فاشل",
+  "qcPending": "QC معلق",
+  "qcNotes": "ملاحظات الفحص"
+  ,"stage": {
+    "received": "استلام",
+    "cleaning": "تنظيف",
+    "cleaningDone": "تنظيف منتهي",
+    "ironing": "كي",
+    "ironingDone": "كي منتهي",
+    "packing": "تغليف",
+    "packingDone": "تغليف منتهي",
+    "ready": "جاهز"
+  }
 }

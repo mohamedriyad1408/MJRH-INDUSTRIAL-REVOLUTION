@@ -1,0 +1,81 @@
+{
+  "pageTitle": "Financial Ledger & Reports",
+  "kpi": {
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "netProfit": "Net Profit",
+    "balance": "Balance",
+    "balanced": "Balanced",
+    "unbalanced": "Unbalanced"
+  },
+  "err": {
+    "noTenant": "No laundry selected for the current account. Please re-login.",
+    "monthClosed": "Month is closed and cannot be posted",
+    "completeData": "Complete the journal entry data"
+  },
+  "toast": {
+    "created": "Journal entry created",
+    "repaired": "Ledger and safe basics repaired",
+    "closed": "Month closed successfully", "autoPostOk": "Checked and posted missing only: {syncedOrders} orders and {syncedExpenses} expenses.", "autoPostFailed": "Failed to auto-post journals", "createFailed": "Failed to create journal entry"
+  },
+  "confirm": {
+    "close": "Closing the month prevents adding or editing entries within the period. Are you sure?"
+  },
+  "alert": {
+    "closed": "This month is accounting-locked. New entries cannot be added.",
+    "warning": "Warning: Do not use this page unless you understand journal entries. The system creates most entries automatically.",
+    "readErr": "Ledger data not fully read; displayed figures might be incomplete.",
+    "noChart": "Chart of accounts not visible for this laundry.",
+    "chartHint": "Press repair to create base accounts: Safe, Receivables, Revenue, Expenses, Salaries."
+  },
+  "btn": {
+    "repairNow": "Repair Ledger Now",
+    "createChart": "Create Chart of Accounts"
+  },
+  "tab": {
+    "journals": "Journals",
+    "pl": "Profit & Loss",
+    "trial": "Trial Balance",
+    "close": "Closing"
+  },
+  "autoPost": {
+    "title": "Auto Post",
+    "desc": "Check orders and expenses and create missing entries only. Does not aggregate to avoid doubling.",
+    "btn": "Check & Post Missing Only"
+  },
+  "manual": {
+    "title": "Manual Accountant Entry",
+    "descLabel": "Description",
+    "debitLabel": "Debit",
+    "creditLabel": "Credit",
+    "amountLabel": "Amount",
+    "memoPlaceholder": "Memo",
+    "saveBtn": "Save Entry"
+  },
+  "journals": {
+    "title": "Monthly Journals",
+    "empty": "No journal entries for this month"
+  },
+  "pl": {
+    "title": "Profit & Loss Statement for",
+    "rev": "Revenue",
+    "exp": "Expense",
+    "empty": "No revenue or expenses posted for this month"
+  },
+  "trial": {
+    "account": "Account",
+    "balance": "Balance",
+    "total": "Total"
+  },
+  "close": {
+    "title": "Monthly Closing",
+    "desc": "After reviewing journals and trial balance, close the month to prevent accidental changes.",
+    "btn": "Close Month",
+    "closed": "Closed",
+    "open": "Open"
+  },
+  "select": {
+    "account": "Account"
+  },
+  "ownerOnly": "Ledger and financial reports are for Owner only."
+}

@@ -22,7 +22,7 @@ import {
 import { createOrder } from "@/lib/orders-api";
 
 export const Route = createFileRoute("/_app/orders/new")({
-  head: () => ({ meta: [{ title: "طلب جديد" }] }),
+  head: () => ({ meta: [{ title: "New Order - MJRH" }] }),
   component: NewOrderPage,
 });
 
@@ -171,7 +171,7 @@ function NewOrderPage() {
       if (area.lat && area.lng) setDeliveryLoc({ lat: String(area.lat), lng: String(area.lng) });
     }
     if (area.default_delivery_fee) setDeliveryFee(String(area.default_delivery_fee));
-    toast.success(`${t("orders.areaSelected", "تم اختيار")} ${area.name}`);
+    toast.success(interpolate(t("orders.toastAreaSelected"), { name: area.name }));
   }
 
   function fillLocation(kind: "pickup" | "delivery") {
@@ -180,7 +180,7 @@ function NewOrderPage() {
     if (parsed) {
       if (kind === "pickup") setPickupLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
       else setDeliveryLoc({ lat: String(parsed.lat), lng: String(parsed.lng) });
-      toast.success(t("orders.locExtracted", "تم استخراج الإحداثيات"));
+      toast.success(t("orders.toastCoordsExtracted"));
       return;
     }
     if (!navigator.geolocation) return toast.error(t("orders.noGps", "المتصفح لا يدعم تحديد الموقع"));

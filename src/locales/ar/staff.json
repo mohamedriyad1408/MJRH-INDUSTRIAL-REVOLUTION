@@ -1,1 +1,47 @@
-{}
+{
+  "users": {
+    "pageTitle": "إدارة المستخدمين",
+    "ownerOnly": "صلاحية مالك المغسلة فقط.",
+    "noTenant": "لا توجد مغسلة مرتبطة بحسابك.",
+    "btnNew": "مستخدم جديد",
+    "titleNew": "إضافة مستخدم للمغسلة",
+    "empty": "لا يوجد مستخدمون. أضف أول حساب.",
+    "toastCreated": "تم إنشاء المستخدم وربطه بموظف عند الحاجة",
+    "labelName": "الاسم الكامل",
+    "labelEmail": "البريد",
+    "labelPassword": "كلمة المرور",
+    "labelRole": "الدور",
+    "roleCs": "مدير خدمة عملاء",
+    "roleOps": "مدير تشغيل",
+    "roleEmp": "موظف",
+    "roleDriver": "مندوب",
+    "roleCust": "عميل",
+    "opsSalaryHeader": "بيانات التشغيل والراتب",
+    "labelBranch": "الفرع",
+    "branchPlaceholder": "اختار الفرع",
+    "labelStation": "المحطة",
+    "stationNone": "بدون محطة",
+    "stationReception": "الاستقبال",
+    "stationCleaning": "الغسيل",
+    "stationAssembly": "التجفيف والتجميع",
+    "stationIroning": "الكي",
+    "stationPacking": "التغليف",
+    "stationDelivery": "التوصيل",
+    "labelJobRole": "نوع الوظيفة",
+    "labelSalary": "راتب شهري",
+    "labelComm": "عمولة %",
+    "btnSave": "حفظ", "off": "إجازة", "on": "عمل", "from": "من", "to": "إلى"
+  },
+  "list": {
+    "pageTitle": "كل الموظفين",
+    "subtitle": "إدارة بيانات الموظفين، الرواتب، والورديات.",
+    "btnNew": "إضافة موظف",
+    "colName": "الموظف",
+    "colRole": "الوظيفة",
+    "colBranch": "الفرع",
+    "colSalary": "الراتب",
+    "colStatus": "الحالة", "days": ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"], "info": "المعلومات", "schedule": "جدول العمل", "leaves": "الإجازات", "advances": "السلف", "basicData": "البيانات الأساسية", "hireDate": "تاريخ التعيين", "activeQuery": "نشط؟", "saveSchedule": "حفظ الجدول", "noLeaves": "لا توجد طلبات إجازة", "noAdvances": "لا توجد سلف", "confirmDelete": "حذف الموظف نهائياً؟", "errNotFound": "الموظف غير موجود",
+    "active": "نشط",
+    "inactive": "موقف", "errNameJob": "الاسم والوظيفة مطلوبان", "toastAdded": "تم إضافة الموظف", "linkNote": "ملاحظة: لتفعيل دخول الموظف للنظام، يجب أن يسجل حساباً بنفس الإيميل من صفحة الدخول، ثم يمكنك ربط الدور به من ملفه الشخصي.", "saveStaff": "حفظ الموظف", "salaryAndCommission": "الراتب والعمولة", "roleAndStation": "الدور والمحطة", "basicInfo": "المعلومات الأساسية"
+  }
+}

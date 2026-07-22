@@ -24,7 +24,7 @@
   "customConfigSubtitle": "أي إعداد خاص بالمشروع (مثلاً room_types, minibar_items) — يُقرأ في work_orders.custom_fields",
   "saveBtn": "حفظ كل الإعدادات المؤسسية",
   "toastSaved": "تم الحفظ — الإعدادات المؤسسية",
-  "cannotLoad": "لا يمكن تحميل الإعدادات.",
+  "cannotLoad": "لا يمكن تحميل الإعدادات.", "defaultName": "مغسلة", "save": "حفظ",
   "quickLinks": "روابط سريعة — إضافة شيء جديد",
   "linkWorkflow": "مراحل العمل (Workflow Builder)",
   "linkInputs": "حقول مخصصة لكل مرحلة (Input Builder)",

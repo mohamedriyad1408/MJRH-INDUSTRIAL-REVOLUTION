@@ -67,5 +67,32 @@
   "water": "Water",
   "electricity": "Electricity",
   "supplies": "Supplies",
-  "maintenance": "Maintenance"
+  "maintenance": "Maintenance",
+  "garment": {
+    "shirt": "Shirt",
+    "blouse": "Blouse",
+    "pants": "Pants",
+    "jacket": "Jacket",
+    "suit": "Suit",
+    "abaya": "Abaya",
+    "dress": "Dress",
+    "tshirt": "T-Shirt",
+    "skirt": "Skirt",
+    "coat": "Coat",
+    "other": "Other"
+  },
+  "qcPassed": "QC Passed",
+  "qcFailed": "QC Failed",
+  "qcPending": "QC Pending",
+  "qcNotes": "QC Notes"
+  ,"stage": {
+    "received": "Received",
+    "cleaning": "Cleaning",
+    "cleaningDone": "Cleaning Done",
+    "ironing": "Ironing",
+    "ironingDone": "Ironing Done",
+    "packing": "Packing",
+    "packingDone": "Packing Done",
+    "ready": "Ready"
+  }
 }

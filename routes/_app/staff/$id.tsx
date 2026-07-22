@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_app/staff/$id")({
   component: StaffDetailPage,
 });
 
-const DAYS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const DAYS = t("staff.days", { returnObjects: true }) as unknown as string[] || ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 type Employee = any;
 type Schedule = { id?: string; day_of_week: number; start_time: string | null; end_time: string | null; is_off: boolean };
@@ -81,7 +81,7 @@ function StaffDetailPage() {
       is_active: emp.is_active, notes: emp.notes,
     }).eq("id", id);
     setSaving(false);
-    if (error) toast.error(error.message); else toast.success("تم الحفظ");
+    if (error) toast.error(error.message); else toast.success(t("customers.toastSaved"));
   }
 
   async function saveSchedule() {
@@ -97,18 +97,18 @@ function StaffDetailPage() {
       await supabase.from("work_schedules").upsert(payload, { onConflict: "employee_id,day_of_week" });
     }
     setSaving(false);
-    toast.success("تم حفظ جدول العمل");
+    toast.success(t("staff.saveSchedule", "حفظ الجدول"));
   }
 
   async function removeEmployee() {
-    if (!confirm("حذف الموظف نهائياً؟")) return;
+    if (!confirm(t("staff.confirmDelete"))) return;
     const { error } = await supabase.from("employees").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("تم الحذف"); nav({ to: "/staff" }); }
+    else { toast.success(t("common.toastDeleted", "تم الحذف")); nav({ to: "/staff" }); }
   }
 
   if (loading) return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>;
-  if (!emp) return <Card className="p-8 text-center text-muted-foreground">الموظف غير موجود</Card>;
+  if (!emp) return <Card className="p-8 text-center text-muted-foreground">{t("staff.errNotFound")}</Card>;
 
   return (
     <div className="space-y-4 max-w-4xl">
@@ -116,7 +116,7 @@ function StaffDetailPage() {
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm"><Link to="/staff"><ArrowRight className="w-4 h-4" /></Link></Button>
           <h1 className="text-2xl font-bold">{emp.full_name}</h1>
-          {!emp.is_active && <Badge variant="outline">موقوف</Badge>}
+          {!emp.is_active && <Badge variant="outline">{t("staff.inactive")}</Badge>}
         </div>
         {isOwner && (
           <Button variant="ghost" size="sm" onClick={removeEmployee}>
@@ -127,64 +127,64 @@ function StaffDetailPage() {
 
       <Tabs defaultValue="info">
         <TabsList>
-          <TabsTrigger value="info">المعلومات</TabsTrigger>
-          <TabsTrigger value="schedule">جدول العمل</TabsTrigger>
-          <TabsTrigger value="leaves">الإجازات ({leaves.length})</TabsTrigger>
-          <TabsTrigger value="advances">السلف ({advances.length})</TabsTrigger>
+          <TabsTrigger value="info">{t("staff.info")}</TabsTrigger>
+          <TabsTrigger value="schedule">{t("staff.schedule")}</TabsTrigger>
+          <TabsTrigger value="leaves">{t("staff.leaves")} ({leaves.length})</TabsTrigger>
+          <TabsTrigger value="advances">{t("staff.advances")} ({advances.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">البيانات الأساسية</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("staff.basicData")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <Fld label="الاسم"><Input value={emp.full_name} onChange={(v) => setEmp({ ...emp, full_name: v.target.value })} disabled={!isOwner} /></Fld>
-              <Fld label="الوظيفة"><Input value={emp.job_title} onChange={(v) => setEmp({ ...emp, job_title: v.target.value })} disabled={!isOwner} /></Fld>
-              <Fld label="الفرع">
+              <Fld label={t("common.name")}><Input value={emp.full_name} onChange={(v) => setEmp({ ...emp, full_name: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("common.role")}><Input value={emp.job_title} onChange={(v) => setEmp({ ...emp, job_title: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("common.branch")}>
                 <Select value={emp.branch_id ?? "none"} onValueChange={(v) => setEmp({ ...emp, branch_id: v === "none" ? null : v })} disabled={!isOwner}>
-                  <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("staff.users.branchPlaceholder")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">بدون فرع</SelectItem>
+                    <SelectItem value="none">{t("staff.list.noBranch", "بدون فرع")}</SelectItem>
                     {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Fld>
-              <Fld label="الهاتف"><Input value={emp.phone ?? ""} onChange={(v) => setEmp({ ...emp, phone: v.target.value })} disabled={!isOwner} /></Fld>
-              <Fld label="الإيميل"><Input value={emp.email ?? ""} onChange={(v) => setEmp({ ...emp, email: v.target.value })} disabled={!isOwner} /></Fld>
-              <Fld label="تاريخ التعيين"><Input value={fmtDate(emp.hire_date)} disabled /></Fld>
-              <Fld label="نشط؟">
+              <Fld label={t("common.phone")}><Input value={emp.phone ?? ""} onChange={(v) => setEmp({ ...emp, phone: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("login.email")}><Input value={emp.email ?? ""} onChange={(v) => setEmp({ ...emp, email: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("staff.hireDate")}><Input value={fmtDate(emp.hire_date)} disabled /></Fld>
+              <Fld label={t("staff.activeQuery")}>
                 <div className="flex items-center gap-2 mt-2">
                   <Switch checked={emp.is_active} onCheckedChange={(c) => setEmp({ ...emp, is_active: c })} disabled={!isOwner} />
-                  <span className="text-sm text-muted-foreground">{emp.is_active ? "نشط" : "موقوف"}</span>
+                  <span className="text-sm text-muted-foreground">{emp.is_active ? t("staff.active") : t("staff.inactive")}</span>
                 </div>
               </Fld>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">الدور والمحطة</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("staff.roleAndStation")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <Fld label="الدور">
+              <Fld label={t("staff.users.labelRole")}>
                 <Select value={emp.role ?? "none"} onValueChange={(v) => setEmp({ ...emp, role: v === "none" ? null : v })} disabled={!isOwner}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">بدون</SelectItem>
-                    <SelectItem value="cs_manager">مدير خدمة عملاء</SelectItem>
-                    <SelectItem value="ops_manager">مدير تشغيل</SelectItem>
-                    <SelectItem value="courier">مندوب</SelectItem>
-                    <SelectItem value="owner">مالك</SelectItem>
+                    <SelectItem value="none">{t("common.other")}</SelectItem>
+                    <SelectItem value="cs_manager">{t("staff.users.roleCs")}</SelectItem>
+                    <SelectItem value="ops_manager">{t("staff.users.roleOps")}</SelectItem>
+                    <SelectItem value="courier">{t("staff.users.roleDriver")}</SelectItem>
+                    <SelectItem value="owner">{t("staff.users.roleOwner", "مالك")}</SelectItem>
                   </SelectContent>
                 </Select>
               </Fld>
-              <Fld label="المحطة">
+              <Fld label={t("staff.users.labelStation")}>
                 <Select value={emp.station ?? "none"} onValueChange={(v) => setEmp({ ...emp, station: v === "none" ? null : v })} disabled={!isOwner}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">—</SelectItem>
-                    <SelectItem value="reception">الاستلام</SelectItem>
-                    <SelectItem value="cleaning">التنظيف</SelectItem>
-                    <SelectItem value="ironing">الكي</SelectItem>
-                    <SelectItem value="packing">التغليف</SelectItem>
-                    <SelectItem value="delivery">التسليم</SelectItem>
+                    <SelectItem value="reception">{t("staff.users.stationReception")}</SelectItem>
+                    <SelectItem value="cleaning">{t("staff.users.stationCleaning")}</SelectItem>
+                    <SelectItem value="ironing">{t("staff.users.stationIroning")}</SelectItem>
+                    <SelectItem value="packing">{t("staff.users.stationPacking")}</SelectItem>
+                    <SelectItem value="delivery">{t("staff.users.stationDelivery")}</SelectItem>
                   </SelectContent>
                 </Select>
               </Fld>
@@ -192,23 +192,23 @@ function StaffDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">الراتب والعمولة</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("staff.salaryAndCommission")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
-              <Fld label="الراتب الشهري"><Input type="number" value={emp.monthly_salary} onChange={(v) => setEmp({ ...emp, monthly_salary: v.target.value })} disabled={!isOwner} /></Fld>
-              <Fld label="العمولة %"><Input type="number" value={emp.commission_percent} onChange={(v) => setEmp({ ...emp, commission_percent: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("staff.users.labelSalary")}><Input type="number" value={emp.monthly_salary} onChange={(v) => setEmp({ ...emp, monthly_salary: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("staff.users.labelComm")}><Input type="number" value={emp.commission_percent} onChange={(v) => setEmp({ ...emp, commission_percent: v.target.value })} disabled={!isOwner} /></Fld>
             </CardContent>
           </Card>
 
           <Card>
             <CardContent className="pt-6">
-              <Fld label="ملاحظات"><Textarea rows={3} value={emp.notes ?? ""} onChange={(v) => setEmp({ ...emp, notes: v.target.value })} disabled={!isOwner} /></Fld>
+              <Fld label={t("common.notes", "ملاحظات")}><Textarea rows={3} value={emp.notes ?? ""} onChange={(v) => setEmp({ ...emp, notes: v.target.value })} disabled={!isOwner} /></Fld>
             </CardContent>
           </Card>
 
           {isOwner && (
             <div className="flex justify-end">
               <Button onClick={saveBasic} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> حفظ</>}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> {t("common.save")}</>}
               </Button>
             </div>
           )}
@@ -216,7 +216,7 @@ function StaffDetailPage() {
 
         <TabsContent value="schedule">
           <Card>
-            <CardHeader><CardTitle className="text-base">جدول العمل الأسبوعي</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("staff.schedule")}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {schedules.map((s, i) => (
                 <div key={s.day_of_week} className="flex items-center gap-3 flex-wrap border-b pb-2">
@@ -225,13 +225,13 @@ function StaffDetailPage() {
                     <Switch checked={!s.is_off} onCheckedChange={(c) => {
                       const next = [...schedules]; next[i] = { ...s, is_off: !c }; setSchedules(next);
                     }} disabled={!canEditSchedule} />
-                    <span className="text-xs text-muted-foreground">{s.is_off ? "إجازة" : "عمل"}</span>
+                    <span className="text-xs text-muted-foreground">{s.is_off ? t("staff.off") : t("staff.on")}</span>
                   </div>
                   {!s.is_off && (
                     <>
                       <Input type="time" value={s.start_time ?? ""} className="w-32" disabled={!canEditSchedule}
                         onChange={(e) => { const next = [...schedules]; next[i] = { ...s, start_time: e.target.value }; setSchedules(next); }} />
-                      <span className="text-muted-foreground">إلى</span>
+                      <span className="text-muted-foreground">{t("staff.to")}</span>
                       <Input type="time" value={s.end_time ?? ""} className="w-32" disabled={!canEditSchedule}
                         onChange={(e) => { const next = [...schedules]; next[i] = { ...s, end_time: e.target.value }; setSchedules(next); }} />
                     </>
@@ -241,7 +241,7 @@ function StaffDetailPage() {
               {canEditSchedule && (
                 <div className="flex justify-end pt-2">
                   <Button onClick={saveSchedule} disabled={saving}>
-                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> حفظ الجدول</>}
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-4 h-4 ms-1" /> {t("common.save")} الجدول</>}
                   </Button>
                 </div>
               )}
@@ -254,12 +254,12 @@ function StaffDetailPage() {
             <CardContent className="p-0">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50"><tr>
-                  <th className="text-start p-3">النوع</th><th className="text-start p-3">من</th>
-                  <th className="text-start p-3">إلى</th><th className="text-start p-3">السبب</th>
-                  <th className="text-start p-3">الحالة</th>
+                  <th className="text-start p-3">{t("common.type")}</th><th className="text-start p-3">{t("staff.from")}</th>
+                  <th className="text-start p-3">{t("staff.to")}</th><th className="text-start p-3">{t("common.reason")}</th>
+                  <th className="text-start p-3">{t("common.status")}</th>
                 </tr></thead>
                 <tbody>
-                  {leaves.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">لا توجد طلبات إجازة</td></tr>}
+                  {leaves.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{t("staff.noLeaves")}</td></tr>}
                   {leaves.map((l) => (
                     <tr key={l.id} className="border-t">
                       <td className="p-3">{leaveTypeAr(l.leave_type, t)}</td>
@@ -280,11 +280,11 @@ function StaffDetailPage() {
             <CardContent className="p-0">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50"><tr>
-                  <th className="text-start p-3">التاريخ</th><th className="text-end p-3">المبلغ</th>
-                  <th className="text-start p-3">السبب</th><th className="text-start p-3">الحالة</th>
+                  <th className="text-start p-3">{t("common.date")}</th><th className="text-end p-3">{t("common.amount")}</th>
+                  <th className="text-start p-3">{t("common.reason")}</th><th className="text-start p-3">{t("common.status")}</th>
                 </tr></thead>
                 <tbody>
-                  {advances.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">لا توجد سلف</td></tr>}
+                  {advances.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">{t("staff.noAdvances")}</td></tr>}
                   {advances.map((a) => (
                     <tr key={a.id} className="border-t">
                       <td className="p-3 text-xs">{fmtDate(a.created_at)}</td>
@@ -310,12 +310,12 @@ function leaveTypeAr(t: string, fn: any) {
   return { annual: fn("leave.annual", "سنوية"), sick: fn("leave.sick", "مرضية"), unpaid: fn("leave.unpaid", "بدون أجر"), emergency: fn("leave.emergency", "طارئة") }[t] ?? t;
 }
 function LeaveStatusBadge({ s }: { s: string }) {
-  if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;
-  if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
-  return <Badge variant="destructive">مرفوض</Badge>;
+  if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
+  if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
+  return <Badge variant="destructive">{t("finance.rejected")}</Badge>;
 }
 function AdvStatusBadge({ s }: { s: string }) {
-  if (s === "pending") return <Badge variant="secondary">قيد المراجعة</Badge>;
-  if (s === "approved") return <Badge className="bg-emerald-600">موافق</Badge>;
-  return <Badge variant="destructive">مرفوض</Badge>;
+  if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
+  if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
+  return <Badge variant="destructive">{t("finance.rejected")}</Badge>;
 }

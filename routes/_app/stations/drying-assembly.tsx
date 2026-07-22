@@ -17,7 +17,7 @@ type Row = {
 };
 
 export const Route = createFileRoute("/_app/stations/drying-assembly")({
-  head: () => ({ meta: [{ title: "التجفيف والتجميع" }] }),
+  head: () => ({ meta: [{ title: "Drying - MJRH" }] }),
   component: DryingAssemblyStation,
 });
 
@@ -104,8 +104,8 @@ function DryingAssemblyStation() {
         return (sameOrderA + sameNameA + sameBranchA) - (sameOrderB + sameNameB + sameBranchB);
       }).slice(0, 30);
       setMatches((m) => ({ ...m, [row.id]: ranked }));
-      await recordEvent(row, "assembly_photo_search", "تصوير وبحث عن قطعة في صور آخر 15 يوم", { photo_search: true, search_window_days: 15, matches: ranked.length });
-      toast.success(ranked.length ? `تم البحث في صور آخر 15 يوم ووجدنا ${ranked.length} نتيجة محتملة` : "تم التصوير، ولا توجد صور مطابقة ضمن آخر 15 يوم");
+      await recordEvent(row, "assembly_photo_search", t("stations.assembly.logPhotoSearch"), { photo_search: true, search_window_days: 15, matches: ranked.length });
+      toast.success(ranked.length ? interpolate(t("stations.assembly.toastPhotoSearch"), { count: ranked.length }) : t("stations.assembly.toastPhotoNoMatch"));
       load();
     } finally {
       setBusy(null);
@@ -115,34 +115,34 @@ function DryingAssemblyStation() {
   async function startAssembly(row: Row) {
     setBusy(row.id);
     const { error } = await supabase.from("service_units").update({ current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: notes[row.id] || null }).eq("id", row.id);
-    if (!error) await recordEvent(row, "drying_assembly_started", "بدء التجفيف والتجميع");
+    if (!error) await recordEvent(row, "drying_assembly_started", t("stations.assembly.logStarted"));
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم بدء التجفيف والتجميع"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.assembly.toastStarted")); load(); }
   }
 
   async function reportLabel(row: Row, status: "missing_label" | "unclear_label") {
     const note = (notes[row.id] ?? "").trim();
-    if (note.length < 3) return toast.error("اكتب ملاحظة واضحة عن مشكلة المارك/الليبل");
+    if (note.length < 3) return toast.error(t("stations.assembly.errNoteReq"));
     setBusy(row.id);
     const { error } = await supabase.from("service_units").update({ label_status: status, current_stage: "drying_assembly", assembly_checked_by: user?.id, assembly_notes: note, staff_notes: note }).eq("id", row.id);
     if (!error) {
-      await recordEvent(row, "label_issue_reported", "تسجيل مشكلة مارك/ليبل", { needs_resolution: true });
-      await supabase.from("app_notifications").insert({ tenant_id: row.tenant_id, branch_id: row.branch_id ?? null, audience: "ops", title: "مشكلة مارك/ليبل في التجميع", body: `طلب #${row.order_number} — ${row.name}: ${note}`, href: `/orders/${row.order_id}`, tone: "warning" }).then(() => null);
+      await recordEvent(row, "label_issue_reported", t("stations.assembly.logMarkIssue"), { needs_resolution: true });
+      await supabase.from("app_notifications").insert({ tenant_id: row.tenant_id, branch_id: row.branch_id ?? null, audience: "ops", title: t("stations.assembly.notifMarkTitle"), body: `${t("orders.orderNoShort", "طلب #")}${row.order_number} — ${row.name}: ${note}`, href: `/orders/${row.order_id}`, tone: "warning" }).then(() => null);
     }
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم تسجيل مشكلة المارك وإشعار التشغيل"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.assembly.toastMarkReported")); load(); }
   }
 
   async function completeAssembly(row: Row) {
     setBusy(row.id);
     const { error } = await supabase.from("service_units").update({ current_stage: "ironing", label_status: "labeled", assembly_checked_at: new Date().toISOString(), assembly_checked_by: user?.id, assembly_notes: notes[row.id] || row.assembly_notes || null }).eq("id", row.id);
     if (!error) {
-      await recordEvent(row, "drying_assembly_completed", "إنهاء التجفيف والتجميع");
+      await recordEvent(row, "drying_assembly_completed", t("stations.assembly.logDone"));
       const { data: remaining } = await supabase.from("service_units").select("id").eq("order_id", row.order_id).in("current_stage", ["cleaning", "cleaning_done", "drying_assembly"]).limit(1);
       if (!remaining?.length) await supabase.from("orders").update({ status: "ironing" }).eq("id", row.order_id).neq("status", "cancelled");
     }
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم التجميع والقطعة جاهزة للكي"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.assembly.toastReadyForIroning")); load(); }
   }
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("station.assembly.accessDenied")}</CardContent></Card>;

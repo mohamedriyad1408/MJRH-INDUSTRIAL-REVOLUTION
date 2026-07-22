@@ -11,7 +11,7 @@ import { RotateCcw, CheckCircle2, Sparkles, Package, Shirt, Image as ImageIcon, 
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/cleaning")({
-  head: () => ({ meta: [{ title: "الغسيل والتنظيف" }] }),
+  head: () => ({ meta: [{ title: "Cleaning - MJRH" }] }),
   component: CleaningStation,
 });
 
@@ -67,12 +67,12 @@ function CleaningWorkerView({ manager = false }: { manager?: boolean }) {
 
   async function resolveReclean(unit: Unit) {
     const { error } = await supabase.rpc("resolve_reclean_return", { _unit_id: unit.id });
-    if (error) toast.error(error.message); else { toast.success("تم تنظيف المرتجع ورجوعه لنفس فني الكي"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.cleaning.toastRecleanDone")); load(); }
   }
 
   async function markCleaned(unit: Unit) {
     const { error } = await supabase.from("service_units").update({ current_stage: "cleaning_done" }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success(`تم تنظيف ${unit.label_code}`); load(); }
+    if (error) toast.error(error.message); else { toast.success(interpolate(t("stations.cleaning.toastCleaned"), { code: unit.label_code })); load(); }
   }
 
   const groups = useMemo(() => {

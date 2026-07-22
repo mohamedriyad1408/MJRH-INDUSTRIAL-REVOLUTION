@@ -16,7 +16,7 @@ import { BookOpenCheck, FileBarChart, Scale, LockKeyhole, Plus, Loader2, Refresh
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/ledger")({
-  head: () => ({ meta: [{ title: "القيود والتقارير المالية" }] }),
+  head: () => ({ meta: [{ title: "Ledger - MJRH" }] }),
   component: LedgerPage,
 });
 
@@ -135,7 +135,7 @@ function LedgerPage() {
         const r3 = await supabase.rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
         const r4 = await supabase.rpc("repair_cash_account_balances"); if (r4.error) errs.push(r4.error.message);
       }
-      if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("ledger.toast.created", "تم إصلاح أساسيات دفتر القيود والخزنة"));
+      if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("ledger.toast.repaired"));
       await load();
     } finally {
       setRepairing(false);
@@ -165,9 +165,9 @@ function LedgerPage() {
         if (!r.error) syncedExpenses++;
       }
       await supabase.rpc("repair_ledger_basics").then(() => null);
-      toast.success(`تم فحص وترحيل الناقص فقط: ${syncedOrders} طلب و ${syncedExpenses} مصروف. بدون مضاعفة شهرية.`);
+      toast.success(interpolate(t("ledger.toast.autoPostOk"), { syncedOrders, syncedExpenses }));
       load();
-    } catch (e: any) { toast.error(e.message ?? "تعذر فحص القيود"); }
+    } catch (e: any) { toast.error(e.message ?? t("ledger.err.autoPostFailed", "تعذر فحص القيود")); }
   }
 
   async function addManualJournal() {
@@ -177,16 +177,16 @@ function LedgerPage() {
         { account_id: manual.debit_account, debit: Number(manual.amount), credit: 0, memo: manual.memo },
         { account_id: manual.credit_account, debit: 0, credit: Number(manual.amount), memo: manual.memo },
       ]);
-      toast.success(t("ledger.toast.created", "تم إنشاء القيد"));
+      toast.success(t("ledger.toast.created"));
       setManual({ description: "", debit_account: "", credit_account: "", amount: "0", memo: "" });
       load();
-    } catch (e: any) { toast.error(e.message ?? "تعذر إنشاء القيد"); }
+    } catch (e: any) { toast.error(e.message ?? t("ledger.err.createFailed", "تعذر إنشاء القيد")); }
   }
 
   async function closeMonth() {
     if (!confirm(t("ledger.confirm.close", "إقفال الشهر يمنع إضافة أو تعديل قيود داخل الفترة. متأكد؟"))) return;
     const { error } = await supabase.from("accounting_periods").upsert({ tenant_id: tenantId, period_start: b.start, period_end: b.end, status: "closed", closed_at: new Date().toISOString() }, { onConflict: "tenant_id,period_start,period_end" });
-    if (error) toast.error(error.message); else { toast.success(t("ledger.toast.closed", "تم إقفال الشهر")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("ledger.toast.closed")); load(); }
   }
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("ledger.err.ownerOnly", "القيود والتقارير المالية للمالك فقط.")}</CardContent></Card>;
@@ -199,10 +199,10 @@ function LedgerPage() {
       <div className="flex gap-2"><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>{t("common.refresh")}</Button></div>
     </div>
     <div className="grid md:grid-cols-4 gap-3">
-      <Kpi label={t("ledger.kpi.revenue", "الإيرادات")} value={fmtMoney(pnl.revenue, curr)} />
+      <Kpi label={t("ledger.kpi.revenue")} value={fmtMoney(pnl.revenue, curr)} />
       <Kpi label={t("ledger.kpi.expense", "المصروفات")} value={fmtMoney(pnl.expense, curr)} warn />
-      <Kpi label={t("ledger.kpi.netProfit", "صافي الربح")} value={fmtMoney(pnl.net, curr)} warn={pnl.net < 0} />
-      <Kpi label={t("ledger.kpi.balance", "اتزان الميزان")} value={trialTotals.debit === trialTotals.credit ? t("ledger.kpi.balanced", "متزن") : t("ledger.kpi.unbalanced", "غير متزن")} warn={trialTotals.debit !== trialTotals.credit} />
+      <Kpi label={t("ledger.kpi.netProfit")} value={fmtMoney(pnl.net, curr)} warn={pnl.net < 0} />
+      <Kpi label={t("ledger.kpi.balance")} value={trialTotals.debit === trialTotals.credit ? t("ledger.kpi.balanced") : t("ledger.kpi.unbalanced")} warn={trialTotals.debit !== trialTotals.credit} />
     </div>
     {isClosed && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 font-bold text-amber-800">{t("ledger.alert.closed", "هذا الشهر مقفول محاسبيًا. لا يمكن إضافة قيود جديدة داخله.")}</CardContent></Card>}
     <Card className="border-blue-200 bg-blue-50"><CardContent className="p-4 text-sm text-blue-900"><b>{t("ledger.alert.warning", "تنبيه: لا تستخدم هذه الصفحة في التشغيل اليومي إلا لو أنت فاهم القيود. النظام ينشئ أغلب القيود تلقائيًا من الطلبات، المصروفات، الخزنة، المخزون، والرواتب.")}</b></CardContent></Card>
@@ -226,7 +226,7 @@ function LedgerPage() {
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />{t("ledger.manual.title", "قيد يدوي للمحاسب")}</CardTitle></CardHeader><CardContent className="space-y-3"><Field label={t("ledger.manual.descLabel", "البيان")}><Input value={manual.description} onChange={(e) => setManual({ ...manual, description: e.target.value })} /></Field><div className="grid grid-cols-2 gap-2"><Field label={t("ledger.manual.debitLabel", "مدين")}><AccountSelect accounts={accounts} value={manual.debit_account} onChange={(v) => setManual({ ...manual, debit_account: v })} t={t} /></Field><Field label={t("ledger.manual.creditLabel", "دائن")}><AccountSelect accounts={accounts} value={manual.credit_account} onChange={(v) => setManual({ ...manual, credit_account: v })} t={t} /></Field></div><Field label={t("ledger.manual.amountLabel", "المبلغ")}><Input type="number" value={manual.amount} onChange={(e) => setManual({ ...manual, amount: e.target.value })} /></Field><Textarea placeholder={t("ledger.manual.memoPlaceholder", "مذكرة")} value={manual.memo} onChange={(e) => setManual({ ...manual, memo: e.target.value })} /><Button onClick={addManualJournal} disabled={isClosed} className="w-full">{t("ledger.manual.saveBtn", "حفظ القيد")}</Button></CardContent></Card></div>
         <Card><CardHeader><CardTitle className="text-base">{t("ledger.journals.title", "قيود الشهر")}</CardTitle></CardHeader><CardContent className="space-y-3">{journals.map((j) => <JournalCard key={j.id} journal={j} curr={curr} t={t} />)}{!journals.length && <Empty text={t("ledger.journals.empty", "لا توجد قيود لهذا الشهر")} />}</CardContent></Card>
       </TabsContent>
-      <TabsContent value="pl"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><FileBarChart className="w-4 h-4" />{t("ledger.pl.title", "قائمة الأرباح والخسائر لشهر")} {month}</CardTitle></CardHeader><CardContent className="space-y-2">{monthlyPl.map((r) => <Row key={r.code} a={`${r.code} — ${r.name}`} b={r.account_type === "revenue" ? t("ledger.pl.rev", "إيراد") : t("ledger.pl.exp", "مصروف")} c={fmtMoney(r.amount, curr)} danger={r.account_type === "expense"} />)}{!monthlyPl.length && <Empty text={t("ledger.pl.empty", "لا توجد إيرادات أو مصروفات مرحلة لهذا الشهر")} />}<div className="border-t pt-3 mt-3 flex justify-between font-black text-lg"><span>{t("ledger.kpi.netProfit", "صافي الربح")}</span><span className={pnl.net >= 0 ? "text-emerald-700" : "text-red-700"}>{fmtMoney(pnl.net, curr)}</span></div></CardContent></Card></TabsContent>
+      <TabsContent value="pl"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><FileBarChart className="w-4 h-4" />{t("ledger.pl.title", "قائمة الأرباح والخسائر لشهر")} {month}</CardTitle></CardHeader><CardContent className="space-y-2">{monthlyPl.map((r) => <Row key={r.code} a={`${r.code} — ${r.name}`} b={r.account_type === "revenue" ? t("ledger.pl.rev", "إيراد") : t("ledger.pl.exp", "مصروف")} c={fmtMoney(r.amount, curr)} danger={r.account_type === "expense"} />)}{!monthlyPl.length && <Empty text={t("ledger.pl.empty", "لا توجد إيرادات أو مصروفات مرحلة لهذا الشهر")} />}<div className="border-t pt-3 mt-3 flex justify-between font-black text-lg"><span>{t("ledger.kpi.netProfit")}</span><span className={pnl.net >= 0 ? "text-emerald-700" : "text-red-700"}>{fmtMoney(pnl.net, curr)}</span></div></CardContent></Card></TabsContent>
       <TabsContent value="trial"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Scale className="w-4 h-4" />{t("ledger.tab.trial", "ميزان المراجعة")}</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><table className="w-full text-sm"><thead className="bg-muted/50"><tr><th className="text-start p-3">{t("ledger.trial.account", "الحساب")}</th><th className="text-end p-3">{t("ledger.manual.debitLabel", "مدين")}</th><th className="text-end p-3">{t("ledger.manual.creditLabel", "دائن")}</th><th className="text-end p-3">{t("ledger.trial.balance", "الرصيد")}</th></tr></thead><tbody>{trial.map((r) => <tr key={r.account_id} className="border-t"><td className="p-3 font-bold">{r.code} — {r.name}</td><td className="p-3 text-end">{fmtMoney(r.total_debit, curr)}</td><td className="p-3 text-end">{fmtMoney(r.total_credit, curr)}</td><td className="p-3 text-end font-black">{fmtMoney(r.balance, curr)}</td></tr>)}<tr className="border-t bg-muted/30 font-black"><td className="p-3">{t("ledger.trial.total", "الإجمالي")}</td><td className="p-3 text-end">{fmtMoney(trialTotals.debit, curr)}</td><td className="p-3 text-end">{fmtMoney(trialTotals.credit, curr)}</td><td></td></tr></tbody></table></CardContent></Card></TabsContent>
       <TabsContent value="close"><Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><LockKeyhole className="w-4 h-4" />{t("ledger.close.title", "الإقفال الشهري")}</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground">{t("ledger.close.desc", "بعد مراجعة القيود وميزان المراجعة، اقفل الشهر لمنع أي تعديل غير مقصود.")}</p><Button variant="destructive" onClick={closeMonth} disabled={isClosed}>{t("ledger.close.btn", "إقفال شهر")} {month}</Button><div className="space-y-2 pt-3">{periods.map((p) => <Row key={p.id} a={`${p.period_start} → ${p.period_end}`} b={p.status === "closed" ? t("ledger.close.closed", "مقفول") : t("ledger.close.open", "مفتوح")} c={p.closed_at ? fmtDate(p.closed_at) : "—"} />)}</div></CardContent></Card></TabsContent>
     </Tabs>}

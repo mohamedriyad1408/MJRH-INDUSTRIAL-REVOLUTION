@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/staff/attendance")({
-  head: () => ({ meta: [{ title: "الحضور والانصراف — Mawared HR" }] }),
+  head: () => ({ meta: [{ title: "Attendance - Mawared HR" }] }),
   component: AttendanceMawaredPage,
 });
 
@@ -160,11 +160,11 @@ function AttendanceMawaredPage() {
       work_date: date,
       check_in_lat: loc.lat ?? null,
       check_in_lng: loc.lng ?? null,
-      notes: "تسجيل حضور شخصي بالهاتف / المتصفح",
+      notes: t("attendance.personalNotes"),
     });
     setBusyMyShift(false);
     if (error) return toast.error(error.message);
-    toast.success("تم تسجيل حضوري بنجاح");
+    toast.success(t("attendance.toastInSuccess"));
     loadData();
   }
 
@@ -179,7 +179,7 @@ function AttendanceMawaredPage() {
     }).eq("id", myOpenShift.id);
     setBusyMyShift(false);
     if (error) return toast.error(error.message);
-    toast.success("تم تسجيل انصرافي بنجاح");
+    toast.success(t("attendance.toastOutSuccess"));
     loadData();
   }
 
@@ -229,7 +229,7 @@ function AttendanceMawaredPage() {
     setModalDate(date);
     setCheckInTime("09:00");
     setCheckOutTime("");
-    setNotes("تسجيل إداري عبر Mawared HR");
+    setNotes(t("attendance.adminNotes"));
     setOpenModal(true);
   }
 
@@ -262,7 +262,7 @@ function AttendanceMawaredPage() {
 
   async function saveModalRecord() {
     if (!selectedEmpId || !modalDate || !checkInTime) {
-      return toast.error("الموظف والتاريخ ووقت الحضور عناصر مطلوبة");
+      return toast.error(t("attendance.errorRequired"));
     }
     setSaving(true);
     try {
@@ -281,11 +281,11 @@ function AttendanceMawaredPage() {
       if (editingId) {
         const { error } = await supabase.from("employee_attendance").update(payload).eq("id", editingId);
         if (error) throw error;
-        toast.success("تم تحديث سجل الحضور والانصراف");
+        toast.success(t("attendance.toastUpdateSuccess"));
       } else {
         const { error } = await supabase.from("employee_attendance").insert(payload);
         if (error) throw error;
-        toast.success("تم إضافة السجل الجديد بنجاح");
+        toast.success(t("attendance.toastAddSuccess"));
       }
       setOpenModal(false);
       loadData();
@@ -297,11 +297,11 @@ function AttendanceMawaredPage() {
   }
 
   async function deleteRecord(id: string) {
-    if (!confirm("هل أنت متأكد من حذف هذا السجل نهائياً؟")) return;
+    if (!confirm(t("attendance.confirmDelete"))) return;
     try {
       const { error } = await supabase.from("employee_attendance").delete().eq("id", id);
       if (error) throw error;
-      toast.success("تم الحذف بنجاح");
+      toast.success(t("attendance.toastDeleteSuccess"));
       loadData();
     } catch (err: any) {
       toast.error(err?.message || "فشل الحذف");
@@ -318,7 +318,7 @@ function AttendanceMawaredPage() {
         notes: "تسجيل حضور سريع بواسطة الإدارة",
       });
       if (error) throw error;
-      toast.success("تم تسجيل الحضور للموظف");
+      toast.success(t("attendance.toastQuickInSuccess"));
       loadData();
     } catch (err: any) {
       toast.error(err?.message || "فشل التسجيل");
@@ -365,7 +365,7 @@ function AttendanceMawaredPage() {
                 <div className="text-xs text-teal-200 font-bold uppercase tracking-wider font-mono">سجلك الشخصي اليومي في الموارد البشرية</div>
                 <h3 className="text-xl font-black mt-0.5">أهلاً بك، {currentEmp.full_name} 👋</h3>
                 <p className="text-xs text-teal-100 font-medium mt-1">
-                  {myOpenShift ? `🟢 أنت حاضر في العمل منذ ${formatTime(myOpenShift.check_in_at)}` : "⭕ لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
+                  {myOpenShift ? interpolate(t("attendance.presentSince"), { time: formatTime(myOpenShift.check_in_at) }) : "⭕ لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
                 </p>
               </div>
             </div>
@@ -374,12 +374,12 @@ function AttendanceMawaredPage() {
               {myOpenShift ? (
                 <Button onClick={checkOutMyShift} disabled={busyMyShift} className="bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl h-12 px-6 shadow-lg transition">
                   {busyMyShift ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-5 h-5 ms-1.5" />}
-                  <span>تسجيل الانصراف الآن (GPS)</span>
+                  <span>{t("attendance.checkoutNow")} (GPS)</span>
                 </Button>
               ) : (
                 <Button onClick={checkInMyShift} disabled={busyMyShift} className="bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl h-12 px-6 shadow-lg transition">
                   {busyMyShift ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-5 h-5 ms-1.5" />}
-                  <span>تسجيل حضوري الآن (GPS)</span>
+                  <span>{t("attendance.checkinNow")} (GPS)</span>
                 </Button>
               )}
             </div>
@@ -393,7 +393,7 @@ function AttendanceMawaredPage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 bg-white border rounded-2xl p-1.5 shadow-2xs">
               <Calendar className="w-4 h-4 text-teal-600 ms-2" />
-              <Label className="text-xs font-bold text-slate-700">{t("mawared.selectDate", "تاريخ العمل:")}</Label>
+              <Label className="text-xs font-bold text-slate-700">{t("mawared.selectDate", "t("attendance.workDate") + ":"")}</Label>
               <Input
                 type="date"
                 value={date}
@@ -576,7 +576,7 @@ function AttendanceMawaredPage() {
                   <tr>
                     <td colSpan={isManager ? 7 : 6} className="p-12 text-center text-slate-400 font-bold">
                       <Clock className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                      <div>{t("mawared.emptyRecords", "لا توجد سجلات حضور وانصراف مطابقة للبحث في هذا اليوم.")}</div>
+                      <div>{t("attendance.emptyRecords")}</div>
                     </td>
                   </tr>
                 ) : (
@@ -597,11 +597,11 @@ function AttendanceMawaredPage() {
                           {isOpen ? (
                             <Badge className="bg-emerald-600 text-white gap-1 font-bold shadow-2xs">
                               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-                              <span>{t("mawared.statusPresent", "حاضر بالعمل")}</span>
+                              <span>{t("attendance.statusPresent")}</span>
                             </Badge>
                           ) : (
                             <Badge className="bg-blue-600 text-white font-bold">
-                              <span>{t("mawared.statusDone", "منصرف (شفت مكتمل)")}</span>
+                              <span>{t("attendance.statusDone")}</span>
                             </Badge>
                           )}
                         </td>
@@ -620,7 +620,7 @@ function AttendanceMawaredPage() {
                                 <span>{r.check_in_lat.toFixed(4)}, {r.check_in_lng.toFixed(4)}</span>
                               </a>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium">{t("mawared.noGps", "بدون إحداثيات GPS")}</span>
+                              <span className="text-[11px] text-slate-400 font-medium">{t("attendance.noGps")}</span>
                             )}
                           </div>
                         </td>
@@ -639,9 +639,9 @@ function AttendanceMawaredPage() {
                                 <span>{r.check_out_lat.toFixed(4)}, {r.check_out_lng.toFixed(4)}</span>
                               </a>
                             ) : isOpen ? (
-                              <span className="text-[11px] text-emerald-600 font-bold italic">{t("mawared.shiftOngoing", "الوردية مستمرة...")}</span>
+                              <span className="text-[11px] text-emerald-600 font-bold italic">{t("attendance.shiftOngoing")}</span>
                             ) : (
-                              <span className="text-[11px] text-slate-400 font-medium">{t("mawared.noGps", "بدون إحداثيات GPS")}</span>
+                              <span className="text-[11px] text-slate-400 font-medium">{t("attendance.noGps")}</span>
                             )}
                           </div>
                         </td>
@@ -687,13 +687,13 @@ function AttendanceMawaredPage() {
           <DialogHeader>
             <DialogTitle className="text-lg font-black flex items-center gap-2">
               <Clock className="w-5 h-5 text-teal-600" />
-              <span>{editingId ? t("mawared.modalEdit", "تعديل سجل حضور وانصراف") : t("mawared.modalNew", "إضافة شفت / تسجيل إداري")}</span>
+              <span>{editingId ? t("attendance.modalEdit") : t("attendance.modalNew")}</span>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-3">
             <div>
-              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("mawared.labelEmp", "الموظف *")}</Label>
+              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelEmp")}</Label>
               <Select value={selectedEmpId} onValueChange={setSelectedEmpId} disabled={!!editingId}>
                 <SelectTrigger className="rounded-xl h-11 font-bold">
                   <SelectValue placeholder="اختر الموظف..." />
@@ -709,7 +709,7 @@ function AttendanceMawaredPage() {
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("mawared.labelDate", "تاريخ العمل *")}</Label>
+              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelDate")}</Label>
               <Input
                 type="date"
                 value={modalDate}
@@ -720,7 +720,7 @@ function AttendanceMawaredPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("mawared.labelIn", "وقت الحضور *")}</Label>
+                <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelIn")}</Label>
                 <Input
                   type="time"
                   value={checkInTime}
@@ -731,7 +731,7 @@ function AttendanceMawaredPage() {
               </div>
 
               <div>
-                <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("mawared.labelOut", "وقت الانصراف (اختياري)")}</Label>
+                <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelOut")}</Label>
                 <Input
                   type="time"
                   value={checkOutTime}
@@ -742,7 +742,7 @@ function AttendanceMawaredPage() {
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("mawared.labelNotes", "ملاحظات إدارية / التبرير")}</Label>
+              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelNotes")}</Label>
               <Textarea
                 rows={2}
                 value={notes}

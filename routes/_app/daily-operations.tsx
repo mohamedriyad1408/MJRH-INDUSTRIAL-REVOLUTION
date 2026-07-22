@@ -11,7 +11,7 @@ import { AlertTriangle, CalendarCheck, CheckCircle2, ClipboardCheck, Loader2, Lo
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/daily-operations")({
-  head: () => ({ meta: [{ title: "تشغيل اليوم" }] }),
+  head: () => ({ meta: [{ title: "Daily Ops - MJRH" }] }),
   component: DailyOperationsPage,
 });
 
@@ -117,35 +117,35 @@ function DailyOperationsPage() {
   async function runSmartAlerts() {
     if (!tenantId) return;
     const { data, error } = await supabase.rpc("generate_smart_operational_alerts", { _tenant_id: tenantId });
-    if (error) toast.error(error.message); else toast.success(`تم توليد ${data ?? 0} تنبيه ذكي`);
+    if (error) toast.error(error.message); else toast.success(interpolate(t("dailyOps.toastAlerts"), { count: data ?? 0 }));
   }
 
   async function repairFinance() {
     if (!tenantId) return;
     const { data, error } = await supabase.rpc("repair_financial_operation_audit", { _tenant_id: tenantId, _max_items: 100 });
-    if (error) toast.error(error.message); else toast.success(`إصلاح مالي: ${data?.fixed ?? 0} بند، المتبقي ${data?.remaining ?? 0}`);
+    if (error) toast.error(error.message); else toast.success(interpolate(t("dailyOps.toastFinanceRepair"), { fixed: data?.fixed ?? 0, remaining: data?.remaining ?? 0 }));
   }
 
   async function saveReport(kind: "start" | "end") {
     if (!data) return;
-    const title = kind === "start" ? "تقرير بداية اليوم" : "تقرير نهاية اليوم";
+    const title = kind === "start" ? t("dailyOps.step.startReport.title") : t("dailyOps.step.endReport.title");
     const body = [
       title,
-      `التاريخ: ${new Date().toLocaleDateString("ar-EG")}`,
-      `جاهزية النشاط: ${data.tenantReady?.is_ready ? "جاهز" : "ناقص"}`,
-      `مشاكل مالية حرجة: ${data.financialDanger}`,
-      `APDO ناقص: ${data.apdoMissing}`,
-      `طلبات اليوم: ${data.ordersToday}`,
-      `إيراد اليوم: ${fmtMoney(data.revenueToday)}`,
-      `داخل الخزنة: ${fmtMoney(data.cashIn)}`,
-      `خارج الخزنة: ${fmtMoney(data.cashOut)}`,
-      `إقفال الخزن: ${data.closedCash}/${data.activeCash}`,
-      `متأخرات: ${data.lateOrders}`,
-      `جاهز بلا مندوب: ${data.readyNoDriver}`,
-      `جاهز غير مدفوع: ${data.unpaidReady}`,
+      `${t("common.date")}: ${new Date().toLocaleDateString("ar-EG")}`,
+      `${t("dailyOps.step.ready.title")}: ${data.tenantReady?.is_ready ? t("dailyOps.step.ready.ok") : t("dailyOps.step.ready.fail")}`,
+      `${t("dailyOps.kpi.finance")}: ${data.financialDanger}`,
+      `${t("dailyOps.step.apdo.title")}: ${data.apdoMissing}`,
+      `${t("today.kpi.ordersToday")}: ${data.ordersToday}`,
+      `${t("today.kpi.revenueToday")}: ${fmtMoney(data.revenueToday)}`,
+      `${t("dailyOps.kpi.cashIn")}: ${fmtMoney(data.cashIn)}`,
+      `${t("common.out")}: ${fmtMoney(data.cashOut)}`,
+      `${t("dailyOps.kpi.safes")}: ${data.closedCash}/${data.activeCash}`,
+      `${t("dailyOps.step.late.title")}: ${data.lateOrders}`,
+      `${t("dailyOps.step.map.title")}: ${data.readyNoDriver}`,
+      `${t("dailyOps.step.receivables.title")}: ${data.unpaidReady}`,
     ].join("\n");
     const { error } = await supabase.from("app_notifications").insert({ tenant_id: tenantId, audience: "owner", title, body, href: "/daily-operations", tone: data.financialDanger || data.apdoMissing ? "warning" : "success" });
-    if (error) toast.error(error.message); else toast.success("تم حفظ التقرير في الإشعارات");
+    if (error) toast.error(error.message); else toast.success(t("dailyOps.toastReportSaved"));
   }
 
   const startSteps: Step[] = useMemo(() => data ? [
@@ -177,7 +177,7 @@ function DailyOperationsPage() {
   const endOfDayScore = data ? Math.round((endSteps.filter((s) => s.ok).length / Math.max(1, endSteps.length)) * 100) : 0;
   const score = data ? Math.round((workReadinessSteps.filter((s) => s.ok).length / Math.max(1, workReadinessSteps.length)) * 100) : 0;
 
-  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">تشغيل اليوم للمالك ومدير التشغيل وخدمة العملاء فقط.</CardContent></Card>;
+  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("dailyOps.ownerOnly")}</CardContent></Card>;
   if (loading || !data) return <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div>;
 
   return <div className="space-y-5" dir={dir}>

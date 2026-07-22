@@ -14,13 +14,15 @@ import {
   Filter, Layers, Calendar, ExternalLink, Plus,
 } from "lucide-react";
 
+import { useRef } from "react";
+
 type SearchParams = { q?: string };
 
 export const Route = createFileRoute("/_app/search")({
   validateSearch: (search: Record<string, unknown>): SearchParams => ({
     q: typeof search.q === "string" ? search.q : undefined,
   }),
-  head: () => ({ meta: [{ title: "مركز البحث الموحد والنتائج" }] }),
+  head: () => ({ meta: [{ title: "Search - MJRH" }] }),
   component: SearchResultsPage,
 });
 
@@ -296,13 +298,13 @@ function SearchResultsPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-            <span>{t("searchPage.badge", "منظومة البحث الموحد العميقة")}</span>
+            <span>{t("search.badge")}</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
-            {t("searchPage.title", "مركز البحث الموحد والنتائج")}
+            {t("search.pageTitle")}
           </h1>
           <p className="text-sm text-muted-foreground max-w-2xl font-medium leading-relaxed">
-            {t("searchPage.subtitle", "بحث فوري في كافة سجلات الطلبات، العملاء، قطع الملابس والقيود المالية.")}
+            {t("search.subtitle")}
           </p>
         </div>
 
@@ -310,7 +312,7 @@ function SearchResultsPage() {
           {!tenantId && (
             <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{t("searchPage.demoMode", "وضع استعراض عام")}</span>
+              <span>{t("search.demoMode")}</span>
             </div>
           )}
           <Button variant="outline" size="sm" onClick={() => performSearch(query)} disabled={loading} className="font-bold">
@@ -329,7 +331,7 @@ function SearchResultsPage() {
               value={query}
               onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && performSearch(query)}
-              placeholder={t("searchPage.inputPlaceholder", "اكتب هنا رقم الطلب، الهاتف، أو اسم العميل...")}
+              placeholder={t("search.inputPlaceholder")}
               autoFocus
               className={`h-14 md:h-16 w-full text-base md:text-lg rounded-2xl bg-white border-2 border-slate-300 focus:border-teal-600 focus:ring-4 focus:ring-teal-500/15 ${dir === 'rtl' ? 'pr-14 pl-28' : 'pl-14 pr-28'} shadow-sm font-semibold text-slate-900 transition`}
             />
@@ -338,7 +340,7 @@ function SearchResultsPage() {
               disabled={loading}
               className={`absolute ${dir === 'rtl' ? 'left-2' : 'right-2'} top-2 bottom-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-5 font-bold shadow-md`}
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="flex items-center gap-1.5"><Search className="w-4 h-4" /> <span className="hidden sm:inline">{t("searchPage.btnSearch", "بحث")}</span></span>}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="flex items-center gap-1.5"><Search className="w-4 h-4" /> <span className="hidden sm:inline">{t("search.btnSearch")}</span></span>}
             </Button>
           </div>
         </CardContent>
@@ -363,7 +365,7 @@ function SearchResultsPage() {
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span>{t(`searchPage.${tab.label}`, tab.id)}</span>
+              <span>{t(`search.${tab.label}`)}</span>
               <Badge className={`ms-1 text-xs px-2 py-0.5 font-mono ${active ? "bg-white/20 text-white" : "bg-white text-slate-800"}`}>
                 {tab.count}
               </Badge>
@@ -379,7 +381,7 @@ function SearchResultsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 font-black text-lg text-slate-900">
                 <FileText className="w-5 h-5 text-teal-600" />
-                <span>{t("searchPage.secOrders", "الطلبات")}</span>
+                <span>{t("search.secOrders")}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {orders.map((o) => (
@@ -395,7 +397,7 @@ function SearchResultsPage() {
                         </div>
                         <div className="text-end font-black text-teal-700">{fmtMoney(o.total, t("common.egp"))}</div>
                       </div>
-                      <Button asChild size="sm" className="w-full bg-teal-600"><Link to={`/orders/${o.id}` as any}>{t("searchPage.btnOpenOrder", "فتح الطلب")}</Link></Button>
+                      <Button asChild size="sm" className="w-full bg-teal-600"><Link to={`/orders/${o.id}` as any}>{t("search.btnOpenOrder")}</Link></Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -407,7 +409,7 @@ function SearchResultsPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 font-black text-lg text-slate-900">
                 <User className="w-5 h-5 text-indigo-600" />
-                <span>{t("searchPage.secCustomers", "العملاء")}</span>
+                <span>{t("search.secCustomers")}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {customers.map((c) => (
@@ -415,7 +417,7 @@ function SearchResultsPage() {
                     <CardContent className="p-4 space-y-3">
                       <div className="font-black text-base truncate">{c.full_name}</div>
                       <div className="text-sm font-extrabold text-indigo-700 font-mono" dir="ltr">{c.phone}</div>
-                      <Button asChild size="sm" variant="outline" className="w-full"><Link to={`/customers?id=${c.id}` as any}>{t("searchPage.btnCustomerProfile", "ملف العميل")}</Link></Button>
+                      <Button asChild size="sm" variant="outline" className="w-full"><Link to={`/customers?id=${c.id}` as any}>{t("search.btnCustomerProfile")}</Link></Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -427,5 +429,3 @@ function SearchResultsPage() {
     </div>
   );
 }
-import { useRef } from "react";
-import { RefreshCw } from "lucide-react";

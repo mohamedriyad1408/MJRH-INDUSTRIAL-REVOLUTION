@@ -14,7 +14,7 @@ import { Building2, Plus, Loader2, Pencil } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/branches")({
-  head: () => ({ meta: [{ title: "نقاط التشغيل" }] }),
+  head: () => ({ meta: [{ title: "Branches - MJRH" }] }),
   component: BranchesPage,
 });
 
@@ -73,7 +73,7 @@ function BranchesPage() {
                 </div>
                 <div className="flex gap-2 justify-end pt-2 border-t">
                   <Button size="sm" variant="outline" onClick={() => { setEditing(b); setOpen(true); }}>
-                    <Pencil className="w-3 h-3 ms-1" /> {t("branches.edit", "تعديل")}
+                    <Pencil className="w-3 h-3 ms-1" /> {t("common.edit")}
                   </Button>
                   <Button size="sm" asChild>
                     <Link to={`/branches/${b.id}` as any}>{t("branches.btnDashboard", "شاشة الفرع")}</Link>
@@ -88,7 +88,7 @@ function BranchesPage() {
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{editing?.id ? t("branches.titleEdit", "تعديل") : t("branches.titleNew", "نقطة جديدة")}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing?.id ? t("common.edit") : t("branches.titleNew", "نقطة جديدة")}</DialogTitle></DialogHeader>
           {editing && (
             <div className="space-y-4 py-2">
               <div><Label>{t("branches.labelName", "الاسم *")}</Label><Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>

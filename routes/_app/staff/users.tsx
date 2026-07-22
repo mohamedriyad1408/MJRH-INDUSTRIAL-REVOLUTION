@@ -16,7 +16,7 @@ import { Crown, Plus, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/users")({
-  head: () => ({ meta: [{ title: "إدارة المستخدمين" }] }),
+  head: () => ({ meta: [{ title: "Users - MJRH" }] }),
   component: StaffUsersPage,
 });
 
@@ -39,17 +39,17 @@ function StaffUsersPage() {
   }
   useEffect(() => { load(); }, [tenantId]);
 
-  if (!hasRole("owner")) return <Card className="p-8 text-center">{t("staffUsers.ownerOnly", "صلاحية مالك المغسلة فقط.")}</Card>;
-  if (!tenantId) return <Card className="p-8 text-center">{t("staffUsers.noTenant", "لا توجد مغسلة مرتبطة بحسابك.")}</Card>;
+  if (!hasRole("owner")) return <Card className="p-8 text-center">{t("staff.users.ownerOnly")}</Card>;
+  if (!tenantId) return <Card className="p-8 text-center">{t("staff.users.noTenant")}</Card>;
 
   return (
     <div className="space-y-4 max-w-4xl" dir={dir}>
       <div className="flex justify-between items-center gap-4">
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Crown className="w-6 h-6" /> {t("staffUsers.title", "إدارة المستخدمين")}</h1>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Crown className="w-6 h-6" /> {t("staff.users.pageTitle")}</h1>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" /> {t("staffUsers.btnNew", "مستخدم جديد")}</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" /> {t("staff.users.btnNew")}</Button></DialogTrigger>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{t("staffUsers.titleNew", "إضافة مستخدم للمغسلة")}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("staff.users.titleNew")}</DialogTitle></DialogHeader>
             <AddUserForm tenantId={tenantId} onDone={() => { setOpen(false); load(); }} t={t} />
           </DialogContent>
         </Dialog>
@@ -63,7 +63,7 @@ function StaffUsersPage() {
               <Badge variant="outline">{r.role}</Badge>
             </Card>
           ))}
-          {!rows.length && <Card className="p-8 text-center text-muted-foreground col-span-full">{t("staffUsers.empty", "لا يوجد مستخدمون. أضف أول حساب.")}</Card>}
+          {!rows.length && <Card className="p-8 text-center text-muted-foreground col-span-full">{t("staff.users.empty")}</Card>}
         </div>
       )}
     </div>
@@ -90,57 +90,57 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setSaving(true);
-    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0), branchId: branchId || null }); toast.success(t("staffUsers.toastCreated", "تم إنشاء المستخدم وربطه بموظف عند الحاجة")); onDone(); }
+    try { await fn({ tenantId, email, password, fullName, role, station: station === "none" ? null : station, jobRole, monthlySalary: Number(monthlySalary || 0), commissionPercent: Number(commissionPercent || 0), branchId: branchId || null }); toast.success(t("staff.users.toastCreated")); onDone(); }
     catch (err) { toast.error(err instanceof Error ? err.message : "خطأ"); }
     finally { setSaving(false); }
   }
 
   return (
     <form onSubmit={submit} className="space-y-4 py-2">
-      <div><Label>{t("staffUsers.labelName", "الاسم الكامل")}</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
-      <div><Label>{t("staffUsers.labelEmail", "البريد")}</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
-      <div><Label>{t("staffUsers.labelPassword", "كلمة المرور")}</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></div>
+      <div><Label>{t("staff.users.labelName")}</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
+      <div><Label>{t("staff.users.labelEmail")}</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
+      <div><Label>{t("staff.users.labelPassword")}</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></div>
       <div>
-        <Label>{t("staffUsers.labelRole", "الدور")}</Label>
+        <Label>{t("staff.users.labelRole")}</Label>
         <Select value={role} onValueChange={setRole}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="cs_manager">{t("staffUsers.roleCs", "مدير خدمة عملاء")}</SelectItem>
-            <SelectItem value="ops_manager">{t("staffUsers.roleOps", "مدير تشغيل")}</SelectItem>
-            <SelectItem value="employee">{t("staffUsers.roleEmp", "موظف")}</SelectItem>
-            <SelectItem value="courier">{t("staffUsers.roleCourier", "مندوب")}</SelectItem>
-            <SelectItem value="customer">{t("staffUsers.roleCustomer", "عميل")}</SelectItem>
+            <SelectItem value="cs_manager">{t("staff.users.roleCs")}</SelectItem>
+            <SelectItem value="ops_manager">{t("staff.users.roleOps")}</SelectItem>
+            <SelectItem value="employee">{t("staff.users.roleEmp")}</SelectItem>
+            <SelectItem value="courier">{t("staff.users.roleDriver")}</SelectItem>
+            <SelectItem value="customer">{t("staff.users.roleCust")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {["employee", "courier", "cs_manager", "ops_manager"].includes(role) && (
         <div className="space-y-3 border-t pt-3 mt-3">
-          <div className="text-sm font-bold">{t("staffUsers.opsSalaryHeader", "بيانات التشغيل والراتب")}</div>
+          <div className="text-sm font-bold">{t("staff.users.opsSalaryHeader")}</div>
           {branches.length > 0 && <div>
-            <Label>{t("staffUsers.labelBranch", "الفرع")}</Label>
+            <Label>{t("staff.users.labelBranch")}</Label>
             <Select value={branchId} onValueChange={setBranchId}>
-              <SelectTrigger><SelectValue placeholder={t("staffUsers.branchPlaceholder", "اختار الفرع")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("staff.users.branchPlaceholder")} /></SelectTrigger>
               <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>}
           <div>
-            <Label>{t("staffUsers.labelStation", "المحطة")}</Label>
+            <Label>{t("staff.users.labelStation")}</Label>
             <Select value={station} onValueChange={setStation}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">{t("staffUsers.stationNone", "بدون محطة")}</SelectItem>
-                <SelectItem value="reception">{t("staffUsers.stationReception", "الاستقبال")}</SelectItem>
-                <SelectItem value="cleaning">{t("staffUsers.stationCleaning", "الغسيل")}</SelectItem>
-                <SelectItem value="drying_assembly">{t("staffUsers.stationAssembly", "التجفيف والتجميع")}</SelectItem>
-                <SelectItem value="ironing">{t("staffUsers.stationIroning", "الكي")}</SelectItem>
-                <SelectItem value="packing">{t("staffUsers.stationPacking", "التغليف")}</SelectItem>
-                <SelectItem value="delivery">{t("staffUsers.stationDelivery", "التوصيل")}</SelectItem>
+                <SelectItem value="none">{t("staff.users.stationNone")}</SelectItem>
+                <SelectItem value="reception">{t("staff.users.stationReception")}</SelectItem>
+                <SelectItem value="cleaning">{t("staff.users.stationCleaning")}</SelectItem>
+                <SelectItem value="drying_assembly">{t("staff.users.stationAssembly")}</SelectItem>
+                <SelectItem value="ironing">{t("staff.users.stationIroning")}</SelectItem>
+                <SelectItem value="packing">{t("staff.users.stationPacking")}</SelectItem>
+                <SelectItem value="delivery">{t("staff.users.stationDelivery")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>{t("staffUsers.labelJobRole", "نوع الوظيفة")}</Label>
+            <Label>{t("staff.users.labelJobRole")}</Label>
             <Select value={jobRole} onValueChange={setJobRole}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -156,8 +156,8 @@ function AddUserForm({ tenantId, onDone, t }: { tenantId: string; onDone: () => 
             </Select>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>{t("common.salary", "راتب شهري")}</Label><Input type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} /></div>
-            <div><Label>{t("common.commission", "عمولة %")}</Label><Input type="number" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} /></div>
+            <div><Label>{t("staff.users.labelSalary")}</Label><Input type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} /></div>
+            <div><Label>{t("staff.users.labelComm")}</Label><Input type="number" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} /></div>
           </div>
         </div>
       )}

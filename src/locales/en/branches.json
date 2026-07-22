@@ -1,0 +1,16 @@
+{
+  "pageTitle": "Operating Branches",
+  "btnNew": "New Branch",
+  "active": "Active",
+  "inactive": "Inactive",
+  "btnDashboard": "Branch Board",
+  "empty": "No branches found",
+  "titleNew": "New Branch",
+  "labelName": "Name *",
+  "labelAddress": "Address",
+  "labelPhone": "Phone",
+  "btnSave": "Save",
+  "errName": "Name is required",
+  "ownerOnly": "Owner access only.",
+  "toastSaved": "Branch saved"
+}

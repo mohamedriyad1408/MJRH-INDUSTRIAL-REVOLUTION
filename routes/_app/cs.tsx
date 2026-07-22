@@ -11,7 +11,7 @@ import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/cs")({
-  head: () => ({ meta: [{ title: "لوحة خدمة العملاء" }] }),
+  head: () => ({ meta: [{ title: "CS - MJRH" }] }),
   component: CsDashboard,
 });
 
@@ -105,7 +105,7 @@ function CsDashboard() {
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {o.customers?.full_name ?? "—"}
-                        {lastAssign?.employees?.full_name && ` • مُكلَّف: ${lastAssign.employees.full_name}`}
+                        {lastAssign?.employees?.full_name && ` • ${t("cs.assignedTo")}: ${lastAssign.employees.full_name}`}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-sm font-mono tabular-nums">

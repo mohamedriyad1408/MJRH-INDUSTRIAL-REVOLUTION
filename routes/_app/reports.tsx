@@ -12,24 +12,24 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/reports")({
-  head: () => ({ meta: [{ title: "التقارير والذكاء التشغيلي - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Reports - MJRH" }] }),
   component: ReportsPage,
 });
 
 const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 const STAGE_AR: Record<string, string> = {
-  received: "استلام",
-  cleaning: "تنظيف",
-  cleaning_done: "تنظيف منتهي",
-  ironing: "كي",
-  ironing_done: "كي منتهي",
-  packing: "تغليف",
-  packing_done: "تغليف منتهي",
-  ready: "جاهز",
-  out_for_delivery: "خارج للتوصيل",
-  delivered: "تم التسليم",
-  qc_passed: "QC ناجح",
-  qc_failed: "QC فشل",
+  received: t("stage.received", "استلام"),
+  cleaning: t("stage.cleaning", "تنظيف"),
+  cleaning_done: t("stage.cleaningDone", "تنظيف منتهي"),
+  ironing: t("stage.ironing", "كي"),
+  ironing_done: t("stage.ironingDone", "كي منتهي"),
+  packing: t("stage.packing", "تغليف"),
+  packing_done: t("stage.packingDone", "تغليف منتهي"),
+  ready: t("stage.ready", "جاهز"),
+  out_for_delivery: t("status.order.out_for_delivery", "خارج للتوصيل"),
+  delivered: t("status.order.delivered", "تم التسليم"),
+  qc_passed: t("common.qcPassed", "QC ناجح"),
+  qc_failed: t("common.qcFailed", "QC فشل"),
 };
 
 type Insight = { title: string; body: string; tone: "good" | "warn" | "bad" | "info"; action: string };
@@ -195,11 +195,11 @@ function ReportsPage() {
       body: `${Math.abs(revenueDelta).toFixed(1)}% ${revenueDelta >= 0 ? "زيادة" : "انخفاض"} مقارنة بالشهر السابق.`,
       action: revenueDelta >= 0 ? "كرر مصدر النمو: راجع أكثر الخدمات والموظفين إنتاجية." : "راجع أسباب الانخفاض: عدد الطلبات، متوسط الفاتورة، والعملاء غير النشطين.",
     });
-    if (Number(bottleneck[1]) > Math.max(8, units.length * 0.35)) insights.push({ tone: "warn", title: "عنق زجاجة ظاهر", body: `${bottleneck[1]} قطعة متكدسة في مرحلة ${STAGE_AR[bottleneck[0]] ?? bottleneck[0]}.`, action: "انقل موظف مؤقتًا لهذه المحطة أو افتح وردية قصيرة لتفريغ التكدس." });
-    if (qcRate > 8 || recleanCount > 0) insights.push({ tone: "bad", title: "تسريب جودة", body: `${qcFailed} فشل QC و ${recleanCount} مرتجع تنظيف.`, action: "افتح محطة QC يوميًا قبل التغليف وراجع الفني/الخدمة المتكررة في الفشل." });
-    if (unpaidValue > totalRevenue * 0.25) insights.push({ tone: "warn", title: "تحصيل مؤجل عالي", body: `الآجل الحالي ${fmtMoney(unpaidValue)} من إجمالي ${fmtMoney(totalRevenue)}.`, action: "فعّل رسالة واتساب آلية قبل التسليم وامنع خروج الطلب غير المدفوع إلا بإذن." });
-    if (lowStock.length) insights.push({ tone: "warn", title: "مخزون معرض للنفاد", body: `${lowStock.length} صنف وصل أو تعدّى حد إعادة الطلب.`, action: "راجع صفحة المخزون واطلب الكيماويات/الأكياس قبل ضغط التشغيل." });
-    if (!insights.length) insights.push({ tone: "good", title: "التشغيل مستقر", body: "لا توجد مؤشرات خطر واضحة في الفترة المختارة.", action: "استمر في متابعة الجودة والمخزون يوميًا." });
+    if (Number(bottleneck[1]) > Math.max(8, units.length * 0.35)) insights.push({ tone: "warn", title: t("reports.insight.bottleneck", "عنق زجاجة ظاهر"), body: `${bottleneck[1]} قطعة متكدسة في مرحلة ${STAGE_AR[bottleneck[0]] ?? bottleneck[0]}.`, action: "انقل موظف مؤقتًا لهذه المحطة أو افتح وردية قصيرة لتفريغ التكدس." });
+    if (qcRate > 8 || recleanCount > 0) insights.push({ tone: "bad", title: t("reports.insight.quality", "تسريب جودة"), body: `${qcFailed} فشل QC و ${recleanCount} مرتجع تنظيف.`, action: "افتح محطة QC يوميًا قبل التغليف وراجع الفني/الخدمة المتكررة في الفشل." });
+    if (unpaidValue > totalRevenue * 0.25) insights.push({ tone: "warn", title: t("reports.insight.receivables", "تحصيل مؤجل عالي"), body: `الآجل الحالي ${fmtMoney(unpaidValue)} من إجمالي ${fmtMoney(totalRevenue)}.`, action: "فعّل رسالة واتساب آلية قبل التسليم وامنع خروج الطلب غير المدفوع إلا بإذن." });
+    if (lowStock.length) insights.push({ tone: "warn", title: t("reports.insight.stock", "مخزون معرض للنفاد"), body: `${lowStock.length} صنف وصل أو تعدّى حد إعادة الطلب.`, action: "راجع صفحة المخزون واطلب الكيماويات/الأكياس قبل ضغط التشغيل." });
+    if (!insights.length) insights.push({ tone: "good", title: t("reports.insight.stable", "التشغيل مستقر"), body: "لا توجد مؤشرات خطر واضحة في الفترة المختارة.", action: "استمر في متابعة الجودة والمخزون يوميًا." });
 
     setData({
       totalRevenue, prevRevenue, revenueDelta, totalExpenses, paidExpenses, payableExpenses, payrollAccrual, accruedExpenses, netProfit: totalRevenue - totalExpenses, accruedNetProfit: totalRevenue - accruedExpenses,
@@ -244,7 +244,7 @@ function ReportsPage() {
   }
 
   const years = useMemo(() => [2024, 2025, 2026, 2027], []);
-  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">التقارير متاحة للمالك ومدير التشغيل ومدير خدمة العملاء فقط</CardContent></Card>;
+  if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("reports.noAccess")}</CardContent></Card>;
 
   return (
     <div className="space-y-6" dir={dir}>
@@ -311,7 +311,7 @@ function ReportsPage() {
             </Card>
 
             <Card>
-              <CardHeader><CardTitle className="text-sm flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-red-500" />الجودة والتسريبات</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-sm flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-red-500" />{t("reports.qualityLeaks")}</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <Leak label="فشل QC" value={data.qcFailed} danger={data.qcFailed > 0} />
                 <Leak label="مرتجع تنظيف" value={data.recleanCount} danger={data.recleanCount > 0} />
@@ -323,15 +323,15 @@ function ReportsPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            <Panel title="أداء المحطات" icon={<Clock className="w-4 h-4 text-blue-500" />}>
+            <Panel title={t("reports.stationsPerformance")} icon={<Clock className="w-4 h-4 text-blue-500" />}>
               {data.stations.map((s: any) => <Row key={s.station} left={STAGE_AR[s.station] ?? s.station} mid={`${s.count} مهمة`} right={s.avgHours ? `${s.avgHours.toFixed(1)}س` : "—"} />)}
               {!data.stations.length && <Empty />}
             </Panel>
-            <Panel title="أكثر الموظفين إنتاجية" icon={<Award className="w-4 h-4 text-amber-500" />}>
+            <Panel title={t("reports.topEmployees")} icon={<Award className="w-4 h-4 text-amber-500" />}>
               {data.topEmployees.map((e: any, i: number) => <Row key={i} left={`${i + 1}. ${e.name}`} mid={`${e.count} مهمة`} right={`${e.completed} منتهي`} />)}
               {!data.topEmployees.length && <Empty />}
             </Panel>
-            <Panel title="أكثر الخدمات ربحًا" icon={<TrendingUp className="w-4 h-4 text-teal-500" />}>
+            <Panel title={t("reports.topServices")} icon={<TrendingUp className="w-4 h-4 text-teal-500" />}>
               {data.topServices.map((s: any) => <Row key={s.name} left={s.name} mid={`${s.qty} قطعة`} right={fmtMoney(s.revenue)} />)}
               {!data.topServices.length && <Empty />}
             </Panel>
@@ -401,7 +401,7 @@ function Kpi({ label, value, sub, tone }: { label: string; value: any; sub?: str
 
 function InsightCard({ item }: { item: Insight }) {
   const cls = item.tone === "good" ? "border-emerald-200 bg-emerald-50" : item.tone === "bad" ? "border-red-200 bg-red-50" : item.tone === "warn" ? "border-amber-200 bg-amber-50" : "border-blue-200 bg-blue-50";
-  return <div className={`rounded-2xl border p-4 ${cls}`}><div className="flex items-center gap-2 font-black"><AlertTriangle className="w-4 h-4" />{item.title}</div><p className="text-sm mt-2 text-slate-700">{item.body}</p><div className="mt-3 text-xs font-bold text-slate-900">الإجراء المقترح: {item.action}</div></div>;
+  return <div className={`rounded-2xl border p-4 ${cls}`}><div className="flex items-center gap-2 font-black"><AlertTriangle className="w-4 h-4" />{item.title}</div><p className="text-sm mt-2 text-slate-700">{item.body}</p><div className="mt-3 text-xs font-bold text-slate-900">{t("reports.suggestedAction")} {item.action}</div></div>;
 }
 
 function Leak({ label, value, danger }: { label: string; value: number; danger: boolean }) {

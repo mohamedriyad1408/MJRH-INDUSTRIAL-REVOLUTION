@@ -24,4 +24,11 @@
   "stationsPerformance": "أداء المحطات",
   "topEmployees": "أكثر الموظفين إنتاجية",
   "topServices": "أكثر الخدمات ربحًا"
+  ,"insight": {
+    "bottleneck": "عنق زجاجة ظاهر",
+    "quality": "تسريب جودة",
+    "receivables": "تحصيل مؤجل عالي",
+    "stock": "مخزون معرض للنفاد",
+    "stable": "التشغيل مستقر"
+  }
 }

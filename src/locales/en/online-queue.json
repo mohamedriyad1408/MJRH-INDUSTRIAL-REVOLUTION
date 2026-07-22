@@ -1,0 +1,9 @@
+{
+  "title": "Online Orders - Queue",
+  "subtitle": "Orders received from the app waiting arrival at branch",
+  "empty": "No orders in queue",
+  "receiveBtn": "Receive Order",
+  "errorFetch": "Failed to fetch queue",
+  "successReceive": "Order received successfully",
+  "errorReceive": "Reception failed"
+}

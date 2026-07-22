@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/driver")({
-  head: () => ({ meta: [{ title: "لوحة السائق" }] }),
+  head: () => ({ meta: [{ title: "Driver - MJRH" }] }),
   component: DriverPage,
 });
 
@@ -95,8 +95,8 @@ function DriverPage() {
   useEffect(() => { load(); }, [load]);
 
   async function updateMyLocation() {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
-    if (!navigator.geolocation) return toast.error("المتصفح لا يدعم GPS");
+    if (!empId) return toast.error(t("driver.errNoEmp"));
+    if (!navigator.geolocation) return toast.error(t("driver.errGps", "المتصفح لا يدعم GPS"));
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setMyLoc(loc);
@@ -108,8 +108,8 @@ function DriverPage() {
       await supabase.from("driver_location_log").insert({
         employee_id: empId, lat: loc.lat, lng: loc.lng, accuracy: pos.coords.accuracy,
       });
-      toast.success("تم تحديث موقعك");
-    }, () => toast.error("تعذر تحديد الموقع"), { enableHighAccuracy: true, timeout: 15000 });
+      toast.success(t("driver.toastLocOk"));
+    }, () => toast.error(t("driver.toastGpsErr", "تعذر تحديد الموقع")), { enableHighAccuracy: true, timeout: 15000 });
   }
 
   useEffect(() => {
@@ -121,7 +121,7 @@ function DriverPage() {
 
   /* ─── PICKUP: assign self ─── */
   async function assignSelf(p: Pickup) {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف — تواصل مع المدير");
+    if (!empId) return toast.error(t("driver.errNoEmp"));
     setActing(p.id);
     const { error } = await supabase
       .from("pickup_requests")
@@ -129,7 +129,7 @@ function DriverPage() {
       .eq("id", p.id);
     setActing(null);
     if (error) return toast.error(error.message);
-    toast.success("تم الإسناد لك");
+    toast.success(t("driver.toastPickupStart"));
     load();
   }
 
@@ -149,7 +149,7 @@ function DriverPage() {
       await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString() }).eq("id", p.id);
       await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: `تم استلام الطلب من العميل بواسطة المندوب` });
       setActing(null);
-      toast.success(`✅ تم استلام طلب #${ord.order_number} من العميل`);
+      toast.success(interpolate(t("driver.toastPickupDone"), { order: ord.order_number }));
       load();
       return;
     }
@@ -168,16 +168,16 @@ function DriverPage() {
     await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
     await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
     setActing(null);
-    toast.success(`✅ تم الاستلام! طلب #${ord.order_number} أُنشئ تلقائياً`);
+    toast.success(interpolate(t("driver.toastPickupDone"), { order: ord.order_number }));
     load();
   }
 
   /* ─── DELIVERY: start out_for_delivery ─── */
   async function startDelivery(d: Delivery) {
-    if (!empId) return toast.error("لم يتم ربط حسابك بموظف");
+    if (!empId) return toast.error(t("driver.errNoEmp"));
     const issue = deliveryIssues[d.id];
     if (issue && (issue.label || issue.reclean || issue.notQc)) {
-      return toast.error(`لا يمكن الخروج للتسليم: مارك ${issue.label} / مرتجع ${issue.reclean} / غير معتمد QC ${issue.notQc}`);
+      return toast.error(interpolate(t("driver.errIssue"), { label: issue.label, reclean: issue.reclean, notQc: issue.notQc }));
     }
     setActing(d.id);
     const { error } = await supabase
@@ -194,7 +194,7 @@ function DriverPage() {
     }
     setActing(null);
     if (error) return toast.error(error.message);
-    toast.success("تم التحديث — خرجت للتسليم");
+    toast.success(t("driver.toastDeliveryStart"));
     load();
   }
 
@@ -202,18 +202,18 @@ function DriverPage() {
   async function confirmDelivery(d: Delivery) {
     const code = confirmCode[d.id] ?? "";
     const phone = d.customers?.phone ?? "";
-    if (!phone) return toast.error("لا يوجد رقم هاتف للعميل");
+    if (!phone) return toast.error(t("driver.errNoPhone", "لا يوجد رقم هاتف للعميل"));
     // validate: last 4 digits of phone
     const last4 = phone.replace(/\D/g, "").slice(-4);
     if (code.trim() !== last4) {
-      return toast.error(`كود التأكيد خطأ — آخر 4 أرقام من هاتف العميل (${last4})`);
+      return toast.error(interpolate(t("driver.errCode"), { code: last4 }));
     }
     let collected: number | null = null;
     if (d.payment_status !== "paid") {
-      const val = prompt(`المطلوب من العميل ${Number(d.total ?? 0).toLocaleString("en-US")} جنيه. اكتب المبلغ المحصل من العميل`);
+      const val = prompt(interpolate(t("driver.amountPrompt"), { amount: Number(d.total ?? 0) }));
       if (val === null) return;
       collected = Number(val || 0);
-      if (!collected || collected < Number(d.total ?? 0)) return toast.error("المبلغ المحصل أقل من المطلوب");
+      if (!collected || collected < Number(d.total ?? 0)) return toast.error(t("driver.errAmount"));
     }
     setActing(d.id);
     const { data: res, error } = await supabase.rpc("confirm_delivery_with_collection", { _order_id: d.id, _collected_amount: collected, _driver_employee_id: empId });
@@ -228,7 +228,7 @@ function DriverPage() {
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? "تأكيد تسليم مع تحصيل" : "تأكيد تسليم", _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
     const extra = Number(res?.overpayment ?? 0);
-    toast.success(extra > 0 ? `🎉 تم التسليم وتسجيل ${extra} جنيه بقشيش للمندوب` : "🎉 تم التسليم بنجاح!");
+    toast.success(extra > 0 ? interpolate(t("driver.toastTip"), { amount: extra }) : t("driver.toastDeliveryDone"));
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });
     load();
   }
@@ -236,7 +236,7 @@ function DriverPage() {
   if (!allowed)
     return (
       <Card className="p-8 text-center text-muted-foreground">
-        هذه الصفحة للسائقين فقط.
+        {t("driver.noRole")}
       </Card>
     );
 
@@ -265,7 +265,7 @@ function DriverPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" size="sm" onClick={updateMyLocation}>GPS</Button>
+          <Button variant="secondary" size="sm" onClick={updateMyLocation}>{t("driver.btnUpdateLoc")}</Button>
           <Button variant="outline" size="sm" onClick={load}>{t("common.refresh")}</Button>
         </div>
       </div>

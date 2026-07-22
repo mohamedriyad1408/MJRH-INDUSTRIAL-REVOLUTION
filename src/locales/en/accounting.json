@@ -28,7 +28,11 @@
     "step3": "3) When paying, press Payout Salaries to deduct from cash safe."
   },
   "cash": {
+    "mainSafe": "Main Safe",
+    "internalTransfer": "Internal Transfer",
     "openingBalance": "Opening Balance",
+    "manualDeposit": "Manual Deposit",
+    "manualWithdraw": "Manual Withdraw",
     "manualTx": "Manual Transaction",
     "manualTxDesc": "Manual entry",
     "account": "Account",
@@ -51,7 +55,33 @@
   },
   "ledger": {
     "title": "Employee Financial Ledger",
-    "empty": "No staff entries found"
+    "empty": "No staff entries found",
+    "entry": {
+      "salary_accrual": "Salary Accrual",
+      "commission_accrual": "Commission Accrual",
+      "advance": "Advance",
+      "advance_deduction": "Advance Deduction",
+      "salary_payment": "Salary Payment",
+      "adjustment": "Adjustment"
+    }
+  },
+  "account": {
+    "type": {
+      "cash": "Cash",
+      "bank": "Bank",
+      "wallet": "Wallet"
+    }
+  },
+  "expense": {
+    "cat": {
+      "salaries": "Salaries",
+      "rent": "Rent",
+      "water": "Water",
+      "electricity": "Electricity",
+      "supplies": "Supplies",
+      "maintenance": "Maintenance",
+      "other": "Other"
+    }
   },
   "payroll": {
     "salary": "Base Salary",

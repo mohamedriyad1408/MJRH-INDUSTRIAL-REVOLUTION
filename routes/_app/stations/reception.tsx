@@ -13,7 +13,7 @@ import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/reception")({
-  head: () => ({ meta: [{ title: "الاستقبال" }] }),
+  head: () => ({ meta: [{ title: "Reception - MJRH" }] }),
   component: ReceptionPage,
 });
 
@@ -68,7 +68,7 @@ function ReceptionPage() {
     const { data: openPickup } = await supabase.from("pickup_requests").select("id,status").eq("converted_order_id", id).in("status", ["pending", "assigned"]).maybeSingle();
     if (openPickup) {
       setActing(null);
-      toast.error("لا يمكن تحويل الطلب للتشغيل قبل أن يستلمه المندوب من العميل");
+      toast.error(t("stations.reception.errNoPickup"));
       return;
     }
 
@@ -78,7 +78,7 @@ function ReceptionPage() {
       .eq("order_id", id)
       .neq("status", "cancelled");
     if (unitsErr) { setActing(null); toast.error(unitsErr.message); return; }
-    if (!units?.length) { setActing(null); toast.error("لا يمكن تشغيل طلب بلا قطع"); return; }
+    if (!units?.length) { setActing(null); toast.error(t("stations.reception.errNoPieces")); return; }
 
     const hasCleaning = units.some((u: any) => ["cleaning", "both"].includes(u.service_type));
     const hasIroning = units.some((u: any) => ["ironing", "both", "cleaning"].includes(u.service_type));
@@ -92,20 +92,20 @@ function ReceptionPage() {
     if (!error) {
       await supabase.from("order_status_history").insert({
         order_id: id, from_status: "received", to_status: nextStatus,
-        changed_by: user?.id, notes: "محطة الاستلام",
+        changed_by: user?.id, notes: t("stations.reception.logNotes"),
       });
       if (nextStatus === "ironing") {
         try {
           const r = await autoAssignIroningPieces(id);
-          toast.success(r.assigned ? `تم تحويل الطلب للكي وتوزيع ${r.assigned} قطعة` : (r.message || "تم تحويل الطلب للكي ولا يوجد فني حاضر للتوزيع"));
+          toast.success(r.assigned ? interpolate(t("stations.reception.toastIroning"), { count: r.assigned }) : (r.message || t("stations.reception.toastIroningNoTech")));
         } catch (e: any) {
-          toast.success("تم تحويل الطلب للكي");
-          toast.error(e?.message ?? "تعذر توزيع الكي تلقائيًا");
+          toast.success(t("stations.reception.toastIroningOnly"));
+          toast.error(e?.message ?? t("stations.ironing.errDistribute"));
         }
       } else if (nextStatus === "cleaning") {
-        toast.success("تم تحويل الطلب للتنظيف");
+        toast.success(t("stations.reception.toastCleaning"));
       } else {
-        toast.success("تم تحويل الطلب للمرحلة التالية");
+        toast.success(t("stations.reception.toastNext"));
       }
     } else {
       toast.error(error.message);
@@ -234,7 +234,7 @@ function OrderCard({
           </div>
           <div className="text-sm text-muted-foreground">{o.customers?.full_name ?? "—"}</div>
           <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
-          {o.notes && <div className="mt-1 rounded-lg bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">ملاحظات الطلب: {o.notes}</div>}
+          {o.notes && <div className="mt-1 rounded-lg bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">{t("stations.reception.orderNotes")} {o.notes}</div>}
         </div>
         {canMove && (
           <div className="flex gap-1 shrink-0">

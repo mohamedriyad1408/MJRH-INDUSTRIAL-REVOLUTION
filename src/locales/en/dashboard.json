@@ -1,0 +1,33 @@
+{
+  "title": "Owner Dashboard",
+  "subtitle": "Overview of activity performance and daily operations.",
+  "recentEvents": "Recent Events",
+  "noEvents": "No recorded events",
+  "pickups": "Pickups",
+  "netProfit": "Net Profit",
+  "revToday": "Revenue Today",
+  "cashToday": "Cash Today",
+  "revMonth": "Revenue Month",
+  "team": "Team",
+  "stationDistribution": "Station Distribution",
+  "attentionNeeded": "Attention Needed",
+  "noIssues": "Everything looks good",
+  "liveMap": "Live Map",
+  "station": {
+    "received": "Received",
+    "cleaning": "Cleaning",
+    "ironing": "Ironing",
+    "packing": "Packing",
+    "ready": "Ready",
+    "delivery": "Delivery"
+  },
+  "attention": {
+    "late": "Late Orders",
+    "reclean": "Reclean Returns",
+    "qc": "QC Issues",
+    "noPieces": "Orders without pieces",
+    "noDriver": "Ready without driver",
+    "unpaid": "Unpaid ready orders",
+    "pendingPickups": "Pickups needing driver"
+  }
+}

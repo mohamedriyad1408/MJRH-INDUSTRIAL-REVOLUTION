@@ -11,7 +11,7 @@ import { validateOrderMove } from "@/lib/station-workflow";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/packing")({
-  head: () => ({ meta: [{ title: "محطة التغليف" }] }),
+  head: () => ({ meta: [{ title: "Packing - MJRH" }] }),
   component: PackingStation,
 });
 
@@ -90,30 +90,30 @@ function PackingStation() {
     const { error } = await supabase.from("orders").update({ status: "packing" }).eq("id", g.orderId);
     if (!error) await record(g, "packing_started", "بدء التغليف");
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم بدء التغليف"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastStarted")); load(); }
   }
 
   async function packAll(g: Group) {
     const c = checks(g);
-    if (!c.okToPack) return toast.error("لا يمكن التغليف قبل حل المرتجعات/المارك/التجميع/الكي");
+    if (!c.okToPack) return toast.error(t("stations.packing.errNotReady"));
     setBusy(g.orderId);
     const ids = g.units.filter((u) => !["qc_passed", "ready"].includes(u.current_stage)).map((u) => u.id);
-    const { error } = await supabase.from("service_units").update({ current_stage: "packing_done", staff_notes: "تمت مراجعة التغليف" }).in("id", ids);
+    const { error } = await supabase.from("service_units").update({ current_stage: "packing_done", staff_notes: t("stations.packing.staffNote") }).in("id", ids);
     if (!error) await record(g, "packing_completed", "إنهاء تغليف الطلب", { packed_units: ids.length });
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم تغليف كل القطع وإرسالها للجودة"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastPacked")); load(); }
   }
 
   async function markReady(g: Group) {
     const c = checks(g);
-    if (!c.okToReady) return toast.error("لا يمكن جعل الطلب جاهز قبل تغليف كل القطع وحل المشاكل");
+    if (!c.okToReady) return toast.error(t("stations.packing.errNotFitReady"));
     const v = await validateOrderMove(g.orderId, "ready");
-    if (!v.ok) return toast.error(v.message || "راجع محطة الجودة أولًا");
+    if (!v.ok) return toast.error(v.message || t("stations.packing.errQcFirst"));
     setBusy(g.orderId);
     const { error } = await supabase.from("orders").update({ status: "ready" }).eq("id", g.orderId);
     if (!error) await record(g, "order_ready_after_packing", "اعتماد الطلب جاهز بعد التغليف والجودة");
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("الطلب أصبح جاهزًا للتسليم"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastReady")); load(); }
   }
 
   const stats = useMemo(() => ({

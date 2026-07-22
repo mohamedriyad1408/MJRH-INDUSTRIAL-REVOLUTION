@@ -1,0 +1,17 @@
+{
+  "subtitle": "Manage workstations, team, and monitor operational bottlenecks.",
+  "tomorrowOrders": "Tomorrow's Orders",
+  "notStarted": "Not Started",
+  "cashRevenue": "Cash Revenue",
+  "instapayRevenue": "InstaPay Revenue",
+  "attentionNeeded": "Operational Alerts",
+  "stable": "Operations Stable",
+  "activeTeam": "Active Team",
+  "manage": "Manage",
+  "noStaff": "No active staff",
+  "staffRequests": "Staff Requests",
+  "viewAll": "View All",
+  "pendingRequestsDetail": "Leave or advance requests pending review",
+  "roleDistribution": "Workstation Distribution",
+  "roleDistributionDetail": "Monitor load on each station and distribute staff as needed."
+}

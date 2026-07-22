@@ -129,5 +129,34 @@
   "errorNoBranch": "اختار الفرع قبل إنشاء الطلب",
   "toastOrderCreated": "تم إنشاء الطلب وترقيم القطع",
   "errorNumbering": "تم إنشاء الطلب لكن تعذر ترقيم القطع: {error}",
-  "noAccess": "صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط."
+  "noAccess": "صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.",
+  "finalInvoiceMsg": "فاتورتك النهائية من MJRH لطلب #{order_number}: {total} ج. رابط التتبع: {url}",
+  "allOrders": "كل الطلبات",
+  "newOrder": "طلب جديد",
+  "allStatuses": "كل الحالات",
+  "searchPlaceholder": "رقم طلب / اسم / تليفون...",
+  "badge": {
+    "openPickup": "استلام مفتوح",
+    "noPieces": "بلا قطع",
+    "reclean": "مرتجع",
+    "qc": "جودة",
+    "paymentReview": "إيصال مراجعة"
+  },
+  "filter": {
+    "all": "الكل",
+    "openPickup": "استلامات مفتوحة",
+    "noPieces": "بلا قطع",
+    "reclean": "مرتجع",
+    "qc": "جودة",
+    "invoiceReview": "فواتير تحتاج اعتماد",
+    "paymentReview": "إيصالات تحتاج مراجعة",
+    "readyUnpaid": "جاهز غير مدفوع"
+  },
+  "qc": {
+    "success": "تم تحديث فحص الجودة بنجاح",
+    "error": "فشل فحص الجودة",
+    "notesPlaceholder": "ملاحظات اختيارية عن حالة الملابس بعد التشغيل...",
+    "pass": "اجتياز (Passed)",
+    "fail": "فشل (Failed)"
+  }
 }

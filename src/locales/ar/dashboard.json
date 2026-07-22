@@ -1,0 +1,33 @@
+{
+  "title": "لوحة المالك",
+  "subtitle": "نظرة عامة على أداء النشاط والعمليات اليومية.",
+  "recentEvents": "الأحداث الأخيرة",
+  "noEvents": "لا توجد أحداث مسجلة",
+  "pickups": "طلبات الاستلام",
+  "netProfit": "صافي الربح",
+  "revToday": "إيراد اليوم",
+  "cashToday": "نقدي اليوم",
+  "revMonth": "إيراد الشهر",
+  "team": "فريق العمل",
+  "stationDistribution": "توزيع الحالات",
+  "attentionNeeded": "تنبيهات عاجلة",
+  "noIssues": "كل شيء يبدو جيداً",
+  "liveMap": "خريطة المراقبة",
+  "station": {
+    "received": "استقبال",
+    "cleaning": "تنظيف",
+    "ironing": "كي",
+    "packing": "تغليف",
+    "ready": "جاهز",
+    "delivery": "توصيل"
+  },
+  "attention": {
+    "late": "طلبات متأخرة",
+    "reclean": "مرتجعات غسيل",
+    "qc": "مشاكل جودة",
+    "noPieces": "طلبات بلا قطع",
+    "noDriver": "جاهز بلا مندوب",
+    "unpaid": "طلبات جاهزة غير مدفوعة",
+    "pendingPickups": "استلامات تحتاج مندوب"
+  }
+}

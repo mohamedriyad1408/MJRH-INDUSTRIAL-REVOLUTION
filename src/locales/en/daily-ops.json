@@ -1,0 +1,85 @@
+{
+  "title": "Daily Operations",
+  "subtitle": "Daily workflow, monitoring, and closing tasks.",
+  "score": "Daily Readiness",
+  "scoreEnd": "Closing Score",
+  "sec": {
+    "start": "Start the Day",
+    "monitor": "Monitor & Follow-up",
+    "end": "End the Day"
+  },
+  "kpi": {
+    "cashIn": "Cash In",
+    "finance": "Financial Issues",
+    "safes": "Safe Closing"
+  },
+  "status": {
+    "done": "Done",
+    "todo": "Todo"
+  },
+  "btn": {
+    "open": "Open Page",
+    "run": "Run/Repair",
+    "done": "Mark Done",
+    "undone": "Undo"
+  },
+  "step": {
+    "ready": {
+      "title": "System Readiness",
+      "ok": "Basics complete",
+      "fail": "Configuration missing"
+    },
+    "finance": {
+      "title": "Financial Health",
+      "ok": "No financial errors"
+    },
+    "alerts": {
+      "title": "Smart Alerts",
+      "detail": "Generate recommendations based on yesterday"
+    },
+    "map": {
+      "title": "Driver Assignment",
+      "ok": "All orders assigned"
+    },
+    "startReport": {
+      "title": "Start Report",
+      "detail": "Save morning activity snapshot"
+    },
+    "orders": {
+      "title": "Orders Flow"
+    },
+    "late": {
+      "title": "Delays",
+      "ok": "No delays"
+    },
+    "invoice": {
+      "title": "Invoice Finalization",
+      "ok": "All invoices finalized"
+    },
+    "receivables": {
+      "title": "Collections",
+      "ok": "No pending collections"
+    },
+    "stock": {
+      "title": "Inventory",
+      "ok": "Stock sufficient"
+    },
+    "cash": {
+      "title": "Safe Closing"
+    },
+    "apdo": {
+      "title": "Operational Audit",
+      "ok": "All events audited"
+    },
+    "reports": {
+      "title": "Review Reports",
+      "detail": "Analyze daily P&L"
+    },
+    "endReport": {
+      "title": "End Report",
+      "detail": "Save daily performance summary"
+    }
+  },
+  "toastReportSaved": "Report saved to notifications", "toastAlerts": "Generated {count} smart alerts", "toastFinanceRepair": "Financial repair: {fixed} items fixed, {remaining} remaining",
+  "ownerOnly": "Daily operations are for Owner, Ops Manager, and CS Manager only."
+}

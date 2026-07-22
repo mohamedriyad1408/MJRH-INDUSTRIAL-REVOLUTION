@@ -84,8 +84,8 @@ function StaffListPage() {
     <div className="space-y-6" dir={dir}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{t("nav./staff")}</h1>
-          <p className="text-sm text-muted-foreground">{t("staff.subtitle")}</p>
+          <h1 className="text-2xl font-bold">{t("staff.list.pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("staff.list.subtitle")}</p>
         </div>
         {isOwner && (
           <Button asChild>
@@ -97,7 +97,7 @@ function StaffListPage() {
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t("staff.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
+          <Input placeholder={t("staff.list.searchPlaceholder", "بحث...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pe-9" />
         </div>
         <Select value={branchId} onValueChange={setBranchId}>
           <SelectTrigger className="w-44"><SelectValue placeholder={t("common.branch")} /></SelectTrigger>
@@ -120,8 +120,8 @@ function StaffListPage() {
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">{t("staff.active")}</SelectItem>
-            <SelectItem value="inactive">{t("staff.inactive")}</SelectItem>
+            <SelectItem value="active">{t("staff.list.active")}</SelectItem>
+            <SelectItem value="inactive">{t("staff.list.inactive")}</SelectItem>
             <SelectItem value="all">{t("notif.filter.all")}</SelectItem>
           </SelectContent>
         </Select>
@@ -136,12 +136,12 @@ function StaffListPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="text-start p-3">{t("login.fullName")}</th>
-                  <th className="text-start p-3">{t("common.branch")}</th>
-                  <th className="text-start p-3">{t("common.role")}</th>
-                  <th className="text-start p-3">{t("common.role")}</th>
+                  <th className="text-start p-3">{t("staff.list.colBranch")}</th>
+                  <th className="text-start p-3">{t("staff.list.colRole")}</th>
+                  <th className="text-start p-3">{t("staff.list.colRole")}</th>
                   <th className="text-start p-3">{t("stage.received")}</th>
                   <th className="text-start p-3">{t("staff.hireDate")}</th>
-                  <th className="text-start p-3">{t("common.status")}</th>
+                  <th className="text-start p-3">{t("staff.list.colStatus")}</th>
                   <th className="p-3 w-20"></th>
                 </tr>
               </thead>
@@ -157,7 +157,7 @@ function StaffListPage() {
                     <td className="p-3">{e.role ? <Badge variant="secondary">{t("role." + e.role)}</Badge> : <span className="text-muted-foreground text-xs">—</span>}</td>
                     <td className="p-3 text-muted-foreground text-xs">{e.station ? t("stage." + e.station) : "—"}</td>
                     <td className="p-3 text-xs">{fmtDate(e.hire_date)}</td>
-                    <td className="p-3">{e.is_active ? <Badge className="bg-emerald-600">{t("staff.active")}</Badge> : <Badge variant="outline">{t("staff.inactive")}</Badge>}</td>
+                    <td className="p-3">{e.is_active ? <Badge className="bg-emerald-600">{t("staff.list.active")}</Badge> : <Badge variant="outline">{t("staff.list.inactive")}</Badge>}</td>
                     <td className="p-3">
                       <Button asChild size="sm" variant="ghost">
                         <Link to="/staff/$id" params={{ id: e.id }}><UserCog className="w-4 h-4" /></Link>

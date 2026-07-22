@@ -25,4 +25,20 @@
   "count": "Count",
   "status": "Status",
   "export": "Export CSV"
+  ,"title": "Reports & Operational Intelligence",
+  "noAccess": "Reports available to Owner, Ops Manager, and CS Manager only",
+  "systemTalk": "What the system says?",
+  "suggestedAction": "Suggested Action:",
+  "stuckByStage": "Bottleneck Map by Item Stage",
+  "noPieces": "No pieces found in the selected period",
+  "qualityLeaks": "Quality & Leaks",
+  "stationsPerformance": "Station Performance",
+  "topEmployees": "Most Productive Employees",
+  "insight": {
+    "bottleneck": "Obvious Bottleneck",
+    "quality": "Quality Leak",
+    "receivables": "High Receivables",
+    "stock": "Low Stock Risk",
+    "stable": "Stable Operations"
+  }
 }

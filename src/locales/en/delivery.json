@@ -1,0 +1,8 @@
+{
+  "title": "Delivery",
+  "subtitle": "Orders ready for delivery to customers",
+  "empty": "No orders ready for delivery",
+  "deliverBtn": "✅ Deliver",
+  "errorFetch": "Failed to fetch ready orders",
+  "successDeliver": "Order delivered successfully"
+}

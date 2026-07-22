@@ -62,4 +62,11 @@
   "personalNotes": "تسجيل حضور شخصي بالهاتف / المتصفح",
   "adminNotes": "تسجيل إداري عبر Mawared HR",
   "quickInNotes": "تسجيل حضور سريع بواسطة الإدارة"
+  ,"pageTitle": "الحضور والانصراف",
+  "checkinNow": "تسجيل حضوري الآن",
+  "checkoutNow": "تسجيل انصرافي الآن",
+  "workDate": "تاريخ العمل",
+  "checkinTime": "وقت الحضور",
+  "checkoutTime": "وقت الانصراف",
+  "records": "سجلات الحضور"
 }

@@ -21,4 +21,14 @@
   "toastCheckedOut": "Check-out successful",
   "selectStation": "Select Station",
   "errorSelectStation": "Please select a station first"
+  ,"welcome": "Welcome",
+  "checkinNow": "Check-In Now",
+  "checkoutNow": "Check-Out Now",
+  "workDate": "Work Date",
+  "checkinTime": "Check-In Time",
+  "checkoutTime": "Check-Out Time",
+  "records": "Attendance Records",
+  "searchPlaceholder": "Search by employee, branch or role...",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }

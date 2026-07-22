@@ -10,7 +10,7 @@ import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/ops")({
-  head: () => ({ meta: [{ title: "لوحة التشغيل" }] }),
+  head: () => ({ meta: [{ title: "Operations - MJRH" }] }),
   component: OpsDashboard,
 });
 

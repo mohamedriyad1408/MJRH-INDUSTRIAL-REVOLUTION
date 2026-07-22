@@ -18,13 +18,13 @@ import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/orders/$id")({
-  head: () => ({ meta: [{ title: "تفاصيل الطلب - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Order Detail - MJRH" }] }),
   component: OrderDetailPage,
 });
 
-const GARMENT_TYPES = ["قميص", "بلوزة", "بنطلون", "جاكيت", "بدلة", "عباية", "فستان", "تيشيرت", "جيبة", "معطف", "أخرى"];
+const GARMENT_TYPES = ["shirt", "blouse", "pants", "jacket", "suit", "abaya", "dress", "tshirt", "skirt", "coat", "other"];
 const COMPLEXITY: Record<string, number> = {
-  "تيشيرت": 1, "قميص": 2, "بلوزة": 2, "بنطلون": 2, "جيبة": 2, "عباية": 3, "جاكيت": 3, "معطف": 4, "بدلة": 5, "فستان": 8, "أخرى": 1,
+  "tshirt": 1, "shirt": 2, "blouse": 2, "pants": 2, "skirt": 2, "abaya": 3, "jacket": 3, "coat": 4, "suit": 5, "dress": 8, "other": 1,
 };
 
 function isShirtLikeName(name: string) { return /قميص|بلوز|shirt|blouse/i.test(name); }
@@ -157,9 +157,9 @@ function OrderDetailPage() {
 
   async function deleteInvoiceRow(idx: number) {
     const row = invoiceItems[idx];
-    const reason = prompt(t("order.cancelReasonPrompt", "سبب إلغاء هذا البند من الفاتورة؟"));
+    const reason = prompt(t("orders.deleteInvoiceItemReason"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error(t("order.errReasonRequired", "لا يمكن إلغاء بند بدون سبب واضح"));
+    if (reason.trim().length < 3) return toast.error(t("orders.errorReasonRequired"));
     const amount = Number(row.qty) * Number(row.unit_price);
     if (row.id) {
       await supabase.from("order_cancellations").insert({ order_id: id, order_item_id: row.id, cancel_type: "invoice_item", reason: reason.trim(), amount_delta: amount, cancelled_by: user?.id, tenant_id: order?.tenant_id });
@@ -208,9 +208,9 @@ function OrderDetailPage() {
     const { error } = await supabase.from("orders").update({ invoice_finalized_at: new Date().toISOString(), customer_notified_at: new Date().toISOString(), total: totals.total, subtotal: totals.subtotal }).eq("id", id);
     if (error) return toast.error(error.message);
     const phone = (order.customers?.phone ?? "").replace(/\D/g, "");
-    const msg = `فاتورتك النهائية من Dry Tech لطلب #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
+    const msg = `${t("orders.finalInvoiceMsg", "فاتورتك النهائية من Dry Tech لطلب")} #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
     if (phone.length >= 11) window.open(`https://wa.me/2${phone.startsWith("0") ? phone.slice(1) : phone}?text=${encodeURIComponent(msg)}`, "_blank");
-    await supabase.rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: "اعتماد فاتورة", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: t("orders.toastInvoiceFinalized"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
     toast.success(t("order.invoiceFinalized", "تم تأكيد الفاتورة وتجهيز إشعار العميل"));
     load();
   }
@@ -239,7 +239,7 @@ function OrderDetailPage() {
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: "إضافة قطعة للطلب", _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     toast.success(t("order.unitAdded", "تمت إضافة القطعة"));
-    setForm({ garment_type: "قميص", color: "", notes: "" });
+    setForm({ garment_type: "shirt", color: "", notes: "" });
     load();
   }
 
@@ -266,7 +266,7 @@ function OrderDetailPage() {
       reclean_reported_by: user?.id,
       reclean_reported_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: "تسجيل مرتجع تنظيف", _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("order.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
+    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: t("orders.toastRecleanReported"), _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("order.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
   }
 
   async function resolveReclean(unit: ServiceUnit) {
@@ -330,7 +330,7 @@ function OrderDetailPage() {
     if (typeRaw === null) return;
     const tVal = typeRaw.trim();
     const returnType = /كي/.test(tVal) ? "reiron" : /تصليح|repair/.test(tVal) ? "repair" : /اخرى|أخرى|other/.test(tVal) ? "other" : "reclean";
-    const reason = prompt(t("order.returnReasonPrompt", "سبب المرتجع من العميل؟"));
+    const reason = prompt(t("orders.returnReasonPrompt"));
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error(t("order.errReasonRequired"));
     const { error } = await supabase.rpc("register_customer_return", {
@@ -368,8 +368,8 @@ function OrderDetailPage() {
     if (reason === null) return;
     const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
     if (!error) {
-      await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `إغلاق بتجاوز التحقق: ${reason}` });
-      await supabase.rpc("record_operation_event", { _process_key: "order_delivered_override", _process_name: "تسليم طلب بتجاوز", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/delivery", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason }, _output: { cash_impact: order.payment_status !== "paid", journal_required: order.payment_status !== "paid", appears_in_report: true } }).then(() => null);
+      await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `${t("orders.overrideClose")}: ${reason}` });
+      await supabase.rpc("record_operation_event", { _process_key: "order_delivered_override", _process_name: t("orders.overrideClose"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/delivery", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason }, _output: { cash_impact: order.payment_status !== "paid", journal_required: order.payment_status !== "paid", appears_in_report: true } }).then(() => null);
       toast.success(t("order.overrideCloseDone", "تم إغلاق الطلب بتجاوز التحقق"));
       load();
     } else toast.error(error.message);
@@ -380,7 +380,7 @@ function OrderDetailPage() {
       @page{size:50mm 30mm;margin:2mm} body{font-family:Arial,sans-serif;margin:0;color:#111}.label{width:46mm;height:26mm;border:1px dashed #999;margin:1mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;text-align:center}.code{font-size:18px;font-weight:900}.name{font-size:13px;font-weight:700}.meta{font-size:10px;color:#444}
     </style></head><body>${units.map((u) => `<div class="label"><div class="code">${u.label_code}</div><div class="name">${u.name}</div><div class="meta">طلب #${order.order_number} — ${order.customers?.full_name ?? ""}</div></div>`).join("")}</body></html>`;
     const w = window.open("", "_blank", "width=420,height=600");
-    if (!w) return toast.error(t("order.errPrintBlocked", "المتصفح منع فتح نافذة الطباعة"));
+    if (!w) return toast.error(t("orders.errorPrintBlocked"));
     w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
   }
 
@@ -528,8 +528,7 @@ function OrderDetailPage() {
                   <Select value={form.garment_type} onValueChange={(v) => setForm((f) => ({ ...f, garment_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{GARMENT_TYPES.map((item) => {
-                      const key = item === "قميص" ? "shirt" : item === "بلوزة" ? "blouse" : item === "بنطلون" ? "pants" : item === "جاكيت" ? "jacket" : item === "بدلة" ? "suit" : item === "عباية" ? "abaya" : item === "فستان" ? "dress" : item === "تيشيرت" ? "tshirt" : item === "جيبة" ? "skirt" : item === "معطف" ? "coat" : "other";
-                      return <SelectItem key={item} value={item}>{t(`garment.${key}`, item)}</SelectItem>;
+                      return <SelectItem key={item} value={item}>{t(`garment.${item}`, item)}</SelectItem>;
                     })}</SelectContent>
                   </Select>
                 </div>

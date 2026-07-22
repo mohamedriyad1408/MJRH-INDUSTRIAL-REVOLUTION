@@ -1,0 +1,17 @@
+{
+  "subtitle": "إدارة محطات العمل، الفريق، ومتابعة المختنقات التشغيلية.",
+  "tomorrowOrders": "طلبات غداً",
+  "notStarted": "لم يبدأ بعد",
+  "cashRevenue": "إيراد نقدي",
+  "instapayRevenue": "إيراد InstaPay",
+  "attentionNeeded": "ملاحظات تشغيلية",
+  "stable": "التشغيل مستقر",
+  "activeTeam": "الفريق النشط",
+  "manage": "إدارة",
+  "noStaff": "لا يوجد موظفون نشطون",
+  "staffRequests": "طلبات الموظفين",
+  "viewAll": "عرض الكل",
+  "pendingRequestsDetail": "طلبات إجازة أو سلف بانتظار الرد",
+  "roleDistribution": "توزيع محطات العمل",
+  "roleDistributionDetail": "راقب الضغط على كل محطة ووزع الموظفين حسب الحاجة."
+}

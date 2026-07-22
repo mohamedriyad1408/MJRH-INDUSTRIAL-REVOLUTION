@@ -61,7 +61,7 @@ function NewStaffPage() {
 
   async function submit() {
     if (!form.full_name.trim() || !form.job_title.trim()) {
-      toast.error("الاسم والوظيفة مطلوبان");
+      toast.error(t("staff.errNameJob"));
       return;
     }
     setSaving(true);
@@ -81,7 +81,7 @@ function NewStaffPage() {
     const { data, error } = await supabase.from("employees").insert(payload).select("id").single();
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("تم إضافة الموظف");
+    toast.success(t("staff.toastAdded"));
     nav({ to: "/staff/$id", params: { id: data!.id } });
   }
 
@@ -93,7 +93,7 @@ function NewStaffPage() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{t("staff.basicInfo")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.basicInfo", "المعلومات الأساسية")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
           <Field label={t("login.fullName")}><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
           <Field label={t("common.branch")}>
@@ -114,7 +114,7 @@ function NewStaffPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{t("staff.roleAndStation")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.roleAndStation", "الدور والمحطة")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
           <Field label={t("common.role")}>
             <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
@@ -145,7 +145,7 @@ function NewStaffPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">{t("staff.salaryAndCommission")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t("staff.salaryAndCommission", "الراتب والعمولة")}</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
           <Field label={t("staff.monthlySalary")}><Input type="number" value={form.monthly_salary} onChange={(e) => setForm({ ...form, monthly_salary: e.target.value })} /></Field>
           <Field label={t("staff.commission")}><Input type="number" value={form.commission_percent} onChange={(e) => setForm({ ...form, commission_percent: e.target.value })} /></Field>
@@ -161,12 +161,12 @@ function NewStaffPage() {
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild><Link to="/staff">{t("common.cancel")}</Link></Button>
         <Button onClick={submit} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("staff.saveStaff")}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("staff.saveStaff", "حفظ الموظف")}
         </Button>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        ملاحظة: لتفعيل دخول الموظف للنظام، يجب أن يسجل حساباً بنفس الإيميل من صفحة الدخول، ثم يمكنك ربط الدور به من ملفه الشخصي.
+        {t("staff.linkNote")}
       </p>
     </div>
   );

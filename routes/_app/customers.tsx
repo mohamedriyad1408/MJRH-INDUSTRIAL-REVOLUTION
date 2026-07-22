@@ -15,7 +15,7 @@ import { Loader2, Plus, Users, MapPin, Search } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/customers")({
-  head: () => ({ meta: [{ title: "العملاء" }] }),
+  head: () => ({ meta: [{ title: "Customers - MJRH" }] }),
   component: CustomersPage,
 });
 

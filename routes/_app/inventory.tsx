@@ -16,7 +16,7 @@ import { Boxes, Plus, AlertTriangle, Wrench, Loader2, TrendingDown, TrendingUp }
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/inventory")({
-  head: () => ({ meta: [{ title: "المخزون والمعدات" }] }),
+  head: () => ({ meta: [{ title: "Inventory - MJRH" }] }),
   component: InventoryPage,
 });
 
@@ -30,7 +30,7 @@ function InventoryPage() {
   const [assets, setAssets] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [branchId, setBranchId] = useState("all");
-  const [itemForm, setItemForm] = useState({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: "" });
+  const [itemForm, setItemForm] = useState({ name: "", category: "consumable", unit: t("inventory.unit", "وحدة"), initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: "" });
   const [moveForm, setMoveForm] = useState({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" });
   const [assetForm, setAssetForm] = useState({ name: "", asset_type: "machine", status: "working", next_maintenance_at: "", purchase_cost: "0", notes: "", branch_id: "" });
 
@@ -79,11 +79,11 @@ function InventoryPage() {
       const qty = Number(itemForm.initial_qty || 0);
       const cost = Number(itemForm.avg_unit_cost || 0);
       if (qty > 0) {
-        await supabase.from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: "رصيد بداية/شراء أول", created_by: user?.id });
+        await supabase.from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: t("inventory.movePurchase", "رصيد بداية/شراء أول"), created_by: user?.id });
       }
       await supabase.rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: "إضافة صنف مخزون", _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
       toast.success(t("inventory.toastAdded", "تم إضافة الصنف وربطه بالفرع والتقارير"));
-      setItemForm({ name: "", category: "consumable", unit: "وحدة", initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: selectedBranchId });
+      setItemForm({ name: "", category: "consumable", unit: t("inventory.unit", "وحدة"), initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: selectedBranchId });
       load();
     }
   }

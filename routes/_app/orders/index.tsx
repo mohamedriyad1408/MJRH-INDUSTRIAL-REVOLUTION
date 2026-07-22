@@ -12,7 +12,7 @@ import { Loader2, Plus, Search, Eye, Zap, AlertTriangle, PackageOpen, ShieldChec
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/orders/")({
-  head: () => ({ meta: [{ title: "كل الطلبات" }] }),
+  head: () => ({ meta: [{ title: "All Orders - MJRH" }] }),
   component: OrdersPage,
 });
 
@@ -121,14 +121,14 @@ function OrdersPage() {
 
       <div className="flex flex-wrap gap-2">
         {[
-          ["all", t("orders.filter.all", "الكل"), AlertTriangle],
-          ["open_pickup", t("orders.filter.openPickup", "استلامات مفتوحة"), PackageOpen],
-          ["no_pieces", t("orders.filter.noPieces", "بلا قطع"), PackageOpen],
-          ["reclean", t("orders.filter.reclean", "مرتجعات"), RotateCcw],
-          ["qc", t("orders.filter.qc", "مشاكل جودة"), ShieldCheck],
-          ["invoice_review", t("orders.filter.invoiceReview", "فواتير تحتاج اعتماد"), CreditCard],
-          ["payment_review", t("orders.filter.paymentReview", "إيصالات تحتاج مراجعة"), CreditCard],
-          ["ready_unpaid", t("orders.filter.readyUnpaid", "جاهز غير مدفوع"), CreditCard],
+          ["all", t("orders.filter.all"), AlertTriangle],
+          ["open_pickup", t("orders.filter.openPickup"), PackageOpen],
+          ["no_pieces", t("orders.filter.noPieces"), PackageOpen],
+          ["reclean", t("orders.filter.reclean"), RotateCcw],
+          ["qc", t("orders.filter.qc"), ShieldCheck],
+          ["invoice_review", t("orders.filter.invoiceReview"), CreditCard],
+          ["payment_review", t("orders.filter.paymentReview"), CreditCard],
+          ["ready_unpaid", t("orders.filter.readyUnpaid"), CreditCard],
         ].map(([k, label, Icon]: any) => <Button key={k} size="sm" variant={quick === k ? "default" : "outline"} onClick={() => setQuick(k)}><Icon className="w-3 h-3 ms-1" />{label}</Button>)}
       </div>
 
@@ -160,12 +160,12 @@ function OrdersPage() {
                       <div className="font-medium">{r.customers?.full_name ?? "—"}</div>
                       <div className="text-xs text-muted-foreground">{r.customers?.phone ?? ""}</div>{r.branches?.name && <div className="text-xs text-teal-600">{r.branches.name}</div>}
                     </td>
-                    <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{orderStatusLabel(r.status, t)}</Badge>{r.open_pickup && <Badge className="bg-blue-600">{t("orders.badge.openPickup", "استلام مفتوح")}</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">{t("orders.badge.noPieces", "بلا قطع")}</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">{t("orders.badge.reclean", "مرتجع")}</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">{t("orders.badge.qc", "جودة")}</Badge>}</div></td>
+                    <td className="p-3"><div className="flex flex-wrap gap-1"><Badge variant="secondary">{orderStatusLabel(r.status, t)}</Badge>{r.open_pickup && <Badge className="bg-blue-600">{t("orders.badge.openPickup")}</Badge>}{(r.pieces_count ?? 0) === 0 && <Badge variant="destructive">{t("orders.badge.noPieces")}</Badge>}{(r.reclean_count ?? 0) > 0 && <Badge className="bg-amber-500">{t("orders.badge.reclean")}</Badge>}{(r.qc_failed_count ?? 0) > 0 && <Badge variant="destructive">{t("orders.badge.qc")}</Badge>}</div></td>
                     <td className="p-3">
                       <Badge variant={r.payment_status === "paid" ? "default" : "outline"}>
                         {paymentStatusLabel(r.payment_status, t)}
                       </Badge>
-                      {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">{t("orders.badge.paymentReview", "إيصال مراجعة")}</Badge>}
+                      {["pending_review", "underpaid"].includes(r.payment_verification_status ?? "") && <Badge variant="destructive" className="me-1">{t("orders.badge.paymentReview")}</Badge>}
                     </td>
                     <td className="p-3 font-medium">{fmtMoney(r.total, curr)}</td>
                     <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.created_at, loc)}</td>

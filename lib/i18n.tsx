@@ -15,8 +15,20 @@ import arReports from "../src/locales/ar/reports.json";
 import enReports from "../src/locales/en/reports.json";
 import arOrders from "../src/locales/ar/orders.json";
 import enOrders from "../src/locales/en/orders.json";
+import arStaff from "../src/locales/ar/staff.json";
+import enStaff from "../src/locales/en/staff.json";
 import arCustomer from "../src/locales/ar/customer.json";
 import enCustomer from "../src/locales/en/customer.json";
+import arCustomers from "../src/locales/ar/customers.json";
+import enCustomers from "../src/locales/en/customers.json";
+import arServices from "../src/locales/ar/services.json";
+import enServices from "../src/locales/en/services.json";
+import arBranches from "../src/locales/ar/branches.json";
+import enBranches from "../src/locales/en/branches.json";
+import arInventory from "../src/locales/ar/inventory.json";
+import enInventory from "../src/locales/en/inventory.json";
+import arOps from "../src/locales/ar/ops.json";
+import enOps from "../src/locales/en/ops.json";
 import arSearch from "../src/locales/ar/search.json";
 import enSearch from "../src/locales/en/search.json";
 import arAttendance from "../src/locales/ar/attendance.json";
@@ -31,6 +43,8 @@ import arSettings from "../src/locales/ar/settings.json";
 import enSettings from "../src/locales/en/settings.json";
 import arFinance from "../src/locales/ar/finance.json";
 import enFinance from "../src/locales/en/finance.json";
+import arLedger from "../src/locales/ar/ledger.json";
+import enLedger from "../src/locales/en/ledger.json";
 import arDriver from "../src/locales/ar/driver.json";
 import enDriver from "../src/locales/en/driver.json";
 import arMap from "../src/locales/ar/map.json";
@@ -47,8 +61,20 @@ import arTrack from "../src/locales/ar/track.json";
 import enTrack from "../src/locales/en/track.json";
 import arLanding from "../src/locales/ar/landing.json";
 import enLanding from "../src/locales/en/landing.json";
+import arDailyOps from "../src/locales/ar/daily-ops.json";
+import enDailyOps from "../src/locales/en/daily-ops.json";
+import arDashboard from "../src/locales/ar/dashboard.json";
+import enDashboard from "../src/locales/en/dashboard.json";
 import arOperations from "../src/locales/ar/operations.json";
 import enOperations from "../src/locales/en/operations.json";
+import arErrors from "../src/locales/ar/errors.json";
+import enErrors from "../src/locales/en/errors.json";
+import arStations from "../src/locales/ar/stations.json";
+import enStations from "../src/locales/en/stations.json";
+import arOnlineQueue from "../src/locales/ar/online-queue.json";
+import enOnlineQueue from "../src/locales/en/online-queue.json";
+import arDelivery from "../src/locales/ar/delivery.json";
+import enDelivery from "../src/locales/en/delivery.json";
 
 export type LanguageCode = "ar" | "en" | "fr" | "it" | "es" | "de" | "zh" | "ja" | "pt";
 
@@ -90,7 +116,13 @@ const domains: any = {
   today: { ar: arToday, en: enToday },
   reports: { ar: arReports, en: enReports },
   orders: { ar: arOrders, en: enOrders },
+  staff: { ar: arStaff, en: enStaff },
   customer: { ar: arCustomer, en: enCustomer },
+  customers: { ar: arCustomers, en: enCustomers },
+  services: { ar: arServices, en: enServices },
+  branches: { ar: arBranches, en: enBranches },
+  inventory: { ar: arInventory, en: enInventory },
+  ops: { ar: arOps, en: enOps },
   search: { ar: arSearch, en: enSearch },
   attendance: { ar: arAttendance, en: enAttendance },
   scorecard: { ar: arScorecard, en: enScorecard },
@@ -98,6 +130,7 @@ const domains: any = {
   issues: { ar: arIssues, en: enIssues },
   settings: { ar: arSettings, en: enSettings },
   finance: { ar: arFinance, en: enFinance },
+  ledger: { ar: arLedger, en: enLedger },
   driver: { ar: arDriver, en: enDriver },
   map: { ar: arMap, en: enMap },
   roles: { ar: arRoles, en: enRoles },
@@ -106,7 +139,13 @@ const domains: any = {
   "workflow-fields": { ar: arWFFields, en: enWFFields },
   track: { ar: arTrack, en: enTrack },
   landing: { ar: arLanding, en: enLanding },
+  dailyOps: { ar: arDailyOps, en: enDailyOps },
+  dashboard: { ar: arDashboard, en: enDashboard },
   operations: { ar: arOperations, en: enOperations },
+  errors: { ar: arErrors, en: enErrors },
+  stations: { ar: arStations, en: enStations },
+  "online-queue": { ar: arOnlineQueue, en: enOnlineQueue },
+  delivery: { ar: arDelivery, en: enDelivery },
 };
 
 Object.keys(domains).forEach((domain) => {

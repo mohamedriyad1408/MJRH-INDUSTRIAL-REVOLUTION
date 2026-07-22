@@ -13,7 +13,7 @@ import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/qc")({
-  head: () => ({ meta: [{ title: "محطة الجودة QC" }] }),
+  head: () => ({ meta: [{ title: "QC - MJRH" }] }),
   component: QcStation,
 });
 
@@ -76,12 +76,12 @@ function QcStation() {
     let ok = 0;
     for (const u of c.safe) {
       if (u.current_stage === "qc_passed") continue;
-      const r = await supabase.rpc("pass_qc_unit", { _unit_id: u.id, _notes: "اعتماد جماعي من محطة الجودة" });
+      const r = await supabase.rpc("pass_qc_unit", { _unit_id: u.id, _notes: t("stations.qc.approveSafe") });
       if (!r.error) ok++;
     }
-    await supabase.rpc("record_operation_event", { _process_key: "qc_bulk_passed", _process_name: "اعتماد جماعي لقطع سليمة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, passed: ok }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "qc_bulk_passed", _process_name: t("stations.qc.logBulk"), _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, passed: ok }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     setBusy(null);
-    toast.success(`تم اعتماد ${ok} قطعة سليمة`);
+    toast.success(interpolate(t("stations.qc.toastBulk"), { count: ok }));
     load();
   }
 
@@ -92,15 +92,15 @@ function QcStation() {
     if (!v.ok) return toast.error(v.message);
     setBusy(g.orderId);
     const { error } = await supabase.from("orders").update({ status: "ready" }).eq("id", g.orderId);
-    if (!error) await supabase.rpc("record_operation_event", { _process_key: "qc_order_ready", _process_name: "اعتماد الطلب جاهز من الجودة", _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, pieces: g.units.length }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    if (!error) await supabase.rpc("record_operation_event", { _process_key: "qc_order_ready", _process_name: t("stations.qc.logReady"), _source_type: "order", _source_id: g.orderId, _branch_id: g.order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: false, _data: { order_number: g.order?.order_number, pieces: g.units.length }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("تم اعتماد الطلب جاهز للتسليم"); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("stations.qc.toastReady")); load(); }
   }
 
   async function qc(unit: Unit, res: "passed" | "reclean" | "repair" | "lost" | "damaged") {
     const note = (notes[unit.id] ?? "").trim();
-    if (res === "passed" && unit.label_status && unit.label_status !== "labeled") return toast.error("لا يمكن اعتماد قطعة بها مشكلة مارك/ليبل. افتح التجفيف والتجميع أولًا.");
-    if (res !== "passed" && note.length < 3) return toast.error("اكتب سبب واضح قبل رفض القطعة");
+    if (res === "passed" && unit.label_status && unit.label_status !== "labeled") return toast.error(t("stations.qc.errLabelIssue"));
+    if (res !== "passed" && note.length < 3) return toast.error(t("stations.qc.errReason"));
 
     let error: any = null;
     if (res === "passed") {
@@ -116,7 +116,7 @@ function QcStation() {
 
     if (error) toast.error(error.message);
     else {
-      toast.success(res === "passed" ? "تم اعتماد القطعة" : res === "reclean" ? "تم رجوع القطعة للغسيل" : "تم تسجيل مشكلة الجودة وإشعار الإدارة");
+      toast.success(res === "passed" ? t("stations.qc.toastPieceOk") : res === "reclean" ? t("stations.qc.toastToCleaning") : t("stations.qc.toastIssueLogged"));
       setNotes((m) => ({ ...m, [unit.id]: "" }));
       load();
     }
