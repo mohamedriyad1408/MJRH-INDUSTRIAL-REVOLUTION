@@ -187,6 +187,13 @@ function AttendanceMawaredPage() {
   const attendedEmpIds = useMemo(() => new Set(records.map((r: any) => r.employee_id)), [records]);
   const absentEmployees = useMemo(() => employees.filter((e: any) => !attendedEmpIds.has(e.id)), [employees, attendedEmpIds]);
 
+  const totalHoursFormatted = useMemo(() => {
+    const totalMinutes = records.reduce((acc: number, r: any) => acc + calculateDuration(r.check_in_at, r.check_out_at).totalMinutes, 0);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    return `${hours}h ${mins}m`;
+  }, [records]);
+
   const filteredRecords = useMemo(() => {
     let list = records;
     if (activeTab === "present") list = presentRecords;
@@ -246,6 +253,16 @@ function AttendanceMawaredPage() {
       toast.success(t("attendance.toastDeleteSuccess"));
       loadData();
     }
+  }
+
+  function openEditRecord(r: AttendanceRecord) {
+    setEditingId(r.id);
+    setSelectedEmpId(r.employee_id);
+    setModalDate(r.work_date);
+    setCheckInTime(new Date(r.check_in_at).toTimeString().slice(0, 5));
+    setCheckOutTime(r.check_out_at ? new Date(r.check_out_at).toTimeString().slice(0, 5) : "");
+    setNotes(r.notes || "");
+    setOpenModal(true);
   }
 
   async function quickCheckIn(empId: string) {

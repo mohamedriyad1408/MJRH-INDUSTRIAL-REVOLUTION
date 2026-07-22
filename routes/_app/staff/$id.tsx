@@ -273,7 +273,7 @@ function StaffDetailPage() {
                       <td className="p-3 text-xs">{fmtDate(l.start_date)}</td>
                       <td className="p-3 text-xs">{fmtDate(l.end_date)}</td>
                       <td className="p-3 text-muted-foreground">{l.reason || "—"}</td>
-                      <td className="p-3"><LeaveStatusBadge s={l.status} /></td>
+                      <td className="p-3"><LeaveStatusBadge s={l.status} t={t} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -297,7 +297,7 @@ function StaffDetailPage() {
                       <td className="p-3 text-xs">{fmtDate(a.created_at)}</td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(a.amount)}</td>
                       <td className="p-3 text-muted-foreground">{a.reason || "—"}</td>
-                      <td className="p-3"><AdvStatusBadge s={a.status} /></td>
+                      <td className="p-3"><AdvStatusBadge s={a.status} t={t} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -316,12 +316,12 @@ function Fld({ label, children }: { label: string; children: React.ReactNode }) 
 function leaveTypeAr(t: string, fn: any) {
   return { annual: fn("leave.annual", "سنوية"), sick: fn("leave.sick", "مرضية"), unpaid: fn("leave.unpaid", "بدون أجر"), emergency: fn("leave.emergency", "طارئة") }[t] ?? t;
 }
-function LeaveStatusBadge({ s }: { s: string }) {
+function LeaveStatusBadge({ s, t }: { s: string; t: any }) {
   if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
   if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
   return <Badge variant="destructive">{t("finance.rejected")}</Badge>;
 }
-function AdvStatusBadge({ s }: { s: string }) {
+function AdvStatusBadge({ s, t }: { s: string; t: any }) {
   if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
   if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
   return <Badge variant="destructive">{t("finance.rejected")}</Badge>;

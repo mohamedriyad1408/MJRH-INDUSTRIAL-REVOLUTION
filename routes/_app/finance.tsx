@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, TrendingUp, TrendingDown, Wallet, Check, X, Trash2, RefreshCw, Users } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/finance")({
   head: () => ({ meta: [{ title: "Finance - MJRH" }] }),
@@ -31,7 +31,19 @@ const EXPENSE_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
-type Expense = { id: string; category: string; amount: number; description: string | null; spent_at: string; created_at: string; status?: string; source_type?: string | null; employee_id?: string | null };
+type Expense = { 
+  id: string; 
+  category: string; 
+  amount: number; 
+  description: string | null; 
+  spent_at: string; 
+  created_at: string; 
+  status?: string; 
+  source_type?: string | null; 
+  employee_id?: string | null;
+  branches?: { name: string } | null;
+  cash_accounts?: { name: string } | null;
+};
 type AdvanceRequest = { id: string; employee_id: string | null; employee_name: string; amount: number; reason: string | null; status: "pending"|"approved"|"rejected"; created_at: string; decided_at: string | null };
 type Employee = { id: string; full_name: string; monthly_salary?: number; commission_percent?: number };
 
@@ -158,7 +170,7 @@ function FinancePage() {
       <Tabs defaultValue="expenses" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <TabsList><TabsTrigger value="expenses">{t("finance.expensesTab")}</TabsTrigger><TabsTrigger value="advances">{t("finance.advancesTab")}</TabsTrigger><TabsTrigger value="revenue">{t("finance.revenueTab")}</TabsTrigger></TabsList>
-          {isOwner && <div className="flex gap-2"><NewExpenseDialog onCreated={load} userId={user?.id} tenantId={tenantId} branches={branches} cashAccounts={cashAccounts} defaultBranchId={branchId === "all" ? "" : branchId} /></div>}
+          {isOwner && <div className="flex gap-2"><NewExpenseDialog onCreated={load} userId={user?.id} tenantId={tenantId ?? undefined} branches={branches} cashAccounts={cashAccounts} defaultBranchId={branchId === "all" ? "" : branchId} /></div>}
         </div>
 
         <TabsContent value="expenses">
