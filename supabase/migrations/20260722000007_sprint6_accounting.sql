@@ -140,3 +140,23 @@ EXECUTE FUNCTION public.auto_create_invoice();
 CREATE INDEX IF NOT EXISTS idx_accounts_tenant_id ON public.accounts(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_journal_entries_tenant_id ON public.journal_entries(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ledger_entries_journal_entry_id ON public.ledger_entries(journal_entry_id);
+
+-- 7. إدخال الحسابات الأساسية (لـ Tenant الافتراضي)
+INSERT INTO public.accounts (tenant_id, code, name, type)
+SELECT 
+    t.id,
+    v.code,
+    v.name,
+    v.type
+FROM tenants t
+CROSS JOIN (
+    VALUES 
+        ('1000', 'النقدية', 'ASSET'),
+        ('1100', 'البنك/الذمم', 'ASSET'),
+        ('2000', 'الموردين', 'LIABILITY'),
+        ('3000', 'رأس المال', 'EQUITY'),
+        ('4000', 'إيرادات المبيعات', 'REVENUE'),
+        ('5000', 'تكلفة البضائع', 'EXPENSE')
+) AS v(code, name, type)
+WHERE t.slug = 'dry-tech'
+ON CONFLICT (tenant_id, code) DO NOTHING;
