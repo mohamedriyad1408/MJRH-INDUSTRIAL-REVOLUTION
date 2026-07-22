@@ -31,6 +31,7 @@ CREATE POLICY user_roles_owner_manage ON public.user_roles
   );
 
 -- 4) Lock down SECURITY DEFINER helpers: revoke EXECUTE from anon/authenticated
+-- Note: SET search_path = public
 -- These are only meant to be called from RLS policies / triggers (server-side), not from clients.
 REVOKE EXECUTE ON FUNCTION public.has_role(uuid, app_role) FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.has_tenant_role(uuid, uuid, app_role) FROM PUBLIC, anon, authenticated;

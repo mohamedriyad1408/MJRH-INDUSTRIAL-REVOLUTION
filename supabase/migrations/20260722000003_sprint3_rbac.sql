@@ -41,7 +41,11 @@ END $$;
 
 -- 5. إنشاء دالة للتحقق من الصلاحية
 CREATE OR REPLACE FUNCTION public.has_permission(user_id UUID, required_permission TEXT)
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN 
+LANGUAGE plpgsql 
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
     user_role TEXT;
     user_permissions JSONB;
