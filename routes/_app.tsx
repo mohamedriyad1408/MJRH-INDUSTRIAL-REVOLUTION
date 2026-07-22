@@ -88,11 +88,11 @@ function AppLayout() {
           <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center">
             <Hourglass className="w-7 h-7 text-muted-foreground" />
           </div>
-          <h1 className="text-xl font-bold">{t("waiting.title")}</h1>
+          <h1 className="text-xl font-bold">{t("common.waiting.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            {t("waiting.body")}
+            {t("common.waiting.body")}
           </p>
-          <Button variant="outline" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut")}</Button>
+          <Button variant="outline" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("common.app.signOut")}</Button>
         </Card>
       </div>
     );
@@ -106,11 +106,11 @@ function AppLayout() {
           <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center border border-red-200">
             <LogOut className="w-7 h-7 text-red-600" />
           </div>
-          <h1 className="text-xl font-extrabold text-red-900">{t("tenant.suspended.title")}</h1>
+          <h1 className="text-xl font-extrabold text-red-900">{t("common.tenant.suspended.title")}</h1>
           <p className="text-sm text-red-800 font-medium">
-            {t("tenant.suspended.body")}
+            {t("common.tenant.suspended.body")}
           </p>
-          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("app.signOut")}</Button>
+          <Button variant="destructive" className="w-full font-bold" onClick={() => signOut()}><LogOut className="w-4 h-4 ms-1" /> {t("common.app.signOut")}</Button>
         </Card>
       </div>
     );
@@ -123,7 +123,7 @@ function AppLayout() {
         <div className="app-shell flex-1 flex flex-col min-w-0">
           <header className="app-topbar flex items-center px-4 md:px-6 gap-3 sticky top-0 z-30">
             <SidebarTrigger />
-            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-white p-0.5 shadow-sm shrink-0 border border-slate-200 overflow-hidden">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-xl object-cover" /> : <img src="/mjrh-logo.png" alt="MJRH" className="h-full w-full rounded-xl object-contain" />}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("app.tagline")}</div></div></div>
+            <div className="flex items-center gap-2 min-w-0 flex-1"><div className="brand-orb h-11 w-11 rounded-2xl bg-white p-0.5 shadow-sm shrink-0 border border-slate-200 overflow-hidden">{tenantBrand?.logo_url ? <img src={tenantBrand.logo_url} className="h-full w-full rounded-xl object-cover" /> : <img src="/mjrh-logo.png" alt="MJRH" className="h-full w-full rounded-xl object-contain" />}</div><div className="min-w-0"><div className="font-black text-sm truncate">{tenantBrand?.name ?? "MJRH"}</div><div className="text-[10px] text-muted-foreground truncate">{tenantBrand?.public_url ?? t("common.app.tagline")}</div></div></div>
             <UnifiedSearch />
             <LanguageSwitcher compact />
             <NotificationCenter />

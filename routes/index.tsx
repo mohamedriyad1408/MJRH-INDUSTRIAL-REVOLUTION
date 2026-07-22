@@ -26,12 +26,12 @@ function businessTypeLabel(t: (k: string, f?: string) => string, type: string | 
   const key = type ?? "laundry";
   return (
     {
-      laundry: t("biz.laundry", "مغسلة"),
-      retail: t("biz.retail", "تجاري"),
-      manufacturing: t("biz.manufacturing", "صناعي"),
-      services: t("biz.services", "خدمات"),
+      laundry: t("home.biz.laundry", "مغسلة"),
+      retail: t("home.biz.retail", "تجاري"),
+      manufacturing: t("home.biz.manufacturing", "صناعي"),
+      services: t("home.biz.services", "خدمات"),
     } as Record<string, string>
-  )[key] ?? t("biz.generic", "عام");
+  )[key] ?? t("home.biz.generic", "عام");
 }
 
 function HomeDirectory() {
@@ -200,8 +200,8 @@ function HomeDirectory() {
         <footer className="py-6 text-center text-xs text-slate-500 space-y-2 font-medium">
           <div>© {new Date().getFullYear()} MJRH INDUSTRIAL REVOLUTION — BY MUHAMMAD RIYAD</div>
           <div className="flex justify-center gap-4">
-            <Link to="/privacy" className="hover:underline">{t("legal.privacyTitle", "الخصوصية")}</Link>
-            <Link to="/terms" className="hover:underline">{t("legal.termsTitle", "الشروط")}</Link>
+            <Link to="/privacy" className="hover:underline">{t("common.legal.privacyTitle", "الخصوصية")}</Link>
+            <Link to="/terms" className="hover:underline">{t("common.legal.termsTitle", "الشروط")}</Link>
             <Link to="/login" className="hover:underline font-bold text-slate-700">{t("home.platformLogin", "دخول إدارة وموظفي المنصة")}</Link>
           </div>
         </footer>

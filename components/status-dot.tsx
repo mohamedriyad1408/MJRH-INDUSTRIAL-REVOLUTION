@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 export type StatusLevel = "ok" | "attention" | "urgent" | "waiting";

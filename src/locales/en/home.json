@@ -12,5 +12,5 @@
   "noProjects": "No active projects at the moment.",
   "wantProject": "Have a project and want to run it with MJRH?",
   "wantProjectSub": "Contact us to start a direct trial",
-  "requestDemo": "Request Demo"
+  "requestDemo": "Request Demo", "biz": {"laundry": "Laundry", "retail": "Retail", "manufacturing": "Manufacturing", "services": "Services", "generic": "General"}
 }

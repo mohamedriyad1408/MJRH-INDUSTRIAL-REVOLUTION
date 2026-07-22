@@ -12,5 +12,5 @@
   "noProjects": "لا توجد مشاريع نشطة حاليًا.",
   "wantProject": "عندك مشروع وعايز تشغله بنظام MJRH؟",
   "wantProjectSub": "تواصل معنا لبدء تجربة مباشرة",
-  "requestDemo": "اطلب تجربة"
+  "requestDemo": "اطلب تجربة", "biz": {"laundry": "مغسلة", "retail": "تجاري", "manufacturing": "صناعي", "services": "خدمات", "generic": "عام"}
 }

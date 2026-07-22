@@ -1,3 +1,4 @@
+import { useI18n } from "@/lib/i18n";
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
 import { Minus } from "lucide-react";

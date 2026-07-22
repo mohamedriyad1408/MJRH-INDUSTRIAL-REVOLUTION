@@ -108,7 +108,7 @@
     "body": "Your account is currently being reviewed by management. You will be notified once your permissions are activated."
   },
   "app": {
-    "signOut": "Sign Out",
+    "signOut": "Sign Out", "legal": {"privacyTitle": "Privacy Policy", "termsTitle": "Terms of Service"},
     "tagline": "Project Operating System"
   },
   "status": {
