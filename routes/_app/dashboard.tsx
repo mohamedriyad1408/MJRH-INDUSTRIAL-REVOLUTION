@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
-import { Loader2, Calendar, Zap, CheckCircle2, AlertTriangle, Activity, Wallet, TrendingUp, Users, Navigation, Truck, XCircle, History } from "lucide-react";
+import { Loader2, Calendar, Zap, CheckCircle2, AlertTriangle, Activity, Wallet, TrendingUp, Users, Navigation, Truck, XCircle, History, Clock } from "lucide-react";
 import { Link as RouterLink } from "@tanstack/react-router";
 import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";

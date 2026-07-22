@@ -75,6 +75,7 @@ import { Route as AppAdminPlatformFeesRouteImport } from './routes/_app/admin/pl
 import { Route as AppAdminBillingRouteImport } from './routes/_app/admin/billing'
 import { Route as AppAdminUsersIndexRouteImport } from './routes/_app/admin/users/index'
 import { Route as AppAdminTenantsIndexRouteImport } from './routes/_app/admin/tenants/index'
+import { Route as AppOrdersIdQcRouteImport } from './routes/_app/orders/$id/qc'
 import { Route as AppAdminTenantsIdRouteImport } from './routes/_app/admin/tenants/$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -407,6 +408,11 @@ const AppAdminTenantsIndexRoute = AppAdminTenantsIndexRouteImport.update({
   path: '/admin/tenants/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrdersIdQcRoute = AppOrdersIdQcRouteImport.update({
+  id: '/qc',
+  path: '/qc',
+  getParentRoute: () => AppOrdersIdRoute,
+} as any)
 const AppAdminTenantsIdRoute = AppAdminTenantsIdRouteImport.update({
   id: '/admin/tenants/$id',
   path: '/admin/tenants/$id',
@@ -454,7 +460,7 @@ export interface FileRoutesByFullPath {
   '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/branches/$id': typeof AppBranchesIdRoute
-  '/orders/$id': typeof AppOrdersIdRoute
+  '/orders/$id': typeof AppOrdersIdRouteWithChildren
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
   '/staff/$id': typeof AppStaffIdRoute
@@ -478,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/pickups/': typeof AppPickupsIndexRoute
   '/staff/': typeof AppStaffIndexRoute
   '/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/orders/$id/qc': typeof AppOrdersIdQcRoute
   '/admin/tenants/': typeof AppAdminTenantsIndexRoute
   '/admin/users/': typeof AppAdminUsersIndexRoute
 }
@@ -522,7 +529,7 @@ export interface FileRoutesByTo {
   '/admin/billing': typeof AppAdminBillingRoute
   '/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/branches/$id': typeof AppBranchesIdRoute
-  '/orders/$id': typeof AppOrdersIdRoute
+  '/orders/$id': typeof AppOrdersIdRouteWithChildren
   '/orders/new': typeof AppOrdersNewRoute
   '/pickups/new': typeof AppPickupsNewRoute
   '/staff/$id': typeof AppStaffIdRoute
@@ -546,6 +553,7 @@ export interface FileRoutesByTo {
   '/pickups': typeof AppPickupsIndexRoute
   '/staff': typeof AppStaffIndexRoute
   '/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/orders/$id/qc': typeof AppOrdersIdQcRoute
   '/admin/tenants': typeof AppAdminTenantsIndexRoute
   '/admin/users': typeof AppAdminUsersIndexRoute
 }
@@ -592,7 +600,7 @@ export interface FileRoutesById {
   '/_app/admin/billing': typeof AppAdminBillingRoute
   '/_app/admin/platform-fees': typeof AppAdminPlatformFeesRoute
   '/_app/branches/$id': typeof AppBranchesIdRoute
-  '/_app/orders/$id': typeof AppOrdersIdRoute
+  '/_app/orders/$id': typeof AppOrdersIdRouteWithChildren
   '/_app/orders/new': typeof AppOrdersNewRoute
   '/_app/pickups/new': typeof AppPickupsNewRoute
   '/_app/staff/$id': typeof AppStaffIdRoute
@@ -616,6 +624,7 @@ export interface FileRoutesById {
   '/_app/pickups/': typeof AppPickupsIndexRoute
   '/_app/staff/': typeof AppStaffIndexRoute
   '/_app/admin/tenants/$id': typeof AppAdminTenantsIdRoute
+  '/_app/orders/$id/qc': typeof AppOrdersIdQcRoute
   '/_app/admin/tenants/': typeof AppAdminTenantsIndexRoute
   '/_app/admin/users/': typeof AppAdminUsersIndexRoute
 }
@@ -686,6 +695,7 @@ export interface FileRouteTypes {
     | '/pickups/'
     | '/staff/'
     | '/admin/tenants/$id'
+    | '/orders/$id/qc'
     | '/admin/tenants/'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
@@ -754,6 +764,7 @@ export interface FileRouteTypes {
     | '/pickups'
     | '/staff'
     | '/admin/tenants/$id'
+    | '/orders/$id/qc'
     | '/admin/tenants'
     | '/admin/users'
   id:
@@ -823,6 +834,7 @@ export interface FileRouteTypes {
     | '/_app/pickups/'
     | '/_app/staff/'
     | '/_app/admin/tenants/$id'
+    | '/_app/orders/$id/qc'
     | '/_app/admin/tenants/'
     | '/_app/admin/users/'
   fileRoutesById: FileRoutesById
@@ -1305,6 +1317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminTenantsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/orders/$id/qc': {
+      id: '/_app/orders/$id/qc'
+      path: '/qc'
+      fullPath: '/orders/$id/qc'
+      preLoaderRoute: typeof AppOrdersIdQcRouteImport
+      parentRoute: typeof AppOrdersIdRoute
+    }
     '/_app/admin/tenants/$id': {
       id: '/_app/admin/tenants/$id'
       path: '/admin/tenants/$id'
@@ -1325,6 +1344,18 @@ const AppBranchesRouteChildren: AppBranchesRouteChildren = {
 
 const AppBranchesRouteWithChildren = AppBranchesRoute._addFileChildren(
   AppBranchesRouteChildren,
+)
+
+interface AppOrdersIdRouteChildren {
+  AppOrdersIdQcRoute: typeof AppOrdersIdQcRoute
+}
+
+const AppOrdersIdRouteChildren: AppOrdersIdRouteChildren = {
+  AppOrdersIdQcRoute: AppOrdersIdQcRoute,
+}
+
+const AppOrdersIdRouteWithChildren = AppOrdersIdRoute._addFileChildren(
+  AppOrdersIdRouteChildren,
 )
 
 interface AppRouteChildren {
@@ -1357,7 +1388,7 @@ interface AppRouteChildren {
   AppTodayRoute: typeof AppTodayRoute
   AppAdminBillingRoute: typeof AppAdminBillingRoute
   AppAdminPlatformFeesRoute: typeof AppAdminPlatformFeesRoute
-  AppOrdersIdRoute: typeof AppOrdersIdRoute
+  AppOrdersIdRoute: typeof AppOrdersIdRouteWithChildren
   AppOrdersNewRoute: typeof AppOrdersNewRoute
   AppPickupsNewRoute: typeof AppPickupsNewRoute
   AppStaffIdRoute: typeof AppStaffIdRoute
@@ -1415,7 +1446,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppTodayRoute: AppTodayRoute,
   AppAdminBillingRoute: AppAdminBillingRoute,
   AppAdminPlatformFeesRoute: AppAdminPlatformFeesRoute,
-  AppOrdersIdRoute: AppOrdersIdRoute,
+  AppOrdersIdRoute: AppOrdersIdRouteWithChildren,
   AppOrdersNewRoute: AppOrdersNewRoute,
   AppPickupsNewRoute: AppPickupsNewRoute,
   AppStaffIdRoute: AppStaffIdRoute,

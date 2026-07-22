@@ -56,6 +56,21 @@ export async function createOrder(payload: {
 
   if (itemsError) throw itemsError;
 
+  // 4. Log Event (EVT-001)
+  await logEvent({
+    event_type: "OrderCreated",
+    tenant_id: payload.tenant_id,
+    order_id: order.id,
+    payload: { 
+      order_number: order.order_number,
+      total: payload.total,
+      items_count: payload.items.length 
+    }
+  });
+
+  return order;
+}
+
 /**
  * T-007: تفعيل فحص الجودة (QC Logic)
  * سجل نتيجة فحص الجودة لطلب معين
@@ -92,11 +107,11 @@ export async function updateOrderQC(
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        qc_status: status,
+        qc_status: status as any,
         qc_notes: notes || '',
         qc_checked_at: new Date().toISOString(),
         // إذا نجح QC، نحدّث الحالة إلى READY تلقائياً
-        status: status === 'PASSED' ? 'ready' : 'cleaning' // Fallback to cleaning if failed
+        status: status === 'PASSED' ? 'ready' : 'received' // Fallback
       })
       .eq('id', orderId);
 
@@ -146,35 +161,4 @@ async function logEvent({
     payload,
     occurred_at: new Date().toISOString(),
   });
-}
-
-/**
- * T-007: Update QC Status API Logic
- * Implements CAP-003 (Quality Assurance)
- */
-export async function updateOrderQC(payload: {
-  order_id: string;
-  tenant_id: string;
-  qc_status: "Passed" | "Failed";
-  notes?: string;
-}) {
-  const { error } = await supabase
-    .from("orders")
-    .update({ qc_status: payload.qc_status })
-    .eq("id", payload.order_id);
-
-  if (error) throw error;
-
-  // Log Event (EVT-007 or EVT-008)
-  await supabase.from("event_log").insert({
-    tenant_id: payload.tenant_id,
-    order_id: payload.order_id,
-    event_type: payload.qc_status === "Passed" ? "QCPassed" : "QCFailed",
-    payload: { 
-      qc_status: payload.qc_status,
-      notes: payload.notes 
-    }
-  });
-
-  return { ok: true };
 }

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/_app/orders/$id/qc" as any)({
+export const Route = createFileRoute("/_app/orders/$id/qc")({
   component: QCPage,
 });
 

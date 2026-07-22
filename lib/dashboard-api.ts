@@ -41,7 +41,7 @@ export async function fetchDashboardStats(
       .eq('tenant_id', tenantId);
 
     const statusCounts: Record<string, number> = {};
-    ordersData?.forEach(o => {
+    (ordersData || []).forEach((o: any) => {
       statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
     });
     
@@ -66,7 +66,7 @@ export async function fetchDashboardStats(
       failed: 0,
       pending: 0,
     };
-    qcData?.forEach((row) => {
+    (qcData || []).forEach((row: any) => {
       if (row.qc_status === 'PASSED') qcStats.passed++;
       else if (row.qc_status === 'FAILED') qcStats.failed++;
       else qcStats.pending++;
