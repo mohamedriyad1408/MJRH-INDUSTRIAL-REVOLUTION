@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/staff/scorecard")({
-  head: () => ({ meta: [{ title: "التقييم المؤسسي الأوروبي 360° — Scorecard" }] }),
+  head: () => ({ meta: [{ title: t("التقييم المؤسسي الأوروبي 360° — Scorecard") }] }),
   component: EuropeanScorecardPage,
 });
 
@@ -100,10 +100,10 @@ function computeEuropeanAppraisal(
     const amt = Number(l.amount || 0);
     if (l.direction === "employee_due") {
       totalEarned += amt;
-      if (l.entry_type === "adjustment" || (l.description || "").includes("مكافأة")) totalBonuses += amt;
+      if (l.entry_type === "adjustment" || (l.description || "").includes(t("common.bonus"))) totalBonuses += amt;
     } else {
       if (l.entry_type === "advance") totalAdvances += amt;
-      else if (l.entry_type === "adjustment" || (l.description || "").includes("خصم")) totalDeductions += amt;
+      else if (l.entry_type === "adjustment" || (l.description || "").includes(t("common.deduction"))) totalDeductions += amt;
     }
   });
 
@@ -131,35 +131,35 @@ function computeEuropeanAppraisal(
   );
 
   // Map to European 9-Box Talent Grid
-  let gridCategory = "Consistent Contributor (المساهم المستقر)";
+  let gridCategory = t("Consistent Contributor (المساهم المستقر)");
   let gridBoxColor = "bg-blue-600 text-white";
-  let gridDesc = "أداء تشغيلي مستقر وموثوق يفي بالمعايير المعتمدة للمؤسسة.";
+  let gridDesc = t("أداء تشغيلي مستقر وموثوق يفي بالمعايير المعتمدة للمؤسسة.");
   let actionRecommendation = "normal";
 
   if (overallScore >= 88) {
-    gridCategory = "🌟 Star Talent (قائد مستقبلي وشريك استراتيجي)";
+    gridCategory = t("🌟 Star Talent (قائد مستقبلي وشريك استراتيجي)");
     gridBoxColor = "bg-gradient-to-r from-emerald-600 to-teal-600 text-white";
-    gridDesc = "أداء استثنائي يتجاوز جميع المعايير الأوروبية في الجودة والالتزام والمبادرة. استحقاق ترقية فورية أو حافز تميز مؤسسي.";
+    gridDesc = t("أداء استثنائي يتجاوز جميع المعايير الأوروبية في الجودة والالتزام والمبادرة. استحقاق ترقية فورية أو حافز تميز مؤسسي.");
     actionRecommendation = "bonus";
   } else if (overallScore >= 75) {
-    gridCategory = "🟢 Core Performer (خبير تشغيلي محترف)";
+    gridCategory = t("🟢 Core Performer (خبير تشغيلي محترف)");
     gridBoxColor = "bg-emerald-600 text-white";
-    gridDesc = "ركيزة أساسية في تشغيل النشاط، يظهر التزاماً عالياً بالجودة ومواعيد العمل بانتظام.";
+    gridDesc = t("ركيزة أساسية في تشغيل النشاط، يظهر التزاماً عالياً بالجودة ومواعيد العمل بانتظام.");
     actionRecommendation = "bonus";
   } else if (overallScore >= 60) {
-    gridCategory = "🔵 Consistent Contributor (أداء مستقر وموثوق)";
+    gridCategory = t("🔵 Consistent Contributor (أداء مستقر وموثوق)");
     gridBoxColor = "bg-blue-600 text-white";
-    gridDesc = "ينجز المطلوب بكفاءة جيدة، ويحتاج تعزيز في بعض مجالات المبادرة أو الالتزام.";
+    gridDesc = t("ينجز المطلوب بكفاءة جيدة، ويحتاج تعزيز في بعض مجالات المبادرة أو الالتزام.");
     actionRecommendation = "normal";
   } else if (overallScore >= 45) {
-    gridCategory = "⚠️ Underperformer (أداء متذبذب — خطة تحسين PIP)";
+    gridCategory = t("⚠️ Underperformer (أداء متذبذب — خطة تحسين PIP)");
     gridBoxColor = "bg-amber-500 text-white";
-    gridDesc = "قصور في الالتزام بالمواعيد أو معايير الجودة. يجب وضعه تحت خطة تحسين أداء إلزامية (PIP) لمدة شهر.";
+    gridDesc = t("قصور في الالتزام بالمواعيد أو معايير الجودة. يجب وضعه تحت خطة تحسين أداء إلزامية (PIP) لمدة شهر.");
     actionRecommendation = "warning";
   } else {
-    gridCategory = "🚨 Exit Candidate (إنذار أحمر / استمارة 6 إنهاء خدمة)";
+    gridCategory = t("🚨 Exit Candidate (إنذار أحمر / استمارة 6 إنهاء خدمة)");
     gridBoxColor = "bg-red-600 text-white animate-pulse";
-    gridDesc = "فشل في استيفاء الحد الأدنى من معايير العمل المؤسسي الأوروبية. يُنصح باتخاذ إجراءات إنهاء التعاقد (استمارة 6).";
+    gridDesc = t("فشل في استيفاء الحد الأدنى من معايير العمل المؤسسي الأوروبية. يُنصح باتخاذ إجراءات إنهاء التعاقد (استمارة 6).");
     actionRecommendation = "form6";
   }
 
@@ -204,8 +204,8 @@ function EuropeanScorecardPage() {
 
   // Individual Development Plan (IDP) Goals
   const [idpGoals, setIdpGoals] = useState<IdpGoal[]>([
-    { id: "1", title: "الوصول بنسبة المرتجعات التشغيلية إلى صفر% خلال الشهر", targetDate: "2026-07-31", status: "pending" },
-    { id: "2", title: "الالتزام التام بمواعيد الحضور دون أي دقائق تأخير", targetDate: "2026-07-31", status: "pending" },
+    { id: "1", title: t("الوصول بنسبة المرتجعات التشغيلية إلى صفر% خلال الشهر"), targetDate: "2026-07-31", status: "pending" },
+    { id: "2", title: t("الالتزام التام بمواعيد الحضور دون أي دقائق تأخير"), targetDate: "2026-07-31", status: "pending" },
   ]);
   const [newGoalTitle, setNewGoalTitle] = useState("");
 
@@ -234,7 +234,7 @@ function EuropeanScorecardPage() {
         selectEmployee(list[0]);
       }
     } catch (err: any) {
-      toast.error(err?.message || "خطأ في تحميل الموظفين");
+      toast.error(err?.message || t("خطأ في تحميل الموظفين"));
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,7 @@ function EuropeanScorecardPage() {
       setInitiativeRating(3);
     } catch (err: any) {
       console.error(err);
-      toast.error("فشل تحميل تفاصيل الموظف");
+      toast.error(t("فشل تحميل تفاصيل الموظف"));
     } finally {
       setLoadingDetails(false);
     }
@@ -294,13 +294,13 @@ function EuropeanScorecardPage() {
   async function submitAdjustment() {
     if (!selectedEmp || !actionType || actionType === "form6" || actionType === "appraisal_report") return;
     const val = Number(amount);
-    if (!val || val <= 0) return toast.error("أدخل مبلغاً صحيحاً أكبر من صفر");
-    if (!reason.trim()) return toast.error("اكتب سبب المكافأة أو الخصم");
+    if (!val || val <= 0) return toast.error(t("أدخل مبلغاً صحيحاً أكبر من صفر"));
+    if (!reason.trim()) return toast.error(t("اكتب سبب المكافأة أو الخصم"));
 
     setSubmitting(true);
     try {
       const direction = actionType === "bonus" ? "employee_due" : "employee_owes";
-      const descPrefix = actionType === "bonus" ? "حافز كفاءة مؤسسية (Bonus): " : "جزاء إداري / خصم (Penalty): ";
+      const descPrefix = actionType === "bonus" ? t("حافز كفاءة مؤسسية (Bonus): ") : t("جزاء إداري / خصم (Penalty): ");
 
       const { error } = await supabase.from("employee_financial_ledger").insert({
         tenant_id: tenantId,
@@ -313,13 +313,13 @@ function EuropeanScorecardPage() {
       });
 
       if (error) throw error;
-      toast.success(actionType === "bonus" ? "تم صرف الحافز المؤسسي للموظف بنجاح" : "تم إيقاع الجزاء وخصمه من رصيد الموظف");
+      toast.success(actionType === "bonus" ? t("تم صرف الحافز المؤسسي للموظف بنجاح") : t("تم إيقاع الجزاء وخصمه من رصيد الموظف"));
       setActionType(null);
       setAmount("");
       setReason("");
       selectEmployee(selectedEmp);
     } catch (err: any) {
-      toast.error(err?.message || "فشل تسجيل الحركة المالية");
+      toast.error(err?.message || t("فشل تسجيل الحركة المالية"));
     } finally {
       setSubmitting(false);
     }
@@ -332,7 +332,7 @@ function EuropeanScorecardPage() {
       { id: String(Date.now()), title: newGoalTitle.trim(), targetDate: "2026-08-31", status: "pending" },
     ]);
     setNewGoalTitle("");
-    toast.success("تم إضافة الهدف إلى خطة تحسين الأداء (IDP)");
+    toast.success(t("تم إضافة الهدف إلى خطة تحسين الأداء (IDP)"));
   }
 
   function toggleGoalStatus(id: string) {
@@ -383,7 +383,7 @@ function EuropeanScorecardPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="بحث باسم الموظف أو الوظيفة..."
+                  placeholder=t("بحث باسم الموظف أو الوظيفة...")
                   className="h-10 pe-9 rounded-2xl bg-white font-bold"
                 />
               </div>
@@ -415,7 +415,7 @@ function EuropeanScorecardPage() {
                         <div className="min-w-0">
                           <div className="font-extrabold text-sm text-slate-900 truncate">{emp.full_name}</div>
                           <div className="text-xs text-slate-500 font-medium truncate mt-0.5">
-                            {emp.job_title || emp.role || "موظف"}
+                            {emp.job_title || emp.role || t("staff.users.roleEmp")}
                           </div>
                         </div>
                       </div>
@@ -457,7 +457,7 @@ function EuropeanScorecardPage() {
                     </div>
                     <h2 className="text-2xl md:text-3xl font-black">{selectedEmp.full_name}</h2>
                     <p className="text-sm text-white/90 font-medium flex items-center gap-2">
-                      <span>{selectedEmp.job_title || selectedEmp.role || "خبير تشغيلي"}</span>
+                      <span>{selectedEmp.job_title || selectedEmp.role || t("scorecard.labelExpert")}</span>
                       {selectedEmp.branches?.name && <span>• الفرع: {selectedEmp.branches.name}</span>}
                     </p>
                   </div>
@@ -474,25 +474,25 @@ function EuropeanScorecardPage() {
                 <CardContent className="p-6 md:p-8 space-y-6">
                   {/* Action Buttons for European Corporate Decisions */}
                   <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
-                    <span className="text-xs font-black text-slate-700 w-full sm:w-auto">أدوات القرار والتقييم المؤسسي:</span>
-                    <Button onClick={() => { setActionType("bonus"); setAmount("750"); setReason("حافز كفاءة مؤسسية (European Performance Bonus) لتجاوز معايير الـ SLA والجودة"); }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-xs">
+                    <span className="text-xs font-black text-slate-700 w-full sm:w-auto">{t("scorecard.decisionsTitle")}</span>
+                    <Button onClick={() => { setActionType("bonus"); setAmount("750"); setReason(t("scorecard.bonusDetail")); }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-xs">
                       <Gift className="w-4 h-4 ms-1.5" />
-                      <span>صرف حافز تميز (+)</span>
+                      <span>{t("scorecard.bonusBtn")}</span>
                     </Button>
 
-                    <Button onClick={() => { setActionType("deduction"); setAmount("200"); setReason("جزاء إداري لعدم الالتزام بمعايير السلامة والنظافة والـ SOP المعتمدة"); }} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50 font-black rounded-xl">
+                    <Button onClick={() => { setActionType("deduction"); setAmount("200"); setReason(t("scorecard.penaltyDetail")); }} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50 font-black rounded-xl">
                       <MinusCircle className="w-4 h-4 ms-1.5" />
-                      <span>جزاء تقصير SOP (-)</span>
+                      <span>{t("scorecard.penaltyBtn")}</span>
                     </Button>
 
                     <Button onClick={() => setActionType("appraisal_report")} className="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl">
                       <FileText className="w-4 h-4 ms-1.5" />
-                      <span>تقرير التقييم المؤسسي 360°</span>
+                      <span>{t("scorecard.appraisalReportBtn")}</span>
                     </Button>
 
                     <Button onClick={() => setActionType("form6")} variant="destructive" className="bg-red-600 hover:bg-red-700 text-white font-black rounded-xl ms-auto">
                       <AlertTriangle className="w-4 h-4 ms-1.5" />
-                      <span>إنذار استمارة 6 (إنهاء الخدمة)</span>
+                      <span>{t("scorecard.terminationBtn")}</span>
                     </Button>
                   </div>
 
@@ -500,7 +500,7 @@ function EuropeanScorecardPage() {
                   <div className="space-y-3">
                     <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
                       <Target className="w-5 h-5 text-indigo-600" />
-                      <span>المحاور الستة للتقييم المؤسسي الأوروبي (6-Pillar Competency Framework)</span>
+                      <span>{t("scorecard.pillarsTitle")}</span>
                     </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -508,18 +508,18 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <Clock className="w-4 h-4 text-teal-600" /> 1. الانضباط والالتزام
+                            <Clock className="w-4 h-4 text-teal-600" /> {t("scorecard.pillar1Title")}
                           </span>
                           <Badge className="bg-teal-50 text-teal-800 border-teal-200 font-mono font-black">{stats.disciplineScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">الالتزام بمواعيد الوردية الرسمية (09:00 ص) والرقابة الجغرافية للـ Geofence.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar1Desc")}</p>
                         <div className="pt-2 border-t border-slate-100 space-y-1 text-xs font-semibold">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">مرات التأخير عن 09:15 ص:</span>
+                            <span className="text-slate-500">{t("scorecard.lateCount")}</span>
                             <span className={`font-mono font-black ${stats.delayCount > 0 ? "text-red-600" : "text-emerald-600"}`}>{stats.delayCount} مرات</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">إجمالي دقائق التأخير:</span>
+                            <span className="text-slate-500">{t("scorecard.lateMinutes")}</span>
                             <span className="font-mono font-black">{stats.delayMinutes} دقيقة</span>
                           </div>
                         </div>
@@ -529,18 +529,18 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <Zap className="w-4 h-4 text-blue-600" /> 2. الإنتاجية والإنجاز
+                            <Zap className="w-4 h-4 text-blue-600" /> {t("scorecard.pillar2Title")}
                           </span>
                           <Badge className="bg-blue-50 text-blue-800 border-blue-200 font-mono font-black">{stats.outputScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">حجم إنجاز المهام، سرعة الاستجابة، وتنفيذ معدلات التشغيل المطلوبة.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar2Desc")}</p>
                         <div className="pt-2 border-t border-slate-100 space-y-1 text-xs font-semibold">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">الورديات المنجزة:</span>
+                            <span className="text-slate-500">{t("scorecard.shiftsCompleted")}</span>
                             <span className="font-mono font-black">{stats.totalShifts} وردية</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">حوافز الإنجاز المضافة:</span>
+                            <span className="text-slate-500">{t("scorecard.bonusesAdded")}</span>
                             <span className="font-mono font-black text-emerald-600">+{fmtMoney(stats.totalBonuses)}</span>
                           </div>
                         </div>
@@ -550,20 +550,20 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-indigo-600" /> 3. الجودة والدقة SOP
+                            <ShieldCheck className="w-4 h-4 text-indigo-600" /> {t("scorecard.pillar3Title")}
                           </span>
                           <Badge className="bg-indigo-50 text-indigo-800 border-indigo-200 font-mono font-black">{stats.qualityScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">انعدام المرتجعات التشغيلية، الالتزام بمعايير الفحص، وتفادي الأخطاء.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar3Desc")}</p>
                         <div className="pt-2 border-t border-slate-100 space-y-1 text-xs font-semibold">
                           <div className="flex justify-between">
-                            <span className="text-slate-500">جزاءات التقصير مسجلة:</span>
+                            <span className="text-slate-500">{t("scorecard.deductionsRecorded")}</span>
                             <span className={`font-mono font-black ${stats.totalDeductions > 0 ? "text-red-600" : "text-emerald-600"}`}>
                               -{fmtMoney(stats.totalDeductions)}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-slate-500">سلف مالية جارية:</span>
+                            <span className="text-slate-500">{t("scorecard.currentAdvances")}</span>
                             <span className="font-mono font-black text-amber-700">-{fmtMoney(stats.totalAdvances)}</span>
                           </div>
                         </div>
@@ -573,13 +573,13 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <HeartHandshake className="w-4 h-4 text-violet-600" /> 4. روح الفريق والتعاون
+                            <HeartHandshake className="w-4 h-4 text-violet-600" /> {t("scorecard.pillar4Title")}
                           </span>
                           <Badge className="bg-violet-50 text-violet-800 border-violet-200 font-mono font-black">{stats.teamworkScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">التواصل الإيجابي والتنسيق السلس مع المحطات وأعضاء الفريق في أوقات الذروة.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar4Desc")}</p>
                         <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-600">تقييم المدير:</span>
+                          <span className="text-xs font-bold text-slate-600">{t("scorecard.managerAppraisal")}</span>
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button key={star} onClick={() => setTeamworkRating(star)} className="focus:outline-hidden">
@@ -594,13 +594,13 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <ShieldCheck className="w-4 h-4 text-emerald-600" /> 5. السلامة والنظافة HSE
+                            <ShieldCheck className="w-4 h-4 text-emerald-600" /> {t("scorecard.pillar5Title")}
                           </span>
                           <Badge className="bg-emerald-50 text-emerald-800 border-emerald-200 font-mono font-black">{stats.hseScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">الالتزام بمعايير الأمان، العناية بالمعدات، ونظافة محطة العمل اليومية.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar5Desc")}</p>
                         <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-600">تقييم المدير:</span>
+                          <span className="text-xs font-bold text-slate-600">{t("scorecard.managerAppraisal")}</span>
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button key={star} onClick={() => setHseRating(star)} className="focus:outline-hidden">
@@ -615,13 +615,13 @@ function EuropeanScorecardPage() {
                       <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="font-black text-sm text-slate-800 flex items-center gap-1.5">
-                            <Lightbulb className="w-4 h-4 text-amber-600" /> 6. المبادرة والتطوير
+                            <Lightbulb className="w-4 h-4 text-amber-600" /> {t("scorecard.pillar6Title")}
                           </span>
                           <Badge className="bg-amber-50 text-amber-800 border-amber-200 font-mono font-black">{stats.initiativeScore}%</Badge>
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium">اقتراح تحسينات للعمل، التعامل الذكي مع المشكلات، واستخدام النظام بكفاءة.</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{t("scorecard.pillar6Desc")}</p>
                         <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-600">تقييم المدير:</span>
+                          <span className="text-xs font-bold text-slate-600">{t("scorecard.managerAppraisal")}</span>
                           <div className="flex items-center gap-1">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <button key={star} onClick={() => setInitiativeRating(star)} className="focus:outline-hidden">
@@ -639,7 +639,7 @@ function EuropeanScorecardPage() {
                     <h3 className="font-black text-base text-slate-900 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <GraduationCap className="w-5 h-5 text-indigo-600" />
-                        <span>خطة التطوير وتحسين الأداء المؤسسي (IDP / PIP Objectives)</span>
+                        <span>{t("scorecard.idpTitle")}</span>
                       </div>
                       <Badge variant="outline" className="text-xs font-mono">الربع الحالي</Badge>
                     </h3>
@@ -649,12 +649,12 @@ function EuropeanScorecardPage() {
                         <Input
                           value={newGoalTitle}
                           onChange={(e) => setNewGoalTitle(e.target.value)}
-                          placeholder="أضف هدفاً تشغيلياً جديداً للموظف (مثال: الوصول بالمرتجعات إلى صفر% خلال الشهر)..."
+                          placeholder={t("scorecard.idpAddPlaceholder")}
                           className="bg-white rounded-xl h-11 font-bold text-xs"
                           onKeyDown={(e) => e.key === "Enter" && addIdpGoal()}
                         />
                         <Button onClick={addIdpGoal} className="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl px-5 h-11 shrink-0">
-                          <Plus className="w-4 h-4 ms-1" /> إضافة هدف
+                          <Plus className="w-4 h-4 ms-1" /> {t("scorecard.idpAddBtn")}
                         </Button>
                       </div>
 
@@ -672,7 +672,7 @@ function EuropeanScorecardPage() {
                               <span className="text-xs">{g.title}</span>
                             </div>
                             <Badge variant={g.status === "achieved" ? "default" : "secondary"} className="text-[10px] font-mono shrink-0">
-                              {g.status === "achieved" ? "محقَق ✅" : "قيد التنفيذ 🎯"}
+                              {g.status === "achieved" ? t("محقَق ✅") : t("قيد التنفيذ 🎯")}
                             </Badge>
                           </div>
                         ))}
@@ -684,17 +684,17 @@ function EuropeanScorecardPage() {
                   <div className="space-y-3 pt-2">
                     <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
                       <BriefcaseBusiness className="w-5 h-5 text-teal-600" />
-                      <span>سجل الحركات المالية والجزاءات والمكافآت (آخر 30 يوماً)</span>
+                      <span>{t("scorecard.ledgerTitle")}</span>
                     </h3>
 
                     <div className="border border-slate-200 rounded-2xl overflow-hidden">
                       <table className="w-full text-xs">
                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-black">
                           <tr>
-                            <th className="p-3 text-start">البيان / سبب الحركة</th>
-                            <th className="p-3 text-start">النوع</th>
-                            <th className="p-3 text-start">التاريخ</th>
-                            <th className="p-3 text-end">المبلغ</th>
+                            <th className="p-3 text-start">{t("scorecard.colDescription")}</th>
+                            <th className="p-3 text-start">{t("scorecard.colType")}</th>
+                            <th className="p-3 text-start">{t("common.date")}</th>
+                            <th className="p-3 text-end">{t("common.amount")}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 font-medium">
@@ -740,13 +740,13 @@ function EuropeanScorecardPage() {
           <DialogHeader>
             <DialogTitle className="text-lg font-black flex items-center gap-2">
               {actionType === "bonus" ? <Gift className="w-5 h-5 text-emerald-600" /> : <MinusCircle className="w-5 h-5 text-red-600" />}
-              <span>{actionType === "bonus" ? "صرف حافز تميز أوروبي للموظف" : "إيقاع جزاء عدم التزام بالمعايير"}</span>
+              <span>{actionType === "bonus" ? t("صرف حافز تميز أوروبي للموظف") : t("إيقاع جزاء عدم التزام بالمعايير")}</span>
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-3">
             <div>
-              <Label className="text-xs font-bold text-slate-700 mb-1 block">المبلغ (جنيه مصري) *</Label>
+              <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("scorecard.labelAmount")} *</Label>
               <Input
                 type="number"
                 value={amount}
@@ -758,12 +758,12 @@ function EuropeanScorecardPage() {
             </div>
 
             <div>
-              <Label className="text-xs font-bold text-slate-700 mb-1 block">سبب {actionType === "bonus" ? "الحافز" : "الجزاء / الخصم"} *</Label>
+              <Label className="text-xs font-bold text-slate-700 mb-1 block">سبب {actionType === "bonus" ? t("الحافز") : t("الجزاء / الخصم")} *</Label>
               <Textarea
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={actionType === "bonus" ? "مثال: تحقيق 100% في معايير الجودة والالتزام بالحضور لهذا الشهر..." : "مثال: مخالفة إجراءات السلامة والنظافة SOP أو تأخير بدون إذن..."}
+                placeholder={actionType === "bonus" ? t("مثال: تحقيق 100% في معايير الجودة والالتزام بالحضور لهذا الشهر...") : t("مثال: مخالفة إجراءات السلامة والنظافة SOP أو تأخير بدون إذن...")}
                 className="rounded-xl font-medium text-sm"
               />
             </div>
@@ -774,7 +774,7 @@ function EuropeanScorecardPage() {
               إلغاء
             </Button>
             <Button onClick={submitAdjustment} disabled={submitting} className={`${actionType === "bonus" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"} text-white font-black rounded-xl px-6`}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : actionType === "bonus" ? "اعتماد وصرف الحافز" : "اعتماد وخصم المبلغ"}
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : actionType === "bonus" ? t("scorecard.btnConfirmBonus") : t("scorecard.btnConfirmPenalty")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -786,7 +786,7 @@ function EuropeanScorecardPage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-indigo-900 flex items-center gap-2">
               <FileText className="w-6 h-6 text-indigo-600" />
-              <span>تقرير التقييم المؤسسي الأوروبي 360° (European Corporate Appraisal)</span>
+              <span>{t("scorecard.modalAppraisalTitle")}</span>
             </DialogTitle>
           </DialogHeader>
 
@@ -800,58 +800,58 @@ function EuropeanScorecardPage() {
                 </div>
               </div>
               <div className="text-end font-sans text-xs font-bold text-slate-600">
-                <div>تاريخ التقييم: <span className="font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
+                <div>{t("scorecard.labelAppraisalDate")} <span className="font-mono">{new Date().toISOString().slice(0, 10)}</span></div>
                 <Badge className="bg-indigo-600 text-white font-mono mt-1">SaaS V2.0 Certified</Badge>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border text-xs font-sans font-bold text-slate-800">
-              <div>الموظف: <span className="font-black text-indigo-950 text-sm">{selectedEmp?.full_name}</span></div>
-              <div>المسمى الوظيفي: <span className="font-black">{selectedEmp?.job_title || selectedEmp?.role || "خبير تشغيلي"}</span></div>
-              <div>الفرع التشغيلي: <span className="font-black">{selectedEmp?.branches?.name || "الفرع الرئيسي"}</span></div>
+              <div>{t("scorecard.labelEmployee")} <span className="font-black text-indigo-950 text-sm">{selectedEmp?.full_name}</span></div>
+              <div>{t("scorecard.labelJobTitle")} <span className="font-black">{selectedEmp?.job_title || selectedEmp?.role || t("scorecard.labelExpert")}</span></div>
+              <div>الفرع التشغيلي: <span className="font-black">{selectedEmp?.branches?.name || t("scorecard.labelMainBranch")}</span></div>
               <div>التصنيف المؤسسي (9-Box): <span className="font-black text-indigo-700">{stats?.gridCategory}</span></div>
             </div>
 
             <div className="space-y-3 font-sans">
-              <h4 className="font-black text-sm text-slate-900 border-b pb-1">نتائج تفقيط المحاور الستة للتميز المؤسسي:</h4>
+              <h4 className="font-black text-sm text-slate-900 border-b pb-1">{t("scorecard.labelResults")}</h4>
               <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-700">
                 <div className="flex justify-between p-2 rounded-lg bg-teal-50/60 border">
-                  <span>1. الانضباط والالتزام الميداني:</span>
+                  <span>{t("scorecard.pillar1Title")} الميداني:</span>
                   <span className="font-mono font-black text-teal-800">{stats?.disciplineScore}%</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-blue-50/60 border">
-                  <span>2. الإنتاجية وحجم إنجاز المهام:</span>
+                  <span>{t("scorecard.pillar2Title")}:</span>
                   <span className="font-mono font-black text-blue-800">{stats?.outputScore}%</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-indigo-50/60 border">
-                  <span>3. الجودة والدقة التشغيلية SOP:</span>
+                  <span>{t("scorecard.pillar3Title")}:</span>
                   <span className="font-mono font-black text-indigo-800">{stats?.qualityScore}%</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-violet-50/60 border">
-                  <span>4. التعاون وروح الفريق المؤسسي:</span>
+                  <span>{t("scorecard.pillar4Title")}:</span>
                   <span className="font-mono font-black text-violet-800">{stats?.teamworkScore}%</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-emerald-50/60 border">
-                  <span>5. السلامة والصحة المهنية HSE:</span>
+                  <span>{t("scorecard.pillar5Title")}:</span>
                   <span className="font-mono font-black text-emerald-800">{stats?.hseScore}%</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-amber-50/60 border">
-                  <span>6. المبادرة والتطوير الذاتي:</span>
+                  <span>{t("scorecard.pillar6Title")} الذاتي:</span>
                   <span className="font-mono font-black text-amber-800">{stats?.initiativeScore}%</span>
                 </div>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 text-white flex justify-between items-center text-sm font-black font-mono">
-                <span>التقييم الأوروبي العام الموزون (Overall 360° Grade):</span>
+                <span>{t("scorecard.labelOverallGrade")}</span>
                 <span className="text-emerald-400 text-base">{stats?.overallScore}%</span>
               </div>
             </div>
 
             <div className="space-y-2 font-sans text-xs">
-              <h4 className="font-black text-slate-900">الأهداف التطويرية المعتمدة للربع الحالي (IDP / PIP):</h4>
+              <h4 className="font-black text-slate-900">{t("scorecard.labelIDP")}</h4>
               <ul className="list-disc list-inside space-y-1 text-slate-700 font-semibold pe-4">
                 {idpGoals.map((g) => (
                   <li key={g.id}>
-                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? "محقَق ✅" : "قيد التنفيذ 🎯"})</span>
+                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? t("محقَق ✅") : t("قيد التنفيذ 🎯")})</span>
                   </li>
                 ))}
               </ul>
@@ -859,11 +859,11 @@ function EuropeanScorecardPage() {
 
             <div className="grid grid-cols-2 gap-8 pt-8 text-center text-xs font-bold border-t mt-6 font-sans">
               <div>
-                <p className="mb-8 text-slate-500">توقيع الموظف (بالعلم والإقرار):</p>
+                <p className="mb-8 text-slate-500">{t("scorecard.labelSignatureEmp")}</p>
                 <div className="border-b border-dashed border-slate-400 w-36 mx-auto" />
               </div>
               <div>
-                <p className="mb-8 text-slate-500">اعتماد إدارة الموارد البشرية والتشغيل:</p>
+                <p className="mb-8 text-slate-500">{t("scorecard.labelSignatureMgr")}</p>
                 <div className="border-b border-dashed border-slate-400 w-36 mx-auto" />
               </div>
             </div>
@@ -875,7 +875,7 @@ function EuropeanScorecardPage() {
             </Button>
             <Button onClick={printDocument} className="bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl px-6">
               <Printer className="w-4 h-4 ms-1.5" />
-              <span>طباعة التقرير المعتمد</span>
+              <span>{t("scorecard.btnPrint")}</span>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -887,38 +887,38 @@ function EuropeanScorecardPage() {
           <DialogHeader>
             <DialogTitle className="text-xl font-black text-red-600 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6" />
-              <span>إصدار إنذار نهائي / استمارة 6 إنهاء خدمة</span>
+              <span>{t("scorecard.modalTermTitle")}</span>
             </DialogTitle>
           </DialogHeader>
 
           <div className="p-6 border-2 border-slate-300 rounded-2xl bg-white space-y-4 font-serif" id="form6-print-area">
             <div className="text-center border-b pb-4 space-y-1">
-              <h3 className="font-black text-lg text-slate-900">إشعار إداري / إنهاء تعاقد (استمارة رقم 6)</h3>
-              <p className="text-xs text-slate-500">صادر عن إدارة الموارد البشرية والتشغيل بـ MJRH INDUSTRIAL REVOLUTION</p>
+              <h3 className="font-black text-lg text-slate-900">{t("scorecard.termNoticeHeader")}</h3>
+              <p className="text-xs text-slate-500">{t("scorecard.termNoticeSub")}</p>
             </div>
 
             <div className="space-y-2 text-sm leading-7 text-slate-800 font-medium">
               <p>
-                بناءً على التقييم الدوري الشامل لبيانات الحضور والانصراف وإنجاز المهام للعام الحالي، تم مراجعة أداء الموظف:
+                بناءً على التقييم الدوري الشامل لبيانات الحضور والانصراف وإنجاز المهام للعام الحالي، تم مراجعة أداء {t("scorecard.labelEmployee")}
               </p>
               <div className="bg-slate-50 p-3 rounded-xl border font-bold space-y-1 text-xs">
-                <div>الاسم الكامل: <span className="font-black text-slate-900">{selectedEmp?.full_name}</span></div>
-                <div>المسمى الوظيفي: <span className="font-black">{selectedEmp?.job_title || selectedEmp?.role || "موظف"}</span></div>
+                <div>{t("staff.users.labelName")} <span className="font-black text-slate-900">{selectedEmp?.full_name}</span></div>
+                <div>{t("scorecard.labelJobTitle")} <span className="font-black">{selectedEmp?.job_title || selectedEmp?.role || t("staff.users.roleEmp")}</span></div>
                 <div>التقييم العام للأداء 360°: <span className="font-black font-mono text-red-600">{stats?.overallScore}% (أقل من المستوى المطلوب)</span></div>
-                <div>عدد مرات التأخير عن مواعيد العمل: <span className="font-black font-mono text-red-600">{stats?.delayCount} مرات ({stats?.delayMinutes} دقيقة تأخير)</span></div>
+                <div>{t("scorecard.lateCount")} <span className="font-black font-mono text-red-600">{stats?.delayCount} {interpolate(t("scorecard.form6DelayDetail"), { minutes: stats?.delayMinutes })}</span></div>
               </div>
               <p className="text-xs text-red-800 font-bold bg-red-50 p-3 rounded-xl border border-red-200">
-                ⚠️ تقرر إخطار الموظف بهذا الإنذار النهائي نظراً لتكرار التأخيرات والغياب أو انخفاض الإنتاجية دون تبرير مقبول، ويعتبر هذا المستند إقراراً إدارياً يمهد لإصدار استمارة (6) للتأمينات الاجتماعية وإنهاء الخدمة طبقاً للوائح العمل.
+                {t("scorecard.termP2")}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-8 pt-8 text-center text-xs font-bold border-t mt-6">
               <div>
-                <p className="mb-8 text-slate-500">توقيع الموظف (بالعلم):</p>
+                <p className="mb-8 text-slate-500">{t("scorecard.labelSignatureEmp")}</p>
                 <div className="border-b border-dashed border-slate-400 w-32 mx-auto" />
               </div>
               <div>
-                <p className="mb-8 text-slate-500">اعتماد مالك النشاط / الإدارة:</p>
+                <p className="mb-8 text-slate-500">{t("scorecard.labelSignatureOwner")}</p>
                 <div className="border-b border-dashed border-slate-400 w-32 mx-auto" />
               </div>
             </div>

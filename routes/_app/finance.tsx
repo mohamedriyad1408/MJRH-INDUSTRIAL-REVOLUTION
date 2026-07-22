@@ -281,9 +281,9 @@ function FinancePage() {
         <TabsContent value="revenue">
           <Card><CardHeader><CardTitle className="text-base">{t("finance.revenueSummary")}</CardTitle></CardHeader>
           <CardContent className="grid md:grid-cols-3 gap-4">
-            <Stat title=t("إجمالي الإيرادات") value={fmtMoney(revenue.total, t("common.egp"))} />
-            <Stat title=t("المحصّل") value={fmtMoney(revenue.paid, t("common.egp"))} />
-            <Stat title=t("المتبقي على العملاء") value={fmtMoney(revenue.unpaid)} />
+            <Stat title={t("finance.totalRevenue")} value={fmtMoney(revenue.total, t("common.egp"))} />
+            <Stat title={t("finance.collected")} value={fmtMoney(revenue.paid, t("common.egp"))} />
+            <Stat title={t("finance.remaining")} value={fmtMoney(revenue.unpaid)} />
           </CardContent></Card>
         </TabsContent>
       </Tabs>
@@ -343,7 +343,7 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
     if (!error && expense?.id) {
       await supabase.rpc("record_operation_event", {
         _process_key: "expense_created",
-        _process_name: status === "paid" ? t("تسجيل مصروف مدفوع") : t("تسجيل مصروف آجل"),
+        _process_name: status === "paid" ? t("finance.recordPaidExpense", "Record Paid Expense") : t("finance.recordPayableExpense", "Record Payable Expense"),
         _source_type: "expense",
         _source_id: expense.id,
         _branch_id: branchId,
@@ -362,10 +362,10 @@ function NewExpenseDialog({ onCreated, userId, tenantId, branches, cashAccounts,
       <DialogTrigger asChild><Button><Plus className="w-4 h-4 ms-1" />{t("finance.newExpense")}</Button></DialogTrigger>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addExpense")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>{t("common.branch")}</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder=t("اختار الفرع") /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.branch")}</Label><Select value={branchId} onValueChange={setBranchId}><SelectTrigger><SelectValue placeholder={t("inventory.branchPlaceholder")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>{t("common.category")}</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{t("common." + c.value, c.label)}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>{t("common.status")}</Label><Select value={status} onValueChange={(v) => setStatus(v as any)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="paid">مدفوع الآن</SelectItem><SelectItem value="payable">آجل / مستحق</SelectItem></SelectContent></Select></div>
-          {status === "paid" && <div><Label>الخزنة التي دفعت</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder=t("اختار الخزنة") /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
+          {status === "paid" && <div><Label>الخزنة التي دفعت</Label><Select value={cashAccountId} onValueChange={setCashAccountId}><SelectTrigger><SelectValue placeholder={t("accounting.error.noSafeSelected")} /></SelectTrigger><SelectContent>{visibleSafes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>}
           <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           <div><Label>{t("common.description")} ({t("common.optional", "optional")})</Label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} /></div>
         </div>
@@ -391,11 +391,11 @@ function NewAdvanceDialog({ employees, onCreated, userId }: { employees: Employe
       <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4 ms-1" />{t("finance.advanceRequest")}</Button></DialogTrigger>
       <DialogContent dir="rtl"><DialogHeader><DialogTitle>{t("finance.addAdvance")}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label>{t("common.employee")}</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder=t("اختر موظف") /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
+          <div><Label>{t("common.employee")}</Label><Select value={empId} onValueChange={setEmpId}><SelectTrigger><SelectValue placeholder={t("attendance.selectEmployee")} /></SelectTrigger><SelectContent>{employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}</SelectContent></Select></div>
           <div><Label>{t("common.amount")}</Label><Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
           <div><Label>{t("common.reason")} ({t("common.optional", "optional")})</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} /></div>
         </div>
-        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("إرسال للمالك")}</Button></DialogFooter>
+        <DialogFooter><Button onClick={submit} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("finance.sendToOwner", "Send to Owner")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );
