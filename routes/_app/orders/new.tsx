@@ -1,4 +1,3 @@
-import { createOrder } from "@/lib/orders-api";
 import { Row } from "@/components/new-order-components";
 import { useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
@@ -20,6 +19,7 @@ import {
   Loader2, Trash2, ArrowRight, LocateFixed, Search, Sparkles,
   Shirt, Package, Scissors, Truck, Receipt, CreditCard, Zap, Plus, Minus,
 } from "lucide-react";
+import { createOrder } from "@/lib/orders-api";
 
 export const Route = createFileRoute("/_app/orders/new")({
   head: () => ({ meta: [{ title: "طلب جديد" }] }),
@@ -195,9 +195,7 @@ function NewOrderPage() {
     );
   }
 
-  import { createOrder } from "@/lib/orders-api";
-
-async function submit() {
+  async function submit() {
     if (!customer && !newCustomer.full_name) { toast.error(t("orders.errCustomer", "اختار عميل أو أضف عميل جديد")); return; }
     const effectivePhone = customer?.phone ?? newCustomer.phone;
     if (phoneDigits(effectivePhone).length < 11) { toast.error(t("orders.errPhone", "رقم الهاتف يجب أن يكون 11 رقم على الأقل")); return; }
@@ -212,10 +210,13 @@ async function submit() {
       if (!customerId) {
         const { data, error } = await supabase.from("customers").insert({
           full_name: newCustomer.full_name, phone: newCustomer.phone, address: newCustomer.address || null,
+          tenant_id: tenantId,
         }).select("id").single();
         if (error) throw error;
         customerId = data!.id;
       }
+
+      if (!customerId) throw new Error("Failed to resolve customer ID");
 
       const order = await createOrder({
         customer_id: customerId,
