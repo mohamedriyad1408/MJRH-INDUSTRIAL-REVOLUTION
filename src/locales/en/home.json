@@ -1,0 +1,16 @@
+{
+  "tagline": "Project Operating System — Industrial Revolution",
+  "platformLogin": "🛡️ Platform Staff & Admin",
+  "badge": "MJRH Project Management Platform",
+  "heroTitle": "One System.. Operating Multiple Projects",
+  "heroText": "MJRH is a SaaS operating system serving multiple independent projects, each with its own data, accounts, and staff. Choose the project you need to enter from the list, or learn more about the system.",
+  "learnMore": "Learn More",
+  "projectsTitle": "Active Projects",
+  "projectsText": "Choose your project to enter the customer portal or control panel",
+  "tenantNotice": "Important Note: Project customers and staff please click on your project card below to enter the customer portal or the project's dashboard.",
+  "loadError": "Unable to load the projects list at the moment.",
+  "noProjects": "No active projects at the moment.",
+  "wantProject": "Have a project and want to run it with MJRH?",
+  "wantProjectSub": "Contact us to start a direct trial",
+  "requestDemo": "Request Demo"
+}

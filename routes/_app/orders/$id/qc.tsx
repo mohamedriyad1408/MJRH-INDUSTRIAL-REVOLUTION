@@ -43,7 +43,7 @@ function QCPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground font-mono text-xs">{t("order.id", "معرف الطلب")}: {id}</p>
+          <p className="text-muted-foreground font-mono text-xs">{t("orders.id", "معرف الطلب")}: {id}</p>
 
           <div className="space-y-2">
             <label className="text-sm font-bold">{t("common.qcNotes", "ملاحظات الفحص")}</label>

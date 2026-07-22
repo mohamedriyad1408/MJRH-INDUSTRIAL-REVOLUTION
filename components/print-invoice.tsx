@@ -34,14 +34,14 @@ export function PrintInvoiceButton({ order }: { order: Order }) {
       </tr>`;
     }).join("");
 
-    const title = `${t("order.invoiceTitle", "فاتورة #")}${order.order_number}`;
+    const title = `${t("orders.invoiceTitle", "فاتورة #")}${order.order_number}`;
     const brand = "MJRH";
     const subBrand = t("app.subtitle", "نظام إدارة المغاسل");
     const customerLabel = order.customers?.full_name ?? "—";
     const phoneLabel = order.customers?.phone ?? "";
-    const totalLabel = `${t("order.total", "الإجمالي:")} ${order.total}`;
-    const notesLabel = order.notes ? `<b>${t("order.notes", "ملاحظات:")}</b> ${order.notes}` : "";
-    const footerLabel = t("order.invoiceFooter", "شكراً لثقتكم — MJRH | نظام إدارة المغاسل");
+    const totalLabel = `${t("orders.total", "الإجمالي:")} ${order.total}`;
+    const notesLabel = order.notes ? `<b>${t("orders.notes", "ملاحظات:")}</b> ${order.notes}` : "";
+    const footerLabel = t("orders.invoiceFooter", "شكراً لثقتكم — MJRH | نظام إدارة المغاسل");
 
     let html = "";
 
@@ -131,17 +131,17 @@ export function PrintInvoiceButton({ order }: { order: Order }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button size="sm" variant="outline">
-          <Printer className="w-4 h-4 ms-1" /> {t("order.printInvoice", "طباعة الفاتورة")}
+          <Printer className="w-4 h-4 ms-1" /> {t("orders.printInvoice", "طباعة الفاتورة")}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={() => print("a4")}>
           <FileText className="w-4 h-4 me-2" />
-          {t("order.printA4", "طباعة فاتورة A4")}
+          {t("orders.printA4", "طباعة فاتورة A4")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => print("thermal")}>
           <Receipt className="w-4 h-4 me-2" />
-          {t("order.printThermal", "إيصال حراري 80mm")}
+          {t("orders.printThermal", "إيصال حراري 80mm")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

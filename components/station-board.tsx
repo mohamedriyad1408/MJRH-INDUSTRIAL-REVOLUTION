@@ -85,37 +85,37 @@ export function StationBoard({
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-800 text-white p-5 shadow-xl overflow-hidden relative">
         <div className="absolute -top-16 -left-14 h-36 w-36 rounded-full bg-teal-300/20 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-3">
-          <div><h1 className="text-2xl font-black flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" />{title}</h1><p className="text-sm text-white/70">{t("station.common.queue")}: {queue.length} • {t("station.common.active")}: {active.length}</p></div>
-          <Badge className="bg-white/15 text-white border-white/20 text-sm px-3 py-1">{t("station.common.stepByStep")}</Badge>
+          <div><h1 className="text-2xl font-black flex items-center gap-2"><Trophy className="w-6 h-6 text-amber-300" />{title}</h1><p className="text-sm text-white/70">{t("stations.common.queue")}: {queue.length} • {t("stations.common.active")}: {active.length}</p></div>
+          <Badge className="bg-white/15 text-white border-white/20 text-sm px-3 py-1">{t("stations.common.stepByStep")}</Badge>
         </div>
       </div>
 
       {!loading && nextTask && <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white shadow-md">
         <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs text-teal-700 font-bold mb-1">{t("station.common.nextTask")}</div>
-            <div className="font-black text-lg">{t("order.orderNo", "طلب #{order}").replace("{order}", String(nextTask.order_number))} — {nextTask.customers?.full_name ?? t("station.common.customer")}</div>
-            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? t("station.common.startNow") : interpolate(t("station.common.readyToMove"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })}</div>
+            <div className="text-xs text-teal-700 font-bold mb-1">{t("stations.common.nextTask")}</div>
+            <div className="font-black text-lg">{t("orders.orderNo", "طلب #{order}").replace("{order}", String(nextTask.order_number))} — {nextTask.customers?.full_name ?? t("stations.common.customer")}</div>
+            <div className="text-xs text-muted-foreground">{nextTask.status === incoming ? t("stations.common.startNow") : interpolate(t("stations.common.readyToMove"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })}</div>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>{t("station.common.openOrder")}</Link></Button>
-            {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />{t("station.common.start")}</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.common.finishMove")}</Button>)}
+            <Button asChild variant="outline"><Link to="/orders/$id" params={{ id: nextTask.id }}>{t("stations.common.openOrder")}</Link></Button>
+            {canMove && (nextTask.status === incoming ? <Button className="bg-teal-600 hover:bg-teal-500" onClick={() => move(nextTask.id, current, incoming)}><PlayCircle className="w-4 h-4 ms-1" />{t("stations.common.start")}</Button> : <Button className="bg-emerald-600 hover:bg-emerald-500" onClick={() => move(nextTask.id, nextStatus, current)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("stations.common.finishMove")}</Button>)}
           </div>
         </CardContent>
       </Card>}
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-4">
-          <Column title={`${t("station.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
-            <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("station.common.startProcessing")}</Button>
+          <Column title={`${t("stations.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
+            <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("stations.common.startProcessing")}</Button>
           )} />
-          <Column title={`${t("station.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
+          <Column title={`${t("stations.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
             <div className="flex gap-1">
               <Button size="sm" variant="outline" onClick={() => setAssignFor(o.id)}>
-                <UserPlus className="w-3 h-3 ms-1" />{t("station.common.assign")}
+                <UserPlus className="w-3 h-3 ms-1" />{t("stations.common.assign")}
               </Button>
               <Button size="sm" variant="default" onClick={() => move(o.id, nextStatus, current)}>
-                {interpolate(t("station.common.moveTo"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })} <ArrowLeft className="w-3 h-3 ms-1" />
+                {interpolate(t("stations.common.moveTo"), { target: nextLabel ?? t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })} <ArrowLeft className="w-3 h-3 ms-1" />
               </Button>
             </div>
           )} />
@@ -141,13 +141,13 @@ function Column({ title, list, action }: { title: string; list: Order[]; action:
     <Card className="bg-white/85 backdrop-blur">
       <CardContent className="p-4 space-y-2">
         <div className="font-bold text-sm mb-2">{title}</div>
-        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("station.common.noOrders")}</div>}
+        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("stations.common.noOrders")}</div>}
         {list.map((o) => (
           <div key={o.id} className="rounded-2xl border p-3 space-y-2 bg-white/90 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="font-bold">
                 #{o.order_number}{" "}
-                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />{t("station.common.urgent")}</Badge>}
+                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />{t("stations.common.urgent")}</Badge>}
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
             </div>

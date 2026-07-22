@@ -99,7 +99,7 @@
     "repairSuccess": "Safes and balances verified and repaired.",
     "advancesSynced": "Synced {count} advances as expenses.",
     "payrollGenerated": "Payroll generated for {count} employees.",
-    "payrollPosted": "Payroll posted as accrued expenses.",
+    "payrollPosted": "Payroll posted as accrued expenses.", "manualTxName": "Manual Safe Transaction", "transferTxName": "Safe-to-Safe Transfer", "advanceTxName": "Employee Advance", "salaryPaymentTxName": "Salary Payout",
     "payrollPaid": "Payroll paid and cash safe updated."
   },
   "error": {

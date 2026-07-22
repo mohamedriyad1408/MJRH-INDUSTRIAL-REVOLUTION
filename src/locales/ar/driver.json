@@ -18,7 +18,7 @@
   "errCode": "كود التأكيد خطأ — آخر 4 أرقام من هاتف العميل ({code})",
   "toastLocOk": "تم تحديث موقعك",
   "toastPickupStart": "تم الإسناد لك",
-  "toastPickupDone": "تم الاستلام بنجاح",
+  "toastPickupDone": "تم استلام طلب #{order} بنجاح",
   "toastDeliveryStart": "تم التحديث — خرجت للتسليم",
   "toastDeliveryDone": "تم التسليم بنجاح",
   "toastTip": "🎉 تم التسليم وتسجيل {amount} جنيه بقشيش للمندوب",

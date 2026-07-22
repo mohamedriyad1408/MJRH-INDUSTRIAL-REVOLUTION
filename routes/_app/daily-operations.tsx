@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarCheck, CheckCircle2, ClipboardCheck, Loader2, LockKeyhole, Map, PackageCheck, PlayCircle, RefreshCw, Sparkles, Wallet } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/daily-operations")({
   head: () => ({ meta: [{ title: "Daily Ops - MJRH" }] }),
@@ -157,7 +157,7 @@ function DailyOperationsPage() {
   ] : [], [data, done, t]);
 
   const monitorSteps: Step[] = useMemo(() => data ? [
-    { key: "orders", title: t("dailyOps.step.orders.title"), detail: `${data.ordersToday} ${t("station.common.orders")} · ${fmtMoney(data.revenueToday, t("common.egp"))}`, href: "/today", ok: true },
+    { key: "orders", title: t("dailyOps.step.orders.title"), detail: `${data.ordersToday} ${t("stations.common.orders")} · ${fmtMoney(data.revenueToday, t("common.egp"))}`, href: "/today", ok: true },
     { key: "late", title: t("dailyOps.step.late.title"), detail: data.lateOrders ? `${data.lateOrders} ${t("notif.orderLate")}` : t("dailyOps.step.late.ok"), href: "/today", ok: data.lateOrders === 0, danger: data.lateOrders > 0 },
     { key: "invoice", title: t("dailyOps.step.invoice.title"), detail: data.invoiceReview ? `${data.invoiceReview} ${t("system.check.invoice.fix")}` : t("dailyOps.step.invoice.ok"), href: "/orders", ok: data.invoiceReview === 0 },
     { key: "receivables", title: t("dailyOps.step.receivables.title"), detail: data.unpaidReady ? `${data.unpaidReady} ${t("system.check.unpaid.fix")}` : t("dailyOps.step.receivables.ok"), href: "/receivables", ok: data.unpaidReady === 0 },

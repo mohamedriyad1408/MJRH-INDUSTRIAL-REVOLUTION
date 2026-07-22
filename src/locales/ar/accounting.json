@@ -113,7 +113,7 @@
     "repairSuccess": "تم فحص وإصلاح الخزنة والحسابات",
     "advancesSynced": "تمت مزامنة {{count}} سلفة كمصروف وحركة خزنة",
     "payrollGenerated": "تم توليد مسير الرواتب: {{count}} موظف",
-    "payrollPosted": "تم ترحيل الرواتب كمصروفات مستحقة",
+    "payrollPosted": "تم ترحيل الرواتب كمصروفات مستحقة", "manualTxName": "حركة خزنة يدوية", "transferTxName": "تحويل بين الخزن", "advanceTxName": "تسجيل سلفة موظف", "salaryPaymentTxName": "صرف راتب",
     "payrollPaid": "تم صرف الرواتب وتحديث الخزنة"
   }
 }

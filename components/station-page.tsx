@@ -80,24 +80,24 @@ export function StationPage({
       <div>
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="text-sm text-muted-foreground">
-          {incoming && <>{t("station.common.incoming")}: {queue.length} • </>}{t("station.common.active")}: {active.length}
+          {incoming && <>{t("stations.common.incoming")}: {queue.length} • </>}{t("stations.common.active")}: {active.length}
         </p>
       </div>
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className={`grid gap-4 ${incoming ? "md:grid-cols-2" : ""}`}>
           {incoming && (
-            <Column title={`${t("station.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
-              <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("station.common.startProcessing")}</Button>
+            <Column title={`${t("stations.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
+              <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("stations.common.startProcessing")}</Button>
             )} />
           )}
-          <Column title={`${t("station.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
+          <Column title={`${t("stations.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
             <div className="flex gap-1">
               <Button size="sm" variant="outline" onClick={() => setAssignFor(o.id)}>
-                <UserPlus className="w-3 h-3 ms-1" />{t("station.common.assign")}
+                <UserPlus className="w-3 h-3 ms-1" />{t("stations.common.assign")}
               </Button>
               <Button size="sm" onClick={() => move(o.id, nextStatus, current)}>
-                {interpolate(t("station.common.moveTo"), { target: t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })} <ArrowLeft className="w-3 h-3 ms-1" />
+                {interpolate(t("stations.common.moveTo"), { target: t(`track.step.${nextStatus}`, ORDER_STATUS_AR[nextStatus]) })} <ArrowLeft className="w-3 h-3 ms-1" />
               </Button>
             </div>
           )} />
@@ -123,13 +123,13 @@ function Column({ title, list, action }: { title: string; list: Order[]; action:
     <Card>
       <CardContent className="p-4 space-y-2">
         <div className="font-bold text-sm mb-2">{title}</div>
-        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("station.common.noOrders")}</div>}
+        {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("stations.common.noOrders")}</div>}
         {list.map((o) => (
           <div key={o.id} className="rounded-lg border p-3 space-y-1">
             <div className="flex justify-between items-center">
               <div className="font-bold">
                 #{o.order_number}{" "}
-                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />{t("station.common.urgent")}</Badge>}
+                {o.is_urgent && <Badge className="bg-amber-500"><Zap className="w-3 h-3 ms-1" />{t("stations.common.urgent")}</Badge>}
               </div>
               <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
             </div>

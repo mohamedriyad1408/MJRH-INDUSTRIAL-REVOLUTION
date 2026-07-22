@@ -120,9 +120,9 @@ function ReceptionPage() {
   return (
     <div className="space-y-6" dir={dir}>
       <div>
-        <h1 className="text-2xl font-bold">{t("station.reception.title")}</h1>
+        <h1 className="text-2xl font-bold">{t("stations.reception.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          {interpolate(t("station.reception.summary"), { walkIn: walkIn.length, fromPickup: fromPickup.length, pickups: incomingPickups.length })}
+          {interpolate(t("stations.reception.summary"), { walkIn: walkIn.length, fromPickup: fromPickup.length, pickups: incomingPickups.length })}
         </p>
       </div>
 
@@ -136,9 +136,9 @@ function ReceptionPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">{t("station.reception.activePickups")} ({incomingPickups.length})</span>
-                <Badge variant="outline" className="text-xs">{t("station.reception.waitingDriver")}</Badge>
-                <Link to="/pickups" className="text-xs text-primary underline ms-auto">{t("station.reception.manageAll")}</Link>
+                <span className="font-bold text-sm">{t("stations.reception.activePickups")} ({incomingPickups.length})</span>
+                <Badge variant="outline" className="text-xs">{t("stations.reception.waitingDriver")}</Badge>
+                <Link to="/pickups" className="text-xs text-primary underline ms-auto">{t("stations.reception.manageAll")}</Link>
               </div>
               <div className="grid md:grid-cols-2 gap-3">
                 {incomingPickups.map((p) => (
@@ -147,7 +147,7 @@ function ReceptionPage() {
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-sm">{p.customer_name}</span>
                         <Badge variant="outline" className="text-xs">
-                          {p.status === "pending" ? t("station.reception.pickupPending") : t("station.reception.driverOnWay")}
+                          {p.status === "pending" ? t("stations.reception.pickupPending") : t("stations.reception.driverOnWay")}
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground">{p.address}</div>
@@ -164,10 +164,10 @@ function ReceptionPage() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <PackageOpen className="w-4 h-4 text-primary" />
-              <span className="font-bold text-sm">{t("station.reception.walkInOrders")} ({walkIn.length})</span>
+              <span className="font-bold text-sm">{t("stations.reception.walkInOrders")} ({walkIn.length})</span>
             </div>
             {walkIn.length === 0 ? (
-              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("station.reception.noOrders")}</CardContent></Card>
+              <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">{t("stations.reception.noOrders")}</CardContent></Card>
             ) : (
               <div className="space-y-2">
                 {walkIn.map((o) => (
@@ -186,7 +186,7 @@ function ReceptionPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="w-4 h-4 text-primary" />
-                <span className="font-bold text-sm">{t("station.reception.fromPickup")} ({fromPickup.length})</span>
+                <span className="font-bold text-sm">{t("stations.reception.fromPickup")} ({fromPickup.length})</span>
               </div>
               <div className="space-y-2">
                 {fromPickup.map((o) => (
@@ -230,7 +230,7 @@ function OrderCard({
         <div className="flex-1">
           <div className="font-bold flex items-center gap-2">
             #{o.order_number}
-            {o.is_urgent && <Badge className="bg-amber-500 text-white text-xs"><Zap className="w-3 h-3" /> {t("station.common.urgent")}</Badge>}
+            {o.is_urgent && <Badge className="bg-amber-500 text-white text-xs"><Zap className="w-3 h-3" /> {t("stations.common.urgent")}</Badge>}
           </div>
           <div className="text-sm text-muted-foreground">{o.customers?.full_name ?? "—"}</div>
           <div className="text-xs text-muted-foreground">{fmtDate(o.created_at)}</div>
@@ -238,11 +238,11 @@ function OrderCard({
         </div>
         {canMove && (
           <div className="flex gap-1 shrink-0">
-            <Button size="sm" variant="outline" onClick={onAssign}>{t("station.reception.assign")}</Button>
+            <Button size="sm" variant="outline" onClick={onAssign}>{t("stations.reception.assign")}</Button>
             <Button size="sm" disabled={acting === o.id} onClick={() => onMove(o.id)}>
               {acting === o.id
                 ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <><ArrowLeft className="w-3 h-3 ms-1" />{t("station.reception.startProcessing")}</>}
+                : <><ArrowLeft className="w-3 h-3 ms-1" />{t("stations.reception.startProcessing")}</>}
             </Button>
           </div>
         )}

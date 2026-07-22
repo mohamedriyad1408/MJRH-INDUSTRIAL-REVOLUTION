@@ -18,7 +18,7 @@
   "errCode": "Invalid code — last 4 digits are ({code})",
   "toastLocOk": "Location updated",
   "toastPickupStart": "Assigned to you",
-  "toastPickupDone": "Pickup completed",
+  "toastPickupDone": "Pickup for order #{order} completed",
   "toastDeliveryStart": "Status updated — Out for delivery",
   "toastDeliveryDone": "Delivery completed",
   "toastTip": "🎉 Delivered! {amount} EGP tip recorded for driver",

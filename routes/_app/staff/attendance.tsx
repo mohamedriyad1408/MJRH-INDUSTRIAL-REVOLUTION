@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -332,14 +332,14 @@ function AttendanceMawaredPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-            <span>{t("mawared.badge", "نظام موارد للموارد البشرية والحضور والانصراف — Mawared HR")}</span>
+            <span>{t("attendance.badge", "نظام موارد للموارد البشرية والحضور والانصراف — Mawared HR")}</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
             <Clock className="w-8 h-8 text-teal-600 shrink-0" />
-            <span>{t("mawared.title", "لوحة الحضور والانصراف والمناوبات")}</span>
+            <span>{t("attendance.title", "لوحة الحضور والانصراف والمناوبات")}</span>
           </h1>
           <p className="text-sm text-muted-foreground font-medium max-w-2xl leading-relaxed">
-            {t("mawared.subtitle", "تتبع الحضور اللحظي، المراقبة الجغرافية (GPS Geofencing)، حساب ساعات العمل اليومية وسجلات الحضور والغياب لجميع الموظفين.")}
+            {t("attendance.subtitle", "تتبع الحضور اللحظي، المراقبة الجغرافية (GPS Geofencing)، حساب ساعات العمل اليومية وسجلات الحضور والغياب لجميع الموظفين.")}
           </p>
         </div>
 
@@ -347,7 +347,7 @@ function AttendanceMawaredPage() {
           <div className="flex gap-2 items-center">
             <Button onClick={() => openNewRecord()} className="bg-teal-600 hover:bg-teal-700 text-white font-black shadow-md rounded-2xl h-12 px-5">
               <Plus className="w-5 h-5 ms-1.5" />
-              <span>{t("mawared.btnNew", "تسجيل وردية / تعديل يدوي")}</span>
+              <span>{t("attendance.btnNew", "تسجيل وردية / تعديل يدوي")}</span>
             </Button>
           </div>
         )}
@@ -365,7 +365,7 @@ function AttendanceMawaredPage() {
                 <div className="text-xs text-teal-200 font-bold uppercase tracking-wider font-mono">سجلك الشخصي اليومي في الموارد البشرية</div>
                 <h3 className="text-xl font-black mt-0.5">أهلاً بك، {currentEmp.full_name} 👋</h3>
                 <p className="text-xs text-teal-100 font-medium mt-1">
-                  {myOpenShift ? interpolate(t("attendance.presentSince"), { time: formatTime(myOpenShift.check_in_at) }) : "⭕ لم تقم بتسجيل حضورك اليومي حتى الآن في هذا التاريخ"}
+                  {myOpenShift ? interpolate(t("attendance.presentSince"), { time: formatTime(myOpenShift.check_in_at) }) : t("attendance.notCheckedIn")}
                 </p>
               </div>
             </div>
@@ -393,7 +393,7 @@ function AttendanceMawaredPage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 bg-white border rounded-2xl p-1.5 shadow-2xs">
               <Calendar className="w-4 h-4 text-teal-600 ms-2" />
-              <Label className="text-xs font-bold text-slate-700">{t("mawared.selectDate", "t("attendance.workDate") + ":"")}</Label>
+              <Label className="text-xs font-bold text-slate-700">{t("attendance.selectDate", t("attendance.workDate") + ":")}</Label>
               <Input
                 type="date"
                 value={date}
@@ -427,7 +427,7 @@ function AttendanceMawaredPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("mawared.searchPlaceholder", "بحث باسم الموظف، الفرع أو الوظيفة...")}
+              placeholder={t("attendance.searchPlaceholder", "بحث باسم الموظف، الفرع أو الوظيفة...")}
               className="h-10 pe-9 rounded-2xl bg-white font-medium"
             />
           </div>
@@ -439,7 +439,7 @@ function AttendanceMawaredPage() {
         <Card className="border border-slate-200/80 shadow-xs rounded-2xl bg-gradient-to-br from-white to-slate-50 overflow-hidden">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-500">{t("mawared.kpiStaff", "إجمالي الموظفين النشطين")}</p>
+              <p className="text-xs font-bold text-slate-500">{t("attendance.kpiStaff", "إجمالي الموظفين النشطين")}</p>
               <p className="text-2xl md:text-3xl font-black font-mono text-slate-900">{employees.length}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-slate-100 border text-slate-700 flex items-center justify-center shrink-0">
@@ -453,7 +453,7 @@ function AttendanceMawaredPage() {
             <div className="space-y-1">
               <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
-                <span>{t("mawared.kpiPresent", "حاضرون في العمل الآن")}</span>
+                <span>{t("attendance.kpiPresent", "حاضرون في العمل الآن")}</span>
               </p>
               <p className="text-2xl md:text-3xl font-black font-mono text-emerald-700">{presentRecords.length}</p>
             </div>
@@ -466,7 +466,7 @@ function AttendanceMawaredPage() {
         <Card className="border border-blue-200 shadow-xs rounded-2xl bg-gradient-to-br from-white to-blue-50/40 overflow-hidden">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-blue-800">{t("mawared.kpiCheckedOut", "ورديات مكتملة (منصرف)")}</p>
+              <p className="text-xs font-bold text-blue-800">{t("attendance.kpiCheckedOut", "ورديات مكتملة (منصرف)")}</p>
               <p className="text-2xl md:text-3xl font-black font-mono text-blue-700">{checkedOutRecords.length}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center shrink-0">
@@ -478,7 +478,7 @@ function AttendanceMawaredPage() {
         <Card className="border border-amber-200 shadow-xs rounded-2xl bg-gradient-to-br from-white to-amber-50/40 overflow-hidden">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-amber-800">{t("mawared.kpiHours", "إجمالي ساعات العمل المسجلة")}</p>
+              <p className="text-xs font-bold text-amber-800">{t("attendance.kpiHours", "إجمالي ساعات العمل المسجلة")}</p>
               <p className="text-lg md:text-xl font-black font-mono text-amber-900">{totalHoursFormatted}</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
@@ -521,13 +521,13 @@ function AttendanceMawaredPage() {
         <div className="space-y-4">
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900 text-xs font-bold flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-            <span>{t("mawared.absentNotice", "تنبيه: هؤلاء الموظفون لم يقوموا بتسجيل حضورهم حتى هذه اللحظة في تاريخ هذا اليوم.")}</span>
+            <span>{t("attendance.absentNotice", "تنبيه: هؤلاء الموظفون لم يقوموا بتسجيل حضورهم حتى هذه اللحظة في تاريخ هذا اليوم.")}</span>
           </div>
 
           {filteredAbsent.length === 0 ? (
             <Card className="p-12 text-center border-dashed rounded-3xl">
               <UserCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <h3 className="font-black text-lg text-slate-800">{t("mawared.noAbsent", "ممتاز! لا يوجد أي غياب مسجل هذا اليوم")}</h3>
+              <h3 className="font-black text-lg text-slate-800">{t("attendance.noAbsent", "ممتاز! لا يوجد أي غياب مسجل هذا اليوم")}</h3>
               <p className="text-xs text-slate-500 mt-1">جميع الموظفين النشطين قاموا بتسجيل الحضور.</p>
             </Card>
           ) : (
@@ -546,7 +546,7 @@ function AttendanceMawaredPage() {
                     {isManager && (
                       <Button size="sm" onClick={() => quickCheckIn(emp.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shrink-0">
                         <LogIn className="w-3.5 h-3.5 ms-1" />
-                        <span>{t("mawared.btnQuickCheckIn", "حضور الآن")}</span>
+                        <span>{t("attendance.btnQuickCheckIn", "حضور الآن")}</span>
                       </Button>
                     )}
                   </CardContent>
@@ -562,12 +562,12 @@ function AttendanceMawaredPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colEmp", "الموظف والفرع")}</th>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colStatus", "الحالة")}</th>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colCheckIn", "حضور (Check-In)")}</th>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colCheckOut", "انصراف (Check-Out)")}</th>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colDuration", "مدة العمل")}</th>
-                  <th className="p-4 text-start font-black text-slate-700">{t("mawared.colNotes", "ملاحظات / الرقابة")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colEmp", "الموظف والفرع")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colStatus", "الحالة")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colCheckIn", "حضور (Check-In)")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colCheckOut", "انصراف (Check-Out)")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colDuration", "مدة العمل")}</th>
+                  <th className="p-4 text-start font-black text-slate-700">{t("attendance.colNotes", "ملاحظات / الرقابة")}</th>
                   {isManager && <th className="p-4 text-end font-black text-slate-700">{t("common.actions", "إجراءات")}</th>}
                 </tr>
               </thead>
@@ -654,7 +654,7 @@ function AttendanceMawaredPage() {
 
                         <td className="p-4">
                           <div className="text-xs text-slate-600 max-w-xs truncate" title={r.notes || ""}>
-                            {r.notes || <span className="text-slate-400 italic">سجل طبيعي</span>}
+                            {r.notes || <span className="text-slate-400 italic">{t("attendance.normalRecord")}</span>}
                           </div>
                         </td>
 
@@ -747,7 +747,7 @@ function AttendanceMawaredPage() {
                 rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="مثال: نسى تسجيل الحضور بالهاتف، إذن مسبق..."
+                placeholder={t("attendance.notesPlaceholder")}
                 className="rounded-xl font-medium text-sm"
               />
             </div>

@@ -171,12 +171,12 @@ function OrderDetailPage() {
     setInvoiceItems(next);
     const totals = invoiceTotals(next);
     await supabase.from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
-    toast.success(t("order.itemCancelled", "تم إلغاء البند وتسجيل السبب"));
+    toast.success(t("orders.itemCancelled", "تم إلغاء البند وتسجيل السبب"));
     load();
   }
 
   async function saveInvoiceChanges() {
-    if (!invoiceItems.length) return toast.error(t("order.errEmptyInvoice", "الفاتورة لا تحتوي على بنود"));
+    if (!invoiceItems.length) return toast.error(t("orders.errEmptyInvoice", "الفاتورة لا تحتوي على بنود"));
     setInvoiceSaving(true);
     for (const it of invoiceItems) {
       const payload = { order_id: id, service_item_id: it.service_item_id ?? null, name: it.name, service_type: it.service_type as any, qty: Math.max(1, Number(it.qty)), unit_price: Number(it.unit_price) };
@@ -194,12 +194,12 @@ function OrderDetailPage() {
     const totals = invoiceTotals();
     const { error } = await supabase.from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
     setInvoiceSaving(false);
-    if (error) toast.error(error.message); else { toast.success(t("order.invoiceSaved", "تم حفظ تعديلات الفاتورة")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.invoiceSaved", "تم حفظ تعديلات الفاتورة")); load(); }
   }
 
   async function updateUnitService(unit: ServiceUnit, serviceType: string) {
     const { error } = await supabase.from("service_units").update({ service_type: serviceType, current_stage: serviceType === "both" ? "cleaning" : unit.current_stage }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success(t("order.unitServiceUpdated", "تم تعديل خدمة القطعة")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.unitServiceUpdated", "تم تعديل خدمة القطعة")); load(); }
   }
 
   async function finalizeAndNotify() {
@@ -211,7 +211,7 @@ function OrderDetailPage() {
     const msg = `${t("orders.finalInvoiceMsg", "فاتورتك النهائية من Dry Tech لطلب")} #${order.order_number}: ${Math.round(totals.total)} ج. رابط التتبع: ${location.origin}/track/${order.public_token}`;
     if (phone.length >= 11) window.open(`https://wa.me/2${phone.startsWith("0") ? phone.slice(1) : phone}?text=${encodeURIComponent(msg)}`, "_blank");
     await supabase.rpc("record_operation_event", { _process_key: "invoice_finalized", _process_name: t("orders.toastInvoiceFinalized"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: phone.length >= 11, _data: { tenant_id: order.tenant_id, order_number: order.order_number, total: totals.total, customer_phone: phone }, _output: { cash_impact: false, journal_required: false, appears_in_report: true, notification_prepared: phone.length >= 11 } }).then(() => null);
-    toast.success(t("order.invoiceFinalized", "تم تأكيد الفاتورة وتجهيز إشعار العميل"));
+    toast.success(t("orders.invoiceFinalized", "تم تأكيد الفاتورة وتجهيز إشعار العميل"));
     load();
   }
 
@@ -238,7 +238,7 @@ function OrderDetailPage() {
     setAddingUnit(false);
     if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: "إضافة قطعة للطلب", _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
-    toast.success(t("order.unitAdded", "تمت إضافة القطعة"));
+    toast.success(t("orders.unitAdded", "تمت إضافة القطعة"));
     setForm({ garment_type: "shirt", color: "", notes: "" });
     load();
   }
@@ -253,12 +253,12 @@ function OrderDetailPage() {
     const { error: uErr } = await supabase.from("service_units").update({ photo_url: data.publicUrl }).eq("id", unit.id);
     setUploading(null);
     if (uErr) return toast.error(uErr.message);
-    toast.success(t("order.photoSaved", "تم حفظ صورة القطعة"));
+    toast.success(t("orders.photoSaved", "تم حفظ صورة القطعة"));
     load();
   }
 
   async function markReclean(unit: ServiceUnit) {
-    const reason = prompt(t("order.recleanReasonPrompt", "سبب رجوع القطعة للتنظيف؟"), unit.reclean_reason ?? "");
+    const reason = prompt(t("orders.recleanReasonPrompt", "سبب رجوع القطعة للتنظيف؟"), unit.reclean_reason ?? "");
     if (reason === null) return;
     const { error } = await supabase.from("service_units").update({
       needs_reclean: true,
@@ -266,7 +266,7 @@ function OrderDetailPage() {
       reclean_reported_by: user?.id,
       reclean_reported_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: t("orders.toastRecleanReported"), _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("order.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
+    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: t("orders.toastRecleanReported"), _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("orders.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
   }
 
   async function resolveReclean(unit: ServiceUnit) {
@@ -274,17 +274,17 @@ function OrderDetailPage() {
       needs_reclean: false,
       reclean_resolved_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { toast.success(t("order.recleanResolved", "تم إنهاء مرتجع التنظيف")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.recleanResolved", "تم إنهاء مرتجع التنظيف")); load(); }
   }
 
   async function assignIroning() {
     setAssigning(true);
     try {
       const r = await autoAssignIroningPieces(id);
-      toast.success(r.assigned ? interpolate(t("order.ironingAssignedCount", "تم توزيع {count} قطعة على فنيي الكي"), { count: r.assigned }) : t("order.noIroningUnassigned", "لا توجد قطع كي غير موزعة"));
+      toast.success(r.assigned ? interpolate(t("orders.ironingAssignedCount", "تم توزيع {count} قطعة على فنيي الكي"), { count: r.assigned }) : t("orders.noIroningUnassigned", "لا توجد قطع كي غير موزعة"));
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("order.errAssigningIroning", "تعذر توزيع الكي"));
+      toast.error(e instanceof Error ? e.message : t("orders.errAssigningIroning", "تعذر توزيع الكي"));
     } finally {
       setAssigning(false);
     }
@@ -300,7 +300,7 @@ function OrderDetailPage() {
     }
     const { error } = await supabase.from("orders").update({ payment_status: next }).eq("id", id);
     if (!error) await supabase.rpc("record_operation_event", { _process_key: next === "paid" ? "payment_recorded" : "payment_marked_unpaid", _process_name: next === "paid" ? "تسجيل تحصيل طلب" : "جعل الطلب آجل", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: cashAccountId, _report_bucket: "finance/receivables", _requires_notification: false, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), payment_method: order.payment_method }, _output: { cash_impact: next === "paid", journal_required: next === "paid", appears_in_report: true } }).then(() => null);
-    if (error) toast.error(error.message); else { toast.success(next === "paid" ? t("order.paymentRecorded") : t("order.markedUnpaid")); load(); }
+    if (error) toast.error(error.message); else { toast.success(next === "paid" ? t("orders.paymentRecorded") : t("orders.markedUnpaid")); load(); }
   }
 
   async function uploadPaymentProof(file: File) {
@@ -320,19 +320,19 @@ function OrderDetailPage() {
     setProofUploading(false);
     if (uErr) return toast.error(uErr.message);
     await supabase.rpc("record_operation_event", { _process_key: "payment_proof_uploaded", _process_name: "رفع إيصال دفع", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "finance/payment-review", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), proof_url: data.publicUrl }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
-    toast.success(t("order.instapayProofSaved", "تم حفظ صورة تحويل InstaPay وتسجيل الدفع"));
+    toast.success(t("orders.instapayProofSaved", "تم حفظ صورة تحويل InstaPay وتسجيل الدفع"));
     load();
   }
 
   async function registerCustomerReturn(unit: ServiceUnit) {
-    if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error(t("order.errAdminOnlyReturn", "تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط"));
-    const typeRaw = prompt(t("order.returnTypePrompt", "نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى"), t("common.cleaning"));
+    if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error(t("orders.errAdminOnlyReturn", "تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط"));
+    const typeRaw = prompt(t("orders.returnTypePrompt", "نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى"), t("common.cleaning"));
     if (typeRaw === null) return;
     const tVal = typeRaw.trim();
     const returnType = /كي/.test(tVal) ? "reiron" : /تصليح|repair/.test(tVal) ? "repair" : /اخرى|أخرى|other/.test(tVal) ? "other" : "reclean";
     const reason = prompt(t("orders.returnReasonPrompt"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error(t("order.errReasonRequired"));
+    if (reason.trim().length < 3) return toast.error(t("orders.errReasonRequired"));
     const { error } = await supabase.rpc("register_customer_return", {
       _order_id: id,
       _service_unit_id: unit.id,
@@ -342,35 +342,35 @@ function OrderDetailPage() {
       _billable: false,
       _amount: 0,
     });
-    if (error) toast.error(error.message); else { toast.success(t("order.returnRegistered", "تم تسجيل مرتجع العميل وربطه بالقطعة والمحطات")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.returnRegistered", "تم تسجيل مرتجع العميل وربطه بالقطعة والمحطات")); load(); }
   }
 
   async function completeCustomerReturn(row: any) {
-    const note = prompt(t("order.closeReturnNotePrompt", "ملاحظات إغلاق المرتجع؟"), t("order.closeReturnNoteDefault", "تم الحل والتسليم للعميل"));
+    const note = prompt(t("orders.closeReturnNotePrompt", "ملاحظات إغلاق المرتجع؟"), t("orders.closeReturnNoteDefault", "تم الحل والتسليم للعميل"));
     if (note === null) return;
     const { error } = await supabase.rpc("complete_customer_return", { _return_id: row.id, _notes: note });
-    if (error) toast.error(error.message); else { toast.success(t("order.returnClosed", "تم إغلاق مرتجع العميل")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.returnClosed", "تم إغلاق مرتجع العميل")); load(); }
   }
 
   async function cancelOrder() {
-    if (!hasRole("owner")) return toast.error(t("order.errOwnerOnlyCancel", "إلغاء الطلب بالكامل للمالك فقط"));
-    const reason = prompt(t("order.cancelFullReasonPrompt", "سبب إلغاء الطلب بالكامل؟"));
+    if (!hasRole("owner")) return toast.error(t("orders.errOwnerOnlyCancel", "إلغاء الطلب بالكامل للمالك فقط"));
+    const reason = prompt(t("orders.cancelFullReasonPrompt", "سبب إلغاء الطلب بالكامل؟"));
     if (reason === null) return;
-    if (reason.trim().length < 3) return toast.error(t("order.errReasonRequired"));
+    if (reason.trim().length < 3) return toast.error(t("orders.errReasonRequired"));
     const { error } = await supabase.rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
     if (!error) await supabase.rpc("record_operation_event", { _process_key: "order_cancelled", _process_name: "إلغاء طلب", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason: reason.trim(), total: Number(order.total ?? 0) }, _output: { cash_impact: false, journal_required: Number(order.total ?? 0) > 0, appears_in_report: true } }).then(() => null);
-    if (error) toast.error(error.message); else { toast.success(t("order.orderCancelled", "تم إلغاء الطلب وتسجيل السبب")); load(); }
+    if (error) toast.error(error.message); else { toast.success(t("orders.orderCancelled", "تم إلغاء الطلب وتسجيل السبب")); load(); }
   }
 
   async function overrideCloseOrder() {
-    if (!hasRole("owner", "ops_manager")) return toast.error(t("order.errOpsOnlyOverride", "صلاحية مدير التشغيل أو المالك فقط"));
-    const reason = prompt(t("order.overrideCloseReasonPrompt", "سبب إغلاق الطلب بتجاوز التحقق؟"), t("order.overrideCloseReasonDefault", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً"));
+    if (!hasRole("owner", "ops_manager")) return toast.error(t("orders.errOpsOnlyOverride", "صلاحية مدير التشغيل أو المالك فقط"));
+    const reason = prompt(t("orders.overrideCloseReasonPrompt", "سبب إغلاق الطلب بتجاوز التحقق؟"), t("orders.overrideCloseReasonDefault", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً"));
     if (reason === null) return;
     const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
     if (!error) {
       await supabase.from("order_status_history").insert({ order_id: id, from_status: order.status, to_status: "delivered", changed_by: user?.id, notes: `${t("orders.overrideClose")}: ${reason}` });
       await supabase.rpc("record_operation_event", { _process_key: "order_delivered_override", _process_name: t("orders.overrideClose"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/delivery", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason }, _output: { cash_impact: order.payment_status !== "paid", journal_required: order.payment_status !== "paid", appears_in_report: true } }).then(() => null);
-      toast.success(t("order.overrideCloseDone", "تم إغلاق الطلب بتجاوز التحقق"));
+      toast.success(t("orders.overrideCloseDone", "تم إغلاق الطلب بتجاوز التحقق"));
       load();
     } else toast.error(error.message);
   }
@@ -385,7 +385,7 @@ function OrderDetailPage() {
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-5 h-5 animate-spin" /></div>;
-  if (!order) return <div className="p-8 text-center text-muted-foreground">{t("order.notFound")}</div>;
+  if (!order) return <div className="p-8 text-center text-muted-foreground">{t("orders.notFound")}</div>;
 
   const canEdit = hasRole("cs_manager", "ops_manager", "owner");
   const canOperate = hasRole("ops_manager", "owner", "employee");
@@ -401,28 +401,28 @@ function OrderDetailPage() {
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm"><Link to="/orders"><ArrowRight className="w-4 h-4" /></Link></Button>
           <div>
-            <h1 className="text-2xl font-bold">{t("order.orderNo", "طلب #{order}").replace("{order}", String(order.order_number))}</h1>
+            <h1 className="text-2xl font-bold">{t("orders.orderNo", "طلب #{order}").replace("{order}", String(order.order_number))}</h1>
             <p className="text-sm text-muted-foreground">{order.customers?.full_name} · {order.customers?.phone}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <PrintInvoiceButton order={{ ...order, customers: order.customers, order_items: order.order_items ?? [] }} />
           <Button variant={order.payment_status === "paid" ? "default" : "outline"} onClick={togglePayment} className={order.payment_status === "paid" ? "bg-emerald-600" : ""}>
-            {order.payment_status === "paid" ? t("order.paid") : t("order.recordPayment")}
+            {order.payment_status === "paid" ? t("orders.paid") : t("orders.recordPayment")}
           </Button>
           {(order.payment_method === "instapay" || order.payment_method === "cod_instapay") && canEdit && (
             <label className="inline-flex">
               <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPaymentProof(e.target.files[0])} />
               <Button type="button" variant={order.payment_proof_url ? "default" : "outline"} disabled={proofUploading} asChild>
-                <span>{proofUploading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} {t("order.instapayProof")}</span>
+                <span>{proofUploading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Upload className="w-4 h-4 ms-1" />} {t("orders.instapayProof")}</span>
               </Button>
             </label>
           )}
-          {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> {t("order.viewReceipt")}</a></Button>}
-          {hasRole("owner") && order.status !== "cancelled" && <Button variant="destructive" onClick={cancelOrder}>{t("order.cancelWithReason")}</Button>}
-          {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>{t("order.overrideClose")}</Button>}
-          <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> {t("order.printLabels")}</Button>
-          {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? t("order.assigning") : t("order.assignIroning")}</Button>}
+          {order.payment_proof_url && <Button asChild variant="outline"><a href={order.payment_proof_url} target="_blank" rel="noreferrer"><ImageIcon className="w-4 h-4 ms-1" /> {t("orders.viewReceipt")}</a></Button>}
+          {hasRole("owner") && order.status !== "cancelled" && <Button variant="destructive" onClick={cancelOrder}>{t("orders.cancelWithReason")}</Button>}
+          {hasRole("owner", "ops_manager") && order.status !== "delivered" && order.status !== "cancelled" && <Button variant="destructive" onClick={overrideCloseOrder}>{t("orders.overrideClose")}</Button>}
+          <Button variant="outline" onClick={printLabels} disabled={!units.length}><Printer className="w-4 h-4 ms-1" /> {t("orders.printLabels")}</Button>
+          {canEdit && <Button onClick={assignIroning} disabled={assigning || !units.length}><Scale className="w-4 h-4 ms-1" /> {assigning ? t("orders.assigning") : t("orders.assignIroning")}</Button>}
           <StatusBadge level={statusLevel(order.status)} label={t(`track.step.${order.status}`, order.status)} />
         </div>
       </div>
@@ -430,38 +430,38 @@ function OrderDetailPage() {
       <OrderIssuePanel issues={issueList} />
 
       <div className="grid md:grid-cols-4 gap-3">
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.piecesCount")}</div><div className="text-xl font-black">{pieceCount}</div></CardContent></Card>
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.shirtsCount")}</div><div className="text-xl font-black">{shirtCount}</div></CardContent></Card>
-        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.piecesValue")}</div><div className="text-xl font-black">{invoiceValue.toLocaleString()} {t("common.egp")}</div></CardContent></Card>
-        <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("order.recleanCount")}</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("orders.piecesCount")}</div><div className="text-xl font-black">{pieceCount}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("orders.shirtsCount")}</div><div className="text-xl font-black">{shirtCount}</div></CardContent></Card>
+        <Card><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("orders.piecesValue")}</div><div className="text-xl font-black">{invoiceValue.toLocaleString()} {t("common.egp")}</div></CardContent></Card>
+        <Card className={recleanUnits.length ? "border-amber-300 bg-amber-50" : ""}><CardContent className="p-3"><div className="text-xs text-muted-foreground">{t("orders.recleanCount")}</div><div className="text-xl font-black">{recleanUnits.length}</div></CardContent></Card>
       </div>
 
       <OrderTimeline order={order} units={units} historyRows={historyRows} pickupRows={pickupRows} cancelRows={cancelRows} qcRows={qcRows} operationRows={operationRows} attachmentRows={attachmentRows} cashRows={cashRows} journalRows={journalRows} messageRows={messageRows} employeeLedgerRows={employeeLedgerRows} customerReturnRows={customerReturnRows} />
 
       {customerReturnRows.length > 0 && <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> {t("order.customerReturnsTitle")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> {t("orders.customerReturnsTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {customerReturnRows.map((r) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type, t)} · {returnStatusAr(r.status, t)}</div>
-              {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>{t("order.closeReturn")}</Button>}
+              {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>{t("orders.closeReturn")}</Button>}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">{t("order.reason")}: {r.reason}</div>
+            <div className="text-xs text-muted-foreground mt-1">{t("orders.reason")}: {r.reason}</div>
           </div>)}
         </CardContent>
       </Card>}
 
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> {t("order.invoiceEditTitle")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><CreditCard className="w-4 h-4 text-teal-600" /> {t("orders.invoiceEditTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {canEdit && <div className="flex gap-2">
             <Select onValueChange={addInvoiceService}>
-              <SelectTrigger><SelectValue placeholder={t("order.addInvoiceItem")} /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("orders.addInvoiceItem")} /></SelectTrigger>
               <SelectContent>{services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} — {Number(s.unit_price).toLocaleString()} {t("common.egp")}</SelectItem>)}</SelectContent>
             </Select>
             <Button onClick={saveInvoiceChanges} disabled={invoiceSaving}>{invoiceSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("common.save")}</Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> {t("order.finalizeNotify")}</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> {t("orders.finalizeNotify")}</Button>
           </div>}
           <div className="space-y-2">
             {invoiceItems.map((it, idx) => (
@@ -474,15 +474,15 @@ function OrderDetailPage() {
               </div>
             ))}
           </div>
-          <div className="rounded-xl bg-muted p-3 flex justify-between font-black"><span>{t("order.finalTotal")}</span><span>{invoiceTotals().total.toLocaleString()} {t("common.egp")}</span></div>
-          {order.invoice_finalized_at && <Badge className="bg-emerald-600">{t("order.invoiceConfirmed")}</Badge>}
+          <div className="rounded-xl bg-muted p-3 flex justify-between font-black"><span>{t("orders.finalTotal")}</span><span>{invoiceTotals().total.toLocaleString()} {t("common.egp")}</span></div>
+          {order.invoice_finalized_at && <Badge className="bg-emerald-600">{t("orders.invoiceConfirmed")}</Badge>}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> {t("order.unitsTitle")} ({units.length})</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> {t("orders.unitsTitle")} ({units.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t("order.noUnits")}</p>}
+          {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t("orders.noUnits")}</p>}
           {units.map((u) => (
             <div key={u.id} className="grid md:grid-cols-[88px_1fr_auto] gap-3 p-3 border rounded-xl bg-card">
               <div className="flex flex-col items-center gap-2">
@@ -490,7 +490,7 @@ function OrderDetailPage() {
                   {u.photo_url ? <img src={u.photo_url} className="w-full h-full object-cover" /> : <Camera className="w-7 h-7 text-muted-foreground" />}
                 </div>
                 {canEdit && <label className="text-xs text-teal-700 cursor-pointer underline">
-                  {uploading === u.id ? t("order.uploading") : t("order.photo")}
+                  {uploading === u.id ? t("orders.uploading") : t("orders.photo")}
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(u, e.target.files[0])} />
                 </label>}
               </div>
@@ -498,33 +498,33 @@ function OrderDetailPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-black text-lg">{u.label_code}</span>
                   <Badge variant="outline">{u.name}</Badge>
-                  {u.is_shirt_like && <Badge className="bg-blue-600">{t("order.shirtLike")}</Badge>}
-                  {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("order.recleanBadge")}</Badge>}
+                  {u.is_shirt_like && <Badge className="bg-blue-600">{t("orders.shirtLike")}</Badge>}
+                  {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("orders.recleanBadge")}</Badge>}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {u.attributes?.color ? `${t("order.color")}: ${u.attributes.color} · ` : ""}
-                  {t("order.estimatedValue")}: {Number(u.line_value ?? 0).toLocaleString()} {t("common.egp")} · {t("order.effort")} ×{u.complexity_factor}
+                  {u.attributes?.color ? `${t("orders.color")}: ${u.attributes.color} · ` : ""}
+                  {t("orders.estimatedValue")}: {Number(u.line_value ?? 0).toLocaleString()} {t("common.egp")} · {t("orders.effort")} ×{u.complexity_factor}
                 </div>
                 {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">{t("stage.ironing")}</SelectItem><SelectItem value="both">{t("common.cleanIron")}</SelectItem><SelectItem value="cleaning">{t("common.repair")}</SelectItem></SelectContent></Select></div>}
                 <div className="text-xs text-muted-foreground">
-                  {t("order.ironingTech")}: <b>{u.employees?.full_name ?? t("order.notAssignedYet")}</b>
+                  {t("orders.ironingTech")}: <b>{u.employees?.full_name ?? t("orders.notAssignedYet")}</b>
                 </div>
                 {u.customer_notes && <div className="text-xs text-amber-700">📝 {u.customer_notes}</div>}
-                {u.needs_reclean && <div className="text-xs text-amber-700">{t("order.recleanReason")}: {u.reclean_reason} · {t("order.returnToSameTech")}</div>}
+                {u.needs_reclean && <div className="text-xs text-amber-700">{t("orders.recleanReason")}: {u.reclean_reason} · {t("orders.returnToSameTech")}</div>}
               </div>
               {canOperate && <div className="flex md:flex-col gap-2 justify-end">
-                {order.status === "delivered" ? <Button size="sm" variant="outline" onClick={() => registerCustomerReturn(u)}><RotateCcw className="w-3 h-3 ms-1" /> {t("order.customerReturn")}</Button> : <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> {t("order.reclean")}</Button>}
-                {u.needs_reclean && <Button size="sm" onClick={() => resolveReclean(u)}><CheckCircle2 className="w-3 h-3 ms-1" /> {t("order.cleaned")}</Button>}
+                {order.status === "delivered" ? <Button size="sm" variant="outline" onClick={() => registerCustomerReturn(u)}><RotateCcw className="w-3 h-3 ms-1" /> {t("orders.customerReturn")}</Button> : <Button size="sm" variant="outline" onClick={() => markReclean(u)}><AlertTriangle className="w-3 h-3 ms-1" /> {t("orders.reclean")}</Button>}
+                {u.needs_reclean && <Button size="sm" onClick={() => resolveReclean(u)}><CheckCircle2 className="w-3 h-3 ms-1" /> {t("orders.cleaned")}</Button>}
               </div>}
             </div>
           ))}
 
           {canEdit && (
             <div className="border-t pt-4 space-y-3">
-              <p className="text-sm font-bold">{t("order.manualPiece")}</p>
+              <p className="text-sm font-bold">{t("orders.manualPiece")}</p>
               <div className="grid md:grid-cols-3 gap-2">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.pieceType")}</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("orders.pieceType")}</label>
                   <Select value={form.garment_type} onValueChange={(v) => setForm((f) => ({ ...f, garment_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{GARMENT_TYPES.map((item) => {
@@ -533,18 +533,18 @@ function OrderDetailPage() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.color")}</label>
-                  <Input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} placeholder={t("order.colorPlaceholder")} />
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("orders.color")}</label>
+                  <Input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} placeholder={t("orders.colorPlaceholder")} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">{t("order.notes")}</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t("orders.notes")}</label>
                   <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={1} />
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{t("order.manualPieceHint")}</span>
+                <span className="text-xs text-muted-foreground">{t("orders.manualPieceHint")}</span>
                 <Button onClick={addUnit} disabled={addingUnit} size="sm">
-                  {addingUnit ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 ms-1" /> {t("order.addPiece")}</>}
+                  {addingUnit ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4 ms-1" /> {t("orders.addPiece")}</>}
                 </Button>
               </div>
             </div>

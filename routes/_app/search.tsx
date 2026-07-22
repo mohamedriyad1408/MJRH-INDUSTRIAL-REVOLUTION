@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -11,10 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search, Loader2, QrCode, Phone, User, FileText, Package,
   AlertTriangle, X, Sparkles, Wallet, CheckCircle2, ArrowLeft, ArrowRight,
-  Filter, Layers, Calendar, ExternalLink, Plus,
+  Filter, Layers, Calendar, ExternalLink, Plus, RefreshCw,
 } from "lucide-react";
-
-import { useRef } from "react";
 
 type SearchParams = { q?: string };
 
@@ -280,7 +278,7 @@ function SearchResultsPage() {
   const totalCount = orders.length + customers.length + pieces.length + financials.length;
 
   const translateStatus = (st: string) => {
-    return t(`status.order.${st}`, st);
+    return t(`common.status.order.${st}`, st);
   };
 
   const getStatusColor = (st: string) => {

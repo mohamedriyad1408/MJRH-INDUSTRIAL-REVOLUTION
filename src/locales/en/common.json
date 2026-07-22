@@ -55,6 +55,8 @@
   "address": "Address",
   "other": "Other",
   "clear": "Clear",
+  "backToHome": "Back to Home",
+  "retry": "Retry",
   "cancel": "Cancel",
   "actions": "Actions",
   "edit": "Edit",
@@ -84,8 +86,8 @@
   "qcPassed": "QC Passed",
   "qcFailed": "QC Failed",
   "qcPending": "QC Pending",
-  "qcNotes": "QC Notes"
-  ,"stage": {
+  "qcNotes": "QC Notes",
+  "stage": {
     "received": "Received",
     "cleaning": "Cleaning",
     "cleaningDone": "Cleaning Done",
@@ -94,11 +96,58 @@
     "packing": "Packing",
     "packingDone": "Packing Done",
     "ready": "Ready"
-  }
-  ,"tenant": {
+  },
+  "tenant": {
     "suspended": {
       "title": "Laundry account deactivated",
       "body": "This account is currently suspended by the platform administration (Super Admin). Please contact support for reactivation."
     }
+  },
+  "waiting": {
+    "title": "Awaiting Activation",
+    "body": "Your account is currently being reviewed by management. You will be notified once your permissions are activated."
+  },
+  "app": {
+    "signOut": "Sign Out",
+    "tagline": "Project Operating System"
+  },
+  "status": {
+    "order": {
+      "received": "Received",
+      "cleaning": "Cleaning",
+      "ironing": "Ironing",
+      "packing": "Packing",
+      "ready": "Ready",
+      "out_for_delivery": "Out for Delivery",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "payment": {
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    }
+  },
+  "method": {
+    "cash": "Cash",
+    "instapay": "InstaPay",
+    "cod_cash": "Cash on Delivery",
+    "cod_instapay": "InstaPay on Delivery"
+  },
+  "type": {
+    "walk_in": "Walk-in",
+    "delivery": "Delivery"
+  },
+  "services": {
+    "typeCleaning": "Cleaning",
+    "typeIroning": "Ironing",
+    "typeBoth": "Wash & Iron"
+  },
+  "role": {
+    "owner": "Owner",
+    "cs_manager": "CS Manager",
+    "ops_manager": "Ops Manager",
+    "courier": "Courier",
+    "employee": "Employee",
+    "customer": "Customer"
   }
 }

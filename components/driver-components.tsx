@@ -151,7 +151,7 @@ export function PickupCard({
               {acting === p.id ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                t("station.common.assign")
+                t("stations.common.assign")
               )}
             </Button>
           )}
@@ -209,18 +209,18 @@ export function DeliveriesList({
             <div className="flex justify-between items-start">
               <div>
                 <div className="font-bold text-base flex items-center gap-2">
-                  {t("order.orderNo", "Order #{order}").replace("{order}", String(d.order_number))}
+                  {t("orders.orderNo", "Order #{order}").replace("{order}", String(d.order_number))}
                   {d.is_urgent && (
                     <Badge className="bg-amber-500 text-white">
-                      <Zap className="w-3 h-3 ms-1" /> {t("station.common.urgent")}
+                      <Zap className="w-3 h-3 ms-1" /> {t("stations.common.urgent")}
                     </Badge>
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {d.customers?.full_name}
                 </div>
-                <div className="text-xs text-muted-foreground">{t("orders.total")}: {Number(d.total ?? 0).toLocaleString("en-US")} {t("common.egp")} · {d.payment_status === "paid" ? t("order.paid") : t("driver.cod")}</div>
-                {(() => { const i = deliveryIssues[d.id]; return i && (i.label || i.reclean || i.notQc) ? <div className="mt-2 flex flex-wrap gap-1"><Badge variant="destructive">{t("driver.dontLeave")}</Badge>{i.label > 0 && <Badge variant="destructive">{t("station.common.mark")} {i.label}</Badge>}{i.reclean > 0 && <Badge className="bg-amber-500">{t("station.common.reclean")} {i.reclean}</Badge>}{i.notQc > 0 && <Badge variant="outline">{t("driver.qcMissing")} {i.notQc}</Badge>}</div> : <div className="mt-2"><Badge className="bg-emerald-600">{t("driver.readyForDelivery")}</Badge></div>; })()}
+                <div className="text-xs text-muted-foreground">{t("orders.total")}: {Number(d.total ?? 0).toLocaleString("en-US")} {t("common.egp")} · {d.payment_status === "paid" ? t("orders.paid") : t("driver.cod")}</div>
+                {(() => { const i = deliveryIssues[d.id]; return i && (i.label || i.reclean || i.notQc) ? <div className="mt-2 flex flex-wrap gap-1"><Badge variant="destructive">{t("driver.dontLeave")}</Badge>{i.label > 0 && <Badge variant="destructive">{t("stations.common.mark")} {i.label}</Badge>}{i.reclean > 0 && <Badge className="bg-amber-500">{t("stations.common.reclean")} {i.reclean}</Badge>}{i.notQc > 0 && <Badge variant="outline">{t("driver.qcMissing")} {i.notQc}</Badge>}</div> : <div className="mt-2"><Badge className="bg-emerald-600">{t("driver.readyForDelivery")}</Badge></div>; })()}
               </div>
               <Badge variant={d.status === "out_for_delivery" ? "default" : "secondary"}>
                 {d.status === "ready" ? t("stage.ready") : t("driver.outForDelivery")}

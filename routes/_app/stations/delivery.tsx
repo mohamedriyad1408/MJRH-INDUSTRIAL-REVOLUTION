@@ -9,5 +9,5 @@ export const Route = createFileRoute("/_app/stations/delivery")({
 
 function DeliveryStation() {
   const { t } = useI18n();
-  return <StationPage title={t("station.delivery.title")} station="delivery" incoming="ready" current="out_for_delivery" nextStatus="delivered" />;
+  return <StationPage title={t("stations.delivery.title")} station="delivery" incoming="ready" current="out_for_delivery" nextStatus="delivered" />;
 }

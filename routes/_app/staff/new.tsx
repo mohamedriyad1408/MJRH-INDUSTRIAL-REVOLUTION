@@ -154,7 +154,7 @@ function NewStaffPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <Field label={t("order.notes")}><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
+          <Field label={t("orders.notes")}><Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
         </CardContent>
       </Card>
 

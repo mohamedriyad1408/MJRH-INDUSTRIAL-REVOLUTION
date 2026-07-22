@@ -31,10 +31,10 @@ export function buildOrderIssues(order: any, units: ServiceUnit[], pickups: any[
 
 export function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
   const { t } = useI18n();
-  if (!issues.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("order.issuesOk")}</CardContent></Card>;
+  if (!issues.length) return <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-4 text-sm text-emerald-700 font-bold text-center">{t("orders.issuesOk")}</CardContent></Card>;
   const cls = (tone: string) => tone === "red" ? "border-red-200 bg-red-50 text-red-800" : tone === "amber" ? "border-amber-200 bg-amber-50 text-amber-800" : "border-blue-200 bg-blue-50 text-blue-800";
   return <Card>
-    <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> {t("order.issuesTitle")}</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-600" /> {t("orders.issuesTitle")}</CardTitle></CardHeader>
     <CardContent className="grid md:grid-cols-2 gap-2">
       {issues.map((x, i) => {
         const body = <div className={`rounded-xl border p-3 text-sm ${cls(x.tone)}`}>
@@ -47,7 +47,7 @@ export function OrderIssuePanel({ issues }: { issues: OrderIssue[] }) {
             </div>)}
             {x.units.length > 4 && <span className="text-[11px] opacity-70">+{x.units.length - 4}</span>}
           </div> : null}
-          <div className="text-xs font-bold mt-2">{t("order.nextStep")}: {x.action}</div>
+          <div className="text-xs font-bold mt-2">{t("orders.nextStep")}: {x.action}</div>
         </div>;
         return x.href ? <Link key={i} to={x.href as any}>{body}</Link> : <div key={i}>{body}</div>;
       })}
@@ -156,7 +156,7 @@ export function OrderTimeline({
   const cls = (tone?: string) => tone === "bad" ? "border-red-200 bg-red-50" : tone === "ok" ? "border-emerald-200 bg-emerald-50" : tone === "blue" ? "border-blue-200 bg-blue-50" : tone === "amber" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white";
 
   return <Card>
-    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> {t("order.timelineTitle")}</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-teal-600" /> {t("orders.timelineTitle")}</CardTitle></CardHeader>
     <CardContent className="space-y-2">
       {events.map((e, i) => <div key={i} className={`rounded-xl border p-3 flex items-start gap-3 ${cls(e.tone)}`}>
         <div className="mt-0.5 text-teal-700">{e.icon}</div>

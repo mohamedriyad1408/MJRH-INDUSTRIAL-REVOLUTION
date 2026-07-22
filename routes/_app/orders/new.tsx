@@ -1,5 +1,5 @@
 import { Row } from "@/components/new-order-components";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,7 +255,7 @@ function NewOrderPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} {t("order.pieces", "قطعة")}</Badge>
+            <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} {t("orders.pieces", "قطعة")}</Badge>
             <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/30 px-3 py-1">{shirtCount} {t("orders.shirts", "قميص/بلوزة")}</Badge>
             {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> {t("dashboard.kpi.urgent", "مستعجل")}</Badge>}
           </div>
@@ -297,7 +297,7 @@ function NewOrderPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2 text-sm">
-                  <Row label={t("order.subtotal", "المجموع الفرعي")} value={fmtMoney(subtotal, t("common.egp"))} />
+                  <Row label={t("orders.subtotal", "المجموع الفرعي")} value={fmtMoney(subtotal, t("common.egp"))} />
                   {isUrgent && <Row label={t("settings.urgentFee", "رسوم استعجال")} value={fmtMoney(urgentFee)} />}
                   {orderType === "delivery" && <Row label={t("stage.delivery", "توصيل")} value={fmtMoney(delivery)} />}
                   {disc > 0 && <Row label={`${t("orders.discount", "خصم")} ${discPct}%`} value={`- ${fmtMoney(disc, t("common.egp"))}`} />}
@@ -456,8 +456,8 @@ function NewOrderPage() {
                 </div>
 
                 <div>
-                  <Label className="text-slate-700">{t("order.notes", "ملاحظات")}</Label>
-                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("order.notes", "أي ملاحظات إضافية على الطلب...")} />
+                  <Label className="text-slate-700">{t("orders.notes", "ملاحظات")}</Label>
+                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("orders.notes", "أي ملاحظات إضافية على الطلب...")} />
                 </div>
               </CardContent>
             </Card>

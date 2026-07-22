@@ -1,4 +1,4 @@
 {
   "geoNotSupported": "المتصفح لا يدعم تحديد الموقع",
-  "geoFailed": "تعذر تحديد الموقع"
+  "geoFailed": "تعذر تحديد الموقع", "pageNotFound": "الصفحة غير موجودة", "pageNotFoundDetail": "الصفحة المطلوبة غير متاحة.", "unexpectedError": "حدث خطأ غير متوقع"
 }

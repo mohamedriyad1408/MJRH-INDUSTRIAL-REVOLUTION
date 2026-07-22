@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { validateOrderMove } from "@/lib/station-workflow";
 import { CheckCircle2, ShieldCheck, AlertTriangle, RotateCcw, Package, ArrowLeft, Loader2, Trophy, Tags } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/qc")({
   head: () => ({ meta: [{ title: "QC - MJRH" }] }),
@@ -122,66 +122,66 @@ function QcStation() {
     }
   }
 
-  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("station.qc.accessDenied")}</CardContent></Card>;
+  if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("stations.qc.accessDenied")}</CardContent></Card>;
 
   return (
     <div className="space-y-5" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-emerald-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7" /> {t("station.qc.title")}</h1>
-            <p className="text-sm text-white/70">{t("station.qc.subtitle")}</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><ShieldCheck className="w-7 h-7" /> {t("stations.qc.title")}</h1>
+            <p className="text-sm text-white/70">{t("stations.qc.subtitle")}</p>
           </div>
           <Button variant="secondary" onClick={load}>{t("common.refresh")}</Button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
-          <Mini label={t("station.common.orders")} value={groups.length} />
-          <Mini label={t("station.common.pieces")} value={units.length} />
-          <Mini label={t("station.qc.approved")} value={units.filter((u) => u.current_stage === "qc_passed").length} />
-          <Mini label={t("station.common.markIssue")} value={units.filter((u) => u.label_status && u.label_status !== "labeled").length} warn />
-          <Mini label={t("station.qc.qualityIssues")} value={units.filter((u) => u.needs_reclean || u.current_stage === "qc_failed").length} warn />
+          <Mini label={t("stations.common.orders")} value={groups.length} />
+          <Mini label={t("stations.common.pieces")} value={units.length} />
+          <Mini label={t("stations.qc.approved")} value={units.filter((u) => u.current_stage === "qc_passed").length} />
+          <Mini label={t("stations.common.markIssue")} value={units.filter((u) => u.label_status && u.label_status !== "labeled").length} warn />
+          <Mini label={t("stations.qc.qualityIssues")} value={units.filter((u) => u.needs_reclean || u.current_stage === "qc_failed").length} warn />
         </div>
       </div>
 
-      {!loading && groups[0] && <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-md"><CardContent className="p-4 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs text-emerald-700 font-bold mb-1">{t("station.qc.nextTask")}</div><div className="font-black text-lg">{t("order.orderNo", "طلب #{order}").replace("{order}", String(groups[0].order?.order_number ?? "?"))} — {groups[0].order?.customers?.full_name ?? t("station.common.customer")}</div><div className="text-xs text-muted-foreground">{t("station.qc.nextHint")}</div></div><Button asChild variant="outline"><Link to="/orders/$id" params={{ id: groups[0].orderId }}>{t("station.common.openOrder")}</Link></Button></CardContent></Card>}
+      {!loading && groups[0] && <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-md"><CardContent className="p-4 flex flex-wrap items-center justify-between gap-3"><div><div className="text-xs text-emerald-700 font-bold mb-1">{t("stations.qc.nextTask")}</div><div className="font-black text-lg">{t("orders.orderNo", "طلب #{order}").replace("{order}", String(groups[0].order?.order_number ?? "?"))} — {groups[0].order?.customers?.full_name ?? t("stations.common.customer")}</div><div className="text-xs text-muted-foreground">{t("stations.qc.nextHint")}</div></div><Button asChild variant="outline"><Link to="/orders/$id" params={{ id: groups[0].orderId }}>{t("stations.common.openOrder")}</Link></Button></CardContent></Card>}
 
       {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : (
         <div className="space-y-3">
-          {!groups.length && <Card><CardContent className="p-10 text-center text-muted-foreground">{t("station.qc.noPieces")}</CardContent></Card>}
+          {!groups.length && <Card><CardContent className="p-10 text-center text-muted-foreground">{t("stations.qc.noPieces")}</CardContent></Card>}
           {groups.map((g) => (
             <Card key={g.orderId} className="overflow-hidden bg-white/85 backdrop-blur">
               <CardHeader className="bg-muted/40 pb-3">
                 {(() => { const c = groupChecks(g.units); return <><div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> {t("order.orderNo", "طلب #{order}").replace("{order}", String(g.order?.order_number ?? "?"))}<Badge variant="outline">{g.units.length} {t("station.common.pieces")}</Badge>{c.allPassed && <Badge className="bg-emerald-600">{t("station.qc.allPassed")}</Badge>}{(c.label || c.reclean || c.qcFailed) ? <Badge variant="destructive">{t("station.qc.needsAction")}</Badge> : null}</CardTitle>
-                  {g.order?.id && <Button asChild size="sm" variant="outline"><Link to="/orders/$id" params={{ id: g.order.id }}>{t("station.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
+                  <CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4 text-teal-600" /> {t("orders.orderNo", "طلب #{order}").replace("{order}", String(g.order?.order_number ?? "?"))}<Badge variant="outline">{g.units.length} {t("stations.common.pieces")}</Badge>{c.allPassed && <Badge className="bg-emerald-600">{t("stations.qc.allPassed")}</Badge>}{(c.label || c.reclean || c.qcFailed) ? <Badge variant="destructive">{t("stations.qc.needsAction")}</Badge> : null}</CardTitle>
+                  {g.order?.id && <Button asChild size="sm" variant="outline"><Link to="/orders/$id" params={{ id: g.order.id }}>{t("stations.common.openOrder")} <ArrowLeft className="w-3 h-3 me-1" /></Link></Button>}
                 </div>
                 <div className="text-xs text-muted-foreground">{g.order?.customers?.full_name ?? "—"} · {g.order?.customers?.phone ?? ""}</div>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs"><Check label={t("station.packing.markOk")} ok={!c.label} bad={c.label} /><Check label={t("station.packing.noReturns")} ok={!c.reclean} bad={c.reclean} /><Check label={t("station.packing.packedCheck")} ok={!c.notPacked} bad={c.notPacked} /><Check label={t("station.qc.qcApproved")} ok={c.allPassed} bad={g.units.length - c.passed} /><Check label={t("station.qc.issues")} ok={!c.qcFailed} bad={c.qcFailed} /></div>
-                <div className="flex flex-wrap justify-end gap-2 mt-3"><Button size="sm" variant="outline" disabled={busy === g.orderId} onClick={() => approveSafeGroup(g)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("station.qc.approveSafe")}</Button><Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" disabled={busy === g.orderId || !c.allPassed} onClick={() => markReady(g)}><Trophy className="w-4 h-4 ms-1" />{t("station.qc.markReady")}</Button></div></>; })()}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3 text-xs"><Check label={t("stations.packing.markOk")} ok={!c.label} bad={c.label} /><Check label={t("stations.packing.noReturns")} ok={!c.reclean} bad={c.reclean} /><Check label={t("stations.packing.packedCheck")} ok={!c.notPacked} bad={c.notPacked} /><Check label={t("stations.qc.qcApproved")} ok={c.allPassed} bad={g.units.length - c.passed} /><Check label={t("stations.qc.issues")} ok={!c.qcFailed} bad={c.qcFailed} /></div>
+                <div className="flex flex-wrap justify-end gap-2 mt-3"><Button size="sm" variant="outline" disabled={busy === g.orderId} onClick={() => approveSafeGroup(g)}><CheckCircle2 className="w-4 h-4 ms-1" />{t("stations.qc.approveSafe")}</Button><Button size="sm" className="bg-emerald-600 hover:bg-emerald-500" disabled={busy === g.orderId || !c.allPassed} onClick={() => markReady(g)}><Trophy className="w-4 h-4 ms-1" />{t("stations.qc.markReady")}</Button></div></>; })()}
               </CardHeader>
               <CardContent className="p-3 grid md:grid-cols-2 gap-3">
                 {g.units.map((u) => (
                   <div key={u.id} className={`rounded-2xl border p-3 space-y-3 ${u.label_status && u.label_status !== "labeled" ? "bg-amber-50 border-amber-200" : u.current_stage === "qc_passed" ? "bg-emerald-50 border-emerald-200" : "bg-card"}`}>
                     <div className="flex items-start justify-between gap-2">
-                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">{t("station.common.stage")}: {t("stage." + u.current_stage, u.current_stage)}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">{t("station.common.labelIssue")}: {u.label_status === "missing_label" ? t("station.assembly.noMark") : t("station.assembly.unclearMark")}</div>}</div>
-                      {(u.needs_reclean || u.current_stage === "qc_failed" || (u.label_status && u.label_status !== "labeled")) && <Badge variant="destructive">{t("station.qc.issues")}</Badge>}
+                      <div><div className="font-black">{u.label_code} — {u.name}</div><div className="text-xs text-muted-foreground">{t("stations.common.stage")}: {t("stage." + u.current_stage, u.current_stage)}</div>{u.label_status && u.label_status !== "labeled" && <div className="text-xs text-amber-700 mt-1">{t("stations.common.labelIssue")}: {u.label_status === "missing_label" ? t("stations.assembly.noMark") : t("stations.assembly.unclearMark")}</div>}</div>
+                      {(u.needs_reclean || u.current_stage === "qc_failed" || (u.label_status && u.label_status !== "labeled")) && <Badge variant="destructive">{t("stations.qc.issues")}</Badge>}
                     </div>
-                    <Textarea rows={2} placeholder={t("station.qc.notePlaceholder")} value={notes[u.id] ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
+                    <Textarea rows={2} placeholder={t("stations.qc.notePlaceholder")} value={notes[u.id] ?? ""} onChange={(e) => setNotes((m) => ({ ...m, [u.id]: e.target.value }))} />
                     <div className="grid md:grid-cols-[1fr_auto_auto] gap-2">
                       <Select value={result[u.id] ?? "reclean"} onValueChange={(v) => setResult((m) => ({ ...m, [u.id]: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="reclean">{t("station.qc.resultReclean")}</SelectItem>
-                          <SelectItem value="repair">{t("station.qc.resultRepair")}</SelectItem>
-                          <SelectItem value="damaged">{t("station.qc.resultDamaged")}</SelectItem>
-                          <SelectItem value="lost">{t("station.qc.resultLost")}</SelectItem>
+                          <SelectItem value="reclean">{t("stations.qc.resultReclean")}</SelectItem>
+                          <SelectItem value="repair">{t("stations.qc.resultRepair")}</SelectItem>
+                          <SelectItem value="damaged">{t("stations.qc.resultDamaged")}</SelectItem>
+                          <SelectItem value="lost">{t("stations.qc.resultLost")}</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button variant="outline" onClick={() => qc(u, (result[u.id] ?? "reclean") as any)}><AlertTriangle className="w-4 h-4 ms-1" /> {t("station.qc.recordIssue")}</Button>
-                      <Button onClick={() => qc(u, "passed")} className="bg-emerald-600 hover:bg-emerald-500"><CheckCircle2 className="w-4 h-4 ms-1" /> {t("station.qc.approve")}</Button>
+                      <Button variant="outline" onClick={() => qc(u, (result[u.id] ?? "reclean") as any)}><AlertTriangle className="w-4 h-4 ms-1" /> {t("stations.qc.recordIssue")}</Button>
+                      <Button onClick={() => qc(u, "passed")} className="bg-emerald-600 hover:bg-emerald-500"><CheckCircle2 className="w-4 h-4 ms-1" /> {t("stations.qc.approve")}</Button>
                     </div>
-                    {u.needs_reclean && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">{t("station.qc.recleanHint")}</div>}
-                    {u.label_status && u.label_status !== "labeled" && <div className="rounded-xl bg-red-50 border border-red-200 p-2 text-xs text-red-800 flex flex-wrap items-center justify-between gap-2"><span>{t("station.qc.labelBlock")}</span><Button asChild size="sm" variant="outline"><Link to="/stations/drying-assembly"><Tags className="w-3 h-3 ms-1" />{t("station.qc.openAssembly")}</Link></Button></div>}
+                    {u.needs_reclean && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">{t("stations.qc.recleanHint")}</div>}
+                    {u.label_status && u.label_status !== "labeled" && <div className="rounded-xl bg-red-50 border border-red-200 p-2 text-xs text-red-800 flex flex-wrap items-center justify-between gap-2"><span>{t("stations.qc.labelBlock")}</span><Button asChild size="sm" variant="outline"><Link to="/stations/drying-assembly"><Tags className="w-3 h-3 ms-1" />{t("stations.qc.openAssembly")}</Link></Button></div>}
                   </div>
                 ))}
               </CardContent>

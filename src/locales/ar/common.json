@@ -55,6 +55,8 @@
   "address": "العنوان",
   "other": "أخرى",
   "clear": "مسح",
+  "backToHome": "العودة للرئيسية",
+  "retry": "إعادة المحاولة",
   "cancel": "إلغاء",
   "actions": "إجراءات",
   "edit": "تعديل",
@@ -84,8 +86,8 @@
   "qcPassed": "QC ناجح",
   "qcFailed": "QC فاشل",
   "qcPending": "QC معلق",
-  "qcNotes": "ملاحظات الفحص"
-  ,"stage": {
+  "qcNotes": "ملاحظات الفحص",
+  "stage": {
     "received": "استلام",
     "cleaning": "تنظيف",
     "cleaningDone": "تنظيف منتهي",
@@ -94,11 +96,58 @@
     "packing": "تغليف",
     "packingDone": "تغليف منتهي",
     "ready": "جاهز"
-  }
-  ,"tenant": {
+  },
+  "tenant": {
     "suspended": {
       "title": "تم إيقاف تفعيل حساب المغسلة",
       "body": "حساب هذه المغسلة موقوف حالياً من قِبل إدارة المنصة (Super Admin). يرجى التواصل مع الدعم الفني أو إدارة المنصة لإعادة التفعيل."
     }
+  },
+  "waiting": {
+    "title": "في انتظار التفعيل",
+    "body": "حسابك قيد المراجعة حالياً من قبل الإدارة. سيتم إخطارك فور تفعيل صلاحياتك."
+  },
+  "app": {
+    "signOut": "تسجيل الخروج",
+    "tagline": "منظومة تشغيل المشاريع"
+  },
+  "status": {
+    "order": {
+      "received": "تم الاستلام",
+      "cleaning": "تنظيف",
+      "ironing": "كي",
+      "packing": "تغليف",
+      "ready": "جاهز للتسليم",
+      "out_for_delivery": "خرج للتسليم",
+      "delivered": "تم التسليم",
+      "cancelled": "ملغي"
+    },
+    "payment": {
+      "paid": "مدفوع",
+      "unpaid": "غير مدفوع"
+    }
+  },
+  "method": {
+    "cash": "نقدي",
+    "instapay": "InstaPay",
+    "cod_cash": "دفع عند الاستلام - نقدي",
+    "cod_instapay": "دفع عند الاستلام - InstaPay"
+  },
+  "type": {
+    "walk_in": "داخلي",
+    "delivery": "توصيل"
+  },
+  "services": {
+    "typeCleaning": "تنظيف",
+    "typeIroning": "كي",
+    "typeBoth": "تنظيف وكي"
+  },
+  "role": {
+    "owner": "المالك",
+    "cs_manager": "مدير خدمة عملاء",
+    "ops_manager": "مدير تشغيل",
+    "courier": "مندوب",
+    "employee": "موظف",
+    "customer": "عميل"
   }
 }

@@ -25,7 +25,7 @@ export const ORDER_STATUS_AR: Record<string, string> = {
 };
 
 export function orderStatusLabel(s: string, t: any) {
-  return ({ received: t("status.order.received", "تم الاستلام"), cleaning: t("status.order.cleaning", "تنظيف"), ironing: t("status.order.ironing", "كي"), packing: t("status.order.packing", "تغليف"), ready: t("status.order.ready", "جاهز للتسليم"), out_for_delivery: t("status.order.out_for_delivery", "خرج للتسليم"), delivered: t("status.order.delivered", "تم التسليم"), cancelled: t("status.order.cancelled", "ملغي") } as Record<string,string>)[s] ?? s;
+  return ({ received: t("common.status.order.received", "تم الاستلام"), cleaning: t("common.status.order.cleaning", "تنظيف"), ironing: t("common.status.order.ironing", "كي"), packing: t("common.status.order.packing", "تغليف"), ready: t("common.status.order.ready", "جاهز للتسليم"), out_for_delivery: t("common.status.order.out_for_delivery", "خرج للتسليم"), delivered: t("common.status.order.delivered", "تم التسليم"), cancelled: t("common.status.order.cancelled", "ملغي") } as Record<string,string>)[s] ?? s;
 }
 
 export const PAYMENT_STATUS_AR: Record<string, string> = {
@@ -34,7 +34,7 @@ export const PAYMENT_STATUS_AR: Record<string, string> = {
 };
 
 export function paymentStatusLabel(s: string, t: any) {
-  return ({ paid: t("status.payment.paid", "مدفوع"), unpaid: t("status.payment.unpaid", "غير مدفوع") } as Record<string,string>)[s] ?? s;
+  return ({ paid: t("common.status.payment.paid", "مدفوع"), unpaid: t("common.status.payment.unpaid", "غير مدفوع") } as Record<string,string>)[s] ?? s;
 }
 
 export const PAYMENT_METHOD_AR: Record<string, string> = {
@@ -45,7 +45,7 @@ export const PAYMENT_METHOD_AR: Record<string, string> = {
 };
 
 export function paymentMethodLabel(s: string, t: any) {
-  return ({ cash: t("method.cash", "نقدي"), instapay: t("method.instapay", "InstaPay"), cod_cash: t("method.cod_cash", "دفع عند الاستلام - نقدي"), cod_instapay: t("method.cod_instapay", "دفع عند الاستلام - InstaPay") } as Record<string,string>)[s] ?? s;
+  return ({ cash: t("common.method.cash", "نقدي"), instapay: t("common.method.instapay", "InstaPay"), cod_cash: t("common.method.cod_cash", "دفع عند الاستلام - نقدي"), cod_instapay: t("common.method.cod_instapay", "دفع عند الاستلام - InstaPay") } as Record<string,string>)[s] ?? s;
 }
 
 export const ORDER_TYPE_AR: Record<string, string> = {
@@ -54,7 +54,7 @@ export const ORDER_TYPE_AR: Record<string, string> = {
 };
 
 export function orderTypeLabel(s: string, t: any) {
-  return ({ walk_in: t("type.walk_in", "داخلي"), delivery: t("type.delivery", "توصيل") } as Record<string,string>)[s] ?? s;
+  return ({ walk_in: t("common.type.walk_in", "داخلي"), delivery: t("common.type.delivery", "توصيل") } as Record<string,string>)[s] ?? s;
 }
 
 export const SERVICE_TYPE_AR: Record<string, string> = {
@@ -64,5 +64,5 @@ export const SERVICE_TYPE_AR: Record<string, string> = {
 };
 
 export function serviceTypeLabel(s: string, t: any) {
-  return ({ cleaning: t("services.typeCleaning", "تنظيف"), ironing: t("services.typeIroning", "كي"), both: t("services.typeBoth", "تنظيف وكي") } as Record<string,string>)[s] ?? s;
+  return ({ cleaning: t("common.services.typeCleaning", "تنظيف"), ironing: t("common.services.typeIroning", "كي"), both: t("common.services.typeBoth", "تنظيف وكي") } as Record<string,string>)[s] ?? s;
 }

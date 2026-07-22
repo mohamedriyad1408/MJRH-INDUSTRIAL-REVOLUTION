@@ -1,4 +1,4 @@
 {
   "geoNotSupported": "Browser does not support geolocation",
-  "geoFailed": "Unable to determine location"
+  "geoFailed": "Unable to determine location", "pageNotFound": "Page Not Found", "pageNotFoundDetail": "The requested page is not available.", "unexpectedError": "An unexpected error occurred"
 }

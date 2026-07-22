@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 import {
   Loader2, MapPin, Phone, Truck, CheckCircle2,
   PackageOpen, Zap, ArrowLeft, Navigation,

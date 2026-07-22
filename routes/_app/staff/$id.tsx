@@ -20,13 +20,17 @@ export const Route = createFileRoute("/_app/staff/$id")({
   component: StaffDetailPage,
 });
 
-const DAYS = t("staff.days", { returnObjects: true }) as unknown as string[] || ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-type Employee = any;
-type Schedule = { id?: string; day_of_week: number; start_time: string | null; end_time: string | null; is_off: boolean };
-
 function StaffDetailPage() {
   const { t, dir } = useI18n();
+  const DAYS = [
+    t("staff.days.0", "Sunday"),
+    t("staff.days.1", "Monday"),
+    t("staff.days.2", "Tuesday"),
+    t("staff.days.3", "Wednesday"),
+    t("staff.days.4", "Thursday"),
+    t("staff.days.5", "Friday"),
+    t("staff.days.6", "Saturday")
+  ];
   const { id } = Route.useParams();
   const { hasRole, tenantId } = useAuth();
   const nav = useNavigate();

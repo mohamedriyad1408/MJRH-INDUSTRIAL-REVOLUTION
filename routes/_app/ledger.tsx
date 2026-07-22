@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { BookOpenCheck, FileBarChart, Scale, LockKeyhole, Plus, Loader2, RefreshCw } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/ledger")({
   head: () => ({ meta: [{ title: "Ledger - MJRH" }] }),

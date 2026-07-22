@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Shirt, CheckCircle2, RotateCcw, Scale, User, Image as ImageIcon, PackageCheck } from "lucide-react";
 import { StationBoard } from "@/components/station-board";
 import { autoAssignIroningPieces } from "@/lib/ironing-assignment";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/stations/ironing")({
   head: () => ({ meta: [{ title: "Ironing - MJRH" }] }),
@@ -126,61 +126,61 @@ function IroningManagerPage() {
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-slate-900 to-teal-900 text-white p-5 shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("station.ironing.managerTitle")}</h1>
-            <p className="text-sm text-white/70">{t("station.ironing.managerSubtitle")}</p>
+            <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("stations.ironing.managerTitle")}</h1>
+            <p className="text-sm text-white/70">{t("stations.ironing.managerSubtitle")}</p>
           </div>
           <Button onClick={distributeAll} disabled={assigning} className="bg-teal-400 hover:bg-teal-300 text-slate-950 font-black">
             {assigning ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Scale className="w-4 h-4 ms-1" />}
-            {t("station.ironing.assignAll")}
+            {t("stations.ironing.assignAll")}
           </Button>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <MiniStat label={t("station.ironing.pieces")} value={units.length} />
-          <MiniStat label={t("station.ironing.unassigned")} value={unassigned} tone={unassigned ? "warn" : "ok"} />
-          <MiniStat label={t("station.ironing.done")} value={`${done}/${units.length}`} tone="ok" />
+          <MiniStat label={t("stations.ironing.pieces")} value={units.length} />
+          <MiniStat label={t("stations.ironing.unassigned")} value={unassigned} tone={unassigned ? "warn" : "ok"} />
+          <MiniStat label={t("stations.ironing.done")} value={`${done}/${units.length}`} tone="ok" />
         </div>
       </div>
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <>
           <Card>
-            <CardHeader><CardTitle className="text-base">{t("station.ironing.workload")}</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("stations.ironing.workload")}</CardTitle></CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-3">
               {stats.map((s) => (
                 <div key={s.id} className="rounded-2xl border p-3 bg-card">
                   <div className="flex items-center gap-2 font-black"><User className="w-4 h-4 text-violet-600" /> {s.full_name}</div>
                   <div className="grid grid-cols-3 gap-2 mt-3 text-center text-xs">
-                    <div className="rounded-xl bg-slate-100 p-2"><div className="font-black text-lg">{s.pieces}</div><div>{t("station.ironing.piecesShort")}</div></div>
-                    <div className="rounded-xl bg-blue-50 p-2"><div className="font-black text-lg">{s.shirts}</div><div>{t("station.ironing.shirts")}</div></div>
-                    <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>{t("station.common.done")}</div></div>
+                    <div className="rounded-xl bg-slate-100 p-2"><div className="font-black text-lg">{s.pieces}</div><div>{t("stations.ironing.piecesShort")}</div></div>
+                    <div className="rounded-xl bg-blue-50 p-2"><div className="font-black text-lg">{s.shirts}</div><div>{t("stations.ironing.shirts")}</div></div>
+                    <div className="rounded-xl bg-emerald-50 p-2"><div className="font-black text-lg">{s.done}</div><div>{t("stations.common.done")}</div></div>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-2">{t("station.ironing.assignedValue")}: {s.value.toLocaleString()} {t("common.egp")}</div>
+                  <div className="text-xs text-muted-foreground mt-2">{t("stations.ironing.assignedValue")}: {s.value.toLocaleString()} {t("common.egp")}</div>
                   {s.pieces > s.done && (
                     <div className="flex gap-2 mt-3">
                       <select className="flex-1 h-9 rounded-md border bg-background px-2 text-xs" value={transferTo[s.id] ?? ""} onChange={(e) => setTransferTo((m) => ({ ...m, [s.id]: e.target.value }))}>
-                        <option value="">{t("station.ironing.transferPlaceholder")}</option>
+                        <option value="">{t("stations.ironing.transferPlaceholder")}</option>
                         {employees.filter((e) => e.id !== s.id).map((e) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
                       </select>
-                      <Button size="sm" variant="outline" onClick={() => transferTasks(s.id)}>{t("station.ironing.transfer")}</Button>
+                      <Button size="sm" variant="outline" onClick={() => transferTasks(s.id)}>{t("stations.ironing.transfer")}</Button>
                     </div>
                   )}
                 </div>
               ))}
-              {!stats.length && <div className="text-sm text-muted-foreground">{t("station.ironing.noTechs")}</div>}
+              {!stats.length && <div className="text-sm text-muted-foreground">{t("stations.ironing.noTechs")}</div>}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base">{t("station.ironing.runningPieces")}</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">{t("stations.ironing.runningPieces")}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               {units.map((u) => <UnitRow key={u.id} u={u} manager />)}
-              {!units.length && <div className="text-center text-sm text-muted-foreground p-8">{t("station.ironing.noPiecesNow")}</div>}
+              {!units.length && <div className="text-center text-sm text-muted-foreground p-8">{t("stations.ironing.noPiecesNow")}</div>}
             </CardContent>
           </Card>
         </>
       )}
 
-      <StationBoard title={t("station.ironing.boardTitle", "تحريك الطلبات إلى التغليف")} station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />
+      <StationBoard title={t("stations.ironing.boardTitle", "تحريك الطلبات إلى التغليف")} station="ironing" incoming="cleaning" current="ironing" nextStatus="packing" />
     </div>
   );
 }
@@ -249,18 +249,18 @@ function IroningWorkerPage() {
   }
 
   if (loading) return <div className="flex justify-center p-10"><Loader2 className="w-6 h-6 animate-spin" /></div>;
-  if (!empId) return <Card><CardContent className="p-8 text-center text-muted-foreground">{t("station.ironing.workerUnlinked")}</CardContent></Card>;
+  if (!empId) return <Card><CardContent className="p-8 text-center text-muted-foreground">{t("stations.ironing.workerUnlinked")}</CardContent></Card>;
 
   return (
     <div className="space-y-5 max-w-3xl mx-auto" dir={dir}>
       <div className="rounded-3xl bg-gradient-to-br from-violet-700 to-slate-950 text-white p-5 shadow-xl">
-        <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("station.ironing.myWork")}</h1>
-        <p className="text-sm text-white/70 mt-1">{t("station.ironing.myWorkSubtitle")}</p>
+        <h1 className="text-2xl font-black flex items-center gap-2"><Shirt className="w-6 h-6" /> {t("stations.ironing.myWork")}</h1>
+        <p className="text-sm text-white/70 mt-1">{t("stations.ironing.myWorkSubtitle")}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          <MiniStat label={t("station.ironing.myPieces")} value={units.length} />
-          <MiniStat label={t("station.ironing.myShirts")} value={units.filter((u) => u.is_shirt_like).length} />
-          <MiniStat label={t("station.ironing.todayDonePay")} value={`${Math.round(todayDoneValue * ratePct / 100)} ج`} tone="ok" />
-          <MiniStat label={t("station.ironing.ifFinishAll")} value={`${Math.round(todayValue * ratePct / 100)} ج`} />
+          <MiniStat label={t("stations.ironing.myPieces")} value={units.length} />
+          <MiniStat label={t("stations.ironing.myShirts")} value={units.filter((u) => u.is_shirt_like).length} />
+          <MiniStat label={t("stations.ironing.todayDonePay")} value={`${Math.round(todayDoneValue * ratePct / 100)} ج`} tone="ok" />
+          <MiniStat label={t("stations.ironing.ifFinishAll")} value={`${Math.round(todayValue * ratePct / 100)} ج`} />
         </div>
       </div>
 
@@ -268,7 +268,7 @@ function IroningWorkerPage() {
         {units.map((u) => <UnitRow key={u.id} u={u} onDone={markDone} onReclean={markReclean} />)}
         {!units.length && (
           <Card className="border-emerald-200 bg-emerald-50"><CardContent className="p-10 text-center text-emerald-700 font-bold">
-            <PackageCheck className="w-10 h-10 mx-auto mb-2" /> {t("station.ironing.noAssigned")}
+            <PackageCheck className="w-10 h-10 mx-auto mb-2" /> {t("stations.ironing.noAssigned")}
           </CardContent></Card>
         )}
       </div>
@@ -287,23 +287,23 @@ function UnitRow({ u, manager, onDone, onReclean }: { u: Unit; manager?: boolean
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-black text-lg">{u.label_code}</span>
           <Badge variant="outline">{u.name}</Badge>
-          {u.is_shirt_like && <Badge className="bg-blue-600">{t("station.ironing.shirtLike")}</Badge>}
-          {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("station.common.recleanCleaning")}</Badge>}
-          {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> {t("station.common.done")}</Badge>}
+          {u.is_shirt_like && <Badge className="bg-blue-600">{t("stations.ironing.shirtLike")}</Badge>}
+          {u.needs_reclean && <Badge className="bg-amber-500"><RotateCcw className="w-3 h-3 ms-1" /> {t("stations.common.recleanCleaning")}</Badge>}
+          {u.ironing_completed_at && <Badge className="bg-emerald-600"><CheckCircle2 className="w-3 h-3 ms-1" /> {t("stations.common.done")}</Badge>}
         </div>
         <div className="text-xs text-muted-foreground mt-1">
-          {t("order.orderNo", "طلب #{order}").replace("{order}", String(u.orders?.order_number ?? "?"))} · {u.orders?.customers?.full_name ?? "—"} · {t("station.ironing.ironingValue")} {Number(u.ironing_base_value ?? u.line_value ?? 0).toLocaleString()} {t("common.egp")}
+          {t("orders.orderNo", "طلب #{order}").replace("{order}", String(u.orders?.order_number ?? "?"))} · {u.orders?.customers?.full_name ?? "—"} · {t("stations.ironing.ironingValue")} {Number(u.ironing_base_value ?? u.line_value ?? 0).toLocaleString()} {t("common.egp")}
         </div>
-        {manager && <div className="text-xs text-muted-foreground mt-1">{t("station.ironing.tech")}: <b>{u.employees?.full_name ?? t("station.ironing.unassignedTech")}</b></div>}
-        {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">{t("station.common.reason")}: {u.reclean_reason}</div>}
+        {manager && <div className="text-xs text-muted-foreground mt-1">{t("stations.ironing.tech")}: <b>{u.employees?.full_name ?? t("stations.ironing.unassignedTech")}</b></div>}
+        {u.reclean_reason && <div className="text-xs text-amber-700 mt-1">{t("stations.common.reason")}: {u.reclean_reason}</div>}
       </div>
       {!manager && (
         <div className="col-span-2 md:col-span-1 flex md:flex-col gap-2">
-          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onDone?.(u)}><CheckCircle2 className="w-4 h-4 ms-1" /> {t("station.ironing.done")}</Button>
-          <Button className="flex-1" variant="outline" onClick={() => onReclean?.(u)}><RotateCcw className="w-4 h-4 ms-1" /> {t("station.common.recleanCleaning")}</Button>
+          <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onDone?.(u)}><CheckCircle2 className="w-4 h-4 ms-1" /> {t("stations.ironing.done")}</Button>
+          <Button className="flex-1" variant="outline" onClick={() => onReclean?.(u)}><RotateCcw className="w-4 h-4 ms-1" /> {t("stations.common.recleanCleaning")}</Button>
         </div>
       )}
-      {manager && u.orders?.id && <Button asChild variant="outline" size="sm"><Link to="/orders/$id" params={{ id: u.orders.id }}>{t("station.common.openOrder")}</Link></Button>}
+      {manager && u.orders?.id && <Button asChild variant="outline" size="sm"><Link to="/orders/$id" params={{ id: u.orders.id }}>{t("stations.common.openOrder")}</Link></Button>}
     </div>
   );
 }

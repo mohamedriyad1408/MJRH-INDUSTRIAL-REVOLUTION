@@ -59,6 +59,8 @@ import arWFFields from "../src/locales/ar/workflow-fields.json";
 import enWFFields from "../src/locales/en/workflow-fields.json";
 import arTrack from "../src/locales/ar/track.json";
 import enTrack from "../src/locales/en/track.json";
+import arHome from "../src/locales/ar/home.json";
+import enHome from "../src/locales/en/home.json";
 import arLanding from "../src/locales/ar/landing.json";
 import enLanding from "../src/locales/en/landing.json";
 import arDailyOps from "../src/locales/ar/daily-ops.json";
@@ -99,7 +101,7 @@ const flatten = (obj: any, prefix = "") => {
   if (!obj) return res;
   for (const k in obj) {
     const key = prefix ? `${prefix}.${k}` : k;
-    if (typeof obj[k] === "object" && obj[k] !== null && !Array.isArray(obj[k])) {
+    if (typeof obj[k] === "object" && obj[k] !== null) {
       Object.assign(res, flatten(obj[k], key));
     } else {
       res[key] = String(obj[k]);
@@ -138,13 +140,14 @@ const domains: any = {
   "workflow-settings": { ar: arWFSettings, en: enWFSettings },
   "workflow-fields": { ar: arWFFields, en: enWFFields },
   track: { ar: arTrack, en: enTrack },
+  home: { ar: arHome, en: enHome },
   landing: { ar: arLanding, en: enLanding },
   dailyOps: { ar: arDailyOps, en: enDailyOps },
   dashboard: { ar: arDashboard, en: enDashboard },
   operations: { ar: arOperations, en: enOperations },
   errors: { ar: arErrors, en: enErrors },
   stations: { ar: arStations, en: enStations },
-  "online-queue": { ar: arOnlineQueue, en: enOnlineQueue },
+  onlineQueue: { ar: arOnlineQueue, en: enOnlineQueue },
   delivery: { ar: arDelivery, en: enDelivery },
 };
 

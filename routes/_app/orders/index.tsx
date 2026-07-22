@@ -96,7 +96,7 @@ function OrdersPage() {
       <div className="flex flex-wrap justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{t("orders.allOrders")}</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} {t("station.common.orders")}</p>
+          <p className="text-sm text-muted-foreground">{filtered.length} {t("stations.common.orders")}</p>
         </div>
         {canCreate && <Button asChild><Link to="/orders/new"><Plus className="w-4 h-4 ms-1" /> {t("orders.newOrder")}</Link></Button>}
       </div>
