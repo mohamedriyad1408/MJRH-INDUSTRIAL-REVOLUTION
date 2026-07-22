@@ -5,7 +5,7 @@ import {
   CalendarDays, ShieldCheck, Clock, Inbox, Building2, Crown, PlayCircle,
   Truck, Headphones, Banknote, Navigation, Target, UserCircle, CalendarCheck,
   BarChart3, Boxes, HeartHandshake, ReceiptText, Calculator, BookOpenCheck,
-  UsersRound, LockKeyhole, HelpCircle, Search, Smartphone,
+  UsersRound, LockKeyhole, HelpCircle, Search, Smartphone, UserPlus,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -69,6 +69,7 @@ const tenantGroups = [
     items: [
       { title: "الحضور", url: "/staff/attendance", icon: Clock },
       { title: "التقييم", url: "/staff/scorecard", icon: Target },
+      { title: "الموردين", url: "/staff/suppliers", icon: UserPlus },
       { title: "كل الموظفين", url: "/staff", icon: BriefcaseBusiness },
     ],
   },

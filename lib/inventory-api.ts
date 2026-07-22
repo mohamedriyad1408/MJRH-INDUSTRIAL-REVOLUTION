@@ -30,6 +30,27 @@ export interface InventoryTransaction {
   order_id?: string;
 }
 
+export async function getSuppliers(tenantId: string): Promise<any[]> {
+    const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .order('name', { ascending: true });
+    return (data || []) as any[];
+}
+
+export async function createSupplier(tenantId: string, item: any): Promise<void> {
+    await supabase.from('suppliers').insert({ ...item, tenant_id: tenantId });
+}
+
+export async function updateSupplier(id: string, item: any): Promise<void> {
+    await supabase.from('suppliers').update(item).eq('id', id);
+}
+
+export async function deleteSupplier(id: string): Promise<void> {
+    await supabase.from('suppliers').delete().eq('id', id);
+}
+
 export async function getInventory(tenantId: string): Promise<InventoryItem[]> {
   const { data, error } = await supabase
     .from('inventory')

@@ -1,18 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { generateAiAdvisorInsights, type AiAdvisorInsight, type AiInsightCategory } from "@/lib/ai-advisor";
+import { generateAiAdvisorInsights, getAIRecommendations, type AiAdvisorInsight, type AiInsightCategory } from "@/lib/ai-advisor";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n, interpolate } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@tanstack/react-router";
-import { Sparkles, AlertTriangle, CheckCircle2, Info, RefreshCw, ArrowRight, ArrowLeft, Lightbulb, TrendingUp, Cpu } from "lucide-react";
+import { Sparkles, AlertTriangle, CheckCircle2, Info, RefreshCw, ArrowRight, ArrowLeft, Lightbulb, TrendingUp, Cpu, Brain } from "lucide-react";
 
 export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: string }) {
   const { tenantId } = useAuth();
   const { t, dir } = useI18n();
-  const [activeCategory, setActiveCategory] = useState<AiInsightCategory | "all">("all");
+  const [activeCategory, setActiveCategory] = useState<AiInsightCategory | "all" | "llm">("all");
+  const [llmRecs, setLlmRecs] = useState<string[]>([]);
+  const [loadingLlm, setLoadingLlm] = useState(false);
 
   const { data: insights = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["ai-advisor-insights", tenantId, selectedBranchId],
@@ -21,13 +23,21 @@ export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: strin
     refetchInterval: 60_000,
   });
 
-  const categories: { key: AiInsightCategory | "all"; labelKey: string; icon: string }[] = [
+  useEffect(() => {
+    if (activeCategory === "llm" && tenantId) {
+      setLoadingLlm(true);
+      getAIRecommendations(tenantId).then(res => {
+        setLlmRecs(res);
+        setLoadingLlm(false);
+      });
+    }
+  }, [activeCategory, tenantId]);
+
+  const categories: { key: AiInsightCategory | "all" | "llm"; labelKey: string; icon: string }[] = [
     { key: "all", labelKey: "ai.filter.all", icon: "🌐" },
+    { key: "llm", labelKey: "AI Analysis", icon: "🧠" },
     { key: "bottleneck", labelKey: "ai.filter.bottleneck", icon: "⏳" },
-    { key: "sla", labelKey: "ai.filter.sla", icon: "⚡" },
     { key: "inventory", labelKey: "ai.filter.inventory", icon: "📦" },
-    { key: "maintenance", labelKey: "ai.filter.maintenance", icon: "🔧" },
-    { key: "workforce", labelKey: "ai.filter.workforce", icon: "👥" },
     { key: "finance", labelKey: "ai.filter.finance", icon: "💰" },
   ];
 
@@ -90,7 +100,23 @@ export function AiAdvisorWidget({ selectedBranchId }: { selectedBranchId?: strin
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {isLoading ? (
+        {activeCategory === "llm" ? (
+          <div className="space-y-3">
+            {loadingLlm ? (
+               <div className="flex flex-col items-center justify-center p-8 text-slate-400 space-y-2">
+                 <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
+                 <p className="text-xs">جاري تحليل البيانات عبر Mistral-7B...</p>
+               </div>
+            ) : (
+              llmRecs.map((rec, i) => (
+                <div key={i} className="p-4 rounded-2xl bg-teal-50 border border-teal-100 text-teal-900 text-sm font-bold flex items-start gap-3 shadow-xs">
+                  <Brain className="w-5 h-5 text-teal-600 mt-0.5 shrink-0" />
+                  <span>{rec}</span>
+                </div>
+              ))
+            )}
+          </div>
+        ) : isLoading ? (
           <div className="flex flex-col items-center justify-center p-12 text-slate-400 space-y-2">
             <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
             <p className="text-xs">{t("ai.widget.loading", "جاري تحليل ملايين البيانات التشغيلية...")}</p>

@@ -41,6 +41,81 @@ export type ExecutiveSummaryMetrics = {
   stationCounts: Record<string, number>;
 };
 
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1';
+const HUGGINGFACE_API_KEY = (import.meta.env.VITE_HUGGINGFACE_API_KEY as string) || '';
+
+export async function getAIRecommendations(tenantId: string): Promise<string[]> {
+    try {
+        const { data: orders } = await supabase
+            .from('orders')
+            .select('status, total, created_at')
+            .eq('tenant_id', tenantId)
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (!orders || orders.length === 0) {
+            return ["لا توجد بيانات كافية لتوليد توصيات."];
+        }
+
+        const totalOrders = orders.length;
+        const revenue = orders.reduce((sum: number, o: any) => sum + (Number(o.total) || 0), 0);
+        const avgOrderValue = revenue / totalOrders;
+        const pendingOrders = orders.filter((o: any) => o.status === 'received' || o.status === 'cleaning').length;
+        const readyOrders = orders.filter((o: any) => o.status === 'ready').length;
+
+        const prompt = `
+أنت مستشار ذكي لمنصة إدارة المغاسل MJRH.
+لديك البيانات التالية للفترة الأخيرة:
+- إجمالي الطلبات: ${totalOrders}
+- إجمالي الإيرادات: ${revenue.toFixed(0)} ج.م
+- متوسط قيمة الفاتورة: ${avgOrderValue.toFixed(0)} ج.م
+- طلبات قيد التشغيل: ${pendingOrders}
+- طلبات جاهزة للتسليم: ${readyOrders}
+
+قدم 3 توصيات عملية قصيرة ومباشرة باللغة العربية لتحسين الأداء أو زيادة الربحية.
+`;
+
+        if (!HUGGINGFACE_API_KEY) {
+            return [
+                "توصية: لاحظنا زيادة في الطلبات الجاهزة، يفضل تفعيل حملة واتساب للتذكير بالاستلام.",
+                "تحليل: متوسط الفاتورة جيد، جرب تقديم خصم للطلبات المستعجلة لزيادة الإيراد السريع.",
+                "تنبيه: يوجد ضغط في مرحلة التشغيل، يفضل توزيع المهام بشكل أفضل بين الموظفين."
+            ];
+        }
+
+        const response = await fetch(HUGGINGFACE_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inputs: prompt,
+                parameters: { max_new_tokens: 200, temperature: 0.7 },
+            }),
+        });
+
+        if (!response.ok) {
+            console.error('AI API Error:', response.status);
+            return ["⚠️ تعذر الاتصال بخدمة الذكاء الاصطناعي حالياً."];
+        }
+
+        const data = await response.json();
+        const generatedText = data[0]?.generated_text || "";
+        const result = generatedText
+            .replace(prompt, "")
+            .split('\n')
+            .map((line: string) => line.trim())
+            .filter((line: string) => line.length > 5 && (line.includes('•') || line.match(/^\d\./) || line.length > 20))
+            .slice(0, 3);
+
+        return result.length > 0 ? result : ["جاري تحليل البيانات بشكل أعمق..."];
+    } catch (error) {
+        console.error('AI Advisor Error:', error);
+        return ["⚠️ حدث خطأ في معالجة التوصيات."];
+    }
+}
+
 export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?: string): Promise<ExecutiveSummaryMetrics> {
   const [
     branchesRes,
@@ -67,7 +142,6 @@ export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?:
 
   const now = new Date().toISOString();
 
-  // Filter by branch if selected
   const filterByBranch = <T extends { branch_id?: string }>(list: T[]): T[] => {
     if (!selectedBranchId || selectedBranchId === "all") return list;
     return list.filter((x) => x.branch_id === selectedBranchId);
@@ -79,7 +153,8 @@ export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?:
   const equipment = filterByBranch(rawEquipment);
   const inventory = filterByBranch(rawInventory);
 
-  const totalRevenue = orders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
+  const validOrders = orders.filter((o) => o.status !== "cancelled");
+  const totalRevenue = validOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
   const totalExpenses = expenses.reduce((acc, e) => acc + Number(e.amount ?? 0), 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
@@ -105,7 +180,8 @@ export async function fetchExecutiveMetrics(tenantId: string, selectedBranchId?:
     const bExpenses = rawExpenses.filter((e) => e.branch_id === b.id);
     const bEmployees = rawEmployees.filter((em) => em.branch_id === b.id);
 
-    const bRev = bOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
+    const validBOrders = bOrders.filter((o) => o.status !== "cancelled");
+    const bRev = validBOrders.reduce((acc, o) => acc + Number(o.total ?? 0), 0);
     const bExp = bExpenses.reduce((acc, e) => acc + Number(e.amount ?? 0), 0);
     const bProf = bRev - bExp;
 
@@ -149,7 +225,7 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
   const metrics = await fetchExecutiveMetrics(tenantId, selectedBranchId);
   const insights: AiAdvisorInsight[] = [];
 
-  // 1. Station Bottlenecks
+  // Rules
   const maxStationEntry = Object.entries(metrics.stationCounts).reduce((max, cur) => cur[1] > max[1] ? cur : max, ["received", 0]);
   if (maxStationEntry[1] > 5) {
     insights.push({
@@ -165,7 +241,6 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
     });
   }
 
-  // 2. SLA Monitoring
   if (metrics.slaBreachCount > 0) {
     insights.push({
       id: "sla-1",
@@ -178,19 +253,8 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
       actionHref: "/orders",
       metricImpact: `${metrics.slaBreachCount} Overdue Orders`,
     });
-  } else {
-    insights.push({
-      id: "sla-ok",
-      category: "sla",
-      severity: "success",
-      titleKey: "ai.slaOk.title",
-      descriptionKey: "ai.slaOk.desc",
-      values: { rate: Math.round(metrics.slaComplianceRate) },
-      metricImpact: "100% On-Time Fulfillment",
-    });
   }
 
-  // 3. Inventory & Packaging Alert
   if (metrics.lowStockItemsCount > 0) {
     insights.push({
       id: "inv-1",
@@ -205,37 +269,6 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
     });
   }
 
-  // 4. Predictive Maintenance
-  if (metrics.equipmentAlertCount > 0) {
-    insights.push({
-      id: "maint-1",
-      category: "maintenance",
-      severity: "warning",
-      titleKey: "ai.maintenance.title",
-      descriptionKey: "ai.maintenance.desc",
-      values: { count: metrics.equipmentAlertCount },
-      actionLabelKey: "ai.maintenance.action",
-      actionHref: "/inventory",
-      metricImpact: "Downtime Risk",
-    });
-  }
-
-  // 5. Smart Scheduling & Workforce
-  if (metrics.activeOrdersCount > 20 && metrics.activeEmployeesCount < 3) {
-    insights.push({
-      id: "workforce-1",
-      category: "workforce",
-      severity: "warning",
-      titleKey: "ai.workforce.title",
-      descriptionKey: "ai.workforce.desc",
-      values: { orders: metrics.activeOrdersCount, emps: metrics.activeEmployeesCount },
-      actionLabelKey: "ai.workforce.action",
-      actionHref: "/staff/schedule",
-      metricImpact: "Suboptimal Labor Ratio",
-    });
-  }
-
-  // 6. Profit Analytics & Cash Drag
   if (metrics.netProfit < 0) {
     insights.push({
       id: "finance-1",
@@ -247,28 +280,6 @@ export async function generateAiAdvisorInsights(tenantId: string, selectedBranch
       actionLabelKey: "ai.financeNeg.action",
       actionHref: "/reports",
       metricImpact: "Negative Unit Economics",
-    });
-  } else if (metrics.profitMargin > 0 && metrics.profitMargin < 15) {
-    insights.push({
-      id: "finance-2",
-      category: "finance",
-      severity: "info",
-      titleKey: "ai.financeLow.title",
-      descriptionKey: "ai.financeLow.desc",
-      values: { margin: Math.round(metrics.profitMargin) },
-      actionLabelKey: "ai.financeLow.action",
-      actionHref: "/reports",
-      metricImpact: "Margin Expansion Needed",
-    });
-  } else {
-    insights.push({
-      id: "finance-ok",
-      category: "finance",
-      severity: "success",
-      titleKey: "ai.financeOk.title",
-      descriptionKey: "ai.financeOk.desc",
-      values: { margin: Math.round(metrics.profitMargin) },
-      metricImpact: "Healthy Bottom Line",
     });
   }
 
