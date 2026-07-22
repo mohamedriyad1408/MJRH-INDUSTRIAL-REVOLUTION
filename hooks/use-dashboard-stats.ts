@@ -12,12 +12,13 @@ export function useDashboardStats() {
       const todayIso = today.toISOString();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
-      const [ordersRes, expensesRes, employeesRes, pickupsRes, unitsRes] = await Promise.all([
-        supabase.from("orders").select("id,status,total,is_urgent,created_at,promised_delivery_at,payment_method,payment_status,order_type"),
+      const [ordersRes, expensesRes, employeesRes, pickupsRes, unitsRes, eventsRes] = await Promise.all([
+        supabase.from("orders").select("id,status,total,is_urgent,created_at,promised_delivery_at,payment_method,payment_status,order_type,qc_status"),
         supabase.from("expenses").select("amount,category,spent_at").gte("spent_at", monthStart),
         supabase.from("employees").select("id,full_name,job_role,is_active").eq("is_active", true),
         supabase.from("pickup_requests").select("id,status,driver_employee_id").in("status", ["pending", "assigned"]),
         supabase.from("service_units").select("id,order_id,needs_reclean,current_stage,status"),
+        supabase.from("event_log").select("*").order("created_at", { ascending: false }).limit(10),
       ]);
 
       const orders: any[] = ordersRes.data ?? [];
@@ -25,6 +26,7 @@ export function useDashboardStats() {
       const employees: any[] = employeesRes.data ?? [];
       const pickups: any[] = pickupsRes.data ?? [];
       const units: any[] = unitsRes.data ?? [];
+      const events: any[] = eventsRes.data ?? [];
 
       const todayOrders = orders.filter((o: any) => o.created_at >= todayIso);
       const active = orders.filter((o: any) => !["delivered", "cancelled"].includes(o.status));
@@ -48,6 +50,11 @@ export function useDashboardStats() {
       const readyNoDriver = active.filter((o: any) => o.status === "ready" && !o.assigned_driver_employee_id);
       const unpaidOut = active.filter((o: any) => ["ready", "out_for_delivery"].includes(o.status) && o.payment_status !== "paid");
       const pendingPickupsNoDriver = pickups.filter((p: any) => p.status === "pending" || !p.driver_employee_id);
+      
+      const passedCount = orders.filter(o => o.qc_status === "PASSED").length;
+      const failedCount = orders.filter(o => o.qc_status === "FAILED").length;
+      const pendingQcCount = active.filter(o => !o.qc_status || o.qc_status === "Pending").length;
+
       const attention = [
         { key: "late", label: "طلبات متأخرة", count: late.length, href: "/orders", tone: "red" },
         { key: "reclean", label: "مرتجعات غسيل", count: recleanUnits.length, href: "/stations/cleaning", tone: "red" },
@@ -76,6 +83,8 @@ export function useDashboardStats() {
         employeeCount: employees.length,
         activePickups: pickups.length,
         attention,
+        qcStats: { passed: passedCount, failed: failedCount, pending: pendingQcCount },
+        recentEvents: events
       };
     },
   });

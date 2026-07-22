@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtMoney } from "@/lib/format";
-import { Loader2, Calendar, Zap, CheckCircle2, AlertTriangle, Activity, Wallet, TrendingUp, Users, Navigation, Truck } from "lucide-react";
+import { Loader2, Calendar, Zap, CheckCircle2, AlertTriangle, Activity, Wallet, TrendingUp, Users, Navigation, Truck, XCircle, History } from "lucide-react";
 import { Link as RouterLink } from "@tanstack/react-router";
 import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";
@@ -62,10 +62,24 @@ function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label={t("today.kpi.ordersToday")} value={stats?.todayCount ?? 0} icon={Calendar} link="/orders" />
-        <KpiCard label={t("dashboard.kpi.urgent")} value={stats?.urgent ?? 0} icon={Zap} tone="text-amber-600" link="/orders" />
-        <KpiCard label={t("dashboard.kpi.late")} value={stats?.late ?? 0} icon={AlertTriangle} tone="text-destructive" link="/orders" />
-        <KpiCard label={t("dashboard.kpi.active")} value={stats?.active ?? 0} icon={Activity} link="/orders" />
+        <KpiCard label="QC ناجح" value={stats?.qcStats?.passed ?? 0} icon={CheckCircle2} tone="text-emerald-600" link="/orders" />
+        <KpiCard label="QC فاشل" value={stats?.qcStats?.failed ?? 0} icon={XCircle} tone="text-destructive" link="/orders" />
+        <KpiCard label="QC معلق" value={stats?.qcStats?.pending ?? 0} icon={Clock} tone="text-amber-600" link="/orders" />
       </div>
+
+      {/* Recent Events */}
+      <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-indigo-600" /> الأحداث الأخيرة</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {(stats?.recentEvents ?? []).length === 0 && <p className="text-sm text-center text-muted-foreground py-4">لا توجد أحداث مسجلة</p>}
+          {(stats?.recentEvents ?? []).map((e: any) => (
+            <div key={e.id} className="flex justify-between items-center p-2 border-b last:border-0 text-sm">
+              <span className="font-bold">{e.event_type}</span>
+              <span className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleTimeString()}</span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       {/* Revenue Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

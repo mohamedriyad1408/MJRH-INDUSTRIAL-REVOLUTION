@@ -56,19 +56,96 @@ export async function createOrder(payload: {
 
   if (itemsError) throw itemsError;
 
-  // 4. Log Event (EVT-001)
-  await supabase.from("event_log").insert({
-    tenant_id: payload.tenant_id,
-    order_id: order.id,
-    event_type: "OrderCreated",
-    payload: { 
-      order_number: order.order_number,
-      total: payload.total,
-      items_count: payload.items.length 
-    }
-  });
+/**
+ * T-007: تفعيل فحص الجودة (QC Logic)
+ * سجل نتيجة فحص الجودة لطلب معين
+ * @param orderId - معرف الطلب
+ * @param status - نتيجة الفحص: 'PASSED' أو 'FAILED'
+ * @param tenantId - معرف المؤسسة
+ * @param notes - ملاحظات إضافية (اختياري)
+ */
+export async function updateOrderQC(
+  orderId: string,
+  status: 'PASSED' | 'FAILED',
+  tenantId: string,
+  notes?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. جلب الطلب الحالي للتأكد من وجوده وحالته
+    const { data: order, error: fetchError } = await supabase
+      .from('orders')
+      .select('id, status, qc_status, tenant_id')
+      .eq('id', orderId)
+      .single();
 
-  return order;
+    if (fetchError || !order) {
+      console.error('Order not found:', fetchError);
+      return { success: false, error: 'الطلب غير موجود' };
+    }
+
+    // 2. منع إعادة فحص الطلب إذا كان قد اجتاز QC بالفعل
+    if (order.qc_status === 'PASSED') {
+      return { success: false, error: 'هذا الطلب قد اجتاز فحص الجودة بالفعل' };
+    }
+
+    // 3. تحديث QC في قاعدة البيانات
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        qc_status: status,
+        qc_notes: notes || '',
+        qc_checked_at: new Date().toISOString(),
+        // إذا نجح QC، نحدّث الحالة إلى READY تلقائياً
+        status: status === 'PASSED' ? 'ready' : 'cleaning' // Fallback to cleaning if failed
+      })
+      .eq('id', orderId);
+
+    if (updateError) {
+      // تحقق مما إذا كان الخطأ ناتجاً عن انتهاك POL-001
+      if (updateError.message?.includes('POL-001')) {
+        return { success: false, error: 'لا يمكن التسليم قبل إجراء فحص الجودة' };
+      }
+      console.error('QC update failed:', updateError);
+      return { success: false, error: 'فشل تحديث فحص الجودة' };
+    }
+
+    // 4. تسجيل حدث في event_log
+    const eventType = status === 'PASSED' ? 'EVT-007' : 'EVT-008';
+    await logEvent({
+      event_type: eventType,
+      tenant_id: tenantId,
+      order_id: orderId,
+      payload: { status, notes },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Unexpected error in updateOrderQC:', error);
+    return { success: false, error: 'حدث خطأ غير متوقع' };
+  }
+}
+
+/**
+ * دالة مساعدة لتسجيل الأحداث
+ */
+async function logEvent({
+  event_type,
+  tenant_id,
+  order_id,
+  payload,
+}: {
+  event_type: string;
+  tenant_id: string;
+  order_id?: string;
+  payload: any;
+}) {
+  await supabase.from('event_log').insert({
+    event_type,
+    tenant_id,
+    order_id,
+    payload,
+    occurred_at: new Date().toISOString(),
+  });
 }
 
 /**
