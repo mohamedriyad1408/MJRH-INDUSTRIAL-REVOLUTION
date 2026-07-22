@@ -18,6 +18,8 @@
   "nav./search": "البحث الموحد",
   "nav./orders": "كل الطلبات",
   "nav./orders/new": "طلب جديد",
+  "nav./online-queue": "طلبات أونلاين",
+  "nav./delivery": "توصيل الطلبات",
   "nav./stations/reception": "الاستقبال",
   "nav./stations/cleaning": "التنظيف",
   "nav./stations/drying-assembly": "التجفيف والتجميع",

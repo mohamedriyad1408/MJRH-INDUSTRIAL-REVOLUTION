@@ -8,7 +8,7 @@ import { Loader2, Truck, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 
-export const Route = createFileRoute("/_app/delivery" as any)({
+export const Route = createFileRoute("/_app/delivery")({
   component: DeliveryPage,
 });
 

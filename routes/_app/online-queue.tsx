@@ -8,7 +8,7 @@ import { Loader2, PackageOpen, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 
-export const Route = createFileRoute("/_app/online-queue" as any)({
+export const Route = createFileRoute("/_app/online-queue")({
   component: OnlineQueuePage,
 });
 

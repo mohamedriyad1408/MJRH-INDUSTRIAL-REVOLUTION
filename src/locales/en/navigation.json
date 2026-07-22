@@ -18,6 +18,8 @@
   "nav./search": "Unified Search",
   "nav./orders": "All Orders",
   "nav./orders/new": "New Order",
+  "nav./online-queue": "Online Orders",
+  "nav./delivery": "Delivery Flow",
   "nav./stations/reception": "Reception",
   "nav./stations/cleaning": "Cleaning",
   "nav./stations/drying-assembly": "Drying & Assembly",
