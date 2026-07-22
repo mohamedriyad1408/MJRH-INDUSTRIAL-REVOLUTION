@@ -95,4 +95,10 @@
     "packingDone": "Packing Done",
     "ready": "Ready"
   }
+  ,"tenant": {
+    "suspended": {
+      "title": "Laundry account deactivated",
+      "body": "This account is currently suspended by the platform administration (Super Admin). Please contact support for reactivation."
+    }
+  }
 }

@@ -16,6 +16,7 @@
     "roleEmp": "Employee",
     "roleDriver": "Courier",
     "roleCust": "Customer",
+    "roleOwner": "Owner",
     "opsSalaryHeader": "Operational & Salary Data",
     "labelBranch": "Branch",
     "branchPlaceholder": "Select Branch",
@@ -30,7 +31,11 @@
     "labelJobRole": "Job Type",
     "labelSalary": "Monthly Salary",
     "labelComm": "Commission %",
-    "btnSave": "Save", "off": "Off", "on": "Work", "from": "From", "to": "To"
+    "btnSave": "Save",
+    "off": "Off",
+    "on": "Work",
+    "from": "From",
+    "to": "To"
   },
   "list": {
     "pageTitle": "Staff List",
@@ -40,8 +45,30 @@
     "colRole": "Role",
     "colBranch": "Branch",
     "colSalary": "Salary",
-    "colStatus": "Status", "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], "info": "Information", "schedule": "Work Schedule", "leaves": "Leaves", "advances": "Advances", "basicData": "Basic Data", "hireDate": "Hire Date", "activeQuery": "Active?", "saveSchedule": "Save Schedule", "noLeaves": "No leave requests", "noAdvances": "No advances", "confirmDelete": "Delete employee permanently?", "errNotFound": "Employee not found",
+    "colStatus": "Status",
     "active": "Active",
-    "inactive": "Inactive", "errNameJob": "Name and job title are required", "toastAdded": "Employee added", "linkNote": "Note: To enable system access, the employee must register with the same email, then you can link the role from their profile.", "saveStaff": "Save Staff", "salaryAndCommission": "Salary "inactive": "Inactive" Commission", "roleAndStation": "Role "inactive": "Inactive" Station", "basicInfo": "Basic Information"
-  }
+    "inactive": "Inactive",
+    "noBranch": "No Branch",
+    "searchPlaceholder": "Search by employee, branch or role..."
+  },
+  "days": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  "info": "Information",
+  "schedule": "Work Schedule",
+  "leaves": "Leaves",
+  "advances": "Advances",
+  "basicData": "Basic Data",
+  "hireDate": "Hire Date",
+  "activeQuery": "Active?",
+  "saveSchedule": "Save Schedule",
+  "noLeaves": "No leave requests",
+  "noAdvances": "No advances",
+  "confirmDelete": "Delete employee permanently?",
+  "errNotFound": "Employee not found",
+  "errNameJob": "Name and job title are required",
+  "toastAdded": "Employee added",
+  "linkNote": "Note: To enable system access, the employee must register with the same email, then you can link the role from their profile.",
+  "saveStaff": "Save Staff",
+  "salaryAndCommission": "Salary & Commission",
+  "roleAndStation": "Role & Station",
+  "basicInfo": "Basic Information"
 }
