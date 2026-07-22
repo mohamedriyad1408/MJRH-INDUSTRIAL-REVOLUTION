@@ -16,16 +16,16 @@ export const Route = createFileRoute("/_app/reports")({
   component: ReportsPage,
 });
 
-const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const MONTHS = [t("يناير"),t("فبراير"),t("مارس"),t("أبريل"),t("مايو"),t("يونيو"),t("يوليو"),t("أغسطس"),t("سبتمبر"),t("أكتوبر"),t("نوفمبر"),t("ديسمبر")];
 const STAGE_AR: Record<string, string> = {
   received: t("stage.received", "استلام"),
-  cleaning: t("stage.cleaning", "تنظيف"),
+  cleaning: t("stage.cleaning", "common.cleaning"),
   cleaning_done: t("stage.cleaningDone", "تنظيف منتهي"),
-  ironing: t("stage.ironing", "كي"),
+  ironing: t("stage.ironing", "stage.ironing"),
   ironing_done: t("stage.ironingDone", "كي منتهي"),
-  packing: t("stage.packing", "تغليف"),
+  packing: t("stage.packing", "stage.packing"),
   packing_done: t("stage.packingDone", "تغليف منتهي"),
-  ready: t("stage.ready", "جاهز"),
+  ready: t("stage.ready", "stage.ready"),
   out_for_delivery: t("status.order.out_for_delivery", "خارج للتوصيل"),
   delivered: t("status.order.delivered", "تم التسليم"),
   qc_passed: t("common.qcPassed", "QC ناجح"),
@@ -157,7 +157,7 @@ function ReportsPage() {
       const assignments = (o.task_assignments ?? []).filter((ta: any) => ta.station === stage || (stage === "received" && ta.station === "reception"));
       const last = (assignments.length ? assignments : (o.task_assignments ?? [])).sort((a: any, b: any) => new Date(b.assigned_at ?? 0).getTime() - new Date(a.assigned_at ?? 0).getTime())[0];
       const empKey = last?.employee_id ?? "unassigned";
-      const name = last?.employees?.full_name ?? "غير مُعيّن";
+      const name = last?.employees?.full_name ?? t("غير مُعيّن");
       if (!lateByEmployee[empKey]) lateByEmployee[empKey] = { name, count: 0, stages: {} };
       lateByEmployee[empKey].count += 1;
       lateByEmployee[empKey].stages[stage] = (lateByEmployee[empKey].stages[stage] ?? 0) + 1;
@@ -191,15 +191,15 @@ function ReportsPage() {
     const insights: Insight[] = [];
     if (revenueDelta !== null) insights.push({
       tone: revenueDelta >= 0 ? "good" : "bad",
-      title: revenueDelta >= 0 ? "الإيراد طالع عن الشهر السابق" : "الإيراد نازل عن الشهر السابق",
-      body: `${Math.abs(revenueDelta).toFixed(1)}% ${revenueDelta >= 0 ? "زيادة" : "انخفاض"} مقارنة بالشهر السابق.`,
-      action: revenueDelta >= 0 ? "كرر مصدر النمو: راجع أكثر الخدمات والموظفين إنتاجية." : "راجع أسباب الانخفاض: عدد الطلبات، متوسط الفاتورة، والعملاء غير النشطين.",
+      title: revenueDelta >= 0 ? t("الإيراد طالع عن الشهر السابق") : t("الإيراد نازل عن الشهر السابق"),
+      body: `${Math.abs(revenueDelta).toFixed(1)}% ${revenueDelta >= 0 ? t("زيادة") : t("انخفاض")} مقارنة بالشهر السابق.`,
+      action: revenueDelta >= 0 ? t("كرر مصدر النمو: راجع أكثر الخدمات والموظفين إنتاجية.") : t("راجع أسباب الانخفاض: عدد الطلبات، متوسط الفاتورة، والعملاء غير النشطين."),
     });
-    if (Number(bottleneck[1]) > Math.max(8, units.length * 0.35)) insights.push({ tone: "warn", title: t("reports.insight.bottleneck", "عنق زجاجة ظاهر"), body: `${bottleneck[1]} قطعة متكدسة في مرحلة ${STAGE_AR[bottleneck[0]] ?? bottleneck[0]}.`, action: "انقل موظف مؤقتًا لهذه المحطة أو افتح وردية قصيرة لتفريغ التكدس." });
-    if (qcRate > 8 || recleanCount > 0) insights.push({ tone: "bad", title: t("reports.insight.quality", "تسريب جودة"), body: `${qcFailed} فشل QC و ${recleanCount} مرتجع تنظيف.`, action: "افتح محطة QC يوميًا قبل التغليف وراجع الفني/الخدمة المتكررة في الفشل." });
-    if (unpaidValue > totalRevenue * 0.25) insights.push({ tone: "warn", title: t("reports.insight.receivables", "تحصيل مؤجل عالي"), body: `الآجل الحالي ${fmtMoney(unpaidValue)} من إجمالي ${fmtMoney(totalRevenue)}.`, action: "فعّل رسالة واتساب آلية قبل التسليم وامنع خروج الطلب غير المدفوع إلا بإذن." });
-    if (lowStock.length) insights.push({ tone: "warn", title: t("reports.insight.stock", "مخزون معرض للنفاد"), body: `${lowStock.length} صنف وصل أو تعدّى حد إعادة الطلب.`, action: "راجع صفحة المخزون واطلب الكيماويات/الأكياس قبل ضغط التشغيل." });
-    if (!insights.length) insights.push({ tone: "good", title: t("reports.insight.stable", "التشغيل مستقر"), body: "لا توجد مؤشرات خطر واضحة في الفترة المختارة.", action: "استمر في متابعة الجودة والمخزون يوميًا." });
+    if (Number(bottleneck[1]) > Math.max(8, units.length * 0.35)) insights.push({ tone: "warn", title: t("reports.insight.bottleneck", "عنق زجاجة ظاهر"), body: `${bottleneck[1]} قطعة متكدسة في مرحلة ${STAGE_AR[bottleneck[0]] ?? bottleneck[0]}.`, action: t("انقل موظف مؤقتًا لهذه المحطة أو افتح وردية قصيرة لتفريغ التكدس.") });
+    if (qcRate > 8 || recleanCount > 0) insights.push({ tone: "bad", title: t("reports.insight.quality", "تسريب جودة"), body: `${qcFailed} فشل QC و ${recleanCount} مرتجع تنظيف.`, action: t("افتح محطة QC يوميًا قبل التغليف وراجع الفني/الخدمة المتكررة في الفشل.") });
+    if (unpaidValue > totalRevenue * 0.25) insights.push({ tone: "warn", title: t("reports.insight.receivables", "تحصيل مؤجل عالي"), body: `الآجل الحالي ${fmtMoney(unpaidValue)} من إجمالي ${fmtMoney(totalRevenue)}.`, action: t("فعّل رسالة واتساب آلية قبل التسليم وامنع خروج الطلب غير المدفوع إلا بإذن.") });
+    if (lowStock.length) insights.push({ tone: "warn", title: t("reports.insight.stock", "مخزون معرض للنفاد"), body: `${lowStock.length} صنف وصل أو تعدّى حد إعادة الطلب.`, action: t("راجع صفحة المخزون واطلب الكيماويات/الأكياس قبل ضغط التشغيل.") });
+    if (!insights.length) insights.push({ tone: "good", title: t("reports.insight.stable", "التشغيل مستقر"), body: t("لا توجد مؤشرات خطر واضحة في الفترة المختارة."), action: t("استمر في متابعة الجودة والمخزون يوميًا.") });
 
     setData({
       totalRevenue, prevRevenue, revenueDelta, totalExpenses, paidExpenses, payableExpenses, payrollAccrual, accruedExpenses, netProfit: totalRevenue - totalExpenses, accruedNetProfit: totalRevenue - accruedExpenses,
@@ -222,25 +222,25 @@ function ReportsPage() {
   function exportCSV() {
     if (!data) return;
     const rows = [
-      ["الفرع", branchId === "all" ? "كل الفروع" : branches.find((b) => b.id === branchId)?.name ?? "فرع محدد"],
-      ["المؤشر", "القيمة"],
-      ["الإيرادات", data.totalRevenue],
-      ["المصروفات المدفوعة", data.totalExpenses],
-      ["مصروفات آجلة", data.payableExpenses],
-      ["رواتب مستحقة ضمن الآجل", data.payrollAccrual],
-      ["صافي الربح", data.netProfit],
-      ["إجمالي الطلبات", data.totalOrders],
-      ["متوسط الفاتورة", data.avgOrder],
-      ["قيمة الآجل", data.unpaidValue],
-      ["فشل QC", data.qcFailed],
-      ["مرتجعات تنظيف", data.recleanCount],
-      ["عنق الزجاجة", STAGE_AR[data.bottleneck[0]] ?? data.bottleneck[0]],
+      [t("common.branch"), branchId === "all" ? t("كل الفروع") : branches.find((b) => b.id === branchId)?.name ?? t("فرع محدد")],
+      [t("المؤشر"), t("القيمة")],
+      [t("الإيرادات"), data.totalRevenue],
+      [t("المصروفات المدفوعة"), data.totalExpenses],
+      [t("مصروفات آجلة"), data.payableExpenses],
+      [t("رواتب مستحقة ضمن الآجل"), data.payrollAccrual],
+      [t("صافي الربح"), data.netProfit],
+      [t("إجمالي الطلبات"), data.totalOrders],
+      [t("متوسط الفاتورة"), data.avgOrder],
+      [t("قيمة الآجل"), data.unpaidValue],
+      [t("فشل QC"), data.qcFailed],
+      [t("مرتجعات تنظيف"), data.recleanCount],
+      [t("عنق الزجاجة"), STAGE_AR[data.bottleneck[0]] ?? data.bottleneck[0]],
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `mjrh-intelligence-${branchId === "all" ? "all" : branchId}-${year}-${month+1}.csv`; a.click();
-    toast.success("تم تصدير التقرير");
+    toast.success(t("تم تصدير التقرير"));
   }
 
   const years = useMemo(() => [2024, 2025, 2026, 2027], []);
@@ -313,11 +313,11 @@ function ReportsPage() {
             <Card>
               <CardHeader><CardTitle className="text-sm flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-red-500" />{t("reports.qualityLeaks")}</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <Leak label="فشل QC" value={data.qcFailed} danger={data.qcFailed > 0} />
-                <Leak label="مرتجع تنظيف" value={data.recleanCount} danger={data.recleanCount > 0} />
-                <Leak label="مشاكل مارك/ليبل" value={data.labelIssues ?? 0} danger={(data.labelIssues ?? 0) > 0} />
-                <Leak label="مخزون تحت الحد" value={data.lowStock.length} danger={data.lowStock.length > 0} />
-                <Leak label="طلبات مستعجلة" value={data.urgent} danger={false} />
+                <Leak label=t("فشل QC") value={data.qcFailed} danger={data.qcFailed > 0} />
+                <Leak label=t("مرتجع تنظيف") value={data.recleanCount} danger={data.recleanCount > 0} />
+                <Leak label=t("مشاكل مارك/ليبل") value={data.labelIssues ?? 0} danger={(data.labelIssues ?? 0) > 0} />
+                <Leak label=t("مخزون تحت الحد") value={data.lowStock.length} danger={data.lowStock.length > 0} />
+                <Leak label=t("طلبات مستعجلة") value={data.urgent} danger={false} />
               </CardContent>
             </Card>
           </div>

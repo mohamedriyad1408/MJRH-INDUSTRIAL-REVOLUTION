@@ -88,7 +88,7 @@ function PackingStation() {
   async function startPacking(g: Group) {
     setBusy(g.orderId);
     const { error } = await supabase.from("orders").update({ status: "packing" }).eq("id", g.orderId);
-    if (!error) await record(g, "packing_started", "بدء التغليف");
+    if (!error) await record(g, "packing_started", t("بدء التغليف"));
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastStarted")); load(); }
   }
@@ -99,7 +99,7 @@ function PackingStation() {
     setBusy(g.orderId);
     const ids = g.units.filter((u) => !["qc_passed", "ready"].includes(u.current_stage)).map((u) => u.id);
     const { error } = await supabase.from("service_units").update({ current_stage: "packing_done", staff_notes: t("stations.packing.staffNote") }).in("id", ids);
-    if (!error) await record(g, "packing_completed", "إنهاء تغليف الطلب", { packed_units: ids.length });
+    if (!error) await record(g, "packing_completed", t("إنهاء تغليف الطلب"), { packed_units: ids.length });
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastPacked")); load(); }
   }
@@ -111,7 +111,7 @@ function PackingStation() {
     if (!v.ok) return toast.error(v.message || t("stations.packing.errQcFirst"));
     setBusy(g.orderId);
     const { error } = await supabase.from("orders").update({ status: "ready" }).eq("id", g.orderId);
-    if (!error) await record(g, "order_ready_after_packing", "اعتماد الطلب جاهز بعد التغليف والجودة");
+    if (!error) await record(g, "order_ready_after_packing", t("اعتماد الطلب جاهز بعد التغليف والجودة"));
     setBusy(null);
     if (error) toast.error(error.message); else { toast.success(t("stations.packing.toastReady")); load(); }
   }

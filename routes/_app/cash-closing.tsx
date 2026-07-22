@@ -13,7 +13,7 @@ import { Wallet, Plus, Loader2, RefreshCw, AlertTriangle, ShieldCheck } from "lu
 import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/cash-closing")({
-  head: () => ({ meta: [{ title: "إقفال الخزائن" }] }),
+  head: () => ({ meta: [{ title: t("إقفال الخزائن") }] }),
   component: CashClosingPage,
 });
 
@@ -131,7 +131,7 @@ function CashClosingPage() {
 
       toast.success(t("cashClosing.successClose", "تم إقفال كل الخزن في حركة واحدة"));
       setNotes(""); load();
-    } catch (e: any) { toast.error(e.message ?? "فشل الإقفال"); } finally { setClosingNow(false); }
+    } catch (e: any) { toast.error(e.message ?? t("فشل الإقفال")); } finally { setClosingNow(false); }
   }
 
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("cashClosing.ownerOnly", "إقفال الخزن للمالك ومدير التشغيل فقط.")}</CardContent></Card>;

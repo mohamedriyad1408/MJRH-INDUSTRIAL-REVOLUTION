@@ -127,7 +127,7 @@ function AttendanceMawaredPage() {
       setCurrentEmp((myEmpRes.data ?? null) as Employee | null);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "خطأ في تحميل البيانات");
+      toast.error(err?.message || t("خطأ في تحميل البيانات"));
     } finally {
       setLoading(false);
     }
@@ -151,7 +151,7 @@ function AttendanceMawaredPage() {
   }
 
   async function checkInMyShift() {
-    if (!currentEmp) return toast.error("حسابك غير مربوط بموظف");
+    if (!currentEmp) return toast.error(t("حسابك غير مربوط بموظف"));
     setBusyMyShift(true);
     const loc = await getLocation();
     const { error } = await supabase.from("employee_attendance").insert({
@@ -290,7 +290,7 @@ function AttendanceMawaredPage() {
       setOpenModal(false);
       loadData();
     } catch (err: any) {
-      toast.error(err?.message || "فشل حفظ البيانات");
+      toast.error(err?.message || t("فشل حفظ البيانات"));
     } finally {
       setSaving(false);
     }
@@ -304,7 +304,7 @@ function AttendanceMawaredPage() {
       toast.success(t("attendance.toastDeleteSuccess"));
       loadData();
     } catch (err: any) {
-      toast.error(err?.message || "فشل الحذف");
+      toast.error(err?.message || t("فشل الحذف"));
     }
   }
 
@@ -315,13 +315,13 @@ function AttendanceMawaredPage() {
         employee_id: empId,
         work_date: date,
         check_in_at: new Date().toISOString(),
-        notes: "تسجيل حضور سريع بواسطة الإدارة",
+        notes: t("تسجيل حضور سريع بواسطة الإدارة"),
       });
       if (error) throw error;
       toast.success(t("attendance.toastQuickInSuccess"));
       loadData();
     } catch (err: any) {
-      toast.error(err?.message || "فشل التسجيل");
+      toast.error(err?.message || t("فشل التسجيل"));
     }
   }
 
@@ -404,8 +404,8 @@ function AttendanceMawaredPage() {
 
             <div className="flex items-center gap-1.5">
               {[
-                { label: "اليوم", val: new Date().toISOString().slice(0, 10) },
-                { label: "أمس", val: new Date(Date.now() - 86400000).toISOString().slice(0, 10) },
+                { label: t("اليوم"), val: new Date().toISOString().slice(0, 10) },
+                { label: t("أمس"), val: new Date(Date.now() - 86400000).toISOString().slice(0, 10) },
               ].map((btn) => (
                 <button
                   key={btn.val}
@@ -491,10 +491,10 @@ function AttendanceMawaredPage() {
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
         {[
-          { key: "all", label: "سجلات الحضور", count: records.length, color: "bg-teal-600 text-white" },
-          { key: "present", label: "حاضرون الآن", count: presentRecords.length, color: "bg-emerald-600 text-white" },
-          { key: "checked_out", label: "منصرفون", count: checkedOutRecords.length, color: "bg-blue-600 text-white" },
-          { key: "absent", label: "غائبون اليوم", count: absentEmployees.length, color: "bg-amber-600 text-white" },
+          { key: "all", label: t("سجلات الحضور"), count: records.length, color: "bg-teal-600 text-white" },
+          { key: "present", label: t("حاضرون الآن"), count: presentRecords.length, color: "bg-emerald-600 text-white" },
+          { key: "checked_out", label: t("منصرفون"), count: checkedOutRecords.length, color: "bg-blue-600 text-white" },
+          { key: "absent", label: t("غائبون اليوم"), count: absentEmployees.length, color: "bg-amber-600 text-white" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -538,7 +538,7 @@ function AttendanceMawaredPage() {
                     <div className="space-y-1 min-w-0">
                       <div className="font-black text-base text-slate-900 truncate">{emp.full_name}</div>
                       <div className="text-xs text-slate-500 font-semibold flex items-center gap-1">
-                        <span>{emp.job_title || "موظف"}</span>
+                        <span>{emp.job_title || t("موظف")}</span>
                         {emp.branches?.name && <Badge variant="outline" className="text-[10px]">{emp.branches.name}</Badge>}
                       </div>
                     </div>
@@ -586,9 +586,9 @@ function AttendanceMawaredPage() {
                     return (
                       <tr key={r.id} className="hover:bg-slate-50/70 transition">
                         <td className="p-4">
-                          <div className="font-extrabold text-slate-900">{r.employees?.full_name || "موظف محذوف"}</div>
+                          <div className="font-extrabold text-slate-900">{r.employees?.full_name || t("موظف محذوف")}</div>
                           <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                            <span>{r.employees?.job_title || r.employees?.role || "موظف"}</span>
+                            <span>{r.employees?.job_title || r.employees?.role || t("موظف")}</span>
                             {r.employees?.branches?.name && <Badge variant="outline" className="text-[10px]">{r.employees.branches.name}</Badge>}
                           </div>
                         </td>
@@ -696,7 +696,7 @@ function AttendanceMawaredPage() {
               <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelEmp")}</Label>
               <Select value={selectedEmpId} onValueChange={setSelectedEmpId} disabled={!!editingId}>
                 <SelectTrigger className="rounded-xl h-11 font-bold">
-                  <SelectValue placeholder="اختر الموظف..." />
+                  <SelectValue placeholder=t("اختر الموظف...") />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((e) => (
@@ -755,7 +755,7 @@ function AttendanceMawaredPage() {
 
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpenModal(false)} className="rounded-xl font-bold">
-              {t("common.cancel", "إلغاء")}
+              {t("common.cancel", "common.cancel")}
             </Button>
             <Button onClick={saveModalRecord} disabled={saving} className="bg-teal-600 hover:bg-teal-700 text-white font-black rounded-xl px-6">
               {saving ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : t("common.save", "حفظ السجل")}

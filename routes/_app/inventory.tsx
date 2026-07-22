@@ -72,7 +72,7 @@ function InventoryPage() {
     const selectedBranchId = itemForm.branch_id || (branchId !== "all" ? branchId : branches[0]?.id);
     if (!selectedBranchId) return toast.error(t("inventory.errBranch", "اختار الفرع"));
     const { data, error } = await supabase.from("inventory_items").insert({
-      name: itemForm.name.trim(), category: itemForm.category, unit: itemForm.unit || "وحدة", branch_id: selectedBranchId,
+      name: itemForm.name.trim(), category: itemForm.category, unit: itemForm.unit || t("وحدة"), branch_id: selectedBranchId,
       reorder_level: Number(itemForm.reorder_level || 0), avg_unit_cost: Number(itemForm.avg_unit_cost || 0), supplier: itemForm.supplier || null,
     }).select("id").single();
     if (error) toast.error(error.message); else {
@@ -81,7 +81,7 @@ function InventoryPage() {
       if (qty > 0) {
         await supabase.from("inventory_movements").insert({ item_id: data.id, branch_id: selectedBranchId, movement_type: "purchase", qty, unit_cost: cost, notes: t("inventory.movePurchase", "رصيد بداية/شراء أول"), created_by: user?.id });
       }
-      await supabase.rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: "إضافة صنف مخزون", _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
+      await supabase.rpc("record_operation_event", { _process_key: "inventory_item_created", _process_name: t("إضافة صنف مخزون"), _source_type: "inventory_item", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: Number(itemForm.initial_qty || 0) <= Number(itemForm.reorder_level || 0), _data: { tenant_id: tenantId, name: itemForm.name.trim(), qty, cost }, _output: { cash_impact: false, journal_required: qty > 0, appears_in_report: true } }).then(() => null);
       toast.success(t("inventory.toastAdded", "تم إضافة الصنف وربطه بالفرع والتقارير"));
       setItemForm({ name: "", category: "consumable", unit: t("inventory.unit", "وحدة"), initial_qty: "0", reorder_level: "0", avg_unit_cost: "0", supplier: "", branch_id: selectedBranchId });
       load();
@@ -96,7 +96,7 @@ function InventoryPage() {
     const { data, error } = await supabase.from("inventory_movements").insert({
       item_id: moveForm.item_id, branch_id: selectedBranchId, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0), unit_cost: Number(moveForm.unit_cost || 0), notes: moveForm.notes || null, created_by: user?.id,
     }).select("id").single();
-    if (!error && data?.id) await supabase.rpc("record_operation_event", { _process_key: "inventory_movement", _process_name: "تسجيل حركة مخزون", _source_type: "inventory_movement", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: ["usage", "waste"].includes(moveForm.movement_type), _data: { tenant_id: tenantId, item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0) }, _output: { cash_impact: false, journal_required: ["purchase", "adjustment"].includes(moveForm.movement_type), appears_in_report: true } }).then(() => null);
+    if (!error && data?.id) await supabase.rpc("record_operation_event", { _process_key: "inventory_movement", _process_name: t("تسجيل حركة مخزون"), _source_type: "inventory_movement", _source_id: data.id, _branch_id: selectedBranchId, _report_bucket: "inventory/reports", _requires_notification: ["usage", "waste"].includes(moveForm.movement_type), _data: { tenant_id: tenantId, item_id: moveForm.item_id, movement_type: moveForm.movement_type, qty: Number(moveForm.qty || 0) }, _output: { cash_impact: false, journal_required: ["purchase", "adjustment"].includes(moveForm.movement_type), appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success(t("inventory.toastMoveAdded", "تم تسجيل حركة المخزون وربطها بالفرع")); setMoveForm({ item_id: "", movement_type: "purchase", qty: "1", unit_cost: "0", notes: "" }); load(); }
   }
 
@@ -136,7 +136,7 @@ function InventoryPage() {
 
       <TabsContent value="stock" className="grid lg:grid-cols-[360px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Plus className="w-4 h-4" />{t("inventory.addItemTitle", "إضافة صنف")}</CardTitle></CardHeader><CardContent className="space-y-3">
-          <Field label={t("inventory.labelBranch", "الفرع")}><Select value={itemForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setItemForm({ ...itemForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("inventory.branchPlaceholder", "اختار الفرع")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
+          <Field label={t("inventory.labelBranch", "common.branch")}><Select value={itemForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setItemForm({ ...itemForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("inventory.branchPlaceholder", "اختار الفرع")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
           <Field label={t("inventory.labelName", "اسم الصنف")}><Input value={itemForm.name} onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })} placeholder={t("inventory.namePlaceholder", "مسحوق / أكياس / شماعات")} /></Field>
           <div className="grid grid-cols-2 gap-2"><Field label={t("inventory.labelUnit", "الوحدة")}><Input value={itemForm.unit} onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })} /></Field><Field label={t("inventory.labelInitialQty", "الكمية التي اشتريتها")}><Input type="number" value={itemForm.initial_qty} onChange={(e) => setItemForm({ ...itemForm, initial_qty: e.target.value })} /></Field></div>
           <div className="grid grid-cols-2 gap-2"><Field label={t("inventory.labelReorder", "حد إعادة الطلب")}><Input type="number" value={itemForm.reorder_level} onChange={(e) => setItemForm({ ...itemForm, reorder_level: e.target.value })} /></Field><Field label={t("inventory.labelCost", "تكلفة الوحدة")}><Input type="number" value={itemForm.avg_unit_cost} onChange={(e) => setItemForm({ ...itemForm, avg_unit_cost: e.target.value })} /></Field></div>
@@ -155,7 +155,7 @@ function InventoryPage() {
           <Field label={t("inventory.labelItem", "الصنف")}><Select value={moveForm.item_id} onValueChange={(v) => setMoveForm({ ...moveForm, item_id: v })}><SelectTrigger><SelectValue placeholder={t("inventory.itemPlaceholder", "اختار")} /></SelectTrigger><SelectContent>{items.map((x) => <SelectItem key={x.id} value={x.id}>{x.name}{x.branches?.name ? ` — ${x.branches.name}` : ""}</SelectItem>)}</SelectContent></Select></Field>
           <Field label={t("inventory.labelMoveType", "نوع الحركة")}><Select value={moveForm.movement_type} onValueChange={(v) => setMoveForm({ ...moveForm, movement_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="purchase">{t("inventory.movePurchase", "شراء/توريد")}</SelectItem><SelectItem value="usage">{t("inventory.moveUsage", "استهلاك")}</SelectItem><SelectItem value="waste">{t("inventory.moveWaste", "هالك")}</SelectItem><SelectItem value="return">{t("inventory.moveReturn", "مرتجع للمخزن")}</SelectItem><SelectItem value="adjustment">{t("inventory.moveAdjustment", "تسوية")}</SelectItem></SelectContent></Select></Field>
           <div className="grid grid-cols-2 gap-2"><Field label={t("inventory.labelQty", "الكمية")}><Input type="number" value={moveForm.qty} onChange={(e) => setMoveForm({ ...moveForm, qty: e.target.value })} /></Field><Field label={t("inventory.labelCost", "تكلفة الوحدة")}><Input type="number" value={moveForm.unit_cost} onChange={(e) => setMoveForm({ ...moveForm, unit_cost: e.target.value })} /></Field></div>
-          <Textarea placeholder={t("inventory.labelNotes", "ملاحظات")} value={moveForm.notes} onChange={(e) => setMoveForm({ ...moveForm, notes: e.target.value })} />
+          <Textarea placeholder={t("inventory.labelNotes", "common.notes")} value={moveForm.notes} onChange={(e) => setMoveForm({ ...moveForm, notes: e.target.value })} />
           <Button onClick={addMovement} className="w-full">{t("inventory.btnSaveMove", "حفظ الحركة")}</Button>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">{t("inventory.latestMoves", "آخر الحركات")}</CardTitle></CardHeader><CardContent className="space-y-2">
@@ -166,11 +166,11 @@ function InventoryPage() {
 
       <TabsContent value="equipment" className="grid lg:grid-cols-[360px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Wrench className="w-4 h-4" />{t("inventory.addAssetTitle", "إضافة معدة")}</CardTitle></CardHeader><CardContent className="space-y-3">
-          <Field label={t("inventory.labelBranch", "الفرع")}><Select value={assetForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setAssetForm({ ...assetForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("inventory.branchPlaceholder", "اختار الفرع")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
+          <Field label={t("inventory.labelBranch", "common.branch")}><Select value={assetForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setAssetForm({ ...assetForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("inventory.branchPlaceholder", "اختار الفرع")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field>
           <Field label={t("inventory.labelName", "اسم المعدة")}><Input value={assetForm.name} onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })} placeholder={t("inventory.assetNamePlaceholder", "غسالة / مجفف / مكواة بخار")} /></Field>
           <div className="grid grid-cols-2 gap-2"><Field label={t("inventory.labelAssetType", "النوع")}><Input value={assetForm.asset_type} onChange={(e) => setAssetForm({ ...assetForm, asset_type: e.target.value })} /></Field><Field label={t("inventory.labelAssetCost", "التكلفة")}><Input type="number" value={assetForm.purchase_cost} onChange={(e) => setAssetForm({ ...assetForm, purchase_cost: e.target.value })} /></Field></div>
           <Field label={t("inventory.labelNextMaintenance", "الصيانة القادمة")}><Input type="date" value={assetForm.next_maintenance_at} onChange={(e) => setAssetForm({ ...assetForm, next_maintenance_at: e.target.value })} /></Field>
-          <Textarea placeholder={t("inventory.labelNotes", "ملاحظات")} value={assetForm.notes} onChange={(e) => setAssetForm({ ...assetForm, notes: e.target.value })} />
+          <Textarea placeholder={t("inventory.labelNotes", "common.notes")} value={assetForm.notes} onChange={(e) => setAssetForm({ ...assetForm, notes: e.target.value })} />
           <Button onClick={addAsset} className="w-full">{t("inventory.btnAddAsset", "إضافة المعدة")}</Button>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">{t("inventory.assetsTitle", "المعدات")}</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 gap-3">

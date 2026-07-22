@@ -71,7 +71,7 @@ function QcStation() {
 
   async function approveSafeGroup(g: { orderId: string; order: Unit["orders"]; units: Unit[] }) {
     const c = groupChecks(g.units);
-    if (!c.safe.length) return toast.error("لا توجد قطع سليمة قابلة للاعتماد الآن");
+    if (!c.safe.length) return toast.error(t("لا توجد قطع سليمة قابلة للاعتماد الآن"));
     setBusy(g.orderId);
     let ok = 0;
     for (const u of c.safe) {
@@ -87,7 +87,7 @@ function QcStation() {
 
   async function markReady(g: { orderId: string; order: Unit["orders"]; units: Unit[] }) {
     const c = groupChecks(g.units);
-    if (!c.allPassed) return toast.error("لا يمكن جعل الطلب جاهز قبل اعتماد كل القطع من الجودة");
+    if (!c.allPassed) return toast.error(t("لا يمكن جعل الطلب جاهز قبل اعتماد كل القطع من الجودة"));
     const v = await validateOrderMove(g.orderId, "ready");
     if (!v.ok) return toast.error(v.message);
     setBusy(g.orderId);

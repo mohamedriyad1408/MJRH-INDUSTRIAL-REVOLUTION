@@ -237,7 +237,7 @@ function NewOrderPage() {
       toast.success(t("orders.orderCreated", "تم إنشاء الطلب وتسجيل الحدث"));
       nav({ to: "/orders/$id", params: { id: order.id } });
     } catch (err: any) {
-      toast.error(err.message || "فشل إنشاء الطلب");
+      toast.error(err.message || t("فشل إنشاء الطلب"));
     } finally {
       setSaving(false);
     }
@@ -257,7 +257,7 @@ function NewOrderPage() {
           <div className="flex gap-2">
             <Badge className="bg-teal-500/20 text-teal-100 border-teal-400/30 px-3 py-1">{piecesCount} {t("orders.pieces", "قطعة")}</Badge>
             <Badge className="bg-blue-500/20 text-blue-100 border-blue-400/30 px-3 py-1">{shirtCount} {t("orders.shirts", "قميص/بلوزة")}</Badge>
-            {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> {t("dashboard.kpi.urgent", "مستعجل")}</Badge>}
+            {isUrgent && <Badge className="bg-amber-500 text-black px-3 py-1"><Zap className="w-3 h-3 ms-1" /> {t("dashboard.kpi.urgent", "orders.urgent")}</Badge>}
           </div>
         </div>
 
@@ -299,7 +299,7 @@ function NewOrderPage() {
                 <div className="rounded-2xl bg-white/8 border border-white/10 p-3 space-y-2 text-sm">
                   <Row label={t("orders.subtotal", "المجموع الفرعي")} value={fmtMoney(subtotal, t("common.egp"))} />
                   {isUrgent && <Row label={t("settings.urgentFee", "رسوم استعجال")} value={fmtMoney(urgentFee)} />}
-                  {orderType === "delivery" && <Row label={t("stage.delivery", "توصيل")} value={fmtMoney(delivery)} />}
+                  {orderType === "delivery" && <Row label={t("stage.delivery", "orders.delivery")} value={fmtMoney(delivery)} />}
                   {disc > 0 && <Row label={`${t("orders.discount", "خصم")} ${discPct}%`} value={`- ${fmtMoney(disc, t("common.egp"))}`} />}
                   {settings.tax_percent > 0 && <Row label={`${t("settings.taxPercent", "ضريبة")} ${settings.tax_percent}%`} value={fmtMoney(tax, t("common.egp"))} />}
                   <div className="border-t border-white/10 pt-3 mt-3 flex justify-between items-center">
@@ -309,11 +309,11 @@ function NewOrderPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" variant={paymentStatus === "paid" ? "default" : "outline"} onClick={() => setPaymentStatus("paid")} className={paymentStatus === "paid" ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.paid", "مدفوع")}</Button>
-                  <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.unpaid", "آجل")}</Button>
+                  <Button type="button" variant={paymentStatus === "paid" ? "default" : "outline"} onClick={() => setPaymentStatus("paid")} className={paymentStatus === "paid" ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.paid", "orders.paid")}</Button>
+                  <Button type="button" variant={paymentStatus === "unpaid" ? "default" : "outline"} onClick={() => setPaymentStatus("unpaid")} className={paymentStatus === "unpaid" ? "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black" : "border-white/20 bg-white/5 text-white hover:bg-white/10"}>{t("status.payment.unpaid", "orders.unpaid")}</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">{t("common.cancel", "إلغاء")}</Link></Button>
+                  <Button variant="outline" asChild className="border-white/20 bg-white/5 text-white hover:bg-white/10"><Link to="/orders">{t("common.cancel", "common.cancel")}</Link></Button>
                   <Button onClick={submit} disabled={saving} className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-black h-12">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t("orders.createBtn", "إنشاء الطلب")}
                   </Button>
@@ -351,8 +351,8 @@ function NewOrderPage() {
                         )}
                         <div className="grid grid-cols-2 gap-2">
                           <Input placeholder={t("login.fullName", "الاسم الكامل")} value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
-                          <Input placeholder={t("common.phone", "الهاتف")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
-                          <Input className="col-span-2 bg-white" placeholder={t("common.address", "العنوان")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
+                          <Input placeholder={t("common.phone", "common.phone")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
+                          <Input className="col-span-2 bg-white" placeholder={t("common.address", "common.address")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
                         </div>
                       </>
                     )}
@@ -362,12 +362,12 @@ function NewOrderPage() {
                     <div className="flex items-center gap-2 font-black"><CreditCard className="w-4 h-4 text-teal-600" /> {t("orders.payment", "الدفع")}</div>
                     <div className="grid grid-cols-2 gap-2">
                       <Select value={branchId} onValueChange={setBranchId}>
-                        <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch", "الفرع")} /></SelectTrigger>
+                        <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch", "common.branch")} /></SelectTrigger>
                         <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="walk_in">{t("orders.walkin", "داخلي")}</SelectItem><SelectItem value="delivery">{t("stage.delivery", "توصيل")}</SelectItem></SelectContent>
+                        <SelectContent><SelectItem value="walk_in">{t("orders.walkin", "orders.walkin")}</SelectItem><SelectItem value="delivery">{t("stage.delivery", "orders.delivery")}</SelectItem></SelectContent>
                       </Select>
                       <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
@@ -378,13 +378,13 @@ function NewOrderPage() {
                       </Select>
                     </div>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent", "مستعجل")}</label>
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent", "orders.urgent")}</label>
                       
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {isUrgent && <Input type="number" placeholder={t("settings.urgentFee", "استعجال")} value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
                       <Input type="number" placeholder={t("orders.discount", "خصم %")} value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="bg-white" />
-                      {orderType === "delivery" && <Input type="number" placeholder={t("settings.deliveryFee", "توصيل")} value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
+                      {orderType === "delivery" && <Input type="number" placeholder={t("settings.deliveryFee", "orders.delivery")} value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
                     </div>
                   </div>
                 </div>
@@ -456,7 +456,7 @@ function NewOrderPage() {
                 </div>
 
                 <div>
-                  <Label className="text-slate-700">{t("orders.notes", "ملاحظات")}</Label>
+                  <Label className="text-slate-700">{t("orders.notes", "common.notes")}</Label>
                   <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("orders.notes", "أي ملاحظات إضافية على الطلب...")} />
                 </div>
               </CardContent>

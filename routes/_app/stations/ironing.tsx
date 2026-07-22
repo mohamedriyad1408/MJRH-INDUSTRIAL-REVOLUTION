@@ -89,7 +89,7 @@ function IroningManagerPage() {
       else toast.info(lastMessage || t("stations.ironing.toastNoDistribute"));
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "تعذر توزيع الكي");
+      toast.error(e instanceof Error ? e.message : t("تعذر توزيع الكي"));
     } finally {
       setAssigning(false);
     }

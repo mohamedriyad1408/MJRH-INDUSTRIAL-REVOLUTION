@@ -80,7 +80,7 @@ function OrderDetailPage() {
   const [assigning, setAssigning] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
   const [proofUploading, setProofUploading] = useState(false);
-  const [form, setForm] = useState({ garment_type: "قميص", color: "", notes: "" });
+  const [form, setForm] = useState({ garment_type: t("garment.shirt"), color: "", notes: "" });
   const [historyRows, setHistoryRows] = useState<any[]>([]);
   const [pickupRows, setPickupRows] = useState<any[]>([]);
   const [cancelRows, setCancelRows] = useState<any[]>([]);
@@ -237,7 +237,7 @@ function OrderDetailPage() {
       });
     setAddingUnit(false);
     if (error) return toast.error(error.message);
-    await supabase.rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: "إضافة قطعة للطلب", _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "service_unit_added", _process_name: t("إضافة قطعة للطلب"), _source_type: "order", _source_id: id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/production", _requires_notification: false, _data: { tenant_id: order?.tenant_id, garment_type: form.garment_type, order_number: order?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     toast.success(t("orders.unitAdded", "تمت إضافة القطعة"));
     setForm({ garment_type: "shirt", color: "", notes: "" });
     load();
@@ -262,11 +262,11 @@ function OrderDetailPage() {
     if (reason === null) return;
     const { error } = await supabase.from("service_units").update({
       needs_reclean: true,
-      reclean_reason: reason || "مرتجع تنظيف",
+      reclean_reason: reason || t("مرتجع تنظيف"),
       reclean_reported_by: user?.id,
       reclean_reported_at: new Date().toISOString(),
     }).eq("id", unit.id);
-    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: t("orders.toastRecleanReported"), _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || "مرتجع تنظيف", label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("orders.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
+    if (error) toast.error(error.message); else { await supabase.rpc("record_operation_event", { _process_key: "piece_reclean_reported", _process_name: t("orders.toastRecleanReported"), _source_type: "service_unit", _source_id: unit.id, _branch_id: order?.branch_id ?? null, _cash_account_id: null, _report_bucket: "quality/reports", _requires_notification: true, _data: { tenant_id: order?.tenant_id, order_id: id, reason: reason || t("مرتجع تنظيف"), label_code: unit.label_code }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null); toast.success(t("orders.recleanReported", "تم تسجيل مرتجع التنظيف")); load(); }
   }
 
   async function resolveReclean(unit: ServiceUnit) {
@@ -299,7 +299,7 @@ function OrderDetailPage() {
       cashAccountId = safe?.id ?? null;
     }
     const { error } = await supabase.from("orders").update({ payment_status: next }).eq("id", id);
-    if (!error) await supabase.rpc("record_operation_event", { _process_key: next === "paid" ? "payment_recorded" : "payment_marked_unpaid", _process_name: next === "paid" ? "تسجيل تحصيل طلب" : "جعل الطلب آجل", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: cashAccountId, _report_bucket: "finance/receivables", _requires_notification: false, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), payment_method: order.payment_method }, _output: { cash_impact: next === "paid", journal_required: next === "paid", appears_in_report: true } }).then(() => null);
+    if (!error) await supabase.rpc("record_operation_event", { _process_key: next === "paid" ? "payment_recorded" : "payment_marked_unpaid", _process_name: next === "paid" ? t("تسجيل تحصيل طلب") : t("جعل الطلب آجل"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: cashAccountId, _report_bucket: "finance/receivables", _requires_notification: false, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), payment_method: order.payment_method }, _output: { cash_impact: next === "paid", journal_required: next === "paid", appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success(next === "paid" ? t("orders.paymentRecorded") : t("orders.markedUnpaid")); load(); }
   }
 
@@ -319,7 +319,7 @@ function OrderDetailPage() {
     }).eq("id", id);
     setProofUploading(false);
     if (uErr) return toast.error(uErr.message);
-    await supabase.rpc("record_operation_event", { _process_key: "payment_proof_uploaded", _process_name: "رفع إيصال دفع", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "finance/payment-review", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), proof_url: data.publicUrl }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "payment_proof_uploaded", _process_name: t("رفع إيصال دفع"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "finance/payment-review", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, amount: Number(order.total ?? 0), proof_url: data.publicUrl }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
     toast.success(t("orders.instapayProofSaved", "تم حفظ صورة تحويل InstaPay وتسجيل الدفع"));
     load();
   }
@@ -358,7 +358,7 @@ function OrderDetailPage() {
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error(t("orders.errReasonRequired"));
     const { error } = await supabase.rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
-    if (!error) await supabase.rpc("record_operation_event", { _process_key: "order_cancelled", _process_name: "إلغاء طلب", _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason: reason.trim(), total: Number(order.total ?? 0) }, _output: { cash_impact: false, journal_required: Number(order.total ?? 0) > 0, appears_in_report: true } }).then(() => null);
+    if (!error) await supabase.rpc("record_operation_event", { _process_key: "order_cancelled", _process_name: t("إلغاء طلب"), _source_type: "order", _source_id: id, _branch_id: order.branch_id ?? null, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: true, _data: { tenant_id: order.tenant_id, order_number: order.order_number, reason: reason.trim(), total: Number(order.total ?? 0) }, _output: { cash_impact: false, journal_required: Number(order.total ?? 0) > 0, appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success(t("orders.orderCancelled", "تم إلغاء الطلب وتسجيل السبب")); load(); }
   }
 
