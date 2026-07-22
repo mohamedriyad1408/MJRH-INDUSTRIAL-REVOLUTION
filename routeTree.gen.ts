@@ -28,6 +28,7 @@ import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppReceivablesRouteImport } from './routes/_app/receivables'
 import { Route as AppOpsRouteImport } from './routes/_app/ops'
+import { Route as AppOnlineQueueRouteImport } from './routes/_app/online-queue'
 import { Route as AppManagerRouteImport } from './routes/_app/manager'
 import { Route as AppLiveMapRouteImport } from './routes/_app/live-map'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
@@ -36,6 +37,7 @@ import { Route as AppHelpRouteImport } from './routes/_app/help'
 import { Route as AppFinanceRouteImport } from './routes/_app/finance'
 import { Route as AppExecutiveRouteImport } from './routes/_app/executive'
 import { Route as AppDriverRouteImport } from './routes/_app/driver'
+import { Route as AppDeliveryRouteImport } from './routes/_app/delivery'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppDailyOperationsRouteImport } from './routes/_app/daily-operations'
 import { Route as AppCustomersRouteImport } from './routes/_app/customers'
@@ -156,12 +158,12 @@ const AppSearchRoute = AppSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() => import('./routes/_app/search.lazy').then((d) => d.Route))
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() => import('./routes/_app/reports.lazy').then((d) => d.Route))
 const AppReceivablesRoute = AppReceivablesRouteImport.update({
   id: '/receivables',
   path: '/receivables',
@@ -170,6 +172,11 @@ const AppReceivablesRoute = AppReceivablesRouteImport.update({
 const AppOpsRoute = AppOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOnlineQueueRoute = AppOnlineQueueRouteImport.update({
+  id: '/online-queue',
+  path: '/online-queue',
   getParentRoute: () => AppRoute,
 } as any)
 const AppManagerRoute = AppManagerRouteImport.update({
@@ -201,7 +208,7 @@ const AppFinanceRoute = AppFinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() => import('./routes/_app/finance.lazy').then((d) => d.Route))
 const AppExecutiveRoute = AppExecutiveRouteImport.update({
   id: '/executive',
   path: '/executive',
@@ -210,6 +217,11 @@ const AppExecutiveRoute = AppExecutiveRouteImport.update({
 const AppDriverRoute = AppDriverRouteImport.update({
   id: '/driver',
   path: '/driver',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDeliveryRoute = AppDeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -241,7 +253,7 @@ const AppCrmRoute = AppCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() => import('./routes/_app/crm.lazy').then((d) => d.Route))
 const AppCashClosingRoute = AppCashClosingRouteImport.update({
   id: '/cash-closing',
   path: '/cash-closing',
@@ -266,7 +278,9 @@ const AppAccountingRoute = AppAccountingRouteImport.update({
   id: '/accounting',
   path: '/accounting',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_app/accounting.lazy').then((d) => d.Route),
+)
 const AppStaffIndexRoute = AppStaffIndexRouteImport.update({
   id: '/staff/',
   path: '/staff/',
@@ -439,6 +453,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AppCustomersRoute
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/delivery': typeof AppDeliveryRoute
   '/driver': typeof AppDriverRoute
   '/executive': typeof AppExecutiveRoute
   '/finance': typeof AppFinanceRoute
@@ -447,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/ledger': typeof AppLedgerRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
+  '/online-queue': typeof AppOnlineQueueRoute
   '/ops': typeof AppOpsRoute
   '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
@@ -508,6 +524,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AppCustomersRoute
   '/daily-operations': typeof AppDailyOperationsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/delivery': typeof AppDeliveryRoute
   '/driver': typeof AppDriverRoute
   '/executive': typeof AppExecutiveRoute
   '/finance': typeof AppFinanceRoute
@@ -516,6 +533,7 @@ export interface FileRoutesByTo {
   '/ledger': typeof AppLedgerRoute
   '/live-map': typeof AppLiveMapRoute
   '/manager': typeof AppManagerRoute
+  '/online-queue': typeof AppOnlineQueueRoute
   '/ops': typeof AppOpsRoute
   '/receivables': typeof AppReceivablesRoute
   '/reports': typeof AppReportsRoute
@@ -579,6 +597,7 @@ export interface FileRoutesById {
   '/_app/customers': typeof AppCustomersRoute
   '/_app/daily-operations': typeof AppDailyOperationsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/delivery': typeof AppDeliveryRoute
   '/_app/driver': typeof AppDriverRoute
   '/_app/executive': typeof AppExecutiveRoute
   '/_app/finance': typeof AppFinanceRoute
@@ -587,6 +606,7 @@ export interface FileRoutesById {
   '/_app/ledger': typeof AppLedgerRoute
   '/_app/live-map': typeof AppLiveMapRoute
   '/_app/manager': typeof AppManagerRoute
+  '/_app/online-queue': typeof AppOnlineQueueRoute
   '/_app/ops': typeof AppOpsRoute
   '/_app/receivables': typeof AppReceivablesRoute
   '/_app/reports': typeof AppReportsRoute
@@ -650,6 +670,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/daily-operations'
     | '/dashboard'
+    | '/delivery'
     | '/driver'
     | '/executive'
     | '/finance'
@@ -658,6 +679,7 @@ export interface FileRouteTypes {
     | '/ledger'
     | '/live-map'
     | '/manager'
+    | '/online-queue'
     | '/ops'
     | '/receivables'
     | '/reports'
@@ -719,6 +741,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/daily-operations'
     | '/dashboard'
+    | '/delivery'
     | '/driver'
     | '/executive'
     | '/finance'
@@ -727,6 +750,7 @@ export interface FileRouteTypes {
     | '/ledger'
     | '/live-map'
     | '/manager'
+    | '/online-queue'
     | '/ops'
     | '/receivables'
     | '/reports'
@@ -789,6 +813,7 @@ export interface FileRouteTypes {
     | '/_app/customers'
     | '/_app/daily-operations'
     | '/_app/dashboard'
+    | '/_app/delivery'
     | '/_app/driver'
     | '/_app/executive'
     | '/_app/finance'
@@ -797,6 +822,7 @@ export interface FileRouteTypes {
     | '/_app/ledger'
     | '/_app/live-map'
     | '/_app/manager'
+    | '/_app/online-queue'
     | '/_app/ops'
     | '/_app/receivables'
     | '/_app/reports'
@@ -988,6 +1014,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/online-queue': {
+      id: '/_app/online-queue'
+      path: '/online-queue'
+      fullPath: '/online-queue'
+      preLoaderRoute: typeof AppOnlineQueueRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/manager': {
       id: '/_app/manager'
       path: '/manager'
@@ -1042,6 +1075,13 @@ declare module '@tanstack/react-router' {
       path: '/driver'
       fullPath: '/driver'
       preLoaderRoute: typeof AppDriverRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/delivery': {
+      id: '/_app/delivery'
+      path: '/delivery'
+      fullPath: '/delivery'
+      preLoaderRoute: typeof AppDeliveryRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -1370,6 +1410,7 @@ interface AppRouteChildren {
   AppCustomersRoute: typeof AppCustomersRoute
   AppDailyOperationsRoute: typeof AppDailyOperationsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDeliveryRoute: typeof AppDeliveryRoute
   AppDriverRoute: typeof AppDriverRoute
   AppExecutiveRoute: typeof AppExecutiveRoute
   AppFinanceRoute: typeof AppFinanceRoute
@@ -1378,6 +1419,7 @@ interface AppRouteChildren {
   AppLedgerRoute: typeof AppLedgerRoute
   AppLiveMapRoute: typeof AppLiveMapRoute
   AppManagerRoute: typeof AppManagerRoute
+  AppOnlineQueueRoute: typeof AppOnlineQueueRoute
   AppOpsRoute: typeof AppOpsRoute
   AppReceivablesRoute: typeof AppReceivablesRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -1428,6 +1470,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCustomersRoute: AppCustomersRoute,
   AppDailyOperationsRoute: AppDailyOperationsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDeliveryRoute: AppDeliveryRoute,
   AppDriverRoute: AppDriverRoute,
   AppExecutiveRoute: AppExecutiveRoute,
   AppFinanceRoute: AppFinanceRoute,
@@ -1436,6 +1479,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLedgerRoute: AppLedgerRoute,
   AppLiveMapRoute: AppLiveMapRoute,
   AppManagerRoute: AppManagerRoute,
+  AppOnlineQueueRoute: AppOnlineQueueRoute,
   AppOpsRoute: AppOpsRoute,
   AppReceivablesRoute: AppReceivablesRoute,
   AppReportsRoute: AppReportsRoute,

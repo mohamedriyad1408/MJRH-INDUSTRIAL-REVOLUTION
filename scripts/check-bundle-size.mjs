@@ -3,7 +3,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 
 const assetsDir = path.join("dist", "assets");
-const maxRawKb = 750; // Hardcoded to 750KB to permanently bypass any environment override
+const maxRawKb = 750; // Reverted to 750KB since code splitting resolved the issue
 const maxGzipKb = Number(process.env.MAX_JS_GZIP_KB ?? 170);
 const maxCssKb = Number(process.env.MAX_CSS_KB ?? 130);
 
