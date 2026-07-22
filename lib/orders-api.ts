@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logEvent, EVENTS } from "./event-logger";
 
 /**
  * T-004: Create Order API Logic
@@ -18,6 +19,7 @@ export async function createOrder(payload: {
   }>;
   total: number;
   notes?: string;
+  source?: string;
 }) {
   // 1. Logic Validation
   if (payload.items.length === 0) throw new Error("يجب إضافة قطعة واحدة على الأقل");
@@ -33,7 +35,9 @@ export async function createOrder(payload: {
       total: payload.total,
       notes: payload.notes,
       status: "received",
-      qc_status: "Pending"
+      qc_status: "Pending",
+      source: payload.source || "WALK_IN",
+      queue_status: payload.source === "ONLINE" ? "IN_QUEUE" : "RECEIVED"
     })
     .select("id, order_number")
     .single();
@@ -58,7 +62,7 @@ export async function createOrder(payload: {
 
   // 4. Log Event (EVT-001)
   await logEvent({
-    event_type: "OrderCreated",
+    event_type: EVENTS.ORDER_CREATED,
     tenant_id: payload.tenant_id,
     order_id: order.id,
     payload: { 
@@ -73,11 +77,6 @@ export async function createOrder(payload: {
 
 /**
  * T-007: تفعيل فحص الجودة (QC Logic)
- * سجل نتيجة فحص الجودة لطلب معين
- * @param orderId - معرف الطلب
- * @param status - نتيجة الفحص: 'PASSED' أو 'FAILED'
- * @param tenantId - معرف المؤسسة
- * @param notes - ملاحظات إضافية (اختياري)
  */
 export async function updateOrderQC(
   orderId: string,
@@ -86,7 +85,6 @@ export async function updateOrderQC(
   notes?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // 1. جلب الطلب الحالي للتأكد من وجوده وحالته
     const { data: order, error: fetchError } = await supabase
       .from('orders')
       .select('id, status, qc_status, tenant_id')
@@ -94,40 +92,32 @@ export async function updateOrderQC(
       .single();
 
     if (fetchError || !order) {
-      console.error('Order not found:', fetchError);
       return { success: false, error: 'الطلب غير موجود' };
     }
 
-    // 2. منع إعادة فحص الطلب إذا كان قد اجتاز QC بالفعل
     if (order.qc_status === 'PASSED') {
       return { success: false, error: 'هذا الطلب قد اجتاز فحص الجودة بالفعل' };
     }
 
-    // 3. تحديث QC في قاعدة البيانات
     const { error: updateError } = await supabase
       .from('orders')
       .update({
         qc_status: status as any,
         qc_notes: notes || '',
         qc_checked_at: new Date().toISOString(),
-        // إذا نجح QC، نحدّث الحالة إلى READY تلقائياً
-        status: status === 'PASSED' ? 'ready' : 'received' // Fallback
+        status: status === 'PASSED' ? 'ready' : 'received'
       })
       .eq('id', orderId);
 
     if (updateError) {
-      // تحقق مما إذا كان الخطأ ناتجاً عن انتهاك POL-001
       if (updateError.message?.includes('POL-001')) {
         return { success: false, error: 'لا يمكن التسليم قبل إجراء فحص الجودة' };
       }
-      console.error('QC update failed:', updateError);
       return { success: false, error: 'فشل تحديث فحص الجودة' };
     }
 
-    // 4. تسجيل حدث في event_log
-    const eventType = status === 'PASSED' ? 'EVT-007' : 'EVT-008';
     await logEvent({
-      event_type: eventType,
+      event_type: status === 'PASSED' ? EVENTS.QC_PASSED : EVENTS.QC_FAILED,
       tenant_id: tenantId,
       order_id: orderId,
       payload: { status, notes },
@@ -135,30 +125,99 @@ export async function updateOrderQC(
 
     return { success: true };
   } catch (error) {
-    console.error('Unexpected error in updateOrderQC:', error);
     return { success: false, error: 'حدث خطأ غير متوقع' };
   }
 }
 
 /**
- * دالة مساعدة لتسجيل الأحداث
+ * T-011: Online Order Queue Management
  */
-async function logEvent({
-  event_type,
-  tenant_id,
-  order_id,
-  payload,
-}: {
-  event_type: string;
-  tenant_id: string;
-  order_id?: string;
-  payload: any;
-}) {
-  await supabase.from('event_log').insert({
-    event_type,
-    tenant_id,
-    order_id,
-    payload,
-    occurred_at: new Date().toISOString(),
-  });
+export async function receiveOnlineOrder(
+  orderId: string,
+  tenantId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data: order, error: fetchError } = await supabase
+      .from('orders')
+      .select('id, source, queue_status, tenant_id')
+      .eq('id', orderId)
+      .single();
+
+    if (fetchError || !order) return { success: false, error: 'الطلب غير موجود' };
+    if (order.source !== 'ONLINE') return { success: false, error: 'هذا الطلب ليس طلباً أونلاين' };
+    if (order.queue_status !== 'IN_QUEUE') return { success: false, error: 'الطلب ليس في قائمة الانتظار' };
+
+    const { error: updateError } = await supabase
+      .from('orders')
+      .update({
+        queue_status: 'RECEIVED',
+        status: 'received',
+      })
+      .eq('id', orderId);
+
+    if (updateError) return { success: false, error: 'فشل استلام الطلب' };
+
+    await logEvent({
+      event_type: EVENTS.ORDER_RECEIVED,
+      tenant_id: tenantId,
+      order_id: orderId,
+      user_id: userId,
+      payload: { source: 'ONLINE' },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'حدث خطأ غير متوقع' };
+  }
+}
+
+export async function getOnlineQueue(tenantId: string) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, customers(full_name, phone)')
+    .eq('tenant_id', tenantId)
+    .eq('source', 'ONLINE')
+    .eq('queue_status', 'IN_QUEUE')
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getOrdersByStatus(tenantId: string, status: string) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, customers(full_name, phone)')
+    .eq('tenant_id', tenantId)
+    .eq('status', status.toLowerCase())
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateOrderStatus(orderId: string, tenantId: string, newStatus: string, userId?: string) {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus.toLowerCase() })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    const eventMap: Record<string, string> = {
+      READY: EVENTS.ORDER_READY,
+      DELIVERED: EVENTS.ORDER_DELIVERED,
+      CLEANING: EVENTS.CLEANING_STARTED,
+    };
+
+    if (eventMap[newStatus.toUpperCase()]) {
+      await logEvent({
+        event_type: eventMap[newStatus.toUpperCase()],
+        tenant_id: tenantId,
+        order_id: orderId,
+        user_id: userId,
+      });
+    }
+    return { success: true };
 }

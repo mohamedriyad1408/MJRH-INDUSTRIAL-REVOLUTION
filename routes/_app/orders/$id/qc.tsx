@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_app/orders/$id/qc")({
 });
 
 function QCPage() {
-  const { id } = Route.useParams() as any;
+  const { id } = Route.useParams();
   const navigate = useNavigate();
   const { tenantId } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ function QCPage() {
     setLoading(false);
     if (result.success) {
       toast.success(`تم ${status === "PASSED" ? "اجتياز" : "فشل"} فحص الجودة بنجاح`);
-      navigate({ to: `/orders/${id}` as any });
+      navigate({ to: `/orders/${id}` });
     } else {
       toast.error(`فشل فحص الجودة: ${result.error}`);
     }
