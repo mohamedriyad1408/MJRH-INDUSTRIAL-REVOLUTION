@@ -54,7 +54,7 @@
   "phone": "الهاتف",
   "address": "العنوان",
   "other": "أخرى",
-  "clear": "مسح",
+  "clear": "مسح", "openFixLocation": "فتح مكان الإصلاح", "quickFix": "إصلاح سريع",
   "backToHome": "العودة للرئيسية",
   "retry": "إعادة المحاولة",
   "cancel": "إلغاء",

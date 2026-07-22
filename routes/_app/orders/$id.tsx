@@ -140,19 +140,19 @@ function OrderDetailPage() {
   useEffect(() => { load(); }, [load]);
 
   function addInvoiceService(serviceId: string) {
-    const svc = services.find((x) => x.id === serviceId);
+    const svc = services.find((x: any) => x.id === serviceId);
     if (!svc) return;
-    setInvoiceItems((rows) => [{ service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }, ...rows]);
+    setInvoiceItems((rows: any[]) => [{ service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }, ...rows]);
   }
 
   function invoiceTotals(rows = invoiceItems) {
-    const subtotal = rows.reduce((sum, it) => sum + Number(it.qty) * Number(it.unit_price), 0);
+    const subtotal = rows.reduce((sum: number, it: any) => sum + Number(it.qty) * Number(it.unit_price), 0);
     const total = subtotal + Number(order?.delivery_fee ?? 0) + Number(order?.urgent_fee_amount ?? order?.urgent_fee ?? 0) - Number(order?.discount_amount ?? 0) + Number(order?.tax_amount ?? 0);
     return { subtotal, total };
   }
 
   function updateInvoiceRow(idx: number, patch: Partial<InvoiceItem>) {
-    setInvoiceItems((rows) => rows.map((r, i) => i === idx ? { ...r, ...patch } : r));
+    setInvoiceItems((rows: any[]) => rows.map((r, i) => i === idx ? { ...r, ...patch } : r));
   }
 
   async function deleteInvoiceRow(idx: number) {
@@ -167,7 +167,7 @@ function OrderDetailPage() {
       const { error } = await supabase.from("order_items").delete().eq("id", row.id);
       if (error) return toast.error(error.message);
     }
-    const next = invoiceItems.filter((_, i) => i !== idx);
+    const next = invoiceItems.filter((_: any, i: number) => i !== idx);
     setInvoiceItems(next);
     const totals = invoiceTotals(next);
     await supabase.from("orders").update({ subtotal: totals.subtotal, total: totals.total, invoice_finalized_at: null }).eq("id", id);
@@ -186,7 +186,7 @@ function OrderDetailPage() {
         if (!error && inserted) {
           const qty = Math.max(1, Number(inserted.qty ?? 1));
           const startNo = units.length + 1;
-          const newUnits = Array.from({ length: qty }, (_, i) => ({ order_id: id, order_item_id: inserted.id, unit_number: startNo + i, name: inserted.name, garment_type: inserted.name, service_type: inserted.service_type, unit_price: Number(inserted.unit_price ?? 0), line_value: Number(inserted.unit_price ?? 0), complexity_factor: complexityForName(inserted.name), is_shirt_like: isShirtLikeName(inserted.name), status: order?.status ?? "received", current_stage: order?.status ?? "received", tenant_id: order?.tenant_id }));
+          const newUnits = Array.from({ length: qty }, (_: any, i: number) => ({ order_id: id, order_item_id: inserted.id, unit_number: startNo + i, name: inserted.name, garment_type: inserted.name, service_type: inserted.service_type, unit_price: Number(inserted.unit_price ?? 0), line_value: Number(inserted.unit_price ?? 0), complexity_factor: complexityForName(inserted.name), is_shirt_like: isShirtLikeName(inserted.name), status: order?.status ?? "received", current_stage: order?.status ?? "received", tenant_id: order?.tenant_id }));
           await supabase.from("service_units").insert(newUnits);
         }
       }
@@ -378,7 +378,7 @@ function OrderDetailPage() {
   function printLabels() {
     const html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><title>Labels</title><style>
       @page{size:50mm 30mm;margin:2mm} body{font-family:Arial,sans-serif;margin:0;color:#111}.label{width:46mm;height:26mm;border:1px dashed #999;margin:1mm;display:flex;flex-direction:column;align-items:center;justify-content:center;page-break-after:always;text-align:center}.code{font-size:18px;font-weight:900}.name{font-size:13px;font-weight:700}.meta{font-size:10px;color:#444}
-    </style></head><body>${units.map((u) => `<div class="label"><div class="code">${u.label_code}</div><div class="name">${u.name}</div><div class="meta">طلب #${order.order_number} — ${order.customers?.full_name ?? ""}</div></div>`).join("")}</body></html>`;
+    </style></head><body>${units.map((u: any) => `<div class="label"><div class="code">${u.label_code}</div><div class="name">${u.name}</div><div class="meta">طلب #${order.order_number} — ${order.customers?.full_name ?? ""}</div></div>`).join("")}</body></html>`;
     const w = window.open("", "_blank", "width=420,height=600");
     if (!w) return toast.error(t("orders.errorPrintBlocked"));
     w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
@@ -390,9 +390,9 @@ function OrderDetailPage() {
   const canEdit = hasRole("cs_manager", "ops_manager", "owner");
   const canOperate = hasRole("ops_manager", "owner", "employee");
   const pieceCount = units.length;
-  const shirtCount = units.filter((u) => u.is_shirt_like).length;
-  const invoiceValue = units.reduce((s, u) => s + Number(u.line_value ?? 0), 0);
-  const recleanUnits = units.filter((u) => u.needs_reclean);
+  const shirtCount = units.filter((u: any) => u.is_shirt_like).length;
+  const invoiceValue = units.reduce((s: number, u: any) => s + Number(u.line_value ?? 0), 0);
+  const recleanUnits = units.filter((u: any) => u.needs_reclean);
   const issueList = buildOrderIssues(order, units, pickupRows, qcRows);
 
   return (
@@ -441,7 +441,7 @@ function OrderDetailPage() {
       {customerReturnRows.length > 0 && <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="w-4 h-4 text-amber-600" /> {t("orders.customerReturnsTitle")}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {customerReturnRows.map((r) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+          {customerReturnRows.map((r: any) => <div key={r.id} className={`rounded-xl border p-3 text-sm ${r.status === "resolved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div><b>{r.service_units?.label_code}</b> — {r.service_units?.name} · {returnTypeAr(r.return_type, t)} · {returnStatusAr(r.status, t)}</div>
               {r.status !== "resolved" && <Button size="sm" onClick={() => completeCustomerReturn(r)}>{t("orders.closeReturn")}</Button>}
@@ -464,7 +464,7 @@ function OrderDetailPage() {
             <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={finalizeAndNotify}><Send className="w-4 h-4 ms-1" /> {t("orders.finalizeNotify")}</Button>
           </div>}
           <div className="space-y-2">
-            {invoiceItems.map((it, idx) => (
+            {invoiceItems.map((it: any, idx: number) => (
               <div key={it.id ?? idx} className="grid md:grid-cols-[1fr_80px_110px_90px_40px] gap-2 items-center rounded-xl border p-2">
                 <Input value={it.name} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { name: e.target.value })} />
                 <Input type="number" min={1} value={it.qty} disabled={!canEdit} onChange={(e) => updateInvoiceRow(idx, { qty: Math.max(1, Number(e.target.value)) })} />
@@ -483,7 +483,7 @@ function OrderDetailPage() {
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Printer className="w-4 h-4 text-teal-600" /> {t("orders.unitsTitle")} ({units.length})</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           {units.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">{t("orders.noUnits")}</p>}
-          {units.map((u) => (
+          {units.map((u: any) => (
             <div key={u.id} className="grid md:grid-cols-[88px_1fr_auto] gap-3 p-3 border rounded-xl bg-card">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-20 h-20 rounded-lg border bg-muted overflow-hidden flex items-center justify-center">
@@ -505,7 +505,7 @@ function OrderDetailPage() {
                   {u.attributes?.color ? `${t("orders.color")}: ${u.attributes.color} · ` : ""}
                   {t("orders.estimatedValue")}: {Number(u.line_value ?? 0).toLocaleString()} {t("common.egp")} · {t("orders.effort")} ×{u.complexity_factor}
                 </div>
-                {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">{t("stage.ironing")}</SelectItem><SelectItem value="both">{t("common.cleanIron")}</SelectItem><SelectItem value="cleaning">{t("common.repair")}</SelectItem></SelectContent></Select></div>}
+                {canEdit && <div className="max-w-xs"><Select value={u.service_type} onValueChange={(v: any) => updateUnitService(u, v)}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ironing">{t("stage.ironing")}</SelectItem><SelectItem value="both">{t("common.cleanIron")}</SelectItem><SelectItem value="cleaning">{t("common.repair")}</SelectItem></SelectContent></Select></div>}
                 <div className="text-xs text-muted-foreground">
                   {t("orders.ironingTech")}: <b>{u.employees?.full_name ?? t("orders.notAssignedYet")}</b>
                 </div>
@@ -525,20 +525,20 @@ function OrderDetailPage() {
               <div className="grid md:grid-cols-3 gap-2">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">{t("orders.pieceType")}</label>
-                  <Select value={form.garment_type} onValueChange={(v) => setForm((f) => ({ ...f, garment_type: v }))}>
+                  <Select value={form.garment_type} onValueChange={(v: any) => setForm((f: any) => ({ ...f, garment_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{GARMENT_TYPES.map((item) => {
+                    <SelectContent>{GARMENT_TYPES.map((item: any) => {
                       return <SelectItem key={item} value={item}>{t(`garment.${item}`, item)}</SelectItem>;
                     })}</SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">{t("orders.color")}</label>
-                  <Input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} placeholder={t("orders.colorPlaceholder")} />
+                  <Input value={form.color} onChange={(e) => setForm((f: any) => ({ ...f, color: e.target.value }))} placeholder={t("orders.colorPlaceholder")} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">{t("orders.notes")}</label>
-                  <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={1} />
+                  <Textarea value={form.notes} onChange={(e) => setForm((f: any) => ({ ...f, notes: e.target.value }))} rows={1} />
                 </div>
               </div>
               <div className="flex items-center justify-between">

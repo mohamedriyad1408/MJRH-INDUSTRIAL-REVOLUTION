@@ -51,9 +51,9 @@ function CrmPage() {
   useEffect(() => { if (canUse) load(); }, [canUse]);
 
   const stats = useMemo(() => {
-    const vip = loyalty.filter((x) => x.tier === "vip" || x.tier === "gold").length;
-    const points = loyalty.reduce((s, x) => s + Number(x.points ?? 0), 0);
-    const queued = messages.filter((x) => x.status === "queued" || x.status === "draft").length;
+    const vip = loyalty.filter((x: any) => x.tier === "vip" || x.tier === "gold").length;
+    const points = loyalty.reduce((s: number, x: any) => s + Number(x.points ?? 0), 0);
+    const queued = messages.filter((x: any) => x.status === "queued" || x.status === "draft").length;
     return { vip, points, queued };
   }, [loyalty, messages]);
 
@@ -80,7 +80,7 @@ function CrmPage() {
   function selectTemplate(key: string) { setForm({ ...form, template_key: key, message: templates[key] }); }
 
   async function saveMessage(status: "draft" | "queued") {
-    const c = customers.find((x) => x.id === form.customer_id);
+    const c = customers.find((x: any) => x.id === form.customer_id);
     if (!c) return toast.error(t("crm.err.selectClient", "اختار عميل"));
     if (!form.message.trim()) return toast.error(t("crm.err.writeMsg", "اكتب الرسالة"));
     const messageText = form.message;
@@ -129,20 +129,20 @@ function CrmPage() {
       <TabsList><TabsTrigger value="loyalty">{t("crm.tab.loyalty", "الولاء")}</TabsTrigger><TabsTrigger value="messages">{t("crm.tab.messages", "الرسائل")}</TabsTrigger></TabsList>
       <TabsContent value="loyalty">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-amber-500" />{t("crm.loyalty.title", "أفضل العملاء")}</CardTitle></CardHeader><CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {loyalty.map((l) => <div key={l.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{l.customers?.full_name ?? t("stations.common.customer")}</div><Badge>{tierAr(l.tier, t)}</Badge></div><div className="text-xs text-muted-foreground mt-1">{l.customers?.phone}</div><div className="grid grid-cols-2 gap-2 mt-3 text-sm"><div className="rounded-xl bg-teal-50 p-2"><div className="text-xs text-teal-700">{t("crm.loyalty.points", "النقاط")}</div><b>{l.points}</b></div><div className="rounded-xl bg-slate-50 p-2"><div className="text-xs text-slate-500">{t("crm.loyalty.spend", "إجمالي الشراء")}</div><b>{fmtMoney(l.lifetime_spend, curr)}</b></div></div></div>)}
+          {loyalty.map((l: any) => <div key={l.id} className="rounded-2xl border p-3"><div className="flex justify-between gap-2"><div className="font-black">{l.customers?.full_name ?? t("stations.common.customer")}</div><Badge>{tierAr(l.tier, t)}</Badge></div><div className="text-xs text-muted-foreground mt-1">{l.customers?.phone}</div><div className="grid grid-cols-2 gap-2 mt-3 text-sm"><div className="rounded-xl bg-teal-50 p-2"><div className="text-xs text-teal-700">{t("crm.loyalty.points", "النقاط")}</div><b>{l.points}</b></div><div className="rounded-xl bg-slate-50 p-2"><div className="text-xs text-slate-500">{t("crm.loyalty.spend", "إجمالي الشراء")}</div><b>{fmtMoney(l.lifetime_spend, curr)}</b></div></div></div>)}
           {!loyalty.length && <div className="col-span-full text-center text-muted-foreground p-10">{t("crm.loyalty.empty", "اضغط “تحديث الولاء” لبناء نقاط العملاء من الطلبات.")}</div>}
         </CardContent></Card>
       </TabsContent>
 
       <TabsContent value="messages" className="grid lg:grid-cols-[380px_1fr] gap-4">
         <Card><CardHeader><CardTitle className="text-base flex items-center gap-2"><MessageCircle className="w-4 h-4 text-green-600" />{t("crm.msg.title", "رسالة واتساب")}</CardTitle></CardHeader><CardContent className="space-y-3">
-          <Field label={t("crm.msg.client", "العميل")}><Select value={form.customer_id} onValueChange={(v) => setForm({ ...form, customer_id: v })}><SelectTrigger><SelectValue placeholder={t("crm.msg.clientPlaceholder", "اختار عميل")} /></SelectTrigger><SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name} — {c.phone}</SelectItem>)}</SelectContent></Select></Field>
+          <Field label={t("crm.msg.client", "العميل")}><Select value={form.customer_id} onValueChange={(v: any) => setForm({ ...form, customer_id: v })}><SelectTrigger><SelectValue placeholder={t("crm.msg.clientPlaceholder", "اختار عميل")} /></SelectTrigger><SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.full_name} — {c.phone}</SelectItem>)}</SelectContent></Select></Field>
           <Field label={t("crm.msg.template", "القالب")}><Select value={form.template_key} onValueChange={selectTemplate}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="order_ready">{t("crm.msg.tplOrderReady", "الطلب جاهز")}</SelectItem><SelectItem value="payment_reminder">{t("crm.msg.tplPaymentReminder", "تذكير دفع")}</SelectItem><SelectItem value="winback">{t("crm.msg.tplWinback", "استرجاع عميل")}</SelectItem><SelectItem value="thanks">{t("crm.msg.tplThanks", "شكر وتقييم")}</SelectItem></SelectContent></Select></Field>
           <Field label={t("crm.msg.body", "نص الرسالة")}><Textarea rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></Field>
           <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={() => saveMessage("draft")}>{t("crm.msg.draftBtn", "مسودة")}</Button><Button onClick={() => saveMessage("queued")}><Send className="w-4 h-4 ms-1" />{t("crm.msg.sendBtn", "فتح واتساب للإرسال")}</Button></div>
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">{t("crm.log.title", "سجل الرسائل")}</CardTitle></CardHeader><CardContent className="space-y-2">
-          {messages.map((m) => <div key={m.id} className="rounded-2xl border p-3 space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{m.customers?.full_name ?? m.phone}</div><Badge variant={m.status === "sent" ? "secondary" : "outline"}>{statusAr(m.status, t)}</Badge></div><p className="text-sm text-muted-foreground">{m.message}</p><div className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={whatsappUrl(m.phone ?? m.customers?.phone, m.message)} target="_blank">{t("crm.log.openWa", "فتح واتساب")}</a></Button>{m.status !== "sent" && <Button size="sm" onClick={() => markSent(m)}>{t("crm.log.markSent", "تم الإرسال")}</Button>}</div></div>)}
+          {messages.map((m: any) => <div key={m.id} className="rounded-2xl border p-3 space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><div className="font-black">{m.customers?.full_name ?? m.phone}</div><Badge variant={m.status === "sent" ? "secondary" : "outline"}>{statusAr(m.status, t)}</Badge></div><p className="text-sm text-muted-foreground">{m.message}</p><div className="flex gap-2"><Button size="sm" variant="outline" asChild><a href={whatsappUrl(m.phone ?? m.customers?.phone, m.message)} target="_blank">{t("crm.log.openWa", "فتح واتساب")}</a></Button>{m.status !== "sent" && <Button size="sm" onClick={() => markSent(m)}>{t("crm.log.markSent", "تم الإرسال")}</Button>}</div></div>)}
           {!messages.length && <div className="text-center text-muted-foreground p-10">{t("crm.log.empty", "لا توجد رسائل بعد")}</div>}
         </CardContent></Card>
       </TabsContent>

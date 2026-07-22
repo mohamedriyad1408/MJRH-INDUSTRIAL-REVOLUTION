@@ -48,7 +48,7 @@ export async function createOrder(payload: {
   const { error: itemsError } = await supabase
     .from("order_items")
     .insert(
-      payload.items.map(it => ({
+      payload.items.map((it: any) => ({
         order_id: order.id,
         service_item_id: it.service_item_id,
         name: it.name,

@@ -74,8 +74,8 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
     Object.values(markersRef.current).forEach((m: any) => m.remove?.());
     markersRef.current = {};
 
-    const validPins = pins.filter((p) => p.lat && p.lng);
-    validPins.forEach((pin) => {
+    const validPins = pins.filter((p: any) => p.lat && p.lng);
+    validPins.forEach((pin: any) => {
       const isSelected = selectedIds.has(pin.id);
       const color = pin.type === "driver" ? "#8b5cf6" : pin.type === "pickup" ? "#f59e0b" : "#10b981";
       const emoji = pin.type === "driver" ? "🚗" : pin.type === "pickup" ? "📦" : "🏠";
@@ -92,9 +92,9 @@ function LeafletMap({ pins, selectedIds, onSelect, routeMode }: {
     });
 
     if (routeMode && selectedIds.size >= 2) {
-      const sel = validPins.filter((p) => selectedIds.has(p.id));
+      const sel = validPins.filter((p: any) => selectedIds.has(p.id));
       if (sel.length >= 2) {
-        const pl = L.polyline(sel.map((p) => [p.lat!, p.lng!]), { color: "#0d9488", weight: 4, opacity: .85, dashArray: "10,6" }).addTo(mapRef.current);
+        const pl = L.polyline(sel.map((p: any) => [p.lat!, p.lng!]), { color: "#0d9488", weight: 4, opacity: .85, dashArray: "10,6" }).addTo(mapRef.current);
         markersRef.current["__route__"] = pl;
         try { mapRef.current.fitBounds(pl.getBounds(), { padding: [50, 50] }); } catch {}
       }
@@ -182,7 +182,7 @@ function LiveMapPage() {
 
     setStats({ pickups: (pickups ?? []).length, deliveries: (orders ?? []).length, drivers: (drivers ?? []).length });
     setGeocoding(true);
-    const geocoded = await Promise.all(raw.map(async (pin) => {
+    const geocoded = await Promise.all(raw.map(async (pin: any) => {
       if (pin.lat && pin.lng) return pin;
       if (pin.type === "driver") return pin;
       const c = await geocode(pin.address);
@@ -228,7 +228,7 @@ function LiveMapPage() {
   }
 
   const selectedPins = [...selectedIds]
-    .map((id) => pins.find((p) => p.id === id))
+    .map((id) => pins.find((p: any) => p.id === id))
     .filter((p): p is MapPin => Boolean(p && p.lat && p.lng));
 
   function drawRoute() {
@@ -245,7 +245,7 @@ function LiveMapPage() {
       toast.error("اختار نقطتين على الأقل لفتح خط السير في Google Maps");
       return;
     }
-    const coords = selectedPins.map((p) => `${p.lat},${p.lng}`);
+    const coords = selectedPins.map((p: any) => `${p.lat},${p.lng}`);
     const origin = coords[0];
     const destination = coords[coords.length - 1];
     const waypoints = coords.slice(1, -1).join("|");
@@ -259,8 +259,8 @@ function LiveMapPage() {
   }
 
   if (!canView) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("map.accessDenied")}</CardContent></Card>;
-  const noLocationPins = pins.filter((p) => p.type !== "driver" && (!p.lat || !p.lng));
-  const driversNoLocation = pins.filter((p) => p.type === "driver" && (!p.lat || !p.lng));
+  const noLocationPins = pins.filter((p: any) => p.type !== "driver" && (!p.lat || !p.lng));
+  const driversNoLocation = pins.filter((p: any) => p.type === "driver" && (!p.lat || !p.lng));
 
   return (
     <div className="flex flex-col gap-3 min-h-[calc(100vh-7rem)]" dir={dir}>
@@ -321,7 +321,7 @@ function LiveMapPage() {
 
         <div className="overflow-y-auto space-y-3 shrink-0 max-h-[46vh] xl:max-h-[calc(100vh-17rem)] rounded-3xl border bg-white/70 backdrop-blur p-3">
           {(["pickup", "delivery", "driver"] as PinType[]).map((type) => {
-            const group = pins.filter((p) => p.type === type);
+            const group = pins.filter((p: any) => p.type === type);
             if (!group.length) return null;
             const meta = { pickup: { label: t("map.pickup"), color: "amber", icon: Package }, delivery: { label: t("map.delivery"), color: "emerald", icon: MapPin }, driver: { label: t("map.drivers"), icon: Truck, color: "purple" } }[type]!;
             return (
@@ -329,7 +329,7 @@ function LiveMapPage() {
                 <div className={`text-xs font-bold text-${meta.color}-600 uppercase tracking-wide mb-1 flex items-center gap-1`}>
                   <meta.icon className="w-3 h-3" />{meta.label}
                 </div>
-                {group.map((pin) => (
+                {group.map((pin: any) => (
                   <div key={pin.id} onClick={() => toggle(pin.id)}
                     className={`border rounded-lg p-2 mb-1 cursor-pointer text-xs transition-all ${selectedIds.has(pin.id) ? `bg-${meta.color}-100 border-${meta.color}-400 shadow-sm` : "bg-white hover:shadow-sm"}`}>
                     <div className="font-bold truncate">{pin.label}</div>

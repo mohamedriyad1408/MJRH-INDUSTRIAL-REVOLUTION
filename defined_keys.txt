@@ -710,6 +710,7 @@ on
 online
 open
 openAssembly
+openFixLocation
 openOps
 openOrder
 openPickup
@@ -842,6 +843,7 @@ qcPending
 quality
 qualityIssues
 qualityLeaks
+quickFix
 quickInNotes
 quickLinks
 quickServices

@@ -93,11 +93,11 @@ function NewOrderPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("employees").select("station,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => { setEmployeeStation(data?.station ?? null); setEmployeeBranchId(data?.branch_id ?? null); if (data?.branch_id) setBranchId((old) => old || data.branch_id); });
+    supabase.from("employees").select("station,branch_id,profile_id,email").or(`profile_id.eq.${user.id},email.eq.${user.email}`).maybeSingle().then(({ data }: any) => { setEmployeeStation(data?.station ?? null); setEmployeeBranchId(data?.branch_id ?? null); if (data?.branch_id) setBranchId((old: any) => old || data.branch_id); });
   }, [user]);
 
   useEffect(() => {
-    if (tenantId) supabase.from("branches").select("id,name,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old) => old || employeeBranchId || list[0]?.id || ""); });
+    if (tenantId) supabase.from("branches").select("id,name,is_active").eq("tenant_id", tenantId).eq("is_active", true).order("created_at").then(({ data }: any) => { const list = data ?? []; setBranches(list); setBranchId((old: any) => old || employeeBranchId || list[0]?.id || ""); });
     supabase.from("service_items").select("*").eq("is_active", true).order("name").then(({ data }: any) => setServices((data ?? []) as Service[]));
     supabase.from("service_areas").select("id,name,area_type,lat,lng,default_delivery_fee,aliases").eq("is_active", true).order("area_type").order("name").then(({ data }: any) => setAreas((data ?? []) as ServiceArea[]));
     supabase.from("app_settings").select("*").limit(1).maybeSingle().then(({ data }: any) => {
@@ -121,7 +121,7 @@ function NewOrderPage() {
 
   const filteredServices = useMemo(() => {
     const q = serviceSearch.trim().toLowerCase();
-    return services.filter((s) => {
+    return services.filter((s: any) => {
       const byFilter = filter === "all" || s.service_type === filter;
       const bySearch = !q || s.name.toLowerCase().includes(q);
       return byFilter && bySearch;
@@ -131,16 +131,16 @@ function NewOrderPage() {
   if (!canCreate) return <Card className="p-8 text-center text-muted-foreground">{t("orders.noCreateAccess", "صلاحية إنشاء الطلبات متاحة للاستقبال وخدمة العملاء والمالك فقط.")}</Card>;
 
   function addService(svcId: string) {
-    const svc = services.find((s) => s.id === svcId);
+    const svc = services.find((s: any) => s.id === svcId);
     if (!svc) return;
-    const idx = items.findIndex((it) => it.service_item_id === svc.id && it.unit_price === Number(svc.unit_price));
+    const idx = items.findIndex((it: any) => it.service_item_id === svc.id && it.unit_price === Number(svc.unit_price));
     if (idx >= 0) {
       setItems(items.map((it, i) => i === idx ? { ...it, qty: it.qty + 1 } : it));
     } else {
       setItems([{ service_item_id: svc.id, name: svc.name, service_type: svc.service_type, qty: 1, unit_price: Number(svc.unit_price) }, ...items]);
     }
   }
-  function removeItem(idx: number) { setItems(items.filter((_, i) => i !== idx)); }
+  function removeItem(idx: number) { setItems(items.filter((_: any, i: number) => i !== idx)); }
   function updateItem(idx: number, patch: Partial<LineItem>) {
     setItems(items.map((it, i) => i === idx ? { ...it, ...patch } : it));
   }
@@ -148,9 +148,9 @@ function NewOrderPage() {
     updateItem(idx, { qty: Math.max(1, items[idx].qty + by) });
   }
 
-  const subtotal = items.reduce((s, it) => s + it.qty * it.unit_price, 0);
-  const piecesCount = items.reduce((s, it) => s + it.qty, 0);
-  const shirtCount = items.reduce((s, it) => s + (isShirtLikeName(it.name) ? it.qty : 0), 0);
+  const subtotal = items.reduce((s: number, it: any) => s + it.qty * it.unit_price, 0);
+  const piecesCount = items.reduce((s: number, it: any) => s + it.qty, 0);
+  const shirtCount = items.reduce((s: number, it: any) => s + (isShirtLikeName(it.name) ? it.qty : 0), 0);
   const urgentFee = isUrgent ? Number(urgentFeeInput || 0) : 0;
   const delivery = orderType === "delivery" ? Number(deliveryFee || 0) : 0;
   const discPct = Math.max(0, Math.min(100, Number(discountPct || 0)));
@@ -160,14 +160,14 @@ function NewOrderPage() {
   const total = taxable + tax;
 
   function applyArea(areaId: string, kind: "pickup" | "delivery" = "delivery") {
-    const area = areas.find((a) => a.id === areaId);
+    const area = areas.find((a: any) => a.id === areaId);
     if (!area) return;
     const suffix = area.area_type === "compound" ? `${t("common.compound", "كمبوند")} ${area.name}` : area.name;
     if (kind === "pickup") {
-      setPickupAddress((x) => x ? `${x} - ${suffix}` : suffix);
+      setPickupAddress((x: any) => x ? `${x} - ${suffix}` : suffix);
       if (area.lat && area.lng) setPickupLoc({ lat: String(area.lat), lng: String(area.lng) });
     } else {
-      setDeliveryAddress((x) => x ? `${x} - ${suffix}` : suffix);
+      setDeliveryAddress((x: any) => x ? `${x} - ${suffix}` : suffix);
       if (area.lat && area.lng) setDeliveryLoc({ lat: String(area.lat), lng: String(area.lng) });
     }
     if (area.default_delivery_fee) setDeliveryFee(String(area.default_delivery_fee));
@@ -286,10 +286,10 @@ function NewOrderPage() {
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center rounded-xl overflow-hidden border border-white/10">
                           <button className="px-3 py-2 bg-white/10" onClick={() => inc(idx, -1)}><Minus className="w-3 h-3" /></button>
-                          <Input type="number" min={1} value={it.qty} onChange={(e) => updateItem(idx, { qty: Math.max(1, Number(e.target.value)) })} className="w-14 h-9 bg-transparent border-0 text-center text-white" />
+                          <Input type="number" min={1} value={it.qty} onChange={(e: any) => updateItem(idx, { qty: Math.max(1, Number(e.target.value)) })} className="w-14 h-9 bg-transparent border-0 text-center text-white" />
                           <button className="px-3 py-2 bg-white/10" onClick={() => inc(idx, 1)}><Plus className="w-3 h-3" /></button>
                         </div>
-                        <Input type="number" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: Number(e.target.value) })} className="w-24 h-9 bg-white/5 border-white/10 text-white text-center" />
+                        <Input type="number" value={it.unit_price} onChange={(e: any) => updateItem(idx, { unit_price: Number(e.target.value) })} className="w-24 h-9 bg-white/5 border-white/10 text-white text-center" />
                         <div className="font-black text-teal-200 min-w-20 text-end">{fmtMoney(it.qty * it.unit_price)}</div>
                       </div>
                     </div>
@@ -339,7 +339,7 @@ function NewOrderPage() {
                       </div>
                     ) : (
                       <>
-                        <Input placeholder={t("orders.searchPlaceholder", "ابحث بالاسم أو الهاتف")} value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="bg-white" />
+                        <Input placeholder={t("orders.searchPlaceholder", "ابحث بالاسم أو الهاتف")} value={customerSearch} onChange={(e: any) => setCustomerSearch(e.target.value)} className="bg-white" />
                         {customerMatches.length > 0 && (
                           <div className="rounded-xl border bg-white divide-y overflow-hidden">
                             {customerMatches.map((c) => (
@@ -350,9 +350,9 @@ function NewOrderPage() {
                           </div>
                         )}
                         <div className="grid grid-cols-2 gap-2">
-                          <Input placeholder={t("login.fullName", "الاسم الكامل")} value={newCustomer.full_name} onChange={(e) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
-                          <Input placeholder={t("common.phone", "common.phone")} value={newCustomer.phone} onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
-                          <Input className="col-span-2 bg-white" placeholder={t("common.address", "common.address")} value={newCustomer.address} onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
+                          <Input placeholder={t("login.fullName", "الاسم الكامل")} value={newCustomer.full_name} onChange={(e: any) => setNewCustomer({ ...newCustomer, full_name: e.target.value })} className="bg-white" />
+                          <Input placeholder={t("common.phone", "common.phone")} value={newCustomer.phone} onChange={(e: any) => setNewCustomer({ ...newCustomer, phone: e.target.value })} className="bg-white" />
+                          <Input className="col-span-2 bg-white" placeholder={t("common.address", "common.address")} value={newCustomer.address} onChange={(e: any) => setNewCustomer({ ...newCustomer, address: e.target.value })} />
                         </div>
                       </>
                     )}
@@ -363,7 +363,7 @@ function NewOrderPage() {
                     <div className="grid grid-cols-2 gap-2">
                       <Select value={branchId} onValueChange={setBranchId}>
                         <SelectTrigger className="bg-white"><SelectValue placeholder={t("common.branch", "common.branch")} /></SelectTrigger>
-                        <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{branches.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
                       </Select>
                       <Select value={orderType} onValueChange={(v: any) => setOrderType(v)}>
                         <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
@@ -378,13 +378,13 @@ function NewOrderPage() {
                       </Select>
                     </div>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent", "orders.urgent")}</label>
+                      <label className="flex items-center gap-2 text-sm font-bold"><Checkbox checked={isUrgent} onCheckedChange={(v: any) => setIsUrgent(!!v)} /> {t("dashboard.kpi.urgent", "orders.urgent")}</label>
                       
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {isUrgent && <Input type="number" placeholder={t("settings.urgentFee", "استعجال")} value={urgentFeeInput} onChange={(e) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
-                      <Input type="number" placeholder={t("orders.discount", "خصم %")} value={discountPct} onChange={(e) => setDiscountPct(e.target.value)} className="bg-white" />
-                      {orderType === "delivery" && <Input type="number" placeholder={t("settings.deliveryFee", "orders.delivery")} value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} className="bg-white" />}
+                      {isUrgent && <Input type="number" placeholder={t("settings.urgentFee", "استعجال")} value={urgentFeeInput} onChange={(e: any) => setUrgentFeeInput(e.target.value)} className="bg-white" />}
+                      <Input type="number" placeholder={t("orders.discount", "خصم %")} value={discountPct} onChange={(e: any) => setDiscountPct(e.target.value)} className="bg-white" />
+                      {orderType === "delivery" && <Input type="number" placeholder={t("settings.deliveryFee", "orders.delivery")} value={deliveryFee} onChange={(e: any) => setDeliveryFee(e.target.value)} className="bg-white" />}
                     </div>
                   </div>
                 </div>
@@ -393,23 +393,23 @@ function NewOrderPage() {
                   <div className="rounded-2xl bg-teal-50 border border-teal-100 p-3 space-y-3">
                     <div className="font-black flex items-center gap-2"><Truck className="w-4 h-4 text-teal-700" /> {t("orders.deliveryAddress", "عنوان التوصيل")}</div>
                     <div className="grid md:grid-cols-2 gap-2">
-                      <Select onValueChange={(v) => applyArea(v, "pickup") }>
+                      <Select onValueChange={(v: any) => applyArea(v, "pickup") }>
                         <SelectTrigger><SelectValue placeholder={t("orders.pickupArea", "منطقة الاستلام")} /></SelectTrigger>
-                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
+                        <SelectContent>{areas.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
                       </Select>
-                      <Select onValueChange={(v) => applyArea(v, "delivery") }>
+                      <Select onValueChange={(v: any) => applyArea(v, "delivery") }>
                         <SelectTrigger><SelectValue placeholder={t("orders.deliveryArea", "منطقة التسليم")} /></SelectTrigger>
-                        <SelectContent>{areas.map((a) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
+                        <SelectContent>{areas.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.name} — {a.area_type === "compound" ? t("common.compound", "كمبوند") : a.area_type === "street" ? t("common.street", "شارع") : t("common.area", "منطقة")}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="grid lg:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Input placeholder={t("orders.pickupAddress", "عنوان الاستلام بالتفصيل")} value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
-                        <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
+                        <Input placeholder={t("orders.pickupAddress", "عنوان الاستلام بالتفصيل")} value={pickupAddress} onChange={(e: any) => setPickupAddress(e.target.value)} />
+                        <div className="flex gap-2"><Input placeholder="Lat" value={pickupLoc.lat} onChange={(e: any) => setPickupLoc({ ...pickupLoc, lat: e.target.value })} /><Input placeholder="Lng" value={pickupLoc.lng} onChange={(e: any) => setPickupLoc({ ...pickupLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("pickup")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                       <div className="space-y-2">
-                        <Input placeholder={t("orders.deliveryAddress", "عنوان التسليم بالتفصيل")} value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
-                        <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
+                        <Input placeholder={t("orders.deliveryAddress", "عنوان التسليم بالتفصيل")} value={deliveryAddress} onChange={(e: any) => setDeliveryAddress(e.target.value)} />
+                        <div className="flex gap-2"><Input placeholder="Lat" value={deliveryLoc.lat} onChange={(e: any) => setDeliveryLoc({ ...deliveryLoc, lat: e.target.value })} /><Input placeholder="Lng" value={deliveryLoc.lng} onChange={(e: any) => setDeliveryLoc({ ...deliveryLoc, lng: e.target.value })} /><Button type="button" variant="outline" onClick={() => fillLocation("delivery")}><LocateFixed className="w-4 h-4" /></Button></div>
                       </div>
                     </div>
                   </div>
@@ -426,12 +426,12 @@ function NewOrderPage() {
                   </div>
                   <div className="relative w-full md:w-72">
                     <Search className={`w-4 h-4 absolute ${dir === 'rtl' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-slate-400`} />
-                    <Input className={dir === 'rtl' ? "pr-9" : "pl-9"} placeholder={t("orders.searchService", "ابحث عن خدمة...")} value={serviceSearch} onChange={(e) => setServiceSearch(e.target.value)} />
+                    <Input className={dir === 'rtl' ? "pr-9" : "pl-9"} placeholder={t("orders.searchService", "ابحث عن خدمة...")} value={serviceSearch} onChange={(e: any) => setServiceSearch(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-2">
-                  {FILTERS.map((f) => {
+                  {FILTERS.map((f: any) => {
                     const Icon = f.icon;
                     const active = filter === f.id;
                     const label = t(`common.${f.label}`, f.label);
@@ -440,7 +440,7 @@ function NewOrderPage() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {filteredServices.map((s) => (
+                  {filteredServices.map((s: any) => (
                     <button key={s.id} type="button" onClick={() => addService(s.id)} className="group rounded-3xl border bg-gradient-to-br from-white to-slate-50 hover:from-teal-50 hover:to-white hover:border-teal-300 p-4 text-start min-h-28 shadow-sm hover:shadow-xl transition active:scale-[.98]">
                       <div className="flex justify-between gap-2">
                         <div className="font-black text-base leading-tight group-hover:text-teal-700">{s.name}</div>
@@ -457,7 +457,7 @@ function NewOrderPage() {
 
                 <div>
                   <Label className="text-slate-700">{t("orders.notes", "common.notes")}</Label>
-                  <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("orders.notes", "أي ملاحظات إضافية على الطلب...")} />
+                  <Textarea rows={2} value={notes} onChange={(e: any) => setNotes(e.target.value)} placeholder={t("orders.notes", "أي ملاحظات إضافية على الطلب...")} />
                 </div>
               </CardContent>
             </Card>

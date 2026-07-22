@@ -54,7 +54,7 @@
   "phone": "Phone",
   "address": "Address",
   "other": "Other",
-  "clear": "Clear",
+  "clear": "Clear", "openFixLocation": "Open Fix Location", "quickFix": "Quick Fix",
   "backToHome": "Back to Home",
   "retry": "Retry",
   "cancel": "Cancel",

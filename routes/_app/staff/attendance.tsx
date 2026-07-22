@@ -136,13 +136,13 @@ function AttendanceMawaredPage() {
     loadData();
   }, [tenantId, date]);
 
-  const myOpenShift = useMemo(() => records.find((r) => r.employee_id === currentEmp?.id && !r.check_out_at), [records, currentEmp]);
+  const myOpenShift = useMemo(() => records.find((r: any) => r.employee_id === currentEmp?.id && !r.check_out_at), [records, currentEmp]);
 
   function getLocation(): Promise<{ lat?: number; lng?: number }> {
     return new Promise((resolve) => {
       if (typeof navigator === "undefined" || !navigator.geolocation) return resolve({});
       navigator.geolocation.getCurrentPosition(
-        (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        (p: any) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
         () => resolve({}),
         { enableHighAccuracy: true, timeout: 8000 }
       );
@@ -182,10 +182,10 @@ function AttendanceMawaredPage() {
     loadData();
   }
 
-  const presentRecords = useMemo(() => records.filter((r) => !r.check_out_at), [records]);
-  const checkedOutRecords = useMemo(() => records.filter((r) => !!r.check_out_at), [records]);
-  const attendedEmpIds = useMemo(() => new Set(records.map((r) => r.employee_id)), [records]);
-  const absentEmployees = useMemo(() => employees.filter((e) => !attendedEmpIds.has(e.id)), [employees, attendedEmpIds]);
+  const presentRecords = useMemo(() => records.filter((r: any) => !r.check_out_at), [records]);
+  const checkedOutRecords = useMemo(() => records.filter((r: any) => !!r.check_out_at), [records]);
+  const attendedEmpIds = useMemo(() => new Set(records.map((r: any) => r.employee_id)), [records]);
+  const absentEmployees = useMemo(() => employees.filter((e: any) => !attendedEmpIds.has(e.id)), [employees, attendedEmpIds]);
 
   const filteredRecords = useMemo(() => {
     let list = records;
@@ -194,7 +194,7 @@ function AttendanceMawaredPage() {
 
     if (!search.trim()) return list;
     const s = search.toLowerCase();
-    return list.filter((r) => {
+    return list.filter((r: any) => {
       const name = r.employees?.full_name || "";
       const title = r.employees?.job_title || "";
       const station = r.employees?.station || "";
@@ -316,12 +316,12 @@ function AttendanceMawaredPage() {
         <div className="flex items-center gap-2 bg-white border px-3 py-1.5 rounded-2xl shadow-xs">
           <Calendar className="w-4 h-4 text-slate-400" />
           <Label className="text-xs font-bold text-slate-700">{t("attendance.workDate")}:</Label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="text-sm font-bold border-0 bg-transparent focus:ring-0 p-0 w-32" />
+          <input type="date" value={date} onChange={(e: any) => setDate(e.target.value)} className="text-sm font-bold border-0 bg-transparent focus:ring-0 p-0 w-32" />
         </div>
 
         <div className="relative flex-1 min-w-[240px]">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("attendance.searchPlaceholder")} className="rounded-2xl border-slate-200 h-10 pr-9 bg-white" />
+          <Input value={search} onChange={(e: any) => setSearch(e.target.value)} placeholder={t("attendance.searchPlaceholder")} className="rounded-2xl border-slate-200 h-10 pr-9 bg-white" />
         </div>
       </div>
 
@@ -387,7 +387,7 @@ function AttendanceMawaredPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredRecords.map((r) => {
+                  filteredRecords.map((r: any) => {
                     const dur = calculateDuration(r.check_in_at, r.check_out_at);
                     const isOpen = !r.check_out_at;
                     return (
@@ -460,7 +460,7 @@ function AttendanceMawaredPage() {
                   <SelectValue placeholder={t("attendance.selectEmployee")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map((e) => (
+                  {employees.map((e: any) => (
                     <SelectItem key={e.id} value={e.id} className="font-bold">{e.full_name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -468,21 +468,21 @@ function AttendanceMawaredPage() {
             </div>
             <div>
               <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelDate")}</Label>
-              <Input type="date" value={modalDate} onChange={(e) => setModalDate(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
+              <Input type="date" value={modalDate} onChange={(e: any) => setModalDate(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelIn")}</Label>
-                <Input type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
+                <Input type="time" value={checkInTime} onChange={(e: any) => setCheckInTime(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
               </div>
               <div>
                 <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelOut")}</Label>
-                <Input type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
+                <Input type="time" value={checkOutTime} onChange={(e: any) => setCheckOutTime(e.target.value)} className="rounded-xl h-11 font-mono font-bold" />
               </div>
             </div>
             <div>
               <Label className="text-xs font-bold text-slate-700 mb-1 block">{t("attendance.labelNotes")}</Label>
-              <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("attendance.notesPlaceholder")} className="rounded-xl font-medium text-sm" />
+              <Textarea rows={2} value={notes} onChange={(e: any) => setNotes(e.target.value)} placeholder={t("attendance.notesPlaceholder")} className="rounded-xl font-medium text-sm" />
             </div>
           </div>
           <DialogFooter className="gap-2">

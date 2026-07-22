@@ -60,7 +60,7 @@ export function StationBoard({
       order_id: id, from_status: from, to_status: to, changed_by: user?.id,
       notes: `محطة: ${title}`,
     });
-    const movedOrder = rows.find((r) => r.id === id);
+    const movedOrder = rows.find((r: any) => r.id === id);
     await supabase.rpc("record_operation_event", { _process_key: "station_move", _process_name: `تحريك طلب في ${title}`, _source_type: "order", _source_id: id, _branch_id: movedOrder?.branch_id ?? undefined, _cash_account_id: undefined, _report_bucket: "operations/stations", _requires_notification: false, _data: { from_status: from, to_status: to, station, order_number: movedOrder?.order_number }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     if (to === "ironing") {
       try {
@@ -76,8 +76,8 @@ export function StationBoard({
     load();
   }
 
-  const queue = rows.filter((r) => r.status === incoming);
-  const active = rows.filter((r) => r.status === current);
+  const queue = rows.filter((r: any) => r.status === incoming);
+  const active = rows.filter((r: any) => r.status === current);
   const nextTask = active[0] ?? queue[0] ?? null;
 
   return (
@@ -106,10 +106,10 @@ export function StationBoard({
 
       {loading ? <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div> : (
         <div className="grid md:grid-cols-2 gap-4">
-          <Column title={`${t("stations.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o) => canMove && (
+          <Column title={`${t("stations.common.incoming")} (${t(`track.step.${incoming}`, ORDER_STATUS_AR[incoming])})`} list={queue} action={(o: any) => canMove && (
             <Button size="sm" onClick={() => move(o.id, current, incoming)}>{t("stations.common.startProcessing")}</Button>
           )} />
-          <Column title={`${t("stations.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o) => canMove && (
+          <Column title={`${t("stations.common.active")} (${t(`track.step.${current}`, ORDER_STATUS_AR[current])})`} list={active} action={(o: any) => canMove && (
             <div className="flex gap-1">
               <Button size="sm" variant="outline" onClick={() => setAssignFor(o.id)}>
                 <UserPlus className="w-3 h-3 ms-1" />{t("stations.common.assign")}
@@ -125,7 +125,7 @@ export function StationBoard({
       {assignFor && (
         <AssignEmployeeDialog
           open={!!assignFor}
-          onOpenChange={(v) => !v && setAssignFor(null)}
+          onOpenChange={(v: any) => !v && setAssignFor(null)}
           orderId={assignFor}
           station={station}
           onAssigned={load}
@@ -142,7 +142,7 @@ function Column({ title, list, action }: { title: string; list: Order[]; action:
       <CardContent className="p-4 space-y-2">
         <div className="font-bold text-sm mb-2">{title}</div>
         {list.length === 0 && <div className="text-xs text-muted-foreground text-center p-4">{t("stations.common.noOrders")}</div>}
-        {list.map((o) => (
+        {list.map((o: any) => (
           <div key={o.id} className="rounded-2xl border p-3 space-y-2 bg-white/90 shadow-sm">
             <div className="flex justify-between items-center">
               <div className="font-bold">

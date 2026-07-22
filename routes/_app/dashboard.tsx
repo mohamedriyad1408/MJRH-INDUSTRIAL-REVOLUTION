@@ -129,7 +129,7 @@ function Dashboard() {
               </div>
             );
           })}
-          {Object.values(stats?.stations ?? {}).every((v) => v === 0) && (
+          {Object.values(stats?.stations ?? {}).every((v: any) => v === 0) && (
             <p className="text-sm text-center text-muted-foreground py-4">{t("today.noCritical")}</p>
           )}
         </CardContent>
@@ -155,7 +155,7 @@ function Dashboard() {
           { to: "/finance", label: t("nav./finance"), icon: "📊" },
           { to: "/staff", label: t("nav./staff"), icon: "👥" },
           { to: "/customers", label: t("nav./customers"), icon: "👤" },
-        ].map((l) => (
+        ].map((l: any) => (
           <Link key={l.to} to={l.to} className="flex items-center gap-2 border rounded-xl p-3 bg-white hover:shadow-md transition text-sm font-bold">
             <span className="text-xl">{l.icon}</span>{l.label}
           </Link>

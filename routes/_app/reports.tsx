@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, TrendingUp, TrendingDown, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
+import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n, interpolate } from "@/lib/i18n";
 
@@ -83,26 +83,26 @@ function ReportsPage() {
 
     setBranches(brRes.data ?? []);
     
-    const orders = (ordersRes.data ?? []).filter(o => branchId === "all" || o.branch_id === branchId);
+    const orders = (ordersRes.data ?? []).filter((o: any) => branchId === "all" || o.branch_id === branchId);
     const prevOrders = prevOrdersRes.data ?? [];
-    const expenses = (expRes.data ?? []).filter(e => branchId === "all" || e.branch_id === branchId);
+    const expenses = (expRes.data ?? []).filter((e: any) => branchId === "all" || e.branch_id === branchId);
     const units = (suRes.data ?? []).filter((u: any) => branchId === "all" || u.orders.branch_id === branchId);
     const qc = qcRes.data ?? [];
 
-    const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + Number(o.total), 0);
-    const prevRevenue = prevOrders.reduce((s, o) => s + Number(o.total), 0);
+    const totalRevenue = orders.filter((o: any) => o.status !== "cancelled").reduce((s: number, o: any) => s + Number(o.total), 0);
+    const prevRevenue = prevOrders.reduce((s: number, o: any) => s + Number(o.total), 0);
     const revenueDelta = prevRevenue ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     
-    const paidExpenses = expenses.filter(e => e.status === "paid").reduce((s, e) => s + Number(e.amount), 0);
-    const payableExpenses = expenses.filter(e => e.status === "payable").reduce((s, e) => s + Number(e.amount), 0);
-    const payrollAccrual = expenses.filter(e => e.category === "salaries" && e.status === "payable").reduce((s, e) => s + Number(e.amount), 0);
+    const paidExpenses = expenses.filter((e: any) => e.status === "paid").reduce((s: number, e: any) => s + Number(e.amount), 0);
+    const payableExpenses = expenses.filter((e: any) => e.status === "payable").reduce((s: number, e: any) => s + Number(e.amount), 0);
+    const payrollAccrual = expenses.filter((e: any) => e.category === "salaries" && e.status === "payable").reduce((s: number, e: any) => s + Number(e.amount), 0);
     const totalExpenses = paidExpenses + payableExpenses;
     const accruedExpenses = paidExpenses + payableExpenses;
     
-    const delivered = orders.filter(o => o.status === "delivered").length;
-    const cancelled = orders.filter(o => o.status === "cancelled").length;
-    const urgent = orders.filter(o => o.is_urgent && o.status !== "cancelled").length;
-    const unpaidValue = orders.filter(o => o.status !== "cancelled" && o.payment_status !== "paid").reduce((s, o) => s + Number(o.total), 0);
+    const delivered = orders.filter((o: any) => o.status === "delivered").length;
+    const cancelled = orders.filter((o: any) => o.status === "cancelled").length;
+    const urgent = orders.filter((o: any) => o.is_urgent && o.status !== "cancelled").length;
+    const unpaidValue = orders.filter((o: any) => o.status !== "cancelled" && o.payment_status !== "paid").reduce((s: number, o: any) => s + Number(o.total), 0);
     const avgOrder = orders.length ? totalRevenue / orders.length : 0;
 
     // Cycle time (received to ready)
@@ -115,7 +115,7 @@ function ReportsPage() {
         stageCounts[u.current_stage] = (stageCounts[u.current_stage] || 0) + 1;
       }
     });
-    const bottleneck = Object.entries(stageCounts).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
+    const bottleneck = Object.entries(stageCounts).sort((a: [string, number], b: [string, number]) => b[1] - a[1])[0] || ["none", 0];
 
     // Quality
     const recleanCount = units.filter((u: any) => u.needs_reclean).length;
@@ -158,7 +158,7 @@ function ReportsPage() {
       [t("reports.avgInvoice"), data.avgOrder],
       [t("reports.bottleneck"), STAGE_LABELS[data.bottleneck[0]] ?? data.bottleneck[0]],
     ];
-    const csv = rows.map((r) => r.join(",")).join("\n");
+    const csv = rows.map((r: any) => r.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `mjrh-intelligence-${year}-${month + 1}.csv`; a.click();
@@ -175,9 +175,9 @@ function ReportsPage() {
           <p className="text-sm text-muted-foreground">{t("reports.subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
-          <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map((m, i) => <SelectItem key={i} value={String(i)}>{m}</SelectItem>)}</SelectContent></Select>
-          <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}><SelectTrigger className="w-24"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026, 2027].map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent></Select>
+          <Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={String(month)} onValueChange={(v: any) => setMonth(Number(v))}><SelectTrigger className="w-32"><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map((m: any, i: number) => <SelectItem key={i} value={String(i)}>{m}</SelectItem>)}</SelectContent></Select>
+          <Select value={String(year)} onValueChange={(v: any) => setYear(Number(v))}><SelectTrigger className="w-24"><SelectValue /></SelectTrigger><SelectContent>{[2024, 2025, 2026, 2027].map((y: any) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent></Select>
           <Button variant="outline" onClick={exportCsv}><Download className="w-4 h-4 ms-1" /> CSV</Button>
         </div>
       </div>
@@ -225,7 +225,6 @@ function ReportsPage() {
 }
 
 function KpiCard({ label, value, trend, tone }: { label: string; value: string; trend?: number; tone?: "success" | "danger" | "warn" }) {
-  const { dir } = useI18n();
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4">
@@ -241,4 +240,3 @@ function KpiCard({ label, value, trend, tone }: { label: string; value: string; 
     </Card>
   );
 }
-

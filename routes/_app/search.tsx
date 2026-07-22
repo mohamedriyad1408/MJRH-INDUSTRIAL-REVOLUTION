@@ -48,13 +48,13 @@ function SearchResultsPage() {
       <h1 className="text-2xl font-bold">{t("search.pageTitle")}</h1>
       <Card>
         <CardContent className="p-4 flex gap-2">
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("search.inputPlaceholder")} />
+          <Input value={query} onChange={(e: any) => setQuery(e.target.value)} placeholder={t("search.inputPlaceholder")} />
           <Button onClick={() => load(query)}>{loading ? <Loader2 className="animate-spin" /> : <Search />}</Button>
         </CardContent>
       </Card>
       
       <div className="grid gap-4">
-        {orders.map(o => (
+        {orders.map((o: any) => (
           <Card key={o.id}>
             <CardContent className="p-4 flex justify-between">
               <span>#{o.order_number} - {o.customers?.full_name}</span>
