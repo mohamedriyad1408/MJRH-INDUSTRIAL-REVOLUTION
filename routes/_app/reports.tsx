@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, TrendingUp, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
+import { Loader2, Download, TrendingUp, TrendingDown, Award, Clock, Brain, AlertTriangle, Gauge, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n, interpolate } from "@/lib/i18n";
 
@@ -242,4 +242,3 @@ function KpiCard({ label, value, trend, tone }: { label: string; value: string; 
   );
 }
 
-import { TrendingDown } from "lucide-react";

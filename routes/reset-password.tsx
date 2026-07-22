@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "إعادة تعيين كلمة المرور" }] }),
+  head: () => ({ meta: [{ title: "Reset Password - MJRH" }] }),
   component: ResetPasswordPage,
 });
 

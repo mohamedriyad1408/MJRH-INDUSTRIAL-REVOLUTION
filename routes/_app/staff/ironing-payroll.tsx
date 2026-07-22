@@ -12,7 +12,7 @@ import { Loader2, Banknote, CheckCircle2, Save } from "lucide-react";
 import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/ironing-payroll")({
-  head: () => ({ meta: [{ title: "رواتب فنيي الكي" }] }),
+  head: () => ({ meta: [{ title: "Ironing Payroll - MJRH" }] }),
   component: IroningPayrollPage,
 });
 

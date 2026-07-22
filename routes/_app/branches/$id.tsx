@@ -11,7 +11,7 @@ import { Building2, Loader2, Users, Receipt, Banknote, ClipboardList, AlertTrian
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/branches/$id")({
-  head: () => ({ meta: [{ title: "شاشة الفرع" }] }),
+  head: () => ({ meta: [{ title: "Branch Screen - MJRH" }] }),
   component: BranchDashboardPage,
 });
 

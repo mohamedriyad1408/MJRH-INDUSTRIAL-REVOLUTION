@@ -12,7 +12,7 @@ import { Loader2, Save } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/platform-fees")({
-  head: () => ({ meta: [{ title: "رسوم تشغيل المنصة" }] }),
+  head: () => ({ meta: [{ title: "Platform Fees - MJRH" }] }),
   component: PlatformFeesPage,
 });
 

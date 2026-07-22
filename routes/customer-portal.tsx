@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Camera, CheckCircle2, Clock, Truck, Package, Shirt, Sparkles, Inbox, Trash2, Send, Download, Upload, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/customer-portal")({
-  head: () => ({ meta: [{ title: "بوابة العميل - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Customer Portal - MJRH" }] }),
   component: CustomerPortal,
 });
 

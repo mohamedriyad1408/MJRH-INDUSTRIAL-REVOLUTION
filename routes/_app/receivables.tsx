@@ -12,7 +12,7 @@ import { UsersRound, Loader2, RefreshCw, Search, Wallet } from "lucide-react";
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/receivables")({
-  head: () => ({ meta: [{ title: "ذمم العملاء" }] }),
+  head: () => ({ meta: [{ title: "Receivables - MJRH" }] }),
   component: ReceivablesPage,
 });
 

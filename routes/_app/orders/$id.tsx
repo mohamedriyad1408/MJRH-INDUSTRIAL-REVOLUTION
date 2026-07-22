@@ -157,7 +157,7 @@ function OrderDetailPage() {
 
   async function deleteInvoiceRow(idx: number) {
     const row = invoiceItems[idx];
-    const reason = prompt(t("orders.deleteInvoiceItemReason"));
+    const reason = prompt("orders.deleteInvoiceItemReason");
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error(t("orders.errorReasonRequired"));
     const amount = Number(row.qty) * Number(row.unit_price);
@@ -326,11 +326,11 @@ function OrderDetailPage() {
 
   async function registerCustomerReturn(unit: ServiceUnit) {
     if (!hasRole("owner", "ops_manager", "cs_manager")) return toast.error(t("orders.errAdminOnlyReturn", "تسجيل مرتجع العميل للإدارة وخدمة العملاء فقط"));
-    const typeRaw = prompt(t("orders.returnTypePrompt", "نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى"), t("common.cleaning"));
+    const typeRaw = prompt("orders.returnTypePrompt", "نوع المرتجع؟ اكتب: تنظيف أو كي أو تصليح أو أخرى"), t("common.cleaning");
     if (typeRaw === null) return;
     const tVal = typeRaw.trim();
     const returnType = /كي/.test(tVal) ? "reiron" : /تصليح|repair/.test(tVal) ? "repair" : /اخرى|أخرى|other/.test(tVal) ? "other" : "reclean";
-    const reason = prompt(t("orders.returnReasonPrompt"));
+    const reason = prompt("orders.returnReasonPrompt");
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error(t("orders.errReasonRequired"));
     const { error } = await supabase.rpc("register_customer_return", {
@@ -346,7 +346,7 @@ function OrderDetailPage() {
   }
 
   async function completeCustomerReturn(row: any) {
-    const note = prompt(t("orders.closeReturnNotePrompt", "ملاحظات إغلاق المرتجع؟"), t("orders.closeReturnNoteDefault", "تم الحل والتسليم للعميل"));
+    const note = prompt("orders.closeReturnNotePrompt", "ملاحظات إغلاق المرتجع؟"), t("orders.closeReturnNoteDefault", "تم الحل والتسليم للعميل");
     if (note === null) return;
     const { error } = await supabase.rpc("complete_customer_return", { _return_id: row.id, _notes: note });
     if (error) toast.error(error.message); else { toast.success(t("orders.returnClosed", "تم إغلاق مرتجع العميل")); load(); }
@@ -354,7 +354,7 @@ function OrderDetailPage() {
 
   async function cancelOrder() {
     if (!hasRole("owner")) return toast.error(t("orders.errOwnerOnlyCancel", "إلغاء الطلب بالكامل للمالك فقط"));
-    const reason = prompt(t("orders.cancelFullReasonPrompt", "سبب إلغاء الطلب بالكامل؟"));
+    const reason = prompt("orders.cancelFullReasonPrompt", "سبب إلغاء الطلب بالكامل؟");
     if (reason === null) return;
     if (reason.trim().length < 3) return toast.error(t("orders.errReasonRequired"));
     const { error } = await supabase.rpc("cancel_order_with_reason", { _order_id: id, _reason: reason.trim() });
@@ -364,7 +364,7 @@ function OrderDetailPage() {
 
   async function overrideCloseOrder() {
     if (!hasRole("owner", "ops_manager")) return toast.error(t("orders.errOpsOnlyOverride", "صلاحية مدير التشغيل أو المالك فقط"));
-    const reason = prompt(t("orders.overrideCloseReasonPrompt", "سبب إغلاق الطلب بتجاوز التحقق؟"), t("orders.overrideCloseReasonDefault", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً"));
+    const reason = prompt("orders.overrideCloseReasonPrompt", "سبب إغلاق الطلب بتجاوز التحقق؟"), t("orders.overrideCloseReasonDefault", "رقم هاتف العميل غير مكتمل / تسليم مؤكد يدوياً");
     if (reason === null) return;
     const { error } = await supabase.from("orders").update({ status: "delivered", payment_status: "paid", notes: `${order.notes ?? ""}\n[OVERRIDE DELIVERY] ${reason}`.trim() }).eq("id", id);
     if (!error) {

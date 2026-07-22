@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, ShieldAlert, HeartHandshake, Star, PackageSearch, RotateCcw, CalendarPlus, UserCheck, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/customer-care")({
-  head: () => ({ meta: [{ title: "إدارة رعاية العملاء والتعويضات - Customer Care" }] }),
+  head: () => ({ meta: [{ title: "Customer Care - MJRH" }] }),
   component: CustomerCarePage,
 });
 

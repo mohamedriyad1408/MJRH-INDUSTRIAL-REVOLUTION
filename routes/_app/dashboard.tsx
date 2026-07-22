@@ -62,16 +62,16 @@ function Dashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label={t("today.kpi.ordersToday")} value={stats?.todayCount ?? 0} icon={Calendar} link="/orders" />
-        <KpiCard label={t("common.qcPassed", "QC ناجح")} value={stats?.qcStats?.passed ?? 0} icon={CheckCircle2} tone="text-emerald-600" link="/orders" />
-        <KpiCard label={t("common.qcFailed", "QC فاشل")} value={stats?.qcStats?.failed ?? 0} icon={XCircle} tone="text-destructive" link="/orders" />
-        <KpiCard label={t("common.qcPending", "QC معلق")} value={stats?.qcStats?.pending ?? 0} icon={Clock} tone="text-amber-600" link="/orders" />
+        <KpiCard label={t("common.qcPassed", t("common.qcPassed"))} value={stats?.qcStats?.passed ?? 0} icon={CheckCircle2} tone="text-emerald-600" link="/orders" />
+        <KpiCard label={t("common.qcFailed", t("common.qcFailed"))} value={stats?.qcStats?.failed ?? 0} icon={XCircle} tone="text-destructive" link="/orders" />
+        <KpiCard label={t("common.qcPending", t("common.qcPending"))} value={stats?.qcStats?.pending ?? 0} icon={Clock} tone="text-amber-600" link="/orders" />
       </div>
 
       {/* Recent Events */}
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-indigo-600" /> {t("dashboard.recentEvents", "الأحداث الأخيرة")}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-indigo-600" /> {t("dashboard.recentEvents", t("dashboard.recentEvents"))}</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          {(stats?.recentEvents ?? []).length === 0 && <p className="text-sm text-center text-muted-foreground py-4">{t("dashboard.noEvents", "لا توجد أحداث مسجلة")}</p>}
+          {(stats?.recentEvents ?? []).length === 0 && <p className="text-sm text-center text-muted-foreground py-4">{t("dashboard.noEvents", t("dashboard.noEvents"))}</p>}
           {(stats?.recentEvents ?? []).map((e: any) => (
             <div key={e.id} className="flex justify-between items-center p-2 border-b last:border-0 text-sm">
               <span className="font-bold">{e.event_type}</span>

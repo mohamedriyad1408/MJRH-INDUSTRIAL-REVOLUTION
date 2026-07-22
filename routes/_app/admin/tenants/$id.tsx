@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowRight, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/admin/tenants/$id")({
-  head: () => ({ meta: [{ title: "تفاصيل المغسلة" }] }),
+  head: () => ({ meta: [{ title: "Tenant Details - MJRH" }] }),
   component: TenantDetailPage,
 });
 

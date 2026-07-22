@@ -12,7 +12,7 @@ import { fmtMoney } from "@/lib/format";
 import { Loader2, TrendingUp, Wallet, Activity, Users, AlertTriangle, CheckCircle2, ShieldCheck, Wrench, Calendar, Building2, BarChart3, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_app/executive")({
-  head: () => ({ meta: [{ title: "لوحة المديرين التنفيذيين - MJRH Executive" }] }),
+  head: () => ({ meta: [{ title: "Executive Dashboard - MJRH" }] }),
   component: ExecutiveDashboardPage,
 });
 

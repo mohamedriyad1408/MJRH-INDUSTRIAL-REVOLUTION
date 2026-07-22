@@ -14,7 +14,7 @@ import { Target, Plus, Loader2, TrendingUp, TrendingDown, Save } from "lucide-re
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/budgets")({
-  head: () => ({ meta: [{ title: "الميزانيات - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Budgets - MJRH" }] }),
   component: BudgetsPage,
 });
 

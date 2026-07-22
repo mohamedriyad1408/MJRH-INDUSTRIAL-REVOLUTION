@@ -3,15 +3,14 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/lib/i18n";
-import { fmtMoney, fmtDate } from "@/lib/format";
+import { fmtMoney } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Search, Loader2, QrCode, Phone, User, FileText, Package,
-  AlertTriangle, X, Sparkles, Wallet, CheckCircle2, ArrowLeft, ArrowRight,
-  Filter, Layers, Calendar, ExternalLink, Plus, RefreshCw,
+  Search, Loader2, QrCode, Phone, User, FileText,
+  Sparkles, Layers, RefreshCw,
 } from "lucide-react";
 
 type SearchParams = { q?: string };
@@ -30,7 +29,6 @@ type OrderMatch = {
   status: string;
   total: number;
   created_at: string;
-  notes?: string;
   customers?: { full_name: string; phone: string };
 };
 
@@ -38,9 +36,6 @@ type CustomerMatch = {
   id: string;
   full_name: string;
   phone: string;
-  address?: string;
-  notes?: string;
-  created_at: string;
 };
 
 type PieceMatch = {
@@ -48,8 +43,6 @@ type PieceMatch = {
   order_id: string;
   name: string;
   current_stage: string;
-  status: string;
-  created_at: string;
   orders?: { order_number: number; customers?: { full_name: string; phone: string } };
 };
 
@@ -68,30 +61,17 @@ function SearchResultsPage() {
   const debounceRef = useRef<number | null>(null);
 
   const loadInitialBrowse = useCallback(async () => {
+    if (!tenantId) return;
     setLoading(true);
     try {
-      const oPromise = supabase
-        .from("orders")
-        .select("id, order_number, status, total, created_at, notes, customers(full_name, phone)")
-        .order("created_at", { ascending: false })
-        .limit(15);
-      
-      const cPromise = supabase
-        .from("customers")
-        .select("id, full_name, phone, address, notes, created_at")
-        .order("created_at", { ascending: false })
-        .limit(15);
-
-      if (tenantId) {
-        oPromise.eq("tenant_id", tenantId);
-        cPromise.eq("tenant_id", tenantId);
-      }
-
-      const [oRes, cRes] = await Promise.all([oPromise, cPromise]);
+      const [oRes, cRes] = await Promise.all([
+        supabase.from("orders").select("id, order_number, status, total, created_at, customers(full_name, phone)").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(15),
+        supabase.from("customers").select("id, full_name, phone").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(15)
+      ]);
       if (oRes.data) setOrders(oRes.data as any);
       if (cRes.data) setCustomers(cRes.data as any);
       setPieces([]);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
@@ -111,20 +91,16 @@ function SearchResultsPage() {
       const isNum = !isNaN(Number(clean));
       const numVal = Number(clean);
 
-      const oPromise = supabase.from("orders").select("id, order_number, status, total, created_at, notes, customers(full_name, phone)").or(`order_number.eq.${isNum ? numVal : -1},id.ilike.${esc}%`).limit(20);
-      const cPromise = supabase.from("customers").select("id, full_name, phone, address, notes, created_at").or(`full_name.ilike.%${esc}%,phone.ilike.%${esc.replace(/\s+/g, "")}%`).limit(30);
-      const pPromise = supabase.from("service_units").select("id, order_id, name, current_stage, status, created_at, orders!inner(tenant_id, order_number, customers(full_name, phone))").or(`id.ilike.${esc}%,name.ilike.%${esc}%`).limit(30);
+      const [oRes, cRes, pRes] = await Promise.all([
+        supabase.from("orders").select("id, order_number, status, total, created_at, customers(full_name, phone)").eq("tenant_id", tenantId).or(`order_number.eq.${isNum ? numVal : -1},id.ilike.${esc}%`).limit(20),
+        supabase.from("customers").select("id, full_name, phone").eq("tenant_id", tenantId).or(`full_name.ilike.%${esc}%,phone.ilike.%${esc.replace(/\s+/g, "")}%`).limit(30),
+        supabase.from("service_units").select("id, order_id, name, current_stage, orders!inner(tenant_id, order_number, customers(full_name, phone))").eq("orders.tenant_id", tenantId).or(`id.ilike.${esc}%,name.ilike.%${esc}%`).limit(30)
+      ]);
 
-      if (tenantId) {
-        oPromise.eq("tenant_id", tenantId);
-        cPromise.eq("tenant_id", tenantId);
-      }
-
-      const [oRes, cRes, pRes] = await Promise.all([oPromise, cPromise, pPromise]);
       if (oRes.data) setOrders(oRes.data as any);
       if (cRes.data) setCustomers(cRes.data as any);
       if (pRes.data) setPieces(pRes.data as any);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
@@ -167,12 +143,8 @@ function SearchResultsPage() {
             <Sparkles className="w-3.5 h-3.5 text-teal-600" />
             <span>{t("search.badge")}</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">
-            {t("search.pageTitle")}
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl font-medium leading-relaxed">
-            {t("search.subtitle")}
-          </p>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">{t("search.pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground max-w-2xl font-medium leading-relaxed">{t("search.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => performSearch(query)} disabled={loading} className="font-bold">

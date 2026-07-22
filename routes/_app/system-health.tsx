@@ -14,7 +14,7 @@ import { whatsappLink } from "@/lib/rules/whatsapp";
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/system-health")({
-  head: () => ({ meta: [{ title: "فحص النظام" }] }),
+  head: () => ({ meta: [{ title: "System Health - MJRH" }] }),
   component: SystemHealthPage,
 });
 

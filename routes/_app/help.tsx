@@ -7,7 +7,7 @@ import { BookOpenCheck, Calculator, CheckCircle2, HelpCircle, Map, PackageCheck,
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/help")({
-  head: () => ({ meta: [{ title: "دليل الاستخدام" }] }),
+  head: () => ({ meta: [{ title: "User Guide - MJRH" }] }),
   component: HelpPage,
 });
 

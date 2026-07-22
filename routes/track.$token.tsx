@@ -9,7 +9,7 @@ import { fmtMoney } from "@/lib/format";
 import { Loader2, CheckCircle2, Clock, Truck, Package, Sparkles, Shirt, Inbox, CreditCard } from "lucide-react";
 
 export const Route = createFileRoute("/track/$token")({
-  head: () => ({ meta: [{ title: "متابعة طلبك" }] }),
+  head: () => ({ meta: [{ title: "Track Order - MJRH" }] }),
   component: TrackPage,
 });
 

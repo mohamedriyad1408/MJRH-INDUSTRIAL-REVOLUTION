@@ -16,7 +16,7 @@ import { HeartHandshake, MessageCircle, Star, Loader2, RefreshCw, Send } from "l
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/crm")({
-  head: () => ({ meta: [{ title: "CRM والولاء" }] }),
+  head: () => ({ meta: [{ title: "CRM title: "CRM والولاء" Loyalty - MJRH" }] }),
   component: CrmPage,
 });
 

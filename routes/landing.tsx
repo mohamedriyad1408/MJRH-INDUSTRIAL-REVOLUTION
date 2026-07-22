@@ -7,7 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { ArrowLeft, BarChart3, Calculator, CheckCircle2, ClipboardList, Map, ShieldCheck, Shirt, Sparkles, Truck, Users, WalletCards } from "lucide-react";
 
 export const Route = createFileRoute("/landing")({
-  head: () => ({ meta: [{ title: "MJRH — نظام تشغيل المغاسل" }] }),
+  head: () => ({ meta: [{ title: "MJRH - Laundry OS" }] }),
   component: LandingPage,
 });
 

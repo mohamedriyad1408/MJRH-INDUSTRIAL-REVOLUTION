@@ -96,7 +96,7 @@ function DriverPage() {
 
   async function updateMyLocation() {
     if (!empId) return toast.error(t("driver.errNoEmp"));
-    if (!navigator.geolocation) return toast.error(t("driver.errGps", "المتصفح لا يدعم GPS"));
+    if (!navigator.geolocation) return toast.error(t("driver.errGps", t("driver.errGps")));
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setMyLoc(loc);
@@ -109,7 +109,7 @@ function DriverPage() {
         employee_id: empId, lat: loc.lat, lng: loc.lng, accuracy: pos.coords.accuracy,
       });
       toast.success(t("driver.toastLocOk"));
-    }, () => toast.error(t("driver.toastGpsErr", "تعذر تحديد الموقع")), { enableHighAccuracy: true, timeout: 15000 });
+    }, () => toast.error(t("driver.toastGpsErr", t("driver.toastGpsErr"))), { enableHighAccuracy: true, timeout: 15000 });
   }
 
   useEffect(() => {
@@ -147,7 +147,7 @@ function DriverPage() {
         .single();
       if (oe) { setActing(null); return toast.error(oe.message); }
       await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString() }).eq("id", p.id);
-      await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: `تم استلام الطلب من العميل بواسطة المندوب` });
+      await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: "received", to_status: "received", changed_by: user?.id, notes: t("driver.toastPickupDone") });
       setActing(null);
       toast.success(interpolate(t("driver.toastPickupDone"), { order: ord.order_number }));
       load();
@@ -166,7 +166,7 @@ function DriverPage() {
     const { data: ord, error: oe } = await supabase.from("orders").insert({ customer_id: customerId, branch_id: (p as any).branch_id ?? null, order_type: "delivery", status: "received", pickup_address: p.address, pickup_lat: (p as any).lat ?? null, pickup_lng: (p as any).lng ?? null, notes: p.notes, created_by: user?.id, assigned_driver_employee_id: empId ?? null }).select("id, order_number").single();
     if (oe) { setActing(null); return toast.error(oe.message); }
     await supabase.from("pickup_requests").update({ status: "converted", picked_up_at: new Date().toISOString(), converted_order_id: ord.id, customer_id: customerId }).eq("id", p.id);
-    await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: `تحويل من طلب استلام #${p.id.slice(0, 6)}` });
+    await supabase.from("order_status_history").insert({ order_id: ord.id, from_status: null, to_status: "received", changed_by: user?.id, notes: t("driver.pickupTransfer") });
     setActing(null);
     toast.success(interpolate(t("driver.toastPickupDone"), { order: ord.order_number }));
     load();
@@ -188,9 +188,9 @@ function DriverPage() {
       await supabase.from("order_status_history").insert({
         order_id: d.id, from_status: "ready",
         to_status: "out_for_delivery", changed_by: user?.id,
-        notes: "السائق خرج للتسليم",
+        notes: t("driver.toastDeliveryStart"),
       });
-      await supabase.rpc("record_operation_event", { _process_key: "delivery_started", _process_name: "خروج المندوب للتسليم", _source_type: "order", _source_id: d.id, _branch_id: d.branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, total: Number(d.total ?? 0) }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
+      await supabase.rpc("record_operation_event", { _process_key: "delivery_started", _process_name: t("driver.toastDeliveryStart"), _source_type: "order", _source_id: d.id, _branch_id: d.branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, total: Number(d.total ?? 0) }, _output: { cash_impact: false, journal_required: false, appears_in_report: true } }).then(() => null);
     }
     setActing(null);
     if (error) return toast.error(error.message);
@@ -202,7 +202,7 @@ function DriverPage() {
   async function confirmDelivery(d: Delivery) {
     const code = confirmCode[d.id] ?? "";
     const phone = d.customers?.phone ?? "";
-    if (!phone) return toast.error(t("driver.errNoPhone", "لا يوجد رقم هاتف للعميل"));
+    if (!phone) return toast.error(t("driver.errNoPhone", t("driver.errNoPhone")));
     // validate: last 4 digits of phone
     const last4 = phone.replace(/\D/g, "").slice(-4);
     if (code.trim() !== last4) {
@@ -221,12 +221,12 @@ function DriverPage() {
       await supabase.from("order_status_history").insert({
         order_id: d.id, from_status: d.status as any,
         to_status: "delivered", changed_by: user?.id,
-        notes: collected ? `تأكيد التسليم وتحصيل ${collected} جنيه` : "تأكيد التسليم بكود العميل",
+        notes: collected ? interpolate(t("driver.toastTip"), { amount: collected }) : t("driver.toastDeliveryDone"),
       });
     }
     setActing(null);
     if (error) return toast.error(error.message);
-    await supabase.rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? "تأكيد تسليم مع تحصيل" : "تأكيد تسليم", _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "delivery_confirmed", _process_name: collected ? t("driver.toastDeliveryDone") : t("driver.toastDeliveryDone"), _source_type: "order", _source_id: d.id, _branch_id: (d as any).branch_id ?? null, _cash_account_id: null, _report_bucket: "delivery/reports", _requires_notification: false, _data: { order_number: d.order_number, driver_employee_id: empId, collected_amount: collected, total: Number(d.total ?? 0) }, _output: { cash_impact: !!collected, journal_required: !!collected, appears_in_report: true, overpayment: Number(res?.overpayment ?? 0) } }).then(() => null);
     const extra = Number(res?.overpayment ?? 0);
     toast.success(extra > 0 ? interpolate(t("driver.toastTip"), { amount: extra }) : t("driver.toastDeliveryDone"));
     setConfirmCode((prev) => { const n = { ...prev }; delete n[d.id]; return n; });

@@ -14,7 +14,7 @@ import { Crown, Trash2, KeyRound, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/users/")({
-  head: () => ({ meta: [{ title: "كل المستخدمين" }] }),
+  head: () => ({ meta: [{ title: "Users Admin - MJRH" }] }),
   component: AdminUsersPage,
 });
 

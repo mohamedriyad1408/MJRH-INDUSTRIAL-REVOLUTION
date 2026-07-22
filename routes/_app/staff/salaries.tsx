@@ -15,7 +15,7 @@ import { Wallet, Plus, Loader2, Save, Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/staff/salaries")({
-  head: () => ({ meta: [{ title: "الرواتب اليومية" }] }),
+  head: () => ({ meta: [{ title: "Daily Salaries - MJRH" }] }),
   component: DailySalariesPage,
 });
 

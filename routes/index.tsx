@@ -9,7 +9,7 @@ import { useI18n } from "@/lib/i18n";
 import { Loader2, Shirt, ArrowLeft, Building2, LogIn, ShieldCheck, Boxes, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "MJRH — نظام تشغيل المشاريع" }] }),
+  head: () => ({ meta: [{ title: "MJRH - Industrial Revolution" }] }),
   component: HomeDirectory,
 });
 

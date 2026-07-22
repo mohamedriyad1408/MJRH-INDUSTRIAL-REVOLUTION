@@ -12,7 +12,7 @@ import { Loader2, UserPlus, MapPin, Building2 } from "lucide-react";
 import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/join/$slug")({
-  head: () => ({ meta: [{ title: "تسجيل عميل جديد" }] }),
+  head: () => ({ meta: [{ title: "Customer Registration - MJRH" }] }),
   component: JoinCustomerPage,
 });
 

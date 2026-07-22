@@ -13,7 +13,7 @@ import { Truck, Package, MapPin, Navigation, RefreshCw, Route as RouteIcon, X, C
 import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/live-map")({
-  head: () => ({ meta: [{ title: "خريطة المراقبة الحية - MJRH" }] }),
+  head: () => ({ meta: [{ title: "Live Map - MJRH" }] }),
   component: LiveMapPage,
 });
 

@@ -18,7 +18,7 @@ import { Plus, Loader2, Building2, LocateFixed } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/tenants/")({
-  head: () => ({ meta: [{ title: "إدارة المغاسل" }] }),
+  head: () => ({ meta: [{ title: "Tenants Admin - MJRH" }] }),
   component: TenantsPage,
 });
 

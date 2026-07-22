@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, interpolate } from "@/lib/i18n";
 import { fmtMoney, fmtDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -133,33 +133,33 @@ function computeEuropeanAppraisal(
   // Map to European 9-Box Talent Grid
   let gridCategory = t("Consistent Contributor (المساهم المستقر)");
   let gridBoxColor = "bg-blue-600 text-white";
-  let gridDesc = t("أداء تشغيلي مستقر وموثوق يفي بالمعايير المعتمدة للمؤسسة.");
+  let gridDesc = t("scorecard.grid.stableDesc");
   let actionRecommendation = "normal";
 
   if (overallScore >= 88) {
     gridCategory = t("🌟 Star Talent (قائد مستقبلي وشريك استراتيجي)");
     gridBoxColor = "bg-gradient-to-r from-emerald-600 to-teal-600 text-white";
-    gridDesc = t("أداء استثنائي يتجاوز جميع المعايير الأوروبية في الجودة والالتزام والمبادرة. استحقاق ترقية فورية أو حافز تميز مؤسسي.");
+    gridDesc = t("scorecard.grid.starDesc");
     actionRecommendation = "bonus";
   } else if (overallScore >= 75) {
     gridCategory = t("🟢 Core Performer (خبير تشغيلي محترف)");
     gridBoxColor = "bg-emerald-600 text-white";
-    gridDesc = t("ركيزة أساسية في تشغيل النشاط، يظهر التزاماً عالياً بالجودة ومواعيد العمل بانتظام.");
+    gridDesc = t("scorecard.grid.performerDesc");
     actionRecommendation = "bonus";
   } else if (overallScore >= 60) {
     gridCategory = t("🔵 Consistent Contributor (أداء مستقر وموثوق)");
     gridBoxColor = "bg-blue-600 text-white";
-    gridDesc = t("ينجز المطلوب بكفاءة جيدة، ويحتاج تعزيز في بعض مجالات المبادرة أو الالتزام.");
+    gridDesc = t("scorecard.grid.consistentDesc");
     actionRecommendation = "normal";
   } else if (overallScore >= 45) {
     gridCategory = t("⚠️ Underperformer (أداء متذبذب — خطة تحسين PIP)");
     gridBoxColor = "bg-amber-500 text-white";
-    gridDesc = t("قصور في الالتزام بالمواعيد أو معايير الجودة. يجب وضعه تحت خطة تحسين أداء إلزامية (PIP) لمدة شهر.");
+    gridDesc = t("scorecard.grid.underperformerDesc");
     actionRecommendation = "warning";
   } else {
     gridCategory = t("🚨 Exit Candidate (إنذار أحمر / استمارة 6 إنهاء خدمة)");
     gridBoxColor = "bg-red-600 text-white animate-pulse";
-    gridDesc = t("فشل في استيفاء الحد الأدنى من معايير العمل المؤسسي الأوروبية. يُنصح باتخاذ إجراءات إنهاء التعاقد (استمارة 6).");
+    gridDesc = t("scorecard.grid.exitDesc");
     actionRecommendation = "form6";
   }
 
@@ -204,8 +204,8 @@ function EuropeanScorecardPage() {
 
   // Individual Development Plan (IDP) Goals
   const [idpGoals, setIdpGoals] = useState<IdpGoal[]>([
-    { id: "1", title: t("الوصول بنسبة المرتجعات التشغيلية إلى صفر% خلال الشهر"), targetDate: "2026-07-31", status: "pending" },
-    { id: "2", title: t("الالتزام التام بمواعيد الحضور دون أي دقائق تأخير"), targetDate: "2026-07-31", status: "pending" },
+    { id: "1", title: t("scorecard.goal.returns"), targetDate: "2026-07-31", status: "pending" },
+    { id: "2", title: t("scorecard.goal.punctuality"), targetDate: "2026-07-31", status: "pending" },
   ]);
   const [newGoalTitle, setNewGoalTitle] = useState("");
 
@@ -234,7 +234,7 @@ function EuropeanScorecardPage() {
         selectEmployee(list[0]);
       }
     } catch (err: any) {
-      toast.error(err?.message || t("خطأ في تحميل الموظفين"));
+      toast.error(err?.message || t("scorecard.error.loadEmployees"));
     } finally {
       setLoading(false);
     }
@@ -270,7 +270,7 @@ function EuropeanScorecardPage() {
       setInitiativeRating(3);
     } catch (err: any) {
       console.error(err);
-      toast.error(t("فشل تحميل تفاصيل الموظف"));
+      toast.error(t("scorecard.error.loadDetails"));
     } finally {
       setLoadingDetails(false);
     }
@@ -294,13 +294,13 @@ function EuropeanScorecardPage() {
   async function submitAdjustment() {
     if (!selectedEmp || !actionType || actionType === "form6" || actionType === "appraisal_report") return;
     const val = Number(amount);
-    if (!val || val <= 0) return toast.error(t("أدخل مبلغاً صحيحاً أكبر من صفر"));
-    if (!reason.trim()) return toast.error(t("اكتب سبب المكافأة أو الخصم"));
+    if (!val || val <= 0) return toast.error(t("scorecard.error.invalidAmount"));
+    if (!reason.trim()) return toast.error(t("scorecard.error.reasonRequired"));
 
     setSubmitting(true);
     try {
       const direction = actionType === "bonus" ? "employee_due" : "employee_owes";
-      const descPrefix = actionType === "bonus" ? t("حافز كفاءة مؤسسية (Bonus): ") : t("جزاء إداري / خصم (Penalty): ");
+      const descPrefix = actionType === "bonus" ? t("scorecard.bonusPrefix") : t("scorecard.penaltyPrefix");
 
       const { error } = await supabase.from("employee_financial_ledger").insert({
         tenant_id: tenantId,
@@ -313,13 +313,13 @@ function EuropeanScorecardPage() {
       });
 
       if (error) throw error;
-      toast.success(actionType === "bonus" ? t("تم صرف الحافز المؤسسي للموظف بنجاح") : t("تم إيقاع الجزاء وخصمه من رصيد الموظف"));
+      toast.success(actionType === "bonus" ? t("scorecard.toastBonusSuccess") : t("scorecard.toastPenaltySuccess"));
       setActionType(null);
       setAmount("");
       setReason("");
       selectEmployee(selectedEmp);
     } catch (err: any) {
-      toast.error(err?.message || t("فشل تسجيل الحركة المالية"));
+      toast.error(err?.message || t("scorecard.error.saveAction"));
     } finally {
       setSubmitting(false);
     }
@@ -354,21 +354,21 @@ function EuropeanScorecardPage() {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs font-black shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>{t("scorecard.badgeEuropean", "نظام حوكمة الأداء الأوروبي — European Corporate 360° Appraisal Matrix")}</span>
+            <span>{t("scorecard.badgeEuropean", t("نظام حوكمة الأداء الأوروبي — European Corporate 360° Appraisal Matrix"))}</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
             <Target className="w-8 h-8 text-indigo-600 shrink-0" />
-            <span>{t("scorecard.titleEuropean", "التقييم المؤسسي الشامل واستمارة 6")}</span>
+            <span>{t("scorecard.titleEuropean", t("التقييم المؤسسي الشامل واستمارة 6"))}</span>
           </h1>
           <p className="text-sm text-muted-foreground font-medium max-w-2xl leading-relaxed">
-            {t("scorecard.subEuropean", "تقييم احترافي بـ 6 محاور مؤسسية حقيقية (الانضباط، الإنتاجية، الجودة، روح الفريق، السلامة، والمبادرة) مع تصنيف مصفوفة 9-Box وخطط تحسين الأداء PIP.")}
+            {t("scorecard.subEuropean", t("تقييم احترافي بـ 6 محاور مؤسسية حقيقية (الانضباط، الإنتاجية، الجودة، روح الفريق، السلامة، والمبادرة) مع تصنيف مصفوفة 9-Box وخطط تحسين الأداء PIP."))}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={loadEmployees} disabled={loading} className="font-bold">
             <Search className="w-4 h-4 ms-1.5" />
-            <span>{t("common.refresh", "تحديث الكفاءات")}</span>
+            <span>{t("common.refresh", t("scorecard.btnRefresh"))}</span>
           </Button>
         </div>
       </div>
@@ -383,7 +383,7 @@ function EuropeanScorecardPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t("scorecard.searchPlaceholder", "بحث باسم الموظف أو الوظيفة...")}
+                  placeholder={t("scorecard.searchPlaceholder", t("scorecard.searchPlaceholder"))}
                   className="h-10 pe-9 rounded-2xl bg-white font-bold"
                 />
               </div>
@@ -672,7 +672,7 @@ function EuropeanScorecardPage() {
                               <span className="text-xs">{g.title}</span>
                             </div>
                             <Badge variant={g.status === "achieved" ? "default" : "secondary"} className="text-[10px] font-mono shrink-0">
-                              {g.status === "achieved" ? t("محقَق ✅") : t("قيد التنفيذ 🎯")}
+                              {g.status === "achieved" ? t("scorecard.idpDone") : t("scorecard.idpPending")}
                             </Badge>
                           </div>
                         ))}
@@ -851,7 +851,7 @@ function EuropeanScorecardPage() {
               <ul className="list-disc list-inside space-y-1 text-slate-700 font-semibold pe-4">
                 {idpGoals.map((g) => (
                   <li key={g.id}>
-                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? t("محقَق ✅") : t("قيد التنفيذ 🎯")})</span>
+                    {g.title} — <span className="font-mono text-slate-500">({g.status === "achieved" ? t("scorecard.idpDone") : t("scorecard.idpPending")})</span>
                   </li>
                 ))}
               </ul>

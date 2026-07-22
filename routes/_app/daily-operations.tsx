@@ -172,7 +172,7 @@ function DailyOperationsPage() {
   ] : [], [data, done, t]);
 
   // جاهزية العمل أثناء اليوم لا يجب أن تنقص بسبب مهام نهاية اليوم مثل إقفال الخزنة.
-  // إقفال الخزن وتقرير نهاية اليوم يظهران كمهام منفصلة في قسم t("أنه اليوم").
+  // إقفال الخزن وتقرير نهاية اليوم يظهران كمهام منفصلة في قسم "أنهِ اليوم".
   const workReadinessSteps = [...startSteps, ...monitorSteps];
   const endOfDayScore = data ? Math.round((endSteps.filter((s) => s.ok).length / Math.max(1, endSteps.length)) * 100) : 0;
   const score = data ? Math.round((workReadinessSteps.filter((s) => s.ok).length / Math.max(1, workReadinessSteps.length)) * 100) : 0;

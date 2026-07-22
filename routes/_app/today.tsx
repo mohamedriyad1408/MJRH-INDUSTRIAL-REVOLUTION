@@ -13,7 +13,7 @@ import { autoAssignDrivers } from "@/lib/driver-assignment";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/today")({
-  head: () => ({ meta: [{ title: "مركز اليوم" }] }),
+  head: () => ({ meta: [{ title: "Today Center - MJRH" }] }),
   component: TodayCenter,
 });
 

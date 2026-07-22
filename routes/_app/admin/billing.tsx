@@ -14,7 +14,7 @@ import { Loader2, Plus, ReceiptText } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/admin/billing")({
-  head: () => ({ meta: [{ title: "فواتير المنصة" }] }),
+  head: () => ({ meta: [{ title: "Platform Billing - MJRH" }] }),
   component: AdminBillingPage,
 });
 

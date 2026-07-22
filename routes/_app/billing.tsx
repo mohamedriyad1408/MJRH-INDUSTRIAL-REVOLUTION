@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/billing")({
-  head: () => ({ meta: [{ title: "اشتراك المنصة" }] }),
+  head: () => ({ meta: [{ title: "Platform Subscription - MJRH" }] }),
   component: BillingPage,
 });
 

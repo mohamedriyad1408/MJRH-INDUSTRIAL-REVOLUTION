@@ -12,7 +12,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "تسجيل الدخول" }] }),
+  head: () => ({ meta: [{ title: "Login - MJRH" }] }),
   component: LoginPage,
 });
 
