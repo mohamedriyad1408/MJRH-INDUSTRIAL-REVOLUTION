@@ -13,7 +13,7 @@ import { Wallet, Plus, Loader2, RefreshCw, AlertTriangle, ShieldCheck } from "lu
 import { useI18n, interpolate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/cash-closing")({
-  head: () => ({ meta: [{ title: t("إقفال الخزائن") }] }),
+  head: () => ({ meta: [{ title: "Cash Closing - MJRH" }] }),
   component: CashClosingPage,
 });
 

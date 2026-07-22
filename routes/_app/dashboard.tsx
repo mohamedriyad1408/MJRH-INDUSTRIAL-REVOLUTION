@@ -11,7 +11,7 @@ import { RoleDailyBrief } from "@/components/role-daily-brief";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/dashboard")({
-  head: () => ({ meta: [{ title: t("لوحة المالك - MJRH") }] }),
+  head: () => ({ meta: [{ title: "Owner Dashboard - MJRH" }] }),
   component: Dashboard,
 });
 

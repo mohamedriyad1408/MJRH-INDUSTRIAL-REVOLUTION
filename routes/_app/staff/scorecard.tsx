@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/staff/scorecard")({
-  head: () => ({ meta: [{ title: t("التقييم المؤسسي الأوروبي 360° — Scorecard") }] }),
+  head: () => ({ meta: [{ title: "Scorecard - MJRH" }] }),
   component: EuropeanScorecardPage,
 });
 
@@ -383,7 +383,7 @@ function EuropeanScorecardPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder=t("بحث باسم الموظف أو الوظيفة...")
+                  placeholder={t("scorecard.searchPlaceholder", "بحث باسم الموظف أو الوظيفة...")}
                   className="h-10 pe-9 rounded-2xl bg-white font-bold"
                 />
               </div>
@@ -763,7 +763,7 @@ function EuropeanScorecardPage() {
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder={actionType === "bonus" ? t("مثال: تحقيق 100% في معايير الجودة والالتزام بالحضور لهذا الشهر...") : t("مثال: مخالفة إجراءات السلامة والنظافة SOP أو تأخير بدون إذن...")}
+                placeholder={actionType === "bonus" ? t("scorecard.placeholderBonus") : t("scorecard.placeholderPenalty")}
                 className="rounded-xl font-medium text-sm"
               />
             </div>
