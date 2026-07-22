@@ -77,6 +77,7 @@ const tenantGroups = [
     items: [
       { title: "الحسابات", url: "/finance", icon: Wallet },
       { title: "المحاسبة", url: "/accounting", icon: Calculator },
+      { title: "المخزون", url: "/inventory", icon: Boxes },
       { title: "القيود", url: "/ledger", icon: BookOpenCheck },
       { title: "فحص النظام", url: "/system-health", icon: ShieldCheck },
     ],

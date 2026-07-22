@@ -200,7 +200,9 @@ const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
   getParentRoute: () => AppRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_app/inventory.lazy').then((d) => d.Route),
+)
 const AppHelpRoute = AppHelpRouteImport.update({
   id: '/help',
   path: '/help',
