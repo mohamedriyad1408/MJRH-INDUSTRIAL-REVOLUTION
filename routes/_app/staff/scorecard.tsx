@@ -61,7 +61,7 @@ type IdpGoal = {
   status: "pending" | "achieved";
 };
 
-function computeEuropeanAppraisal(
+function computeEuropeanAppraisal(t: any,
   emp: Employee,
   att: AttendanceRecord[],
   ledger: LedgerEntry[],
@@ -288,7 +288,7 @@ function EuropeanScorecardPage() {
 
   const stats = useMemo(() => {
     if (!selectedEmp) return null;
-    return computeEuropeanAppraisal(selectedEmp, attendance, ledger, teamworkRating, hseRating, initiativeRating);
+    return computeEuropeanAppraisal(t, selectedEmp, attendance, ledger, teamworkRating, hseRating, initiativeRating);
   }, [selectedEmp, attendance, ledger, teamworkRating, hseRating, initiativeRating]);
 
   async function submitAdjustment() {

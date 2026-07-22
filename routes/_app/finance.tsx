@@ -261,12 +261,12 @@ function FinancePage() {
                       <td className="p-3 font-medium">{a.employee_name}</td>
                       <td className="p-3 text-end font-semibold">{fmtMoney(a.amount)}</td>
                       <td className="p-3 text-muted-foreground">{a.reason || "—"}</td>
-                      <td className="p-3"><AdvanceStatus s={a.status} /></td>
+                      <td className="p-3"><AdvanceStatus s={a.status} t={t} /></td>
                       {isOwner && <td className="p-3">
                         {a.status === "pending" ? (
                           <div className="flex gap-2">
-                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load)}><Check className="w-4 h-4 ms-1" />{t("finance.approve", "اعتماد")}</Button>
-                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load)}><X className="w-4 h-4 ms-1" />{t("finance.reject", "رفض")}</Button>
+                            <Button size="sm" onClick={() => decide(a.id, "approved", user?.id, load, t)}><Check className="w-4 h-4 ms-1" />{t("finance.approve", "اعتماد")}</Button>
+                            <Button size="sm" variant="outline" onClick={() => decide(a.id, "rejected", user?.id, load, t)}><X className="w-4 h-4 ms-1" />{t("finance.reject", "رفض")}</Button>
                           </div>
                         ) : <span className="text-xs text-muted-foreground">{fmtDate(a.decided_at)}</span>}
                       </td>}
@@ -291,7 +291,7 @@ function FinancePage() {
   );
 }
 
-async function decide(id: string, status: "approved"|"rejected", uid: string|undefined, reload: () => void) {
+async function decide(id: string, status: "approved"|"rejected", uid: string|undefined, reload: () => void, t: any) {
   const { error } = await supabase.from("employee_requests").update({ status, decided_by: uid, decided_at: new Date().toISOString() }).eq("id", id);
   if (error) toast.error(error.message);
   else { toast.success(status === "approved" ? t("finance.toastApproved", "تمت الموافقة") : t("finance.toastRejected", "تم الرفض")); reload(); }
@@ -305,7 +305,7 @@ function Stat({ title, value }: { title: string; value: string }) {
   return <div className="p-4 rounded-lg border"><div className="text-xs text-muted-foreground">{title}</div><div className="text-lg font-bold mt-1">{value}</div></div>;
 }
 function Spinner() { return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin" /></div>; }
-function AdvanceStatus({ s }: { s: string }) {
+function AdvanceStatus({ s, t }: { s: string, t: any }) {
   if (s === "pending") return <Badge variant="secondary">{t("finance.pendingReview")}</Badge>;
   if (s === "approved") return <Badge className="bg-emerald-600">{t("finance.approved")}</Badge>;
   return <Badge variant="destructive">{t("finance.rejected")}</Badge>;

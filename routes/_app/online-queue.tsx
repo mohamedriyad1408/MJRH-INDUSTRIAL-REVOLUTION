@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { fmtDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
-export const Route = createFileRoute("/_app/online-queue")({
+export const Route = createFileRoute("/_app/online-queue" as any)({
   component: OnlineQueuePage,
 });
 
