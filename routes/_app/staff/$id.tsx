@@ -20,6 +20,9 @@ export const Route = createFileRoute("/_app/staff/$id")({
   component: StaffDetailPage,
 });
 
+type Employee = any;
+type Schedule = { id?: string; day_of_week: number; start_time: string | null; end_time: string | null; is_off: boolean };
+
 function StaffDetailPage() {
   const { t, dir } = useI18n();
   const DAYS = [

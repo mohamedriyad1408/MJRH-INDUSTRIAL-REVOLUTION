@@ -78,39 +78,7 @@ function SearchResultsPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<number | null>(null);
 
-  // Mark search as open to prevent motivational popups
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.body.setAttribute("data-search-open", "true");
-      return () => {
-        document.body.removeAttribute("data-search-open");
-      };
-    }
-  }, []);
-
-  // Initialize query from URL and listen to topbar updates
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const q = new URLSearchParams(window.location.search).get("q") || "";
-      if (q && q !== query) {
-        setQuery(q);
-        performSearch(q);
-      } else if (!q) {
-        // If empty, load recent orders/customers as default browse
-        loadInitialBrowse();
-      }
-
-      const handleCustomUpdate = (e: any) => {
-        const val = e.detail ?? "";
-        setQuery(val);
-        performSearch(val);
-      };
-      window.addEventListener("mjrh-search-update", handleCustomUpdate);
-      return () => window.removeEventListener("mjrh-search-update", handleCustomUpdate);
-    }
-  }, [tenantId]);
-
-  const loadInitialBrowse = async () => {
+  const loadInitialBrowse = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -134,14 +102,12 @@ function SearchResultsPage() {
       const [oRes, cRes] = await Promise.all([oPromise, cPromise]);
       if (oRes.data) setOrders(oRes.data as any);
       if (cRes.data) setCustomers(cRes.data as any);
-      setPieces([]);
-      setFinancials([]);
     } catch (err: any) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId]);
 
   const performSearch = useCallback(async (qString: string) => {
     const clean = qString.trim();
@@ -157,129 +123,47 @@ function SearchResultsPage() {
       const isNum = !isNaN(Number(clean));
       const numVal = Number(clean);
 
-      const oJobs: Promise<any>[] = [];
-      const cJobs: Promise<any>[] = [];
-      const pJobs: Promise<any>[] = [];
-      const fJobs: Promise<any>[] = [];
+      const oPromise = supabase.from("orders").select("id, order_number, status, total, created_at, notes, customers(full_name, phone)").or(`order_number.eq.${isNum ? numVal : -1},id.ilike.${esc}%`).limit(20);
+      const cPromise = supabase.from("customers").select("id, full_name, phone, address, notes, created_at").or(`full_name.ilike.%${esc}%,phone.ilike.%${esc.replace(/\s+/g, "")}%`).limit(30);
+      const pPromise = supabase.from("service_units").select("id, order_id, name, current_stage, status, created_at, orders!inner(tenant_id, order_number, customers(full_name, phone))").or(`id.ilike.${esc}%,name.ilike.%${esc}%`).limit(30);
 
-      // 1. Orders
-      if (isNum) {
-        let q = supabase.from("orders").select("id, order_number, status, total, created_at, notes, customers(full_name, phone)").eq("order_number", numVal).limit(20);
-        if (tenantId) q = q.eq("tenant_id", tenantId);
-        oJobs.push(q);
-      }
-      {
-        let q1 = supabase.from("orders").select("id, order_number, status, total, created_at, notes, customers(full_name, phone)").ilike("id", `${esc}%`).limit(20);
-        if (tenantId) q1 = q1.eq("tenant_id", tenantId);
-        oJobs.push(q1);
+      if (tenantId) {
+        oPromise.eq("tenant_id", tenantId);
+        cPromise.eq("tenant_id", tenantId);
       }
 
-      // 2. Customers
-      {
-        let q1 = supabase.from("customers").select("id, full_name, phone, address, notes, created_at").ilike("full_name", `%${esc}%`).limit(30);
-        let q2 = supabase.from("customers").select("id, full_name, phone, address, notes, created_at").ilike("phone", `%${esc.replace(/\s+/g, "")}%`).limit(30);
-        if (tenantId) {
-          q1 = q1.eq("tenant_id", tenantId);
-          q2 = q2.eq("tenant_id", tenantId);
-        }
-        cJobs.push(q1, q2);
-      }
-
-      // 3. Pieces / Service Units
-      {
-        let q1 = supabase.from("service_units").select("id, order_id, name, current_stage, status, created_at, orders!inner(tenant_id, order_number, customers(full_name, phone))").ilike("id", `${esc}%`).limit(30);
-        let q2 = supabase.from("service_units").select("id, order_id, name, current_stage, status, created_at, orders!inner(tenant_id, order_number, customers(full_name, phone))").ilike("name", `%${esc}%`).limit(30);
-        if (tenantId) {
-          q1 = q1.eq("orders.tenant_id", tenantId);
-          q2 = q2.eq("orders.tenant_id", tenantId);
-        }
-        pJobs.push(q1, q2);
-      }
-
-      // 4. Financial Ledgers
-      if (isNum) {
-        let q1 = supabase.from("customer_financial_ledger").select("id, amount, transaction_type, description, created_at, customers(full_name, phone)").eq("amount", numVal).limit(20);
-        if (tenantId) q1 = q1.eq("tenant_id", tenantId);
-        fJobs.push(q1);
-      }
-      {
-        let q2 = supabase.from("customer_financial_ledger").select("id, amount, transaction_type, description, created_at, customers(full_name, phone)").ilike("description", `%${esc}%`).limit(20);
-        if (tenantId) q2 = q2.eq("tenant_id", tenantId);
-        fJobs.push(q2);
-      }
-
-      const [oRes, cRes, pRes, fRes] = await Promise.all([
-        Promise.allSettled(oJobs),
-        Promise.allSettled(cJobs),
-        Promise.allSettled(pJobs),
-        Promise.allSettled(fJobs),
-      ]);
-
-      // Deduplicate orders
-      const oMap = new Map<string, OrderMatch>();
-      oRes.forEach((res) => {
-        if (res.status === "fulfilled" && res.value.data) {
-          res.value.data.forEach((item: any) => oMap.set(item.id, item));
-        }
-      });
-      setOrders(Array.from(oMap.values()));
-
-      // Deduplicate customers
-      const cMap = new Map<string, CustomerMatch>();
-      cRes.forEach((res) => {
-        if (res.status === "fulfilled" && res.value.data) {
-          res.value.data.forEach((item: any) => cMap.set(item.id, item));
-        }
-      });
-      setCustomers(Array.from(cMap.values()));
-
-      // Deduplicate pieces
-      const pMap = new Map<string, PieceMatch>();
-      pRes.forEach((res) => {
-        if (res.status === "fulfilled" && res.value.data) {
-          res.value.data.forEach((item: any) => pMap.set(item.id, item));
-        }
-      });
-      setPieces(Array.from(pMap.values()));
-
-      // Deduplicate finance
-      const fMap = new Map<string, FinanceMatch>();
-      fRes.forEach((res) => {
-        if (res.status === "fulfilled" && res.value.data) {
-          res.value.data.forEach((item: any) => fMap.set(item.id, item));
-        }
-      });
-      setFinancials(Array.from(fMap.values()));
-
+      const [oRes, cRes, pRes] = await Promise.all([oPromise, cPromise, pPromise]);
+      if (oRes.data) setOrders(oRes.data as any);
+      if (cRes.data) setCustomers(cRes.data as any);
+      if (pRes.data) setPieces(pRes.data as any);
     } catch (err: any) {
       setError(err?.message || String(err));
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, loadInitialBrowse]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("q") || "";
+      if (q) {
+        setQuery(q);
+        performSearch(q);
+      } else {
+        loadInitialBrowse();
+      }
+    }
+  }, [tenantId, performSearch, loadInitialBrowse]);
 
   const handleInputChange = (v: string) => {
     setQuery(v);
-    if (typeof window !== "undefined") {
-      window.history.replaceState({}, "", `/search${v.trim() ? `?q=${encodeURIComponent(v.trim())}` : ""}`);
-    }
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => performSearch(v), 250);
   };
 
-  const handleExampleClick = (ex: string) => {
-    setQuery(ex);
-    if (typeof window !== "undefined") {
-      window.history.replaceState({}, "", `/search?q=${encodeURIComponent(ex)}`);
-    }
-    performSearch(ex);
-  };
-
   const totalCount = orders.length + customers.length + pieces.length + financials.length;
 
-  const translateStatus = (st: string) => {
-    return t(`common.status.order.${st}`, st);
-  };
+  const translateStatus = (st: string) => t(`common.status.order.${st}`, st);
 
   const getStatusColor = (st: string) => {
     if (["delivered", "ready", "completed"].includes(st)) return "bg-emerald-100 text-emerald-800 border-emerald-300";
@@ -291,7 +175,6 @@ function SearchResultsPage() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16" dir={dir}>
-      {/* Page Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold">
@@ -305,17 +188,10 @@ function SearchResultsPage() {
             {t("search.subtitle")}
           </p>
         </div>
-
         <div className="flex items-center gap-2">
-          {!tenantId && (
-            <div className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{t("search.demoMode")}</span>
-            </div>
-          )}
           <Button variant="outline" size="sm" onClick={() => performSearch(query)} disabled={loading} className="font-bold">
             {loading ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}
-            {t("common.refresh", "تحديث")}
+            {t("common.refresh")}
           </Button>
         </div>
       </div>
@@ -330,7 +206,6 @@ function SearchResultsPage() {
               onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && performSearch(query)}
               placeholder={t("search.inputPlaceholder")}
-              autoFocus
               className={`h-14 md:h-16 w-full text-base md:text-lg rounded-2xl bg-white border-2 border-slate-300 focus:border-teal-600 focus:ring-4 focus:ring-teal-500/15 ${dir === 'rtl' ? 'pr-14 pl-28' : 'pl-14 pr-28'} shadow-sm font-semibold text-slate-900 transition`}
             />
             <Button
@@ -338,7 +213,7 @@ function SearchResultsPage() {
               disabled={loading}
               className={`absolute ${dir === 'rtl' ? 'left-2' : 'right-2'} top-2 bottom-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-5 font-bold shadow-md`}
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="flex items-center gap-1.5"><Search className="w-4 h-4" /> <span className="hidden sm:inline">{t("search.btnSearch")}</span></span>}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
             </Button>
           </div>
         </CardContent>
@@ -374,7 +249,6 @@ function SearchResultsPage() {
 
       {!loading && totalCount > 0 && (
         <div className="space-y-10">
-          {/* ORDERS */}
           {(activeTab === "all" || activeTab === "orders") && orders.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 font-black text-lg text-slate-900">
@@ -383,7 +257,7 @@ function SearchResultsPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {orders.map((o) => (
-                  <Card key={o.id} className="border border-slate-200 hover:border-teal-300 rounded-2xl bg-white">
+                  <Card key={o.id} className="border border-slate-200 hover:border-teal-300 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
                     <CardContent className="p-5 flex flex-col justify-between h-full space-y-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
@@ -402,7 +276,7 @@ function SearchResultsPage() {
               </div>
             </div>
           )}
-          {/* CUSTOMERS */}
+
           {(activeTab === "all" || activeTab === "customers") && customers.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 font-black text-lg text-slate-900">
@@ -411,7 +285,7 @@ function SearchResultsPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {customers.map((c) => (
-                  <Card key={c.id} className="border border-slate-200 rounded-2xl bg-white">
+                  <Card key={c.id} className="border border-slate-200 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
                     <CardContent className="p-4 space-y-3">
                       <div className="font-black text-base truncate">{c.full_name}</div>
                       <div className="text-sm font-extrabold text-indigo-700 font-mono" dir="ltr">{c.phone}</div>

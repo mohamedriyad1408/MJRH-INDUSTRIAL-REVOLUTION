@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Calculator, Landmark, WalletCards, Receipt, Users, Loader2, Plus, CheckCircle2, RefreshCw } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { interpolate, useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_app/accounting")({
   head: () => ({ meta: [{ title: "Accounting - MJRH" }] }),
@@ -77,7 +77,7 @@ function AccountingPage() {
     if ((!data || data.length === 0) && tenantId && branchId === "all") {
       const ins = await supabase.from("cash_accounts").insert({
         tenant_id: tenantId,
-        name: t("cash.mainSafe", "الخزنة الرئيسية"),
+        name: t("accounting.cash.mainSafe", "الخزنة الرئيسية"),
         account_type: "cash",
         opening_balance: 0,
         current_balance: 0,
@@ -95,7 +95,7 @@ function AccountingPage() {
     if (!canUse) { setLoading(false); return; }
     if (!tenantId) {
       setLoading(false);
-      setLoadErrors([t("error.noTenant", "لم يتم تحديد مغسلة للحساب الحالي. سجل خروج ثم دخول، أو راجع دور المستخدم من لوحة الإدارة.")]);
+      setLoadErrors([t("accounting.error.noTenant")]);
       return;
     }
     setLoading(true);
@@ -168,25 +168,20 @@ function AccountingPage() {
       if (insErr) return toast.error(insErr.message || rpc.error.message);
       createdCashAccountId = account?.id ?? null;
       if (opening > 0 && account?.id) {
-        const tx = await supabase.from("cash_transactions").insert({
+        await supabase.from("cash_transactions").insert({
           tenant_id: tenantId,
           cash_account_id: account.id,
           direction: "in",
           amount: opening,
-          description: `رصيد افتتاحي: ${cashForm.name.trim()}`,
-          source_type: "cash_opening_balance",
-          source_id: account.id,
-          created_by: user?.id,
+          description: t("accounting.cash.openingBalance") + ": " + cashForm.name.trim(),
+          source_type: "manual",
         });
-        if (tx.error) await supabase.from("cash_accounts").update({ current_balance: opening }).eq("id", account.id);
       }
-      toast.success("تم إضافة الحساب. وسيتم ترحيل القيد المحاسبي تلقائيًا بعد تحديث قاعدة البيانات.");
     } else {
-      createdCashAccountId = rpc.data ?? null;
-      if (rpc.data && selectedBranchId) await supabase.from("cash_accounts").update({ branch_id: selectedBranchId }).eq("id", rpc.data);
-      toast.success(t("accounting.toast.addedSuccess"));
+      createdCashAccountId = (rpc.data as any)?.id || null;
     }
-    await supabase.rpc("record_operation_event", { _process_key: "cash_account_created", _process_name: t("accounting.cash.addSafe", "إضافة خزنة أو حساب"), _source_type: "cash_account", _source_id: createdCashAccountId, _branch_id: selectedBranchId || null, _cash_account_id: createdCashAccountId, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, name: cashForm.name.trim(), opening_balance: opening, account_type: cashForm.account_type }, _output: { cash_impact: opening > 0, journal_required: opening > 0, appears_in_report: true } }).then(() => null);
+    await supabase.rpc("record_operation_event", { _process_key: "cash_account_created", _process_name: t("accounting.cash.addSafe"), _source_type: "cash_account", _source_id: createdCashAccountId, _branch_id: selectedBranchId || null, _cash_account_id: createdCashAccountId, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, name: cashForm.name.trim(), opening_balance: opening, account_type: cashForm.account_type }, _output: { cash_impact: opening > 0, journal_required: opening > 0, appears_in_report: true } }).then(() => null);
+    toast.success(createdCashAccountId ? t("accounting.toast.addedSuccess") : t("accounting.toast.addedFallback"));
     setCashForm({ name: "", account_type: "cash", opening_balance: "0", branch_id: selectedBranchId || "" });
     load();
   }
@@ -194,12 +189,13 @@ function AccountingPage() {
   async function addCashTx() {
     if (!tenantId) return toast.error(t("accounting.error.noTenantSimple"));
     if (!txForm.cash_account_id) return toast.error(t("accounting.error.noSafeSelected"));
-    if (!Number(txForm.amount)) return toast.error("اكتب مبلغ صحيح");
+    const amount = Number(txForm.amount);
+    if (!amount || amount <= 0) return toast.error(t("accounting.error.invalidAmount"));
     const account = cashAccounts.find((c) => c.id === txForm.cash_account_id);
     const { data: tx, error } = await supabase.from("cash_transactions").insert({
-      tenant_id: tenantId, cash_account_id: txForm.cash_account_id, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية", source_type: "manual_cash_transaction", created_by: user?.id,
+      tenant_id: tenantId, cash_account_id: txForm.cash_account_id, direction: txForm.direction, amount: amount, description: txForm.description || t("accounting.cash.manualTx"), source_type: "manual_cash_transaction", created_by: user?.id,
     }).select("id").single();
-    if (!error && tx?.id) await supabase.rpc("record_operation_event", { _process_key: "manual_cash_transaction", _process_name: t("accounting.manualTxName"), _source_type: "manual_cash_transaction", _source_id: tx.id, _branch_id: account?.branch_id ?? null, _cash_account_id: txForm.cash_account_id, _report_bucket: "accounting/ledger", _requires_notification: false, _data: { tenant_id: tenantId, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || "حركة يدوية" }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
+    if (!error && tx?.id) await supabase.rpc("record_operation_event", { _process_key: "manual_cash_transaction", _process_name: t("accounting.manualTxName"), _source_type: "manual_cash_transaction", _source_id: tx.id, _branch_id: account?.branch_id ?? null, _cash_account_id: txForm.cash_account_id, _report_bucket: "accounting/ledger", _requires_notification: false, _data: { tenant_id: tenantId, direction: txForm.direction, amount: Number(txForm.amount), description: txForm.description || t("accounting.cash.manualTx") }, _output: { cash_impact: true, journal_required: true, appears_in_report: true } }).then(() => null);
     if (error) toast.error(error.message); else { toast.success(t("accounting.toast.txRecorded")); setTxForm({ cash_account_id: "", direction: "in", amount: "0", description: "" }); load(); }
   }
 
@@ -209,15 +205,16 @@ function AccountingPage() {
     if (transferForm.from_cash_account_id === transferForm.to_cash_account_id) return toast.error(t("accounting.error.sameSafe"));
     const amount = Number(transferForm.amount || 0);
     if (amount <= 0) return toast.error(t("accounting.error.invalidTransferAmount"));
-    const { error } = await supabase.rpc("transfer_cash_between_accounts", {
-      _from_cash_account_id: transferForm.from_cash_account_id,
-      _to_cash_account_id: transferForm.to_cash_account_id,
-      _amount: amount,
-      _notes: transferForm.notes || null,
-    });
-    if (error) return toast.error(error.message);
     const fromAccount = cashAccounts.find((c) => c.id === transferForm.from_cash_account_id);
     const toAccount = cashAccounts.find((c) => c.id === transferForm.to_cash_account_id);
+    const { error } = await supabase.rpc("transfer_cash_between_accounts", {
+      _from_id: transferForm.from_cash_account_id,
+      _to_id: transferForm.to_cash_account_id,
+      _amount: amount,
+      _notes: transferForm.notes.trim() || t("accounting.cash.internalTransfer"),
+    });
+
+    if (error) return toast.error(error.message);
     await supabase.rpc("record_operation_event", { _process_key: "cash_transfer", _process_name: t("accounting.transferTxName"), _source_type: "cash_transfer", _source_id: null, _branch_id: fromAccount?.branch_id ?? toAccount?.branch_id ?? null, _cash_account_id: transferForm.from_cash_account_id, _report_bucket: "accounting/cash", _requires_notification: false, _data: { tenant_id: tenantId, from_cash_account_id: transferForm.from_cash_account_id, to_cash_account_id: transferForm.to_cash_account_id, amount, notes: transferForm.notes || null }, _output: { cash_impact: true, journal_required: true, appears_in_report: true, not_income_or_expense: true } }).then(() => null);
     toast.success(t("accounting.toast.transferSuccess"));
     setTransferForm({ from_cash_account_id: "", to_cash_account_id: "", amount: "0", notes: "" });
@@ -229,8 +226,8 @@ function AccountingPage() {
     try {
       const errs: string[] = [];
       const r1 = await supabase.rpc("ensure_default_cash_account_for", { _tenant_id: tenantId }); if (r1.error) errs.push(r1.error.message);
-      const r2 = await supabase.rpc("repair_cash_account_balances"); if (r2.error) errs.push(r2.error.message);
-      const r3 = await supabase.rpc("sync_manual_cash_transactions_journals"); if (r3.error) errs.push(r3.error.message);
+      const r2 = await supabase.rpc("repair_tenant_cash_balances", { _tenant_id: tenantId }); if (r2.error) errs.push(r2.error.message);
+      const r3 = await supabase.rpc("repair_cash_closing_discrepancies", { _tenant_id: tenantId }); if (r3.error) errs.push(r3.error.message);
       if (errs.length) toast.error(errs.join(" | ")); else toast.success(t("accounting.toast.repairSuccess"));
       await load();
     } finally {
@@ -239,19 +236,14 @@ function AccountingPage() {
   }
 
   async function syncApprovedAdvances() {
-    const ensured = cashAccounts.length ? cashAccounts : await ensureCashAccount();
-    const mainCash = ensured[0]?.id;
-    if (!mainCash) return toast.error(t("accounting.error.repairFailed"));
-    const { data: adv, error } = await supabase
-      .from("employee_requests")
-      .select("id,employee_id,amount,reason,created_at,employees(full_name)")
-      .eq("type", "advance").eq("status", "approved")
-      .gte("created_at", bounds.fromIso).lte("created_at", bounds.toIso);
+    const { data: adv, error } = await supabase.from("employee_requests").select("*,employees(full_name)").eq("type", "advance").eq("status", "approved").gte("created_at", bounds.fromIso).lte("created_at", bounds.toIso);
     if (error) return toast.error(error.message);
     let created = 0;
+    const ensured = cashAccounts.length ? cashAccounts : await ensureCashAccount();
+    const mainCash = ensured[0]?.id;
     for (const a of adv ?? []) {
-      const amount = Number(a.amount ?? 0); if (!amount) continue;
-      const desc = `سلفة موظف: ${a.employees?.full_name ?? "موظف"}`;
+      const amount = Number(a.amount ?? 0); if (!amount || !mainCash) continue;
+      const desc = t("accounting.ledger.entry.advance") + ": " + (a.employees?.full_name ?? "");
       const { data: exp, error: eErr } = await supabase.from("expenses").upsert({
         tenant_id: tenantId, branch_id: ensured[0]?.branch_id ?? null, cash_account_id: mainCash, category: "salaries", amount, description: desc, spent_at: a.created_at, status: "paid", employee_id: a.employee_id, source_type: "employee_advance", source_id: a.id, paid_at: a.created_at, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
@@ -262,14 +254,14 @@ function AccountingPage() {
         if (exp) created++;
       }
     }
-    toast.success(`تمت مزامنة ${created} سلفة كمصروف وحركة خزنة`);
+    toast.success(interpolate(t("accounting.toast.advancesSynced"), { count: created }));
     load();
   }
 
   async function generatePayroll() {
     const { data, error } = await supabase.rpc("sync_monthly_payroll_payables", { _month: bounds.start });
     if (error) return toast.error(error.message);
-    toast.success(`تم توليد مسير الرواتب: ${data?.employees_count ?? 0} موظف`);
+    toast.success(interpolate(t("accounting.toast.payrollGenerated"), { count: data?.employees_count ?? 0 }));
     load();
   }
 
@@ -277,16 +269,16 @@ function AccountingPage() {
     const periodLines = lines.filter((l) => l.payroll_period_id === periodId);
     for (const l of periodLines) {
       const gross = Number(l.gross_pay ?? 0); if (!gross) continue;
-      const desc = `استحقاق راتب ${l.employees?.full_name ?? "موظف"} عن ${l.payroll_periods?.period_start}`;
+      const desc = t("accounting.ledger.entry.salary_accrual") + " " + (l.employees?.full_name ?? "") + " " + t("common.for") + " " + (l.payroll_periods?.period_start ?? "");
       const { data: exp } = await supabase.from("expenses").upsert({
         tenant_id: tenantId, category: "salaries", amount: gross, description: desc, spent_at: bounds.toIso, status: "payable", employee_id: l.employee_id, source_type: "payroll_line", source_id: l.id, due_at: bounds.toIso, created_by: user?.id,
       }, { onConflict: "tenant_id,source_type,source_id" }).select("id").single();
       await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "salary_accrual", amount: gross, direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: desc, created_by: user?.id }).then(() => null);
       if (Number(l.advances_deducted ?? 0) > 0) {
-        await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: t("accounting.ledger.entry.advance_deduction", "خصم سلفة"), created_by: user?.id }).then(() => null);
+        await supabase.from("employee_financial_ledger").insert({ tenant_id: tenantId, employee_id: l.employee_id, entry_type: "advance_deduction", amount: Number(l.advances_deducted), direction: "employee_due", source_type: "payroll_line", source_id: l.id, description: t("accounting.ledger.entry.advance_deduction"), created_by: user?.id }).then(() => null);
       }
       await supabase.from("payroll_lines").update({ status: "posted", expense_id: exp?.id ?? l.expense_id }).eq("id", l.id);
-      await supabase.rpc("record_operation_event", { _process_key: "payroll_posted", _process_name: t("accounting.process.payrollAccrual", "اعتماد راتب كمصروف آجل"), _source_type: "payroll_line", _source_id: l.id, _branch_id: l.employees?.branch_id ?? null, _cash_account_id: null, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, gross }, _output: { cash_impact: false, journal_required: true, appears_in_report: true } }).then(() => null);
+      await supabase.rpc("record_operation_event", { _process_key: "payroll_posted", _process_name: t("accounting.process.payrollAccrual"), _source_type: "payroll_line", _source_id: l.id, _branch_id: l.employees?.branch_id ?? null, _cash_account_id: null, _report_bucket: "accounting/payroll", _requires_notification: false, _data: { tenant_id: tenantId, employee_id: l.employee_id, gross }, _output: { cash_impact: false, journal_required: true, appears_in_report: true } }).then(() => null);
     }
     await supabase.from("payroll_periods").update({ status: "posted", posted_at: new Date().toISOString() }).eq("id", periodId);
     toast.success(t("accounting.toast.payrollPosted"));
@@ -300,7 +292,7 @@ function AccountingPage() {
     const periodLines = lines.filter((l) => l.payroll_period_id === periodId);
     for (const l of periodLines) {
       const net = Number(l.net_pay ?? 0); if (!net) continue;
-      const desc = `صرف راتب ${l.employees?.full_name ?? "موظف"}`;
+      const desc = t("accounting.ledger.entry.salary_payment") + " " + (l.employees?.full_name ?? "");
       const { data: tx, error } = await supabase.from("cash_transactions").insert({ tenant_id: tenantId, cash_account_id: mainCash, direction: "out", amount: net, description: desc, source_type: "payroll_payment", source_id: l.id, created_by: user?.id }).select("id").single();
       if (!error) {
         if (l.expense_id) await supabase.from("expenses").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", l.expense_id);
@@ -317,35 +309,23 @@ function AccountingPage() {
   if (!canUse) return <Card><CardContent className="p-10 text-center text-muted-foreground">{t("accounting.noAccess")}</CardContent></Card>;
 
   return <div className="space-y-5" dir={dir}>
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h1 className="text-2xl font-black flex items-center gap-2"><Calculator className="w-7 h-7 text-teal-600" />{t("accounting.title")}</h1><p className="text-sm text-muted-foreground">{t("accounting.subtitle")}</p></div>
-      <div className="flex gap-2"><Select value={branchId} onValueChange={setBranchId}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">{t("common.allBranches")}</SelectItem>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select><Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} /><Button variant="outline" onClick={load}>{t("common.refresh")}</Button></div>
-    </div>
+    <Card className="border-teal-200 bg-teal-50"><CardContent className="p-4 text-sm text-teal-900">{t("accounting.loadErrorTitle")}</CardContent></Card>
+    {loadErrors.map((e, i) => <div key={i} className="bg-red-50 text-red-700 p-2 rounded-xl text-xs">{e}</div>)}
+    {(!loading && !cashAccounts.length && tenantId) && <Card className="border-amber-200 bg-amber-50">
+      <CardHeader><CardTitle className="text-base">{t("accounting.noSafeTitle")}</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <div>{t("accounting.noSafeSubtitle")}</div>
+        <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}{t("accounting.btn.repairNow")}</Button>
+        <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Plus className="w-4 h-4 ms-1" />}{t("accounting.btn.repairMainSafe")}</Button>
+      </CardContent>
+    </Card>}
+
     <div className="grid md:grid-cols-4 gap-3">
-      <Kpi label={t("accounting.kpi.safes")} value={fmtMoney(kpis.cash, t("common.egp"))} icon={<Landmark />} />
-      <Kpi label={t("accounting.kpi.paidExpenses")} value={fmtMoney(kpis.paid, t("common.egp"))} icon={<Receipt />} />
-      <Kpi label={t("accounting.kpi.payableExpenses")} value={fmtMoney(kpis.payable, t("common.egp"))} icon={<WalletCards />} warn />
-      <Kpi label={t("accounting.kpi.payrollDue")} value={fmtMoney(kpis.payrollDue, t("common.egp"))} icon={<Users />} warn={kpis.payrollDue > 0} />
+      <Kpi label={t("accounting.kpi.safes")} value={fmtMoney(kpis.cash, t("common.egp"))} icon={<Landmark className="w-4 h-4" />} />
+      <Kpi label={t("accounting.kpi.paidExpenses")} value={fmtMoney(kpis.paid, t("common.egp"))} icon={<WalletCards className="w-4 h-4" />} />
+      <Kpi label={t("accounting.kpi.payableExpenses")} value={fmtMoney(kpis.payable, t("common.egp"))} icon={<Receipt className="w-4 h-4" />} warn={kpis.payable > 0} />
+      <Kpi label={t("accounting.kpi.payrollDue")} value={fmtMoney(kpis.payrollDue, t("common.egp"))} icon={<Users className="w-4 h-4" />} warn={kpis.payrollDue > 0} />
     </div>
-
-    {!loading && <Card className="border-teal-200 bg-teal-50/60"><CardContent className="p-4 text-sm text-teal-900 space-y-1">
-      <div className="font-black">{t("accounting.guide.title")}</div>
-      <div>{t("accounting.guide.step1")}</div>
-      <div>{t("accounting.guide.step2")}</div>
-      <div>{t("accounting.guide.step3")}</div>
-    </CardContent></Card>}
-
-    {!loading && loadErrors.length > 0 && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-sm text-red-900 space-y-2">
-      <div className="font-black">{t("accounting.loadErrorTitle")}</div>
-      {loadErrors.map((e, i) => <div key={i} className="rounded-lg bg-white/70 border border-red-100 px-3 py-2 text-xs break-words">{e}</div>)}
-      <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <RefreshCw className="w-4 h-4 ms-1" />}t("accounting.btn.repairNow", "إصلاح وقراءة الخزنة الآن")</Button>
-    </CardContent></Card>}
-
-    {!loading && cashAccounts.length === 0 && <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 text-sm text-amber-900 space-y-2">
-      <div className="font-black">{t("accounting.noSafeTitle")}</div>
-      <div>اضغط الزر التالي لإنشاء الخزنة الرئيسية تلقائيًا، أو أضف خزنة من تبويب الخزنة واكتب الرصيد الموجود الآن.</div>
-      <Button size="sm" onClick={repairCashNow} disabled={fixingCash}>{fixingCash ? <Loader2 className="w-4 h-4 animate-spin ms-1" /> : <Plus className="w-4 h-4 ms-1" />}t("accounting.btn.repairMainSafe", "إنشاء/إصلاح الخزنة الرئيسية")</Button>
-    </CardContent></Card>}
 
     {loading ? <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-teal-600" /></div> : <Tabs defaultValue="payroll" className="space-y-4">
       <TabsList>
@@ -359,21 +339,21 @@ function AccountingPage() {
         <div className="flex flex-wrap gap-2"><Button onClick={generatePayroll}><RefreshCw className="w-4 h-4 ms-1" />{t("accounting.btn.generatePayroll")}</Button><Button variant="outline" onClick={syncApprovedAdvances}>{t("accounting.btn.syncAdvances")}</Button></div>
         <div className="grid md:grid-cols-2 gap-3">
           {periods.map((p) => <Card key={p.id}><CardHeader><CardTitle className="text-base flex items-center justify-between"><span>{p.period_start} → {p.period_end}</span><Status s={p.status} t={t} /></CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="grid grid-cols-3 gap-2"><Mini label={t("accounting.payroll.salary")} value={fmtMoney(p.gross_total, t("common.egp"))} /><Mini label={t("accounting.payroll.advances")} value={fmtMoney(p.advances_total, t("common.egp"))} /><Mini label={t("accounting.payroll.net")} value={fmtMoney(p.net_total, t("common.egp"))} /></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => postPayroll(p.id)} disabled={p.status !== "draft"}>{t("accounting.btn.postPayroll")}</Button><Button size="sm" onClick={() => payPayroll(p.id)} disabled={p.status === "paid" || p.status === "draft"}><CheckCircle2 className="w-4 h-4 ms-1" />{t("accounting.btn.payPayroll")}</Button></div></CardContent></Card>)}
-          {!periods.length && <Empty text="لم يتم توليد أي مسير رواتب بعد" />}
+          {!periods.length && <Empty text={t("accounting.payroll.empty")} />}
         </div>
         <Card><CardHeader><CardTitle className="text-base">{t("accounting.payroll.itemsTitle")}</CardTitle></CardHeader><CardContent className="p-0 overflow-x-auto"><PayrollTable rows={lines} t={t} /></CardContent></Card>
       </TabsContent>
 
       <TabsContent value="cash" className="grid lg:grid-cols-[360px_1fr] gap-4">
-        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base"><Plus className="w-4 h-4 inline ms-1" />{t("accounting.cash.addSafe", "إضافة خزنة أو حساب")}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-blue-50 border border-blue-100 p-2 text-xs text-blue-800">{t("accounting.cash.addSafeGuide", "اكتب اسم الخزنة والفلوس الموجودة فيها الآن. النظام سيضيفها للرصيد ويسجل قيد افتتاحي تلقائيًا.")}</div><Field label={t("common.name", "الاسم")}><Input value={cashForm.name} onChange={(e) => setCashForm({ ...cashForm, name: e.target.value })} /></Field><Field label={t("common.branch", "الفرع")}><Select value={cashForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setCashForm({ ...cashForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("accounting.error.noBranch", "اختار الفرع")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field><Field label={t("common.type", "النوع")}><Select value={cashForm.account_type} onValueChange={(v) => setCashForm({ ...cashForm, account_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">{t("accounting.account.type.cash", "خزنة نقدية")}</SelectItem><SelectItem value="bank">{t("accounting.account.type.bank", "بنك")}</SelectItem><SelectItem value="wallet">{t("accounting.account.type.wallet", "محفظة")}</SelectItem><SelectItem value="instapay">InstaPay</SelectItem></SelectContent></Select></Field><Field label={t("accounting.cash.currentMoney", "الفلوس الموجودة الآن")}><Input type="number" value={cashForm.opening_balance} onChange={(e) => setCashForm({ ...cashForm, opening_balance: e.target.value })} /></Field><Button onClick={addCashAccount} className="w-full">{t("common.add", "إضافة")}</Button></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">{t("accounting.cash.manualTx", "حركة يدوية")}</CardTitle></CardHeader><CardContent className="space-y-3"><Field label={t("accounting.cash.account", "الحساب")}><Select value={txForm.cash_account_id} onValueChange={(v) => setTxForm({ ...txForm, cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open", "اختار")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""}</SelectItem>)}</SelectContent></Select></Field><div className="grid grid-cols-2 gap-2"><Field label={t("common.type", "النوع")}><Select value={txForm.direction} onValueChange={(v) => setTxForm({ ...txForm, direction: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in">{t("common.in", "داخل")}</SelectItem><SelectItem value="out">{t("common.out", "خارج")}</SelectItem></SelectContent></Select></Field><Field label={t("common.amount", "المبلغ")}><Input type="number" value={txForm.amount} onChange={(e) => setTxForm({ ...txForm, amount: e.target.value })} /></Field></div><Textarea placeholder={t("common.description", "البيان")} value={txForm.description} onChange={(e) => setTxForm({ ...txForm, description: e.target.value })} /><Button onClick={addCashTx} className="w-full">{t("common.record", "تسجيل")}</Button></CardContent></Card>
-        <Card className="border-teal-200"><CardHeader><CardTitle className="text-base">{t("accounting.cash.transferTitle", "تحويل بين الخزن")}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-teal-50 border border-teal-100 p-2 text-xs text-teal-800">{t("accounting.cash.transferGuide", "استخدمها لما خزنة تكون بالسالب وخزنة أخرى فيها رصيد. التحويل لا يزود إيرادات ولا مصروفات.")}</div><Field label={t("accounting.cash.fromSafe", "من خزنة")}><Select value={transferForm.from_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, from_cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open", "اختار")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label={t("accounting.cash.toSafe", "إلى خزنة")}><Select value={transferForm.to_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, to_cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open", "اختار")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label={t("common.amount", "المبلغ")}><Input type="number" value={transferForm.amount} onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })} /></Field><Textarea placeholder={t("accounting.cash.transferReason", "سبب التحويل")} value={transferForm.notes} onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })} /><Button onClick={transferCash} className="w-full">{t("accounting.cash.btn.transfer", "تنفيذ التحويل")}</Button></CardContent></Card></div>
-        <div className="space-y-4"><div className="grid md:grid-cols-2 gap-3">{cashAccounts.map((c) => <Card key={c.id}><CardContent className="p-4"><div className="text-sm text-muted-foreground">{typeAr(c.account_type, t)}{c.branches?.name ? ` — ${c.branches.name}` : ""}</div><div className="text-xl font-black">{c.name}</div><div className={`mt-2 text-2xl font-black ${Number(c.current_balance ?? 0) < 0 ? "text-red-600" : "text-teal-700"}`}>{fmtMoney(c.current_balance)}</div></CardContent></Card>)}</div><Card><CardHeader><CardTitle className="text-base">{t("accounting.cash.txLog", "سجل المعاملات")}</CardTitle></CardHeader><CardContent className="space-y-2">{cashTx.map((t) => <Row key={t.id} a={fmtDate(t.happened_at)} b={t.description} c={`${t.direction === "in" ? "+" : "-"} ${fmtMoney(t.amount)}`} danger={t.direction === "out"} />)}{!cashTx.length && <Empty text={t("common.noTx", "لا توجد معاملات")} />}</CardContent></Card></div>
+        <div className="space-y-4"><Card><CardHeader><CardTitle className="text-base"><Plus className="w-4 h-4 inline ms-1" />{t("accounting.cash.addSafe")}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-blue-50 border border-blue-100 p-2 text-xs text-blue-800">{t("accounting.cash.addSafeGuide")}</div><Field label={t("common.name")}><Input value={cashForm.name} onChange={(e) => setCashForm({ ...cashForm, name: e.target.value })} /></Field><Field label={t("common.branch")}><Select value={cashForm.branch_id || (branchId !== "all" ? branchId : "")} onValueChange={(v) => setCashForm({ ...cashForm, branch_id: v })}><SelectTrigger><SelectValue placeholder={t("accounting.error.noBranch")} /></SelectTrigger><SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent></Select></Field><Field label={t("common.type")}><Select value={cashForm.account_type} onValueChange={(v) => setCashForm({ ...cashForm, account_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">{t("accounting.account.type.cash")}</SelectItem><SelectItem value="bank">{t("accounting.account.type.bank")}</SelectItem><SelectItem value="wallet">{t("accounting.account.type.wallet")}</SelectItem><SelectItem value="instapay">InstaPay</SelectItem></SelectContent></Select></Field><Field label={t("accounting.cash.currentMoney")}><Input type="number" value={cashForm.opening_balance} onChange={(e) => setCashForm({ ...cashForm, opening_balance: e.target.value })} /></Field><Button onClick={addCashAccount} className="w-full">{t("common.add")}</Button></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">{t("accounting.cash.manualTx")}</CardTitle></CardHeader><CardContent className="space-y-3"><Field label={t("accounting.cash.account")}><Select value={txForm.cash_account_id} onValueChange={(v) => setTxForm({ ...txForm, cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""}</SelectItem>)}</SelectContent></Select></Field><div className="grid grid-cols-2 gap-2"><Field label={t("common.type")}><Select value={txForm.direction} onValueChange={(v) => setTxForm({ ...txForm, direction: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in">{t("common.in")}</SelectItem><SelectItem value="out">{t("common.out")}</SelectItem></SelectContent></Select></Field><Field label={t("common.amount")}><Input type="number" value={txForm.amount} onChange={(e) => setTxForm({ ...txForm, amount: e.target.value })} /></Field></div><Textarea placeholder={t("common.description")} value={txForm.description} onChange={(e) => setTxForm({ ...txForm, description: e.target.value })} /><Button onClick={addCashTx} className="w-full">{t("common.record")}</Button></CardContent></Card>
+        <Card className="border-teal-200"><CardHeader><CardTitle className="text-base">{t("accounting.cash.transferTitle")}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="rounded-xl bg-teal-50 border border-teal-100 p-2 text-xs text-teal-800">{t("accounting.cash.transferGuide")}</div><Field label={t("accounting.cash.fromSafe")}><Select value={transferForm.from_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, from_cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label={t("accounting.cash.toSafe")}><Select value={transferForm.to_cash_account_id} onValueChange={(v) => setTransferForm({ ...transferForm, to_cash_account_id: v })}><SelectTrigger><SelectValue placeholder={t("common.open")} /></SelectTrigger><SelectContent>{cashAccounts.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}{c.branches?.name ? ` — ${c.branches.name}` : ""} — {fmtMoney(c.current_balance)}</SelectItem>)}</SelectContent></Select></Field><Field label={t("common.amount")}><Input type="number" value={transferForm.amount} onChange={(e) => setTransferForm({ ...transferForm, amount: e.target.value })} /></Field><Textarea placeholder={t("accounting.cash.transferReason")} value={transferForm.notes} onChange={(e) => setTransferForm({ ...transferForm, notes: e.target.value })} /><Button onClick={transferCash} className="w-full">{t("accounting.cash.btn.transfer")}</Button></CardContent></Card></div>
+        <div className="space-y-4"><div className="grid md:grid-cols-2 gap-3">{cashAccounts.map((c) => <Card key={c.id}><CardContent className="p-4"><div className="text-sm text-muted-foreground">{typeAr(c.account_type, t)}{c.branches?.name ? ` — ${c.branches.name}` : ""}</div><div className="text-xl font-black">{c.name}</div><div className={`mt-2 text-2xl font-black ${Number(c.current_balance ?? 0) < 0 ? "text-red-600" : "text-teal-700"}`}>{fmtMoney(c.current_balance)}</div></CardContent></Card>)}</div><Card><CardHeader><CardTitle className="text-base">{t("accounting.cash.txLog")}</CardTitle></CardHeader><CardContent className="space-y-2">{cashTx.map((t) => <Row key={t.id} a={fmtDate(t.happened_at)} b={t.description} c={`${t.direction === "in" ? "+" : "-"} ${fmtMoney(t.amount)}`} danger={t.direction === "out"} />)}{!cashTx.length && <Empty text={t("common.noTx")} />}</CardContent></Card></div>
       </TabsContent>
 
-      <TabsContent value="expenses"><Card><CardHeader><CardTitle className="text-base">{t("accounting.expenses.title", "مصروفات الشهر: المدفوعة والآجلة")}</CardTitle></CardHeader><CardContent className="space-y-2">{expenses.map((e) => <Row key={e.id} a={fmtDate(e.spent_at)} b={`${catAr(e.category, t)} — ${e.description ?? ""}`} c={fmtMoney(e.amount)} danger={e.status === "payable"} badge={e.status === "payable" ? t("accounting.expenses.unpaid", "آجل") : t("accounting.expenses.paid", "مدفوع")} />)}{!expenses.length && <Empty text={t("accounting.expenses.empty", "لا توجد مصروفات لهذا الشهر")} />}</CardContent></Card></TabsContent>
+      <TabsContent value="expenses"><Card><CardHeader><CardTitle className="text-base">{t("accounting.expenses.title")}</CardTitle></CardHeader><CardContent className="space-y-2">{expenses.map((e) => <Row key={e.id} a={fmtDate(e.spent_at)} b={`${catAr(e.category, t)} — ${e.description ?? ""}`} c={fmtMoney(e.amount)} danger={e.status === "payable"} badge={e.status === "payable" ? t("accounting.expenses.unpaid") : t("accounting.expenses.paid")} />)}{!expenses.length && <Empty text={t("accounting.expenses.empty")} />}</CardContent></Card></TabsContent>
 
-      <TabsContent value="ledger"><Card><CardHeader><CardTitle className="text-base">{t("accounting.ledger.title", "دفتر حسابات الموظفين")}</CardTitle></CardHeader><CardContent className="space-y-2">{ledger.map((l) => <Row key={l.id} a={fmtDate(l.entry_at)} b={`${l.employees?.full_name ?? t("common.employee")} — ${entryAr(l.entry_type, t)} — ${l.description ?? ""}`} c={fmtMoney(l.amount)} danger={l.entry_type === "advance"} />)}{!ledger.length && <Empty text={t("accounting.ledger.empty", "لا توجد قيود موظفين")} />}</CardContent></Card></TabsContent>
+      <TabsContent value="ledger"><Card><CardHeader><CardTitle className="text-base">{t("accounting.ledger.title")}</CardTitle></CardHeader><CardContent className="space-y-2">{ledger.map((l) => <Row key={l.id} a={fmtDate(l.entry_at)} b={`${l.employees?.full_name ?? t("common.employee")} — ${entryAr(l.entry_type, t)} — ${l.description ?? ""}`} c={fmtMoney(l.amount)} danger={l.entry_type === "advance"} />)}{!ledger.length && <Empty text={t("accounting.ledger.empty")} />}</CardContent></Card></TabsContent>
     </Tabs>}
   </div>;
 }
