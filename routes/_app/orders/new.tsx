@@ -1,3 +1,4 @@
+import { createOrder } from "@/lib/orders-api";
 import { Row } from "@/components/new-order-components";
 import { useI18n } from "@/lib/i18n";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
@@ -194,82 +195,51 @@ function NewOrderPage() {
     );
   }
 
-  async function submit() {
+  import { createOrder } from "@/lib/orders-api";
+
+async function submit() {
     if (!customer && !newCustomer.full_name) { toast.error(t("orders.errCustomer", "اختار عميل أو أضف عميل جديد")); return; }
     const effectivePhone = customer?.phone ?? newCustomer.phone;
     if (phoneDigits(effectivePhone).length < 11) { toast.error(t("orders.errPhone", "رقم الهاتف يجب أن يكون 11 رقم على الأقل")); return; }
     if (!items.length) { toast.error(t("orders.errItems", "أضف قطعة أو خدمة واحدة على الأقل")); return; }
     if (!branchId) { toast.error(t("orders.errBranch", "اختار الفرع قبل إنشاء الطلب")); return; }
+    if (!tenantId) { toast.error("Tenant ID missing"); return; }
+    
     setSaving(true);
 
-    let customerId = customer?.id;
-    if (!customerId) {
-      const { data, error } = await supabase.from("customers").insert({
-        full_name: newCustomer.full_name, phone: newCustomer.phone, address: newCustomer.address || null,
-      }).select("id").single();
-      if (error) { toast.error(error.message); setSaving(false); return; }
-      customerId = data!.id;
-    }
-
-    const { data: order, error: oErr } = await supabase.from("orders").insert({
-      customer_id: customerId,
-      branch_id: branchId,
-      order_type: orderType,
-      is_urgent: isUrgent,
-      payment_method: paymentMethod as any,
-      payment_status: paymentStatus,
-      pickup_address: orderType === "delivery" ? pickupAddress || null : null,
-      delivery_address: orderType === "delivery" ? deliveryAddress || null : null,
-      pickup_lat: orderType === "delivery" && pickupLoc.lat ? Number(pickupLoc.lat) : null,
-      pickup_lng: orderType === "delivery" && pickupLoc.lng ? Number(pickupLoc.lng) : null,
-      delivery_lat: orderType === "delivery" && deliveryLoc.lat ? Number(deliveryLoc.lat) : null,
-      delivery_lng: orderType === "delivery" && deliveryLoc.lng ? Number(deliveryLoc.lng) : null,
-      subtotal, urgent_fee: urgentFee, urgent_fee_amount: urgentFee, delivery_fee: delivery,
-      discount_amount: disc, discount_percent: discPct, tax_amount: tax, total,
-      notes: notes || null, created_by: user?.id,
-    }).select("id").single();
-
-    if (oErr) { toast.error(oErr.message); setSaving(false); return; }
-
-    const { data: insertedItems, error: iErr } = await supabase.from("order_items").insert(
-      items.map((it) => ({
-        order_id: order!.id, service_item_id: it.service_item_id, name: it.name,
-        service_type: it.service_type as any, qty: it.qty, unit_price: it.unit_price,
-      }))
-    ).select("id,name,qty,unit_price,service_type");
-    if (iErr) { toast.error(iErr.message); setSaving(false); return; }
-
-    const units: any[] = [];
-    let unitNo = 1;
-    for (const it of (insertedItems ?? []) as any[]) {
-      const qty = Math.max(1, Number(it.qty ?? 1));
-      for (let n = 0; n < qty; n++) {
-        units.push({
-          order_id: order!.id,
-          order_item_id: it.id,
-          unit_number: unitNo,
-          name: it.name,
-          garment_type: it.name,
-          service_type: it.service_type,
-          unit_price: Number(it.unit_price ?? 0),
-          line_value: Number(it.unit_price ?? 0),
-          complexity_factor: complexityForName(it.name),
-          is_shirt_like: isShirtLikeName(it.name),
-          status: "received",
-          current_stage: "received",
-          tenant_id: tenantId,
-        });
-        unitNo += 1;
+    try {
+      let customerId = customer?.id;
+      if (!customerId) {
+        const { data, error } = await supabase.from("customers").insert({
+          full_name: newCustomer.full_name, phone: newCustomer.phone, address: newCustomer.address || null,
+        }).select("id").single();
+        if (error) throw error;
+        customerId = data!.id;
       }
-    }
-    if (units.length) {
-      const { error: uErr } = await supabase.from("service_units").insert(units);
-      if (uErr) toast.error(`${t("orders.errUnits", "تم إنشاء الطلب لكن تعذر ترقيم القطع")}: ${uErr.message}`);
-    }
 
-    await supabase.rpc("record_operation_event", { _process_key: "order_created", _process_name: "إنشاء طلب", _source_type: "order", _source_id: order!.id, _branch_id: branchId, _cash_account_id: null, _report_bucket: "orders/reports", _requires_notification: false, _data: { customer_id: customerId, order_type: orderType, pieces: units.length, items: items.length, total, payment_status: paymentStatus }, _output: { cash_impact: paymentStatus === "paid", journal_required: paymentStatus === "paid", appears_in_report: true } }).then(() => null);
-    toast.success(t("orders.orderCreated", "تم إنشاء الطلب وترقيم القطع"));
-    nav({ to: "/orders/$id", params: { id: order!.id } });
+      const order = await createOrder({
+        customer_id: customerId,
+        tenant_id: tenantId,
+        branch_id: branchId,
+        order_type: orderType,
+        items: items.map(it => ({
+          service_item_id: it.service_item_id,
+          name: it.name,
+          qty: it.qty,
+          unit_price: it.unit_price,
+          service_type: it.service_type
+        })),
+        total,
+        notes
+      });
+
+      toast.success(t("orders.orderCreated", "تم إنشاء الطلب وتسجيل الحدث"));
+      nav({ to: "/orders/$id", params: { id: order.id } });
+    } catch (err: any) {
+      toast.error(err.message || "فشل إنشاء الطلب");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
