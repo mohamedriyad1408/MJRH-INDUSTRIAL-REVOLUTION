@@ -53,34 +53,22 @@ type PieceMatch = {
   orders?: { order_number: number; customers?: { full_name: string; phone: string } };
 };
 
-type FinanceMatch = {
-  id: string;
-  amount: number;
-  transaction_type: string;
-  description?: string;
-  created_at: string;
-  customers?: { full_name: string; phone: string };
-};
-
 function SearchResultsPage() {
   const { tenantId } = useAuth();
   const { t, dir } = useI18n();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"all" | "orders" | "customers" | "pieces" | "finance">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "orders" | "customers" | "pieces">("all");
 
   const [orders, setOrders] = useState<OrderMatch[]>([]);
   const [customers, setCustomers] = useState<CustomerMatch[]>([]);
   const [pieces, setPieces] = useState<PieceMatch[]>([]);
-  const [financials, setFinancials] = useState<FinanceMatch[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<number | null>(null);
 
   const loadInitialBrowse = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const oPromise = supabase
         .from("orders")
@@ -102,6 +90,7 @@ function SearchResultsPage() {
       const [oRes, cRes] = await Promise.all([oPromise, cPromise]);
       if (oRes.data) setOrders(oRes.data as any);
       if (cRes.data) setCustomers(cRes.data as any);
+      setPieces([]);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -117,7 +106,6 @@ function SearchResultsPage() {
     }
 
     setLoading(true);
-    setError(null);
     try {
       const esc = clean.replace(/[%_,\\]/g, "\\$&");
       const isNum = !isNaN(Number(clean));
@@ -137,21 +125,19 @@ function SearchResultsPage() {
       if (cRes.data) setCustomers(cRes.data as any);
       if (pRes.data) setPieces(pRes.data as any);
     } catch (err: any) {
-      setError(err?.message || String(err));
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }, [tenantId, loadInitialBrowse]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const q = new URLSearchParams(window.location.search).get("q") || "";
-      if (q) {
-        setQuery(q);
-        performSearch(q);
-      } else {
-        loadInitialBrowse();
-      }
+    const q = new URLSearchParams(window.location.search).get("q") || "";
+    if (q) {
+      setQuery(q);
+      performSearch(q);
+    } else {
+      loadInitialBrowse();
     }
   }, [tenantId, performSearch, loadInitialBrowse]);
 
@@ -161,7 +147,7 @@ function SearchResultsPage() {
     debounceRef.current = window.setTimeout(() => performSearch(v), 250);
   };
 
-  const totalCount = orders.length + customers.length + pieces.length + financials.length;
+  const totalCount = orders.length + customers.length + pieces.length;
 
   const translateStatus = (st: string) => t(`common.status.order.${st}`, st);
 
@@ -225,7 +211,6 @@ function SearchResultsPage() {
           { id: "orders", label: "tabOrders", icon: FileText, count: orders.length },
           { id: "customers", label: "tabCustomers", icon: User, count: customers.length },
           { id: "pieces", label: "tabPieces", icon: QrCode, count: pieces.length },
-          { id: "finance", label: "tabFinance", icon: Wallet, count: financials.length },
         ].map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -269,7 +254,9 @@ function SearchResultsPage() {
                         </div>
                         <div className="text-end font-black text-teal-700">{fmtMoney(o.total, t("common.egp"))}</div>
                       </div>
-                      <Button asChild size="sm" className="w-full bg-teal-600"><Link to={`/orders/${o.id}` as any}>{t("search.btnOpenOrder")}</Link></Button>
+                      <Button asChild size="sm" className="w-full bg-teal-600">
+                        <Link to={`/orders/${o.id}` as any}>{t("search.btnOpenOrder")}</Link>
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -289,7 +276,9 @@ function SearchResultsPage() {
                     <CardContent className="p-4 space-y-3">
                       <div className="font-black text-base truncate">{c.full_name}</div>
                       <div className="text-sm font-extrabold text-indigo-700 font-mono" dir="ltr">{c.phone}</div>
-                      <Button asChild size="sm" variant="outline" className="w-full"><Link to={`/customers?id=${c.id}` as any}>{t("search.btnCustomerProfile")}</Link></Button>
+                      <Button asChild size="sm" variant="outline" className="w-full">
+                        <Link to={`/customers?id=${c.id}` as any}>{t("search.btnCustomerProfile")}</Link>
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
