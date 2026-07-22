@@ -221,3 +221,38 @@ export async function updateOrderStatus(orderId: string, tenantId: string, newSt
     }
     return { success: true };
 }
+
+export async function getOrdersPaginated(
+  tenantId: string,
+  page: number = 1,
+  limit: number = 20,
+  statusFilter?: string
+): Promise<{ data: any[]; total: number; page: number; totalPages: number }> {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = supabase
+    .from('orders')
+    .select('*, customers(full_name, phone)', { count: 'exact' })
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (statusFilter && statusFilter !== 'all') {
+    query = query.eq('status', statusFilter.toLowerCase());
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error('Failed to fetch orders:', error);
+    return { data: [], total: 0, page, totalPages: 0 };
+  }
+
+  return {
+    data: data || [],
+    total: count || 0,
+    page,
+    totalPages: Math.ceil((count || 0) / limit),
+  };
+}
